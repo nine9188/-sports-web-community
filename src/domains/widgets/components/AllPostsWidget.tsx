@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { fetchPosts, PostsResponse } from '@/domains/boards/actions';
+import { getNotices } from '@/domains/boards/actions/posts/notices';
 import PostList from '@/domains/boards/components/post/PostList';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
@@ -26,23 +27,55 @@ interface AllPostsWidgetProps {
 export default async function AllPostsWidget({ initialData }: AllPostsWidgetProps = {}) {
   try {
     // initialData가 제공되면 바로 사용, 없으면 자체 fetch
-    const postsData = initialData ?? await fetchAllPostsData();
+    // getNotices()는 포맷팅된 데이터 반환 (board_slug, author_nickname 등 포함)
+    const [postsData, globalNotices] = await Promise.all([
+      initialData ? Promise.resolve(initialData) : fetchAllPostsData(),
+      getNotices(),  // 전체 공지 (포맷팅된 데이터)
+    ]);
 
     // LCP 최적화: 게시글이 없으면 렌더링하지 않음
     if (!postsData.data || postsData.data.length === 0) {
       return null;
     }
 
-    // 헤더 컨텐츠 렌더링 - 오른쪽에 > 아이콘 추가
+    // show_in_widget이 true인 공지만 필터링
+    const allNoticeData = globalNotices as Array<Record<string, unknown>>;
+    const noticeData = allNoticeData.filter(notice => notice.show_in_widget === true);
+    const noticePosts = noticeData.map(notice => ({
+      id: notice.id as string,
+      title: notice.title as string,
+      board_id: (notice.board_id as string) || '',
+      board_name: (notice.board_name as string) || '공지',
+      board_slug: (notice.board_slug as string) || '',
+      post_number: (notice.post_number as number) || 0,
+      created_at: (notice.created_at as string) || '',
+      views: (notice.views as number) || 0,
+      likes: (notice.likes as number) || 0,
+      author_nickname: (notice.author_nickname as string) || '관리자',
+      author_id: (notice.user_id as string) || '',
+      author_public_id: (notice.author_public_id as string | null) || null,
+      author_level: (notice.author_level as number) || 1,
+      author_icon_url: (notice.author_icon_url as string | null) || null,
+      comment_count: (notice.comment_count as number) || 0,
+      formattedDate: (notice.formattedDate as string) || '',
+      is_notice: true,
+      notice_type: (notice.notice_type as 'global' | 'board' | null) || 'global',
+      is_must_read: (notice.is_must_read as boolean) || false,
+    }));
+
+    // 공지 + 게시글 합침 (공지가 앞, 게시글 수는 영향 없음)
+    const combinedPosts = [...noticePosts, ...postsData.data];
+
+    // 헤더 컨텐츠 렌더링
     const headerContent = (
       <div className="w-full h-full flex items-center justify-between">
         <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
         <Link
           href="/boards/all"
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          aria-label="더 많은 게시글 보기"
+          className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
         >
-          <ChevronRight className="w-5 h-5" />
+          전체글 보기
+          <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     );
@@ -50,7 +83,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     return (
       <div className="h-full">
         <PostList
-          posts={postsData.data}
+          posts={combinedPosts}
           loading={false} // 로딩 상태는 항상 false (서버 컴포넌트에서 데이터 로드 완료 후 렌더링)
           emptyMessage="아직 게시글이 없습니다."
           headerContent={headerContent}

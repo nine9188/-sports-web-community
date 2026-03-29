@@ -108,7 +108,8 @@ export async function setPostAsNotice(
   noticeType: NoticeType,
   boardIds?: string[],
   noticeOrder: number = 0,
-  isMustRead: boolean = false
+  isMustRead: boolean = false,
+  showInWidget: boolean = false
 ): Promise<SetNoticeResult> {
   try {
     if (noticeType === 'board' && (!boardIds || boardIds.length === 0)) {
@@ -128,7 +129,8 @@ export async function setPostAsNotice(
         is_must_read: isMustRead,
         notice_type: noticeType,
         notice_boards: noticeType === 'board' ? boardIds : null,
-        notice_order: noticeOrder
+        notice_order: noticeOrder,
+        show_in_widget: showInWidget
       } as Record<string, unknown>)
       .eq('id', postId);
 
@@ -164,7 +166,8 @@ export async function removeNotice(postId: string): Promise<SetNoticeResult> {
         is_must_read: false,
         notice_type: null,
         notice_boards: null,
-        notice_order: 0
+        notice_order: 0,
+        show_in_widget: false
       } as Record<string, unknown>)
       .eq('id', postId);
 
@@ -290,6 +293,39 @@ export async function getPostIdByNumber(postNumber: number): Promise<{ success: 
   } catch (error) {
     console.error('게시글 조회 오류:', error);
     return { success: false, error: '게시글 조회 중 오류가 발생했습니다.' };
+  }
+}
+
+/**
+ * 공지 위젯 표시 토글
+ */
+export async function toggleWidgetVisibility(postId: string, showInWidget: boolean): Promise<SetNoticeResult> {
+  try {
+    const validation = await validateNoticeAction(postId, 'id, board_id, is_notice');
+    if (!('supabase' in validation)) return validation;
+
+    const { supabase, post } = validation;
+
+    if (!post.is_notice) {
+      return createError('NOT_NOTICE', ERROR_MESSAGES.NOT_NOTICE);
+    }
+
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ show_in_widget: showInWidget } as Record<string, unknown>)
+      .eq('id', postId);
+
+    if (updateError) {
+      console.error('위젯 표시 변경 오류:', updateError);
+      return createError('UPDATE_ERROR', ERROR_MESSAGES.UPDATE_ERROR('위젯 표시 변경'));
+    }
+
+    revalidateNoticePaths(post.board_id);
+    revalidatePath('/');
+    return createSuccess(showInWidget ? '전체 게시글 위젯에 표시됩니다.' : '전체 게시글 위젯에서 숨겨집니다.');
+  } catch (error) {
+    console.error('위젯 표시 변경 중 오류:', error);
+    return createError('UNKNOWN_ERROR', ERROR_MESSAGES.UNKNOWN_ERROR('위젯 표시 변경'));
   }
 }
 

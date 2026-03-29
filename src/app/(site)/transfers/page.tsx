@@ -11,7 +11,7 @@ import TransfersPageContent from '@/domains/livescore/components/football/transf
 export async function generateMetadata() {
   return buildMetadata({
     title: '이적시장',
-    description: '최신 축구 이적 소식, 영입 정보, 방출 소식을 실시간으로 확인하세요.',
+    description: '17개 리그 축구 이적 소식, 영입 정보, 방출 소식을 확인하세요. 매주 업데이트.',
     path: '/transfers',
   });
 }
@@ -65,17 +65,30 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
           <div className="flex items-center justify-between w-full">
             <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
             <div className="hidden md:flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-gray-700 dark:text-gray-300">실시간 업데이트</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">매주 업데이트</span>
             </div>
           </div>
         </ContainerHeader>
 
         {/* 설명 섹션 */}
-        <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
+        <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D] space-y-2">
           <p className="text-[13px] text-gray-700 dark:text-gray-300">
-            최신 축구 이적 소식과 선수 영입 정보를 확인하세요
+            17개 리그 이적 소식과 선수 영입 정보를 확인하세요
           </p>
+          <div className="flex items-center gap-1.5 mt-1 mb-1">
+            <span className="text-amber-500 text-xs">&#9733;</span>
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">이적 정보는 1주일에 한 번 업데이트됩니다</span>
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+            <p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">자동 업데이트 (13개 리그)</span>
+              {' '}프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑
+            </p>
+            <p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">리그 선택 시 조회 (4개 리그)</span>
+              {' '}덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십
+            </p>
+          </div>
         </div>
       </Container>
 

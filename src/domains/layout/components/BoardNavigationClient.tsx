@@ -67,7 +67,7 @@ const createNavBoards = (boards: Board[]): Board[] => {
     // 개별 링크들 (드롭다운 없음)
     { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: null, display_order: 100, children: [] },
     { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: null, display_order: 101, children: [] },
-    { id: 'nav-datacenter', name: '데이터센터', slug: 'livescore/football/leagues', parent_id: null, display_order: 102, children: [] }
+    { id: 'nav-datacenter', name: '리그·팀', slug: 'livescore/football/leagues', parent_id: null, display_order: 102, children: [] }
   ];
 };
 

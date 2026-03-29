@@ -5,6 +5,7 @@ import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetStreaming } from '@/domains/widgets/components/live-score-widget/index';
 import LiveScoreSkeleton from '@/domains/livescore/components/football/MainView/LiveScoreSkeleton';
+import TransferBannerSlideServer from '@/domains/livescore/components/football/transfers/TransferBannerSlideServer';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -31,6 +32,10 @@ export default function HomePage() {
       {/* LiveScore 위젯 - Suspense 스트리밍 (오늘 경기만 SSR, 어제/내일은 클라이언트) */}
       <Suspense fallback={<LiveScoreSkeleton />}>
         <LiveScoreWidgetStreaming />
+      </Suspense>
+      {/* 이적시장 배너 슬라이드 */}
+      <Suspense>
+        <TransferBannerSlideServer />
       </Suspense>
 
       {/* 게시판 모음 위젯 - Suspense 스트리밍 */}

@@ -123,15 +123,25 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
     setCalendar(false);
   };
 
-  // 검색 필터링 
+  // 검색 필터링 (한국어 리그명/팀명 포함)
   const filteredMatches = matches.filter(match => {
     if (!searchQuery) return true;
-    
+
     const query = searchQuery.toLowerCase();
+    const leagueId = typeof match.league.id === 'number' ? match.league.id : Number(match.league.id);
+    const leagueKoreanName = LEAGUE_NAMES_MAP[leagueId] || '';
+    const homeTeamId = typeof match.teams.home.id === 'number' ? match.teams.home.id : Number(match.teams.home.id);
+    const awayTeamId = typeof match.teams.away.id === 'number' ? match.teams.away.id : Number(match.teams.away.id);
+    const homeKoreanName = getTeamById(homeTeamId)?.name_ko || '';
+    const awayKoreanName = getTeamById(awayTeamId)?.name_ko || '';
+
     return (
       match.league?.name?.toLowerCase().includes(query) ||
+      leagueKoreanName.toLowerCase().includes(query) ||
       match.teams?.home?.name?.toLowerCase().includes(query) ||
-      match.teams?.away?.name?.toLowerCase().includes(query)
+      homeKoreanName.toLowerCase().includes(query) ||
+      match.teams?.away?.name?.toLowerCase().includes(query) ||
+      awayKoreanName.toLowerCase().includes(query)
     );
   });
 
@@ -163,7 +173,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         </div>
         <div className="p-4">
           <div className="space-y-4">
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {/* 날짜 선택 버튼 */}
               <div className="relative flex-1">
                 <Button
@@ -182,11 +192,11 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                   }}
                   className="w-full h-9 flex items-center px-3 text-xs justify-start"
                 >
-                  <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400" />
-                  <span>{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
+                  <CalendarIcon className="mr-2 h-3 w-3 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{format(selectedDate, 'PPP (eee)', { locale: ko })}</span>
                 </Button>
               </div>
-              
+
               {/* 검색 입력 필드 */}
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -353,10 +363,9 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
           <div className="flex justify-end">
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              variant="secondary"
               onClick={onCancel}
-              className="text-xs"
+              className="px-3 py-1.5 text-xs"
             >
               취소
             </Button>

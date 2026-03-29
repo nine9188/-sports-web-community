@@ -37,6 +37,9 @@ export interface Post {
   league_logo?: string | null;
   league_logo_dark?: string | null;
   formattedDate?: string;
+  is_notice?: boolean;
+  notice_type?: 'global' | 'board' | null;
+  is_must_read?: boolean;
   is_hidden?: boolean;
   is_deleted?: boolean;
   deal_info?: DealInfo | null;

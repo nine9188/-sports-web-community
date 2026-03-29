@@ -113,6 +113,15 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
           {/* 제목 + 아이콘 + 댓글 수 */}
           <Link href={href} prefetch={false} className="block overflow-hidden" onClick={handleClick}>
             <div className="flex items-center gap-1 mb-1">
+              {post.is_notice && (
+                <span className={`inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none flex-shrink-0 whitespace-nowrap ${
+                  post.is_must_read
+                    ? 'bg-red-600 dark:bg-red-700 text-white'
+                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                }`}>
+                  {post.is_must_read ? '필독' : '공지'}
+                </span>
+              )}
               <h3 className={`${titleClassName} truncate`}>
                 {titleText}
               </h3>
@@ -148,9 +157,21 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
 
           {/* 메타 정보 */}
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
-              {post.board_name}
-            </Link>
+            {post.is_notice ? (
+              <Link href="/boards/notice" className="inline-flex items-center">
+                <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
+                  post.is_must_read
+                    ? 'bg-red-600 dark:bg-red-700 text-white'
+                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                }`}>
+                  {post.is_must_read ? '필독' : '공지'}
+                </span>
+              </Link>
+            ) : (
+              <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
+                {post.board_name}
+              </Link>
+            )}
 
             <AuthorLink
               nickname={post.author_nickname}
@@ -191,7 +212,19 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       {/* 게시판 컬럼 */}
       {showBoard && (
         <td className="py-2 pl-3 pr-1 align-middle">
-          {renderBoardLogo(post)}
+          {post.is_notice ? (
+            <Link href="/boards/notice" className="flex items-center ml-6">
+              <span className={`inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none whitespace-nowrap ${
+                post.is_must_read
+                  ? 'bg-red-600 dark:bg-red-700 text-white'
+                  : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+              }`}>
+                {post.is_must_read ? '필독' : '공지'}
+              </span>
+            </Link>
+          ) : (
+            renderBoardLogo(post)
+          )}
         </td>
       )}
 

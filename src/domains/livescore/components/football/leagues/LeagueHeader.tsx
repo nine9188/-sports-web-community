@@ -58,14 +58,14 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
       <ContainerContent>
         <div className="flex items-center space-x-2">
           {/* 리그 로고 */}
-          <div className="relative w-8 h-8 flex-shrink-0">
+          <div className="relative w-6 h-6 flex-shrink-0">
             <UnifiedSportsImageClient
               src={(isDark && leagueLogoUrlDark) ? leagueLogoUrlDark : (leagueLogoUrl || LEAGUE_PLACEHOLDER)}
               alt={`${displayName} 로고`}
-              width={32}
-              height={32}
+              width={24}
+              height={24}
               loading="eager"
-              className="object-contain w-8 h-8"
+              className="object-contain w-6 h-6"
             />
           </div>
 

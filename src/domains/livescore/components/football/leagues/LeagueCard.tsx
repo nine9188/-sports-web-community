@@ -42,16 +42,16 @@ export default function LeagueCard({ leagueId, name, leagueLogoUrl, leagueLogoDa
   return (
     <Link
       href={`/livescore/football/leagues/${leagueId}`}
-      className="group flex flex-col items-center bg-[#F5F5F5] dark:bg-[#262626] rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors p-2 lg:p-3"
+      className="group flex flex-col items-center rounded-md hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors p-2 pb-2.5 border-b border-dashed border-gray-300 dark:border-gray-600"
     >
       <UnifiedSportsImageClient
         src={effectiveLogoUrl || LEAGUE_PLACEHOLDER}
         alt={`${name} 로고`}
-        width={40}
-        height={40}
-        className="w-7 h-7 lg:w-10 lg:h-10 object-contain"
+        width={36}
+        height={36}
+        className="w-8 h-8 lg:w-9 lg:h-9 object-contain"
       />
-      <h3 className="mt-1 lg:mt-2 text-[9px] lg:text-xs font-medium text-gray-900 dark:text-[#F0F0F0] text-center leading-tight line-clamp-2">
+      <h3 className="mt-1.5 text-[11px] lg:text-xs font-medium text-gray-700 dark:text-gray-300 text-center leading-tight line-clamp-2 break-keep">
         {name}
       </h3>
     </Link>

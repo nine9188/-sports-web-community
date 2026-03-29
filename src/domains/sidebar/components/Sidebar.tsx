@@ -1,6 +1,7 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, BookOpen } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
@@ -41,6 +42,23 @@ export default function Sidebar({
               {authSection}
             </ContainerContent>
           </Container>
+
+          {/* 이용 가이드 바로가기 */}
+          <Link
+            href="/guide"
+            className="flex items-center gap-2.5 mb-4 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 text-white md:rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-500 transition-all group"
+          >
+            <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <span className="text-[13px] font-bold">이용 가이드</span>
+              <p className="text-[11px] text-blue-100">사이트 사용법을 확인하세요</p>
+            </div>
+            <svg className="w-4 h-4 text-white/60 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
 
           {/* 사이드바 광고 - 카카오 */}
           <div className="mb-4">

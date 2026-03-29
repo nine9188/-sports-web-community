@@ -46,31 +46,71 @@ export default function Footer() {
           </div>
 
           {/* 링크 */}
-          <div className="flex gap-x-3 sm:gap-x-6 text-xs sm:text-[13px] text-gray-700 dark:text-gray-300 items-center justify-center">
-            <Link href="/about" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
-              소개
-            </Link>
-            <Link href="/contact" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
-              제휴/광고
-            </Link>
-            <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
-              이용약관
-            </Link>
-            <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
-              개인정보처리방침
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { mode: 'auto' } }))
-                }
-              }}
-              className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
-              aria-label="문의하기"
-            >
-              문의하기
-            </button>
+          <div className="text-xs sm:text-[13px] text-gray-700 dark:text-gray-300">
+            {/* PC: 한 줄 */}
+            <div className="hidden md:flex gap-x-6 items-center justify-center">
+              <Link href="/about" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                소개
+              </Link>
+              <Link href="/guide" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                이용가이드
+              </Link>
+              <Link href="/contact" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                제휴/광고
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { mode: 'auto' } }))
+                  }
+                }}
+                className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+                aria-label="문의하기"
+              >
+                문의하기
+              </button>
+              <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                개인정보처리방침
+              </Link>
+              <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                이용약관
+              </Link>
+            </div>
+            {/* 모바일: 두 줄 */}
+            <div className="flex flex-col items-center gap-1.5 md:hidden">
+              <div className="flex gap-x-3 items-center justify-center">
+                <Link href="/about" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                  소개
+                </Link>
+                <Link href="/guide" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                  이용가이드
+                </Link>
+                <Link href="/contact" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                  제휴/광고
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { mode: 'auto' } }))
+                    }
+                  }}
+                  className="hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+                  aria-label="문의하기"
+                >
+                  문의하기
+                </button>
+              </div>
+              <div className="flex gap-x-3 items-center justify-center">
+                <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                  개인정보처리방침
+                </Link>
+                <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">
+                  이용약관
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* 소셜 미디어 */}

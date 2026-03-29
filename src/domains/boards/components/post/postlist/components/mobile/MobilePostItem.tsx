@@ -97,6 +97,15 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           {/* 제목 + 아이콘 + 댓글 수 */}
           <Link href={href} prefetch={false} className="block overflow-hidden" onClick={handleClick}>
             <div className="flex items-center gap-1 mb-0.5">
+              {post.is_notice && (
+                <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none flex-shrink-0 whitespace-nowrap ${
+                  post.is_must_read
+                    ? 'bg-red-600 dark:bg-red-700 text-white'
+                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                }`}>
+                  {post.is_must_read ? '필독' : '공지'}
+                </span>
+              )}
               <h3 className={`${titleClassName} truncate`}>
                 {titleText}
               </h3>
@@ -134,9 +143,21 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400">
             {/* 게시판 + 작성자 */}
             <div className="flex items-center gap-2">
-              <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
-                {post.board_name}
-              </Link>
+              {post.is_notice ? (
+                <Link href="/boards/notice" className="inline-flex items-center">
+                  <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
+                    post.is_must_read
+                      ? 'bg-red-600 dark:bg-red-700 text-white'
+                      : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                  }`}>
+                    {post.is_must_read ? '필독' : '공지'}
+                  </span>
+                </Link>
+              ) : (
+                <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
+                  {post.board_name}
+                </Link>
+              )}
               <AuthorLink
                 nickname={post.author_nickname}
                 publicId={post.author_public_id}
@@ -176,6 +197,15 @@ export const MobilePostItem = React.memo(function MobilePostItem({
     >
       <Link href={href} prefetch={false} className="block w-full overflow-hidden" onClick={handleClick}>
         <div className="flex items-center gap-1 mb-1.5">
+          {post.is_notice && (
+            <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none flex-shrink-0 whitespace-nowrap ${
+              post.is_must_read
+                ? 'bg-red-600 dark:bg-red-700 text-white'
+                : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+            }`}>
+              {post.is_must_read ? '필독' : '공지'}
+            </span>
+          )}
           <span className={`${titleClassName} truncate`}>
             {titleText}
           </span>

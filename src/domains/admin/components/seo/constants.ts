@@ -11,7 +11,7 @@ export const PREDEFINED_PAGES: PredefinedPage[] = [
 
   // 라이브스코어
   { path: '/livescore/football', name: '라이브스코어', defaultTitle: '라이브스코어 - 4590 Football', defaultDescription: '실시간 축구 경기 결과와 일정을 확인하세요. 전 세계 주요 리그 경기를 한눈에.' },
-  { path: '/livescore/football/leagues', name: '데이터센터', defaultTitle: '데이터센터 - 4590 Football', defaultDescription: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.' },
+  { path: '/livescore/football/leagues', name: '리그·팀', defaultTitle: '리그·팀 - 4590 Football', defaultDescription: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.' },
 
   // 기타 메인 기능
   { path: '/shop', name: '상점', defaultTitle: '상점 - 4590 Football', defaultDescription: '포인트로 다양한 아이템을 구매하세요. 아이콘, 닉네임 변경권 등.' },

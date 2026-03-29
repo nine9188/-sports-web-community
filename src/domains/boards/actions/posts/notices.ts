@@ -40,6 +40,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         notice_boards,
         notice_order,
         notice_created_at,
+        show_in_widget,
         is_hidden,
         is_deleted,
         profiles (
@@ -100,6 +101,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       notice_boards?: string[] | null;
       notice_order?: number;
       notice_created_at?: string;
+      show_in_widget?: boolean;
       is_hidden?: boolean;
       is_deleted?: boolean;
       profiles?: {
@@ -234,6 +236,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         notice_boards: notice.notice_boards || null,
         notice_order: notice.notice_order || null,
         notice_created_at: notice.notice_created_at || null,
+        show_in_widget: notice.show_in_widget || false,
         is_hidden: notice.is_hidden,
         is_deleted: notice.is_deleted,
         updated_at: notice.updated_at,

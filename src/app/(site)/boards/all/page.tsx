@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { fetchPosts } from '@/domains/boards/actions';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getNotices } from '@/domains/boards/actions/posts/notices';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -28,12 +29,14 @@ export default async function AllPostsPage({
     // 페이지 값 유효성 검증
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1 ? 1 : parseInt(page, 10);
 
-    // 모든 게시판의 게시글 가져오기
-    const postsData = await fetchPosts({
-      limit: 20,
-      page: currentPage
-      // boardIds를 지정하지 않으면 모든 게시판에서 가져옴
-    });
+    // 모든 게시판의 게시글 + 전체 공지 병렬 가져오기
+    const [postsData, globalNotices] = await Promise.all([
+      fetchPosts({
+        limit: 20,
+        page: currentPage
+      }),
+      getNotices(),  // 전체 공지 (포맷팅된 데이터)
+    ]);
 
     // fetchPosts 결과를 직접 사용 (content 포함)
     const layoutPosts = postsData.data || [];
@@ -117,6 +120,7 @@ export default async function AllPostsPage({
         posts={layoutPosts}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
+        notices={globalNotices}
         pagination={{
           totalItems: postsData.meta.totalItems,
           itemsPerPage: postsData.meta.itemsPerPage,

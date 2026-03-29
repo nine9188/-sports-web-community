@@ -10,7 +10,7 @@ import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '데이터센터',
+    title: '리그·팀',
     description: '전 세계 주요 축구 리그 목록을 확인하고 원하는 리그의 팀 정보와 경기 결과를 확인하세요.',
     path: '/livescore/football/leagues',
   });
@@ -79,13 +79,18 @@ export default async function LeaguesPage() {
 
   return (
     <div className="min-h-screen w-full">
-      <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="데이터센터" />
+      <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="리그·팀" />
       <div className="container mx-auto w-full">
         {/* 페이지 헤더 */}
         <Container>
           <ContainerHeader>
-            <ContainerTitle>데이터센터</ContainerTitle>
+            <ContainerTitle>리그·팀</ContainerTitle>
           </ContainerHeader>
+          <ContainerContent>
+            <p className="text-sm text-gray-900 dark:text-gray-100">
+              리그를 선택하면 각 리그의 순위와 팀 정보를 확인할 수 있습니다.
+            </p>
+          </ContainerContent>
         </Container>
 
         <div className="space-y-4 mt-4">

@@ -8,6 +8,7 @@ import ServerLeagueStandings from './league/ServerLeagueStandings';
 import AdSense from '@/shared/components/AdSense';
 import { ADSENSE } from '@/shared/constants/ad-constants';
 
+
 export default async function RightSidebar() {
   try {
     // 서버에서 데이터 가져오기

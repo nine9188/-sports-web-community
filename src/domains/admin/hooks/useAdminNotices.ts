@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getNotices, setPostAsNotice, removeNotice, updateNoticeType, getPostIdByNumber } from '@/domains/boards/actions/posts';
+import { getNotices, setPostAsNotice, removeNotice, updateNoticeType, getPostIdByNumber, toggleWidgetVisibility } from '@/domains/boards/actions/posts';
 import { getBoards } from '@/domains/boards/actions/getBoards';
 import { adminKeys, boardKeys } from '@/shared/constants/queryKeys';
 import type { NoticeType } from '@/domains/boards/types/post';
@@ -23,6 +23,7 @@ export function useBoardsForNotice() {
         id: board.id,
         name: board.name,
         slug: board.slug || '',
+        parent_id: board.parent_id || null,
       }));
     },
     staleTime: 1000 * 60 * 5, // 5분
@@ -39,14 +40,16 @@ export function useSetNoticeMutation() {
       boardIds,
       noticeOrder,
       isMustRead,
+      showInWidget,
     }: {
       postId: string;
       noticeType: NoticeType;
       boardIds?: string[];
       noticeOrder?: number;
       isMustRead?: boolean;
+      showInWidget?: boolean;
     }) => {
-      return setPostAsNotice(postId, noticeType, boardIds, noticeOrder, isMustRead);
+      return setPostAsNotice(postId, noticeType, boardIds, noticeOrder, isMustRead, showInWidget);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
@@ -64,12 +67,14 @@ export function useSetNoticeByNumberMutation() {
       boardIds,
       noticeOrder,
       isMustRead,
+      showInWidget,
     }: {
       postNumber: number;
       noticeType: NoticeType;
       boardIds?: string[];
       noticeOrder?: number;
       isMustRead?: boolean;
+      showInWidget?: boolean;
     }) => {
       // 게시글 번호로 ID 조회
       const lookupResult = await getPostIdByNumber(postNumber);
@@ -77,7 +82,7 @@ export function useSetNoticeByNumberMutation() {
         return { success: false, message: lookupResult.error };
       }
       // 공지 설정
-      return setPostAsNotice(lookupResult.postId, noticeType, boardIds, noticeOrder, isMustRead);
+      return setPostAsNotice(lookupResult.postId, noticeType, boardIds, noticeOrder, isMustRead, showInWidget);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
@@ -90,6 +95,19 @@ export function useRemoveNoticeMutation() {
 
   return useMutation({
     mutationFn: (postId: string) => removeNotice(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
+    },
+  });
+}
+
+export function useToggleWidgetMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ postId, showInWidget }: { postId: string; showInWidget: boolean }) => {
+      return toggleWidgetVisibility(postId, showInWidget);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
     },

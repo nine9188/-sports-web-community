@@ -155,12 +155,12 @@ export function DesktopPostList({
     <div className="hidden sm:block overflow-x-auto">
       <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
         <colgroup>
-          {showBoard && <col style={{ width: '110px' }} />}
+          {showBoard && <col style={{ width: '120px' }} />}
           <col />
-          <col style={{ width: '100px' }} />
-          <col style={{ width: '65px' }} />
-          <col style={{ width: '35px' }} />
-          <col style={{ width: '35px' }} />
+          <col style={{ width: '120px' }} />
+          <col style={{ width: '80px' }} />
+          <col style={{ width: '60px' }} />
+          <col style={{ width: '60px' }} />
         </colgroup>
         <thead>
           <tr className="border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">

@@ -18,7 +18,7 @@ export { likePost, dislikePost, getUserPostAction } from './likes';
 export { getNotices, getGlobalNotices, getBoardNotices, getNoticesForBoard } from './notices';
 
 // 공지사항 설정 관련 (관리자)
-export { setPostAsNotice, removeNotice, updateNoticeOrder, updateNoticeType, getPostIdByNumber } from './setNotice';
+export { setPostAsNotice, removeNotice, updateNoticeOrder, updateNoticeType, getPostIdByNumber, toggleWidgetVisibility } from './setNotice';
 
 // 유틸리티 타입
 export type { PostActionResponse, LikeActionResponse } from './utils'; 

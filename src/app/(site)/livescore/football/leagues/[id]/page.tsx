@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standingsData';
-import { LeagueHeader } from '@/domains/livescore/components/football/leagues';
-import { LeagueStandingsTable } from '@/domains/livescore/components/football/leagues';
+import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
+import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
 import AdBanner from '@/shared/components/AdBanner';
 
 interface LeaguePageProps {
@@ -36,10 +36,11 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
   const { id } = await params;
   const leagueId = parseInt(id, 10);
 
-  // 리그 정보와 순위 데이터를 병렬로 가져오기
-  const [league, standingsResponse] = await Promise.all([
+  // 리그 정보, 순위 데이터, 득점/도움 순위를 병렬로 가져오기
+  const [league, standingsResponse, rankings] = await Promise.all([
     fetchLeagueDetails(id),
-    fetchLeagueStandings(leagueId)
+    fetchLeagueStandings(leagueId),
+    fetchCachedLeagueRankings(leagueId),
   ]);
 
   if (!league) {
@@ -95,7 +96,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
   } : null;
 
   return (
-    <div className="min-h-screen space-y-4">
+    <div className="min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(leagueSchema) }}
@@ -112,15 +113,35 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
           leagueLogoUrl={leagueLogoUrl}
           leagueLogoUrlDark={leagueLogoUrlDark}
         />
+        <div className="px-4 py-2.5 bg-white dark:bg-[#1D1D1D]">
+          <p className="text-sm text-gray-900 dark:text-gray-100">
+            순위표에서 팀을 클릭하면 팀 상세 정보를, 팀 페이지에서 선수를 클릭하면 선수 상세 정보를 확인할 수 있습니다.
+          </p>
+        </div>
       </div>
 
-      <AdBanner />
+      <div className="mt-4">
+        <AdBanner />
+      </div>
 
-      <LeagueStandingsTable
-        standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
+      <div className="mt-4">
+        <LeagueStandingsTable
+          standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
+          leagueId={leagueId}
+          teamLogoUrls={teamLogoUrls}
+        />
+      </div>
+
+      <div className="mt-4">
+        <LeagueRankingsSection
+        topScorers={rankings.topScorers}
+        topAssists={rankings.topAssists}
+        playerPhotoUrls={rankings.playerPhotoUrls}
+        teamLogoUrls={{ ...teamLogoUrls, ...rankings.teamLogoUrls }}
+        playerKoreanNames={rankings.playerKoreanNames}
         leagueId={leagueId}
-        teamLogoUrls={teamLogoUrls}
       />
+      </div>
     </div>
   );
 } 

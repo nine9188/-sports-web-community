@@ -13,19 +13,35 @@ import {
 } from '@/shared/components/ui';
 
 const LEAGUE_OPTIONS = [
-  { value: 'all', label: '전체 리그' },
-  { value: '39', label: '프리미어리그' },
-  { value: '140', label: '라리가' },
-  { value: '135', label: '세리에A' },
-  { value: '78', label: '분데스리가' },
-  { value: '61', label: '리그1' },
+  { value: 'all', label: '전체 리그 (13개 리그)' },
+  // Tier 1: 5대 리그
+  { value: '39', label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 프리미어리그' },
+  { value: '140', label: '🇪🇸 라리가' },
+  { value: '135', label: '🇮🇹 세리에A' },
+  { value: '78', label: '🇩🇪 분데스리가' },
+  { value: '61', label: '🇫🇷 리그1' },
+  // Tier 2
+  { value: '292', label: '🇰🇷 K리그1' },
+  { value: '40', label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 챔피언십' },
+  { value: '88', label: '🇳🇱 에레디비시' },
+  { value: '94', label: '🇵🇹 프리메이라리가' },
+  // Tier 3
+  { value: '98', label: '🇯🇵 J1리그' },
+  { value: '253', label: '🇺🇸 MLS' },
+  { value: '307', label: '🇸🇦 사우디 프로리그' },
+  { value: '71', label: '🇧🇷 브라질레이랑' },
+  // Tier 4
+  { value: '119', label: '🇩🇰 덴마크 수페르리가' },
+  { value: '169', label: '🇨🇳 중국 슈퍼리그' },
+  { value: '262', label: '🇲🇽 리가MX' },
+  { value: '179', label: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 스코틀랜드 프리미어십' },
 ];
 
 // 팀 데이터 메모리 캐시 (컴포넌트 외부에 위치)
 const teamsCache = new Map<string, LeagueTeam[]>();
 
-// 주요 리그 ID들
-const MAJOR_LEAGUES = [39, 140, 135, 78, 61]; // 프리미어리그, 라리가, 세리에A, 분데스리가, 리그1
+// 팀 데이터 미리 로딩할 리그 (5대 리그만, rate limit 방지)
+const PRELOAD_LEAGUES = [39, 140, 135, 78, 61];
 
 // 유럽식 시즌 기본값 계산 (이적 필터 기본 리그가 유럽 리그이므로)
 const getDefaultSeason = () => {
@@ -40,7 +56,7 @@ const preloadTeamsData = async () => {
 
   
   try {
-    const loadPromises = MAJOR_LEAGUES.map(async (leagueId) => {
+    const loadPromises = PRELOAD_LEAGUES.map(async (leagueId) => {
       try {
         const teams = await fetchLeagueTeams(leagueId.toString());
         teamsCache.set(leagueId.toString(), teams);
@@ -270,11 +286,7 @@ export default function TransferFilters({ currentFilters }: TransferFiltersProps
               <span className="text-[13px] text-gray-700 dark:text-gray-300">활성 필터:</span>
               {currentFilters.league && (
                 <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
-                  {currentFilters.league?.toString() === '39' ? '프리미어리그' :
-                   currentFilters.league?.toString() === '140' ? '라리가' :
-                   currentFilters.league?.toString() === '135' ? '세리에A' :
-                   currentFilters.league?.toString() === '78' ? '분데스리가' :
-                   currentFilters.league?.toString() === '61' ? '리그1' : '선택된 리그'}
+                  {LEAGUE_OPTIONS.find(o => o.value === currentFilters.league?.toString())?.label || '선택된 리그'}
                   <Button
                     variant="ghost"
                     onClick={() => updateFilter('league', 'all')}

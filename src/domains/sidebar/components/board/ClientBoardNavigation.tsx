@@ -15,7 +15,7 @@ const quickMenuItems = [
   { href: '/boards/popular', label: '인기글', icon: Flame },
   { href: '/livescore/football', label: '라이브스코어', icon: Timer },
   { href: '/transfers', label: '이적시장', icon: ArrowLeftRight },
-  { href: '/livescore/football/leagues', label: '데이터센터', icon: Database },
+  { href: '/livescore/football/leagues', label: '리그·팀', icon: Database },
   { href: '/shop', label: '아이콘샵', icon: ShoppingBag },
 ];
 

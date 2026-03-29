@@ -14,7 +14,9 @@ import {
   useSetNoticeByNumberMutation,
   useRemoveNoticeMutation,
   useUpdateNoticeTypeMutation,
+  useToggleWidgetMutation,
 } from '@/domains/admin/hooks/useAdminNotices';
+import HierarchicalBoardPicker from './HierarchicalBoardPicker';
 
 export default function NoticeManagement() {
   const { data: notices = [], isLoading: noticesLoading } = useAdminNotices();
@@ -23,24 +25,15 @@ export default function NoticeManagement() {
   const setNoticeMutation = useSetNoticeByNumberMutation();
   const removeNoticeMutation = useRemoveNoticeMutation();
   const updateNoticeTypeMutation = useUpdateNoticeTypeMutation();
+  const toggleWidgetMutation = useToggleWidgetMutation();
 
   const [selectedPostNumber, setSelectedPostNumber] = useState<string>('');
   const [selectedNoticeType, setSelectedNoticeType] = useState<NoticeType>('global');
   const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
   const [isMustRead, setIsMustRead] = useState<boolean>(false);
+  const [showInWidget, setShowInWidget] = useState<boolean>(false);
   const [boardPickerNoticeId, setBoardPickerNoticeId] = useState<string | null>(null);
   const [boardPickerBoardIds, setBoardPickerBoardIds] = useState<string[]>([]);
-  const [boardSearchQuery, setBoardSearchQuery] = useState<string>('');
-
-  const filteredBoards = useMemo(() => {
-    const query = boardSearchQuery.trim().toLowerCase();
-    if (!query) return boards;
-    return boards.filter((board) => {
-      const name = (board.name || '').toLowerCase();
-      const slug = (board.slug || '').toLowerCase();
-      return name.includes(query) || slug.includes(query);
-    });
-  }, [boards, boardSearchQuery]);
 
   const orderedNotices = useMemo(() => {
     const noticeCreatedAtTs = (value?: string | null) => {
@@ -100,6 +93,7 @@ export default function NoticeManagement() {
         noticeType: selectedNoticeType,
         boardIds: selectedNoticeType === 'board' ? selectedBoardIds : undefined,
         isMustRead,
+        showInWidget,
       });
 
       if (result.success) {
@@ -107,6 +101,7 @@ export default function NoticeManagement() {
         setSelectedPostNumber('');
         setSelectedBoardIds([]);
         setIsMustRead(false);
+        setShowInWidget(false);
       } else {
         toast.error(result.message);
       }
@@ -131,6 +126,23 @@ export default function NoticeManagement() {
     } catch (error) {
       console.error('공지 해제 실패:', error);
       toast.error('공지 해제 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleToggleWidget = async (postId: string, currentValue: boolean) => {
+    try {
+      const result = await toggleWidgetMutation.mutateAsync({
+        postId,
+        showInWidget: !currentValue,
+      });
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('위젯 표시 변경 실패:', error);
+      toast.error('위젯 표시 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -234,6 +246,20 @@ export default function NoticeManagement() {
           </div>
 
           <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={showInWidget}
+                onChange={(e) => setShowInWidget(e.target.checked)}
+                className="mr-2"
+              />
+              <span className="text-gray-700 dark:text-gray-300">
+                전체 게시글 위젯에 표시
+              </span>
+            </label>
+          </div>
+
+          <div>
             <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
               공지 타입
             </label>
@@ -269,39 +295,12 @@ export default function NoticeManagement() {
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
                 공지를 표시할 게시판 선택
               </label>
-              <input
-                type="text"
-                value={boardSearchQuery}
-                onChange={(e) => setBoardSearchQuery(e.target.value)}
-                placeholder="게시판명 또는 슬러그로 검색"
-                className={cn('w-full px-4 py-2 rounded-lg mb-3', inputBaseStyles, focusStyles)}
+              <HierarchicalBoardPicker
+                boards={boards}
+                boardsLoading={boardsLoading}
+                selectedBoardIds={selectedBoardIds}
+                onToggleBoard={toggleBoard}
               />
-              <div className="max-h-64 overflow-y-auto border border-black/7 dark:border-white/10 rounded-lg p-3 bg-[#F5F5F5] dark:bg-[#232323]">
-                {boardsLoading ? (
-                  <p className="text-[13px] text-gray-500">게시판 불러오는 중...</p>
-                ) : filteredBoards.length === 0 ? (
-                  <p className="text-[13px] text-gray-500">검색 결과가 없습니다.</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {filteredBoards.map((board) => (
-                      <label key={board.id} className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-[#2D2D2D] rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedBoardIds.includes(board.id)}
-                          onChange={() => toggleBoard(board.id)}
-                          className="mr-2"
-                        />
-                        <span className="text-[13px] text-gray-700 dark:text-gray-300">{board.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {selectedBoardIds.length > 0 && (
-                <p className="text-[13px] text-gray-600 dark:text-gray-400 mt-2">
-                  선택된 게시판: {selectedBoardIds.length}개
-                </p>
-              )}
             </div>
           )}
 
@@ -360,15 +359,28 @@ export default function NoticeManagement() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        const newType = notice.notice_type === 'global' ? 'board' : 'global';
+                      onClick={() => handleToggleWidget(notice.id, Boolean((notice as any).show_in_widget))}
+                      disabled={toggleWidgetMutation.isPending}
+                      className={`px-3 py-1 text-[13px] rounded transition-colors disabled:opacity-50 ${
+                        (notice as any).show_in_widget
+                          ? 'bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-700 dark:text-green-200'
+                          : 'bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      위젯 {(notice as any).show_in_widget ? 'ON' : 'OFF'}
+                    </button>
+                    <select
+                      value={notice.notice_type || 'global'}
+                      onChange={(e) => {
+                        const newType = e.target.value as NoticeType;
                         handleChangeType(notice.id, newType, notice);
                       }}
                       disabled={updateNoticeTypeMutation.isPending}
-                      className="px-3 py-1 text-[13px] bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
+                      className="px-2 py-1 text-[13px] bg-gray-200 dark:bg-[#262626] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50 border-none cursor-pointer"
                     >
-                      타입 변경
-                    </button>
+                      <option value="global">전체 공지</option>
+                      <option value="board">게시판 공지</option>
+                    </select>
                     <button
                       onClick={() => handleRemoveNotice(notice.id)}
                       disabled={removeNoticeMutation.isPending}
@@ -384,34 +396,12 @@ export default function NoticeManagement() {
                     <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">
                       공지를 표시할 게시판 선택
                     </div>
-                    <input
-                      type="text"
-                      value={boardSearchQuery}
-                      onChange={(e) => setBoardSearchQuery(e.target.value)}
-                      placeholder="게시판명 또는 슬러그로 검색"
-                      className={cn('w-full px-4 py-2 rounded-lg mb-3', inputBaseStyles, focusStyles)}
+                    <HierarchicalBoardPicker
+                      boards={boards}
+                      boardsLoading={boardsLoading}
+                      selectedBoardIds={boardPickerBoardIds}
+                      onToggleBoard={toggleBoardForPicker}
                     />
-                    <div className="max-h-64 overflow-y-auto border border-black/7 dark:border-white/10 rounded-lg p-3 bg-[#F5F5F5] dark:bg-[#232323]">
-                      {boardsLoading ? (
-                        <p className="text-[13px] text-gray-500">게시판 불러오는 중...</p>
-                      ) : filteredBoards.length === 0 ? (
-                        <p className="text-[13px] text-gray-500">검색 결과가 없습니다.</p>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2">
-                          {filteredBoards.map((board) => (
-                            <label key={board.id} className="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-[#2D2D2D] rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={boardPickerBoardIds.includes(board.id)}
-                                onChange={() => toggleBoardForPicker(board.id)}
-                                className="mr-2"
-                              />
-                              <span className="text-[13px] text-gray-700 dark:text-gray-300">{board.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                     <div className="mt-3 flex gap-2">
                       <button
                         onClick={() => handleApplyBoardTypeChange(notice.id)}

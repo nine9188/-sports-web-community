@@ -10,6 +10,7 @@ import { Board } from '@/domains/layout/types/board';
 import { HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 import Footer from '@/shared/components/Footer';
+import type { BannerTransferItem } from '@/domains/livescore/actions/transfers/bannerTransfers';
 
 interface SiteLayoutClientProps {
   children?: React.ReactNode;
@@ -18,6 +19,7 @@ interface SiteLayoutClientProps {
   headerBoards?: Board[];
   headerTotalPostCount?: number;
   isMobilePhone?: boolean;
+  bannerTransfers?: BannerTransferItem[];
 }
 
 export default function SiteLayoutClient({
@@ -27,6 +29,7 @@ export default function SiteLayoutClient({
   headerBoards,
   headerTotalPostCount,
   isMobilePhone,
+  bannerTransfers,
 }: SiteLayoutClientProps) {
   // idle 이후에만 유저 데이터 fetch (TBT 최적화: 초기 렌더 차단 방지)
   const [isIdle, setIsIdle] = useState(false);
@@ -81,7 +84,7 @@ export default function SiteLayoutClient({
     if (!pathname) return false;
 
     // 독립 레이아웃이 필요한 단일 경로들
-    const standaloneRoots = ['/terms', '/privacy', '/about', '/contact'];
+    const standaloneRoots = ['/terms', '/privacy', '/about', '/contact', '/guide'];
 
     return pathname.startsWith('/admin') ||  // /admin과 /admin/로 시작하는 모든 경로
            pathname.startsWith('/help/') ||
@@ -157,6 +160,7 @@ export default function SiteLayoutClient({
       onProfileClose={closeProfileSidebar}
       onProfileClick={toggleProfileSidebar}
       isMobilePhone={isMobilePhone}
+      bannerTransfers={bannerTransfers}
     >
       {children}
     </AuthStateManager>

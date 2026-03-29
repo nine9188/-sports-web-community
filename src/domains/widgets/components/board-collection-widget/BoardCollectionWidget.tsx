@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import BoardPostItem from './BoardPostItem';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
@@ -167,8 +169,15 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
     <>
       {/* 데스크톱: 2열 레이아웃 */}
       <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader>
+        <ContainerHeader className="justify-between">
           <ContainerTitle>데이터분석</ContainerTitle>
+          <Link
+            href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
+            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
+          >
+            분석 더보기
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </ContainerHeader>
 
         <div className="grid grid-cols-2">
@@ -190,16 +199,30 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
       <div className="md:hidden space-y-4">
         {/* 해외축구 분석 */}
         <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader>
+          <ContainerHeader className="justify-between">
             <ContainerTitle>{foreign.boardName}</ContainerTitle>
+            <Link
+              href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
+              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
+            >
+              분석 더보기
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
           </ContainerHeader>
           <PostList posts={foreign.posts} />
         </Container>
 
         {/* 국내축구 분석 */}
         <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader>
+          <ContainerHeader className="justify-between">
             <ContainerTitle>{domestic.boardName}</ContainerTitle>
+            <Link
+              href={`/boards/${DOMESTIC_ANALYSIS_SLUG}`}
+              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
+            >
+              분석 더보기
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
           </ContainerHeader>
           <PostList posts={domestic.posts} />
         </Container>

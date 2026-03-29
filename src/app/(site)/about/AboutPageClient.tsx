@@ -161,18 +161,18 @@ function LiveScoreDemo({ images }: { images: DemoImages }) {
 
   return (
     <div ref={ref} className="space-y-4 text-left">
-      <div className="border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+      <div className="border border-black/7 dark:border-white/10 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <LeagueHeader leagueId={39} name="프리미어리그" count={3} />
         <DemoMatchRow home="첼시" away="아스널" homeLogo={t[49]} awayLogo={t[42]} homeScore={chelseaScore} awayScore={0} status={{ type: 'live', label: phase >= 1 ? "73'" : "72'" }} highlight={phase === 1} />
         <DemoMatchRow home="맨시티" away="리버풀" homeLogo={t[50]} awayLogo={t[40]} homeScore={2} awayScore={2} status={{ type: 'ft', label: '종료' }} />
         <DemoMatchRow home="토트넘" away="뉴캐슬" homeLogo={t[47]} awayLogo={t[34]} homeScore={0} awayScore={0} status={{ type: 'ns', label: '21:00' }} isLast />
       </div>
-      <div className="border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+      <div className="border border-black/7 dark:border-white/10 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <LeagueHeader leagueId={140} name="라리가" count={2} />
         <DemoMatchRow home="바르셀로나" away="R. 마드리드" homeLogo={t[529]} awayLogo={t[541]} homeScore={1} awayScore={1} status={{ type: 'live', label: "55'" }} />
         <DemoMatchRow home="AT. 마드리드" away="비야레알" homeLogo={t[530]} awayLogo={t[533]} homeScore={0} awayScore={0} status={{ type: 'ns', label: '23:00' }} isLast />
       </div>
-      <div className="border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
+      <div className="border border-black/7 dark:border-white/10 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D]">
         <LeagueHeader leagueId={2} name="챔피언스리그" count={4} collapsed />
       </div>
     </div>
@@ -198,7 +198,7 @@ function AIPredictionDemo({ images }: { images: DemoImages }) {
   ];
 
   return (
-    <div ref={ref} className="border border-black/7 dark:border-0 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] text-left">
+    <div ref={ref} className="border border-black/7 dark:border-white/10 md:rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] text-left">
       <div className="p-4 border-b border-black/5 dark:border-white/10">
         <div className="flex items-center justify-center gap-4 md:gap-8 mb-3">
           <div className="flex items-center gap-1.5 md:gap-3">
@@ -911,7 +911,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                   <span className="px-2.5 py-1 rounded-md bg-[#F5F5F5] dark:bg-white/5 text-xs font-medium text-gray-400">+35개</span>
                 </div>
               </div>
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden shadow-sm"><LiveScoreDemo images={demoImages} /></div>
+              <LiveScoreDemo images={demoImages} />
             </div>
           </motion.div>
 

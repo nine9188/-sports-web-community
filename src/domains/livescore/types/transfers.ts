@@ -170,47 +170,63 @@ export function formatTransferType(type: string): string {
   return originalType;
 }
 
-// 이적 타입에 따른 색상 클래스 반환
+// 이적 타입에 따른 색상 클래스 반환 (라이트/다크모드 지원)
 export function getTransferTypeColor(type: string): string {
-  if (!type) return 'bg-gray-100 text-gray-800';
-  
+  if (!type) return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400';
+
   const lowerType = type.toLowerCase();
-  
+
   // 금액이 포함된 경우
   if (type.match(/[€$£¥₩]/)) {
-    return 'bg-blue-100 text-blue-800';
+    return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400';
   }
-  
+
   // Free Transfer 처리
   if (lowerType === 'free transfer' || lowerType === 'free') {
-    return 'bg-green-100 text-green-800';
+    return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
   }
-  
+
   // 임대 관련
   if (lowerType.includes('loan')) {
-    return 'bg-orange-100 text-orange-800';
+    return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400';
   }
-  
+
   // 완전이적
   if (lowerType === 'permanent' || lowerType === 'transfer') {
-    return 'bg-purple-100 text-purple-800';
+    return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400';
   }
-  
+
   // 복귀
   if (lowerType === 'return') {
-    return 'bg-indigo-100 text-indigo-800';
+    return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400';
   }
-  
-  return 'bg-gray-100 text-gray-800'; // 기본
+
+  return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400'; // 기본
 }
 
-// 주요 리그 정보
+// 주요 리그 정보 (Tier 1~3)
 export const MAJOR_LEAGUES: League[] = [
+  // Tier 1: 5대 리그
   { id: 39, name: '프리미어리그', logo: '', country: '영국' },
   { id: 140, name: '라리가', logo: '', country: '스페인' },
   { id: 135, name: '세리에A', logo: '', country: '이탈리아' },
   { id: 78, name: '분데스리가', logo: '', country: '독일' },
-  { id: 61, name: '리그1', logo: '', country: '프랑스' }
+  { id: 61, name: '리그1', logo: '', country: '프랑스' },
+  // Tier 2
+  { id: 292, name: 'K리그1', logo: '', country: '한국' },
+  { id: 40, name: '챔피언십', logo: '', country: '영국' },
+  { id: 88, name: '에레디비시', logo: '', country: '네덜란드' },
+  { id: 94, name: '프리메이라리가', logo: '', country: '포르투갈' },
+  // Tier 3
+  { id: 98, name: 'J1리그', logo: '', country: '일본' },
+  { id: 253, name: 'MLS', logo: '', country: '미국' },
+  { id: 307, name: '사우디 프로리그', logo: '', country: '사우디아라비아' },
+  { id: 71, name: '브라질레이랑', logo: '', country: '브라질' },
+  // Tier 4
+  { id: 119, name: '덴마크 수페르리가', logo: '', country: '덴마크' },
+  { id: 169, name: '중국 슈퍼리그', logo: '', country: '중국' },
+  { id: 262, name: '리가MX', logo: '', country: '멕시코' },
+  { id: 179, name: '스코틀랜드 프리미어십', logo: '', country: '스코틀랜드' },
 ];
 
 // 선수 포지션 옵션
