@@ -1,4 +1,4 @@
-import { MatchData as FootballMatchData, MultiDayMatchesResult, fetchMultiDayMatches } from '@/domains/livescore/actions/footballApi';
+import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';
 import { Container } from '@/shared/components/ui';
@@ -53,31 +53,24 @@ function convertToMatch(
   };
 }
 
-// 리그별로 경기를 그룹화하는 함수 (어제+오늘+내일 통합)
+// 리그별로 경기를 그룹화하는 함수
 function groupMatchesByLeague(
-  yesterdayMatches: FootballMatchData[],
-  todayMatches: FootballMatchData[],
-  tomorrowMatches: FootballMatchData[]
+  matches: FootballMatchData[],
+  dateLabel: 'yesterday' | 'today' | 'tomorrow' = 'today'
 ): WidgetLeague[] {
   const leagueMap = new Map<number, { matches: WidgetMatch[]; firstMatch: FootballMatchData }>();
 
-  const addMatches = (matches: FootballMatchData[], dateLabel: 'yesterday' | 'today' | 'tomorrow') => {
-    matches.forEach(match => {
-      if (!match.league?.id) return;
-      const leagueId = match.league.id;
+  matches.forEach(match => {
+    if (!match.league?.id) return;
+    const leagueId = match.league.id;
 
-      if (!leagueMap.has(leagueId)) {
-        leagueMap.set(leagueId, { matches: [], firstMatch: match });
-      }
-      leagueMap.get(leagueId)!.matches.push(convertToMatch(match, dateLabel));
-    });
-  };
+    if (!leagueMap.has(leagueId)) {
+      leagueMap.set(leagueId, { matches: [], firstMatch: match });
+    }
+    leagueMap.get(leagueId)!.matches.push(convertToMatch(match, dateLabel));
+  });
 
-  addMatches(yesterdayMatches, 'yesterday');
-  addMatches(todayMatches, 'today');
-  addMatches(tomorrowMatches, 'tomorrow');
-
-  return Array.from(leagueMap.entries()).map(([leagueId, { matches, firstMatch }]) => {
+  return Array.from(leagueMap.entries()).map(([leagueId, { matches: leagueMatches, firstMatch }]) => {
     const leagueInfo = getLeagueById(leagueId);
 
     return {
@@ -87,7 +80,7 @@ function groupMatchesByLeague(
       logo: firstMatch.league?.logo,
       logoDark: firstMatch.league?.logoDark,
       leagueIdNumber: leagueId,
-      matches,
+      matches: leagueMatches,
     };
   });
 }
@@ -125,20 +118,16 @@ const LEAGUE_PRIORITY: Record<number, number> = {
 };
 
 /**
- * MultiDayMatchesResult → 위젯용 League[] 변환
- * bigMatch 리그만 필터링 + 어제/오늘/내일 경기를 리그별로 그룹화
+ * TodayMatchesResult → 위젯용 League[] 변환
+ * bigMatch 리그만 필터링 + 오늘 경기를 리그별로 그룹화
  */
-export function transformToWidgetLeagues(result: MultiDayMatchesResult): WidgetLeague[] {
+export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeague[] {
   if (!result.success || !result.data) return [];
 
-  const filterMatches = (matches: FootballMatchData[]) =>
-    matches.filter(m => BIG_MATCH_LEAGUES.includes(m.league?.id || 0));
+  const todayMatches = (result.data.today?.matches || [])
+    .filter(m => BIG_MATCH_LEAGUES.includes(m.league?.id || 0));
 
-  const yesterdayMatches = filterMatches(result.data.yesterday?.matches || []);
-  const todayMatches = filterMatches(result.data.today?.matches || []);
-  const tomorrowMatches = filterMatches(result.data.tomorrow?.matches || []);
-
-  const leagues = groupMatchesByLeague(yesterdayMatches, todayMatches, tomorrowMatches);
+  const leagues = groupMatchesByLeague(todayMatches, 'today');
 
   // 우선순위 정렬
   leagues.sort((a, b) => {
@@ -229,16 +218,17 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
  *
  * page.tsx에서 blocking await 없이 <Suspense>로 감싸서 사용.
  * 이 컴포넌트 내부에서 데이터를 fetch하므로 HTML 스트리밍이 가능:
- * - 3일치(어제+오늘+내일) 전부 fetch (위젯이 리그별로 통합 표시하기 때문)
- * - CacheSeeder로 React Query 캐시에 주입 (헤더/모달용)
+ * - 오늘 경기만 fetch (위젯 + 헤더 뱃지용)
+ * - 어제/내일은 모달 탭 클릭 시 클라이언트에서 lazy fetch
+ * - CacheSeeder로 React Query 캐시에 주입 (헤더용)
  */
 export async function LiveScoreWidgetStreaming() {
-  const multiDayData = await fetchMultiDayMatches();
-  const leagues = transformToWidgetLeagues(multiDayData);
+  const todayData = await fetchTodayMatches();
+  const leagues = transformToWidgetLeagues(todayData);
 
   return (
     <>
-      <LiveScoreCacheSeeder data={multiDayData} />
+      <LiveScoreCacheSeeder data={todayData} />
       <LiveScoreWidgetV2Server initialData={leagues} />
     </>
   );

@@ -1,14 +1,14 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MatchData, MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { Trophy } from 'lucide-react';
 import MatchItem from './MatchItem';
 
 interface LiveScoreContentProps {
   selectedDate: 'yesterday' | 'today' | 'tomorrow';
   onClose: () => void;
-  initialData?: MultiDayMatchesResult;
+  matches: MatchData[];
 }
 
 // 리그 우선순위 (숫자가 낮을수록 우선)
@@ -76,44 +76,16 @@ const getDateLabel = (date: 'yesterday' | 'today' | 'tomorrow'): string => {
   }
 };
 
-export default function LiveScoreContent({ selectedDate, onClose, initialData }: LiveScoreContentProps) {
-  // SSR 3일치 데이터에서 선택된 날짜의 경기 추출 (React Query 불필요)
-  const matches = useMemo(() => {
-    if (!initialData?.success || !initialData.data) {
-      return [];
-    }
+export default function LiveScoreContent({ selectedDate, onClose, matches }: LiveScoreContentProps) {
+  const sortedMatches = useMemo(() => {
+    if (!matches || matches.length === 0) return [];
 
     const dateLabel = getDateLabel(selectedDate);
-    let rawMatches: MatchData[] = [];
-
-    switch (selectedDate) {
-      case 'yesterday':
-        rawMatches = initialData.data.yesterday?.matches || [];
-        break;
-      case 'today':
-        rawMatches = initialData.data.today?.matches || [];
-        break;
-      case 'tomorrow':
-        rawMatches = initialData.data.tomorrow?.matches || [];
-        break;
-    }
-
-    // displayDate 추가 후 정렬
-    return sortByStatus(rawMatches.map(match => ({ ...match, displayDate: dateLabel })));
-  }, [initialData, selectedDate]);
-
-  // 데이터 로드 실패
-  if (!initialData?.success) {
-    return (
-      <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
-        <Trophy className="h-8 w-8 mb-2" />
-        <p className="text-[13px]">경기 정보를 불러올 수 없습니다</p>
-      </div>
-    );
-  }
+    return sortByStatus(matches.map(match => ({ ...match, displayDate: dateLabel })));
+  }, [matches, selectedDate]);
 
   // 경기 없음
-  if (matches.length === 0) {
+  if (sortedMatches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 text-gray-600 dark:text-gray-400">
         <Trophy className="h-8 w-8 mb-2" />
@@ -124,7 +96,7 @@ export default function LiveScoreContent({ selectedDate, onClose, initialData }:
 
   return (
     <div className="p-4 space-y-3">
-      {matches.map(match => (
+      {sortedMatches.map(match => (
         <MatchItem
           key={`match-${match.id}`}
           match={match}

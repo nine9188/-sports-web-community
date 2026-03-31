@@ -63,8 +63,10 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
       is_must_read: (notice.is_must_read as boolean) || false,
     }));
 
-    // 공지 + 게시글 합침 (공지가 앞, 게시글 수는 영향 없음)
-    const combinedPosts = [...noticePosts, ...postsData.data];
+    // 공지 + 게시글 합침 (공지가 앞, 중복 제거)
+    const noticeIds = new Set(noticePosts.map(n => n.id));
+    const filteredPosts = postsData.data.filter(post => !noticeIds.has(post.id));
+    const combinedPosts = [...noticePosts, ...filteredPosts];
 
     // 헤더 컨텐츠 렌더링
     const headerContent = (

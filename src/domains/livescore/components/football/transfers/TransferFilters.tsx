@@ -77,7 +77,7 @@ interface TransferFiltersProps {
     league?: number | string;
     team?: number | string;
     season?: number | string;
-    type?: 'in' | 'out';
+    type?: 'in' | 'out' | 'all';
   };
 }
 

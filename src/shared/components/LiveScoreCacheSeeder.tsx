@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { liveScoreKeys } from '@/shared/constants/queryKeys';
-import type { MultiDayMatchesResult } from '@/domains/livescore/actions/footballApi';
+import type { TodayMatchesResult } from '@/domains/livescore/actions/footballApi';
 
 /**
  * 서버 데이터 → React Query 캐시 주입 (1회만 실행)
@@ -13,7 +13,7 @@ import type { MultiDayMatchesResult } from '@/domains/livescore/actions/football
  * 이 컴포넌트가 SSR 데이터를 React Query 캐시에 넣어주면
  * 같은 queryKey를 사용하는 hook들이 캐시에서 꺼내 씀.
  */
-export default function LiveScoreCacheSeeder({ data }: { data: MultiDayMatchesResult }) {
+export default function LiveScoreCacheSeeder({ data }: { data: TodayMatchesResult }) {
   const queryClient = useQueryClient();
   const seeded = useRef(false);
 

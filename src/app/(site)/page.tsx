@@ -1,11 +1,10 @@
 import React, { Suspense } from 'react';
-import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
+import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget, TransferBannerWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetStreaming } from '@/domains/widgets/components/live-score-widget/index';
 import LiveScoreSkeleton from '@/domains/livescore/components/football/MainView/LiveScoreSkeleton';
-import TransferBannerSlideServer from '@/domains/livescore/components/football/transfers/TransferBannerSlideServer';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -35,7 +34,7 @@ export default function HomePage() {
       </Suspense>
       {/* 이적시장 배너 슬라이드 */}
       <Suspense>
-        <TransferBannerSlideServer />
+        <TransferBannerWidget />
       </Suspense>
 
       {/* 게시판 모음 위젯 - Suspense 스트리밍 */}

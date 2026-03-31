@@ -1,7 +1,7 @@
 import { fetchBannerTransfers } from '@/domains/livescore/actions/transfers/bannerTransfers';
-import TransferBannerCard from './TransferBannerSlide';
+import TransferBannerCard from './TransferBannerCard';
 
-export default async function TransferBannerSlideServer() {
+export default async function TransferBannerWidget() {
   const items = await fetchBannerTransfers(12);
 
   if (!items || items.length === 0) return null;

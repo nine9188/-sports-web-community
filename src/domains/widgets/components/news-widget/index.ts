@@ -1,7 +1,7 @@
 // 뉴스 위젯 exports
 export { default as NewsWidget } from './NewsWidget';
 export { default as NewsImageClient } from './NewsImageClient';
-export { MainCard, SideCard, ListCard } from './NewsCardServer';
+export { MainCard, SideCard } from './NewsCardServer';
 
 // 타입 exports
 export type { NewsItem, NewsWidgetProps } from './types';

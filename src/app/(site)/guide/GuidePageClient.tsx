@@ -7,6 +7,7 @@ import { motion, useInView } from 'framer-motion';
 import {
   Trophy, Users, User, Tv, ArrowLeftRight, PenTool,
   ChevronRight, ChevronDown, ArrowDown, BookOpen,
+  ShoppingBag, Palette, Bot, Bell, Search,
 } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { siteConfig } from '@/shared/config';
@@ -49,6 +50,11 @@ const TOC_ITEMS = [
   { id: 'match', icon: Tv, label: '라이브스코어·매치', desc: '실시간 스코어, 라인업' },
   { id: 'transfer', icon: ArrowLeftRight, label: '이적시장', desc: '최신 이적 소식' },
   { id: 'editor', icon: PenTool, label: '게시글 카드 삽입', desc: '팀·선수·매치 카드' },
+  { id: 'shop', icon: ShoppingBag, label: '상점', desc: '팀 아이콘, 이모티콘 팩 구매' },
+  { id: 'emoticon-studio', icon: Palette, label: '이모티콘 스튜디오', desc: '나만의 이모티콘 제작' },
+  { id: 'chatbot', icon: Bot, label: '고객센터 문의', desc: '이용문의, 신고, 의견 제출' },
+  { id: 'notification', icon: Bell, label: '알림', desc: '댓글, 추천, 멘션 알림' },
+  { id: 'search', icon: Search, label: '검색', desc: '게시글, 팀, 선수 통합 검색' },
 ];
 
 /* ─────────────────────────────────────────────
@@ -1772,6 +1778,1545 @@ function MatchHeaderDemo({ images }: { images: GuideDemoImages }) {
 }
 
 /* ─────────────────────────────────────────────
+   데모: 상점
+   ───────────────────────────────────────────── */
+function ShopDemo({ images }: { images: GuideDemoImages }) {
+  const [activeTab, setActiveTab] = useState('프리미어리그');
+  const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
+  const [selectedItem, setSelectedItem] = useState<{ id: number; name: string; price: number } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hoverOn, setHoverOn] = useState(false);
+  const userPoints = 12500;
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const categories = ['전체', '프리미어리그', '라리가', '세리에A', 'K리그', '이모티콘'];
+
+  const teamItems = [
+    { id: 42, name: '아스널', price: 3000 },
+    { id: 49, name: '첼시', price: 3000 },
+    { id: 50, name: '맨체스터 시티', price: 3000 },
+    { id: 40, name: '리버풀', price: 3000 },
+    { id: 47, name: '토트넘', price: 3000 },
+    { id: 33, name: '맨체스터 유나이티드', price: 3000 },
+  ];
+
+  const handlePurchase = () => {
+    if (!selectedItem) return;
+    setIsProcessing(true);
+    setTimeout(() => {
+      setPurchasedIds((prev) => new Set(prev).add(selectedItem.id));
+      setIsProcessing(false);
+      setSelectedItem(null);
+    }, 800);
+  };
+
+  const canAfford = selectedItem ? userPoints >= selectedItem.price : false;
+  const remainingPoints = selectedItem ? Math.max(userPoints - selectedItem.price, 0) : 0;
+
+  return (
+    <>
+    <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 rounded-lg overflow-hidden">
+      {/* 상점 헤더 */}
+      <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center rounded-t-lg">
+        <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">포인트 상점</h3>
+        <div className="ml-auto flex items-center gap-2 text-[13px]">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700 dark:text-gray-300">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          <span className="text-gray-700 dark:text-gray-300">보유 포인트</span>
+          <span className="font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{userPoints.toLocaleString()} P</span>
+        </div>
+      </div>
+
+      <div className="p-4">
+        {/* 카테고리 탭 */}
+        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveTab(cat)}
+              className={`px-3 py-1.5 text-xs rounded-md whitespace-nowrap transition-colors ${
+                activeTab === cat
+                  ? 'bg-[#262626] dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D] font-medium'
+                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-600 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* 아이템 그리드 */}
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {teamItems.map((item) => {
+            const isOwned = item.id === 42 || purchasedIds.has(item.id);
+            const isTarget = item.id === 49 && !isOwned;
+
+            return (
+              <div
+                key={item.id}
+                role="button"
+                tabIndex={isOwned ? -1 : 0}
+                onClick={() => { if (!isOwned) setSelectedItem(item); }}
+                className={`relative border border-black/7 dark:border-0 rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm flex flex-col transition-all ${
+                  isOwned ? 'cursor-default' : 'cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                } ${isTarget && hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+              >
+                {/* 구매 버튼 위에 클릭 유도 — 첼시만 */}
+                <div className="py-5 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]">
+                  <div className="h-8 w-8 flex items-center justify-center">
+                    {images.teamLogos[item.id] ? (
+                      <Image src={images.teamLogos[item.id]} alt={item.name} width={32} height={32} className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600" />
+                    )}
+                  </div>
+                </div>
+                <div className="border-t border-black/7 dark:border-white/10" />
+                <div className="p-3 mt-auto">
+                  <h3 className="text-[13px] font-medium text-center leading-5 line-clamp-2 min-h-[40px] text-gray-900 dark:text-[#F0F0F0]">{item.name}</h3>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[11px] whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-300">{item.price.toLocaleString()} P</span>
+                    {isOwned ? (
+                      <span className="h-8 px-2 text-[11px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded whitespace-nowrap inline-flex items-center justify-center border border-black/7 dark:border-0">
+                        보유 중
+                      </span>
+                    ) : (
+                      <div className="relative">
+                        {isTarget && (
+                          <motion.div
+                            animate={{ y: [0, 5, 0] }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                            className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                          >
+                            <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                            <span className="text-lg">👇</span>
+                          </motion.div>
+                        )}
+                        <span className={`h-8 px-2 text-[12px] font-medium rounded whitespace-nowrap inline-flex items-center justify-center border border-black/7 dark:border-0 transition-colors cursor-pointer ${
+                          isTarget && hoverOn
+                            ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+                            : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
+                        }`}>
+                          구매
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 text-center mt-3">
+          아이템을 클릭하면 아래 구매 확인 화면이 변경됩니다
+        </p>
+      </div>
+
+    </div>
+
+    {/* 구매 확인 모달 데모 — 상점 밖, 실제 max-w-md 크기 */}
+    <FlowArrow label="구매 클릭" />
+    <div className="max-w-md mx-auto w-full border border-black/7 dark:border-white/10 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-lg">
+        {/* 모달 헤더 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/7 dark:border-white/10">
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-[#F0F0F0]">구매 확인</h3>
+          <button className="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {/* 모달 바디 */}
+        <div className="px-6 py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-5 h-5 flex-shrink-0">
+              {images.teamLogos[selectedItem?.id ?? 49] ? (
+                <Image src={images.teamLogos[selectedItem?.id ?? 49]} alt={selectedItem?.name ?? '첼시'} width={20} height={20} className="w-full h-full object-contain" />
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600" />
+              )}
+            </div>
+            <div>
+              <p className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0]">{selectedItem?.name ?? '첼시'}</p>
+              <p className="text-xs tabular-nums text-gray-700 dark:text-gray-300">{(selectedItem?.price ?? 3000).toLocaleString()} 포인트</p>
+            </div>
+          </div>
+
+          <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">보유한 내 포인트</span>
+              <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{userPoints.toLocaleString()} P</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] text-gray-700 dark:text-gray-300">상품 가격</span>
+              <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">- {(selectedItem?.price ?? 3000).toLocaleString()} P</span>
+            </div>
+            <div className="border-t border-black/5 dark:border-white/10 pt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">남는 포인트</span>
+                <span className="text-lg font-bold tabular-nums text-gray-900 dark:text-[#F0F0F0]">
+                  {(userPoints - (selectedItem?.price ?? 3000)).toLocaleString()} P
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 모달 푸터 */}
+        <div className="px-6 py-4 border-t border-black/7 dark:border-white/10">
+          <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-3">
+            <p className="font-medium text-gray-900 dark:text-[#F0F0F0]">이 아이템을 구매하시겠습니까?</p>
+            <p className="mt-1">구매 후에는 환불이 불가능합니다.</p>
+          </div>
+          <div className="relative">
+            <motion.div
+              animate={{ y: [0, 5, 0] }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+            >
+              <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+              <span className="text-lg">👇</span>
+            </motion.div>
+          </div>
+          <button
+            onClick={handlePurchase}
+            disabled={isProcessing}
+            className={`w-full h-12 text-base font-medium rounded-lg active:scale-[0.98] transition disabled:opacity-50 ${
+              hoverOn
+                ? 'bg-[#3F3F3F] dark:bg-gray-200 text-white dark:text-[#1D1D1D]'
+                : 'bg-[#262626] dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D] hover:bg-[#3F3F3F] dark:hover:bg-gray-200'
+            }`}
+          >
+            {isProcessing ? '처리 중...' : '구매하기'}
+          </button>
+        </div>
+      </div>
+
+      {/* 프로필 아이콘 변경 데모 */}
+      <FlowArrow label="구매 후 프로필에서 아이콘 변경" />
+      <ProfileIconDemo images={images} />
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   데모: 프로필 아이콘 선택
+   ───────────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   데모: 댓글 이모티콘 피커
+   ───────────────────────────────────────────── */
+function EmoticonPickerDemo() {
+  const [hoverOn, setHoverOn] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const emoticons = ['⚽', '🥅', '🏟️', '👟', '🧤', '🏃', '🎽', '📣', '🔔', '🏆', '🥇', '⭐'];
+
+  return (
+    <>
+      {/* ① 댓글 입력창 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>댓글</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible">
+          <div className="space-y-3">
+            <textarea
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-base sm:text-[13px] placeholder-gray-500 dark:placeholder-gray-500 resize-none"
+              rows={3}
+              placeholder="댓글을 작성해주세요..."
+              readOnly
+            />
+            <div className="flex justify-between w-full overflow-visible">
+              <div className="relative overflow-visible">
+                <motion.div
+                  animate={{ y: [0, 5, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                >
+                  <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                  <span className="text-lg">👇</span>
+                </motion.div>
+                <button className={`h-[40px] px-3 text-[13px] font-medium rounded-md border border-black/7 dark:border-white/10 transition-colors ${
+                  hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
+                }`}>
+                  이모티콘
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button className="h-[40px] px-3 text-[13px] font-medium rounded-md bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 border border-black/7 dark:border-white/10">
+                  등록
+                </button>
+                <button className="h-[40px] px-3 text-[13px] font-medium rounded-md bg-[#262626] dark:bg-[#3F3F3F] text-white">
+                  등록+추천
+                </button>
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="이모티콘 버튼 클릭" />
+
+      {/* ② 이모티콘 피커 */}
+      <div className="max-w-[692px] mx-auto w-full border border-black/7 dark:border-white/10 rounded-lg bg-white dark:bg-[#1D1D1D] shadow-lg overflow-visible">
+        <div className="flex items-center justify-between px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] h-11 rounded-t-lg">
+          <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">이모티콘</span>
+          <button className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="flex items-center border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] h-11 px-2 gap-1">
+          <button className="w-9 h-9 flex items-center justify-center rounded-md bg-white dark:bg-[#1D1D1D] border border-black/10 dark:border-white/15">
+            <span className="text-lg">⚽</span>
+          </button>
+          <button className="w-9 h-9 flex items-center justify-center rounded-md">
+            <span className="text-lg">🎉</span>
+          </button>
+          <div className="flex-1" />
+          <button className="w-9 h-9 flex items-center justify-center rounded-md text-gray-400" title="상점">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.15c0 .415.336.75.75.75z" /></svg>
+          </button>
+        </div>
+
+        <div className="px-4 py-4 overflow-visible">
+          <div className="grid grid-cols-6 gap-2.5">
+            {emoticons.map((emoji, i) => {
+              const isTarget = i === 0;
+              return (
+                <div key={i} className="relative overflow-visible">
+                  {isTarget && (
+                    <motion.div
+                      animate={{ y: [0, 5, 0] }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                      className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                    >
+                      <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                      <span className="text-lg">👇</span>
+                    </motion.div>
+                  )}
+                  <button className={`w-full aspect-square flex items-center justify-center p-1 rounded border border-transparent transition-colors group ${
+                    isTarget && hoverOn ? 'bg-[#F5F5F5] dark:bg-[#262626] border-black/5 dark:border-white/10' : 'hover:bg-[#F5F5F5] dark:hover:bg-[#262626] hover:border-black/5 dark:hover:border-white/10'
+                  }`}>
+                    <span className="text-[40px] sm:text-[48px] group-hover:scale-105 transition-transform">{emoji}</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center border-t border-black/5 dark:border-white/10 h-[64px] rounded-b-lg">
+          <span className="text-xs text-gray-400 dark:text-gray-500">1 / 1</span>
+        </div>
+      </div>
+
+      <FlowArrow label="이모티콘 선택" />
+
+      <GuideBox title="참고">
+        <p className="text-[13px] text-gray-700 dark:text-gray-300">
+          이모티콘을 선택하면 댓글 입력창에 <strong className="text-gray-900 dark:text-gray-100 font-mono">:코드:</strong> 형태의 텍스트로 삽입됩니다.<br />
+          등록 버튼을 누르면 코드가 실제 이모티콘 이미지로 변환되어 표시됩니다.
+        </p>
+      </GuideBox>
+
+      {/* ③ 선택 후 — textarea에 코드로 삽입된 상태 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>댓글</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible">
+          <div className="space-y-3">
+            <textarea
+              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-lg text-base sm:text-[13px] resize-none"
+              rows={3}
+              value=":soccer_ball:"
+              readOnly
+            />
+            <div className="flex justify-between w-full overflow-visible">
+              <button className="h-[40px] px-3 text-[13px] font-medium rounded-md bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 border border-black/7 dark:border-white/10">
+                이모티콘
+              </button>
+              <div className="flex gap-2 overflow-visible">
+                <div className="relative overflow-visible">
+                  <motion.div
+                    animate={{ y: [0, 5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                  >
+                    <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                    <span className="text-lg">👇</span>
+                  </motion.div>
+                  <button className={`h-[40px] px-3 text-[13px] font-medium rounded-md border border-black/7 dark:border-white/10 transition-colors ${
+                    hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]' : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
+                  }`}>
+                    등록
+                  </button>
+                </div>
+                <button className="h-[40px] px-3 text-[13px] font-medium rounded-md bg-[#262626] dark:bg-[#3F3F3F] text-white">
+                  등록+추천
+                </button>
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="등록 클릭" />
+
+      {/* ④ 등록된 댓글 — 실제 Comment UI */}
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>댓글 1개</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
+          <div className="pb-4">
+            {/* 작성자 */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex-shrink-0">
+                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="레벨 아이콘" width={20} height={20} className="w-full h-full object-contain" />
+                </div>
+                <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">방금</span>
+            </div>
+
+            {/* 이모티콘 — 60px 이미지 */}
+            <div className="text-[13px] text-gray-800 dark:text-gray-200 mb-2 break-words leading-relaxed whitespace-pre-wrap">
+              <span className="inline-block w-[60px] h-[60px] text-[52px] leading-none m-1">⚽</span>
+            </div>
+
+            {/* 액션 — 좌: 좋아요/싫어요/답글, 우: 수정/삭제 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button className="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                  </svg>
+                  <span>0</span>
+                </button>
+                <button className="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 11v-9m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                  </svg>
+                  <span>0</span>
+                </button>
+                <button className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  답글
+                </button>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-gray-500 dark:text-gray-400">수정</span>
+                <span className="text-xs text-red-500 dark:text-red-400">삭제</span>
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   데모: 고객센터 문의 챗봇
+   ───────────────────────────────────────────── */
+function ChatbotDemo() {
+  const chipButtons = [
+    '커뮤니티 이용문의',
+    '약관 및 정보처리방침',
+    '회원신고',
+    '의견제출',
+    '게시글/댓글 삭제요청',
+    '버그신고',
+  ];
+
+  return (
+    <>
+      {/* 푸터 데모 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>푸터에서 문의하기</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible">
+          <div className="border-t border-black/7 dark:border-white/10 pt-4">
+            <div className="flex items-center justify-center gap-3 text-[13px] text-gray-500 dark:text-gray-400 flex-wrap overflow-visible">
+              <span>소개</span>
+              <span>이용가이드</span>
+              <span>제휴/광고</span>
+              <div className="relative overflow-visible">
+                <motion.div
+                  animate={{ y: [0, 3, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                >
+                  <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                  <span className="text-lg">👇</span>
+                </motion.div>
+                <span className="text-gray-900 dark:text-[#F0F0F0] font-medium cursor-pointer">문의하기</span>
+              </div>
+              <span>개인정보처리방침</span>
+              <span>이용약관</span>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      {/* 헤더 + 프로필 드롭다운 데모 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>헤더 프로필에서 문의하기</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible">
+          {/* 헤더 바 */}
+          <div className="flex items-center h-14 px-4 border border-black/7 dark:border-white/10 rounded-lg bg-white dark:bg-[#1D1D1D]">
+            <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">4590</span>
+            <div className="flex-1" />
+            <div className="flex items-center gap-1">
+              {/* 다크모드 */}
+              <div className="w-10 h-10 flex items-center justify-center rounded-md">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              {/* 알림 */}
+              <div className="w-10 h-10 flex items-center justify-center rounded-md">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              {/* 프로필 아이콘 — 클릭 유도 */}
+              <div className="relative overflow-visible">
+                <motion.div
+                  animate={{ y: [0, 3, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                >
+                  <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                  <span className="text-lg">👇</span>
+                </motion.div>
+                <div className="flex items-center space-x-1 h-10 px-3 cursor-pointer">
+                  <div className="w-5 h-5 rounded-full overflow-hidden">
+                    <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
+                  <svg className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <FlowArrow label="프로필 아이콘 클릭" />
+
+          {/* 프로필 드롭다운 — 실제 w-64 (256px) + rounded-xl */}
+          <div className="w-64 mx-auto border border-black/7 dark:border-white/10 rounded-xl bg-white dark:bg-[#1D1D1D] shadow-xl overflow-visible">
+            {/* 유저 정보 */}
+            <div className="px-4 py-3 border-b border-black/5 dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full overflow-hidden">
+                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                </div>
+                <span className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Lv.5</span>
+              </div>
+            </div>
+
+            {/* 메뉴 항목 */}
+            {/* 글쓰기 */}
+            <div className="flex items-center px-4 py-2.5">
+              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <span className="flex-1 ml-3 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">글쓰기</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
+            {/* 프로필 설정 */}
+            <div className="flex items-center px-4 py-2.5">
+              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <span className="flex-1 ml-3 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">프로필 설정</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
+            {/* 문의하기 — 클릭 유도 */}
+            <div className="relative overflow-visible">
+              <motion.div
+                animate={{ x: [0, 5, 0] }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute top-1/4 -translate-y-1/2 -left-14 flex items-center gap-0.5 pointer-events-none z-10"
+              >
+                <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+                <span className="text-lg">👉</span>
+              </motion.div>
+              <div className="flex items-center px-4 py-2.5 bg-[#EAEAEA] dark:bg-[#333333] cursor-pointer">
+                <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <span className="flex-1 ml-3 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">문의하기</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </div>
+            </div>
+            {/* 로그아웃 */}
+            <div className="flex items-center px-4 py-2.5">
+              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#333333] flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <span className="flex-1 ml-3 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">로그아웃</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="문의하기 클릭" />
+
+      {/* 플로팅 버튼 + 채팅 모달 */}
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>채팅 버튼</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-[#262626] dark:bg-[#3F3F3F] flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">문의하기 클릭 시 우하단에 나타나며, 이후 채팅창을 열고 닫을 수 있습니다</p>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="채팅 버튼 클릭" />
+
+      {/* 채팅 모달 데모 — 실제 ChatModal + ChatHeader + ChatMessageBubble */}
+      <div className="max-w-sm mx-auto w-full border border-black/7 dark:border-white/10 rounded-lg bg-white dark:bg-[#1D1D1D] shadow-lg overflow-hidden">
+        {/* 헤더 — 실제 ChatHeader: bg-[#F5F5F5] + MessageCircle + "고객센터" */}
+        <div className="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">고객센터</h2>
+          </div>
+        </div>
+
+        {/* 메시지 영역 */}
+        <div className="px-4 py-4 space-y-4">
+          {/* 봇 메시지 — Bot 아바타 */}
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+              <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            </div>
+            <div className="max-w-xs">
+              <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-white/0 shadow-sm">
+                <p className="text-[13px]">안녕하세요! 무엇을 도와드릴까요?</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 칩 버튼들 — Bot 아바타 */}
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+              <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            </div>
+            <div className="max-w-xs">
+              <div className="flex flex-wrap gap-2">
+                {chipButtons.map((label) => (
+                  <button
+                    key={label}
+                    className="px-4 py-2 text-[13px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-white/10 hover:shadow-sm hover:scale-105 active:scale-95 transition-all"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 사용자 메시지 — User 아바타 */}
+          <div className="flex items-start space-x-3 flex-row-reverse space-x-reverse">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#262626] dark:bg-[#3F3F3F] flex items-center justify-center">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+            <div className="max-w-xs">
+              <div className="px-4 py-3 bg-[#262626] dark:bg-[#3F3F3F] text-white border border-black/7 dark:border-white/0 shadow-sm">
+                <p className="text-[13px]">버그신고</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 봇 응답 */}
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+              <Bot className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            </div>
+            <div className="max-w-xs">
+              <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-white/0 shadow-sm">
+                <p className="text-[13px]">발견하신 버그를 신고해주시면 빠르게 수정하겠습니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 입력 영역 */}
+        <div className="px-4 py-3 border-t border-black/5 dark:border-white/10">
+          <div className="flex items-center gap-2">
+            <input
+              className="flex-1 px-3 py-2 text-[13px] bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] rounded-md border border-black/7 dark:border-white/10 placeholder-gray-500"
+              placeholder="메시지를 입력하세요..."
+              readOnly
+            />
+            <button className="w-9 h-9 flex items-center justify-center rounded-md bg-[#262626] dark:bg-[#3F3F3F] text-white flex-shrink-0">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   데모: 알림
+   ───────────────────────────────────────────── */
+function NotificationDemo() {
+  const [hoverOn, setHoverOn] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const notifications = [
+    { type: 'comment', title: '축구팬456님이 댓글을 남겼습니다', message: '좋은 분석이네요!', time: '2분 전', unread: true },
+    { type: 'post_like', title: '게시글이 추천되었습니다', message: '프리미어리그 분석글', time: '15분 전', unread: true },
+    { type: 'hot_post', title: '내 게시글이 인기글에 선정되었습니다', message: null, time: '1시간 전', unread: false },
+    { type: 'level_up', title: '레벨 6으로 올랐습니다!', message: null, time: '3시간 전', unread: false },
+  ];
+
+  const typeIcons: Record<string, React.ReactNode> = {
+    comment: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+    post_like: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>,
+    hot_post: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /></svg>,
+    level_up: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+  };
+
+  return (
+    <>
+      {/* 헤더 바 — 알림 아이콘 클릭 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>헤더에서 알림 확인</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible">
+          <div className="flex items-center h-14 px-4 border border-black/7 dark:border-white/10 rounded-lg bg-white dark:bg-[#1D1D1D]">
+            <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">4590</span>
+            <div className="flex-1" />
+            <div className="flex items-center gap-1">
+              <div className="w-10 h-10 flex items-center justify-center rounded-md">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              {/* 알림 벨 — 클릭 유도 */}
+              <div className="relative overflow-visible">
+                <motion.div
+                  animate={{ y: [0, 3, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                >
+                  <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                  <span className="text-lg">👇</span>
+                </motion.div>
+                <div className={`relative w-10 h-10 flex items-center justify-center rounded-md cursor-pointer transition-colors ${hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {/* 뱃지 */}
+                  <div className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
+                    2
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1 h-10 px-3">
+                <div className="w-5 h-5 rounded-full overflow-hidden">
+                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                </div>
+                <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="알림 아이콘 클릭" />
+
+      {/* 알림 드롭다운 — 실제 NotificationDropdown 스타일 */}
+      <div className="max-w-sm mx-auto w-full border border-black/7 dark:border-white/10 rounded-lg bg-white dark:bg-[#1D1D1D] shadow-lg overflow-hidden">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
+          <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">알림 (2)</span>
+          <button className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            전체 읽음
+          </button>
+        </div>
+
+        {/* 알림 목록 */}
+        <div className="divide-y divide-black/5 dark:divide-white/10">
+          {notifications.map((notif, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer ${
+                notif.unread
+                  ? 'bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#E0E0E0] dark:hover:bg-[#3A3A3A]'
+                  : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
+              }`}
+            >
+              {/* 읽지 않음 표시 */}
+              <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${notif.unread ? 'bg-[#262626] dark:bg-[#F0F0F0]' : 'bg-transparent'}`} />
+
+              {/* 아이콘 */}
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center text-gray-700 dark:text-gray-300">
+                {typeIcons[notif.type]}
+              </div>
+
+              {/* 내용 */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] line-clamp-2">{notif.title}</p>
+                {notif.message && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{notif.message}</p>
+                )}
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{notif.time}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 푸터 */}
+        <div className="border-t border-black/5 dark:border-white/10 px-4 py-3 text-center">
+          <span className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer transition-colors">
+            전체 알림 보기
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   데모: 검색
+   ───────────────────────────────────────────── */
+function SearchDemo({ images }: { images: GuideDemoImages }) {
+  const [hoverOn, setHoverOn] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const tabs = [
+    { id: 'all', label: '전체', count: 28 },
+    { id: 'teams', label: '팀', count: 3 },
+    { id: 'posts', label: '게시글', count: 20 },
+    { id: 'comments', label: '댓글', count: 5 },
+  ];
+
+  return (
+    <>
+      {/* 헤더 + 네비게이션 검색바 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+        <ContainerHeader>
+          <ContainerTitle>헤더에서 검색</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent className="overflow-visible p-0">
+          {/* 헤더 바 */}
+          <div className="flex items-center h-14 px-4 border-b border-black/5 dark:border-white/10">
+            <span className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">4590</span>
+            <div className="flex-1" />
+            <div className="flex items-center gap-1">
+              <div className="w-10 h-10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              </div>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              </div>
+              <div className="flex items-center space-x-1 h-10 px-3">
+                <div className="w-5 h-5 rounded-full overflow-hidden">
+                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                </div>
+                <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 네비게이션 바 — 검색바가 오른쪽 끝에 위치 */}
+          <div className="flex items-center h-12 px-4 overflow-visible">
+            <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300 flex-1">
+              <span className="font-medium">전체/인기</span>
+              <span>스포츠</span>
+              <span>커뮤니티</span>
+              <span>공지사항</span>
+            </div>
+            {/* 검색바 — 실제 SearchBar: w-64, rounded-full */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <motion.div
+                animate={{ x: [0, 5, 0] }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                className="flex items-center gap-0.5 pointer-events-none"
+              >
+                <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+                <span className="text-lg">👉</span>
+              </motion.div>
+              <div className={`relative w-64 transition-colors ${hoverOn ? '' : ''}`}>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <div className={`w-full pl-10 pr-4 py-2 text-[13px] rounded-full border border-black/5 dark:border-white/10 transition-colors ${
+                  hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333]' : 'bg-[#F5F5F5] dark:bg-[#262626]'
+                }`}>
+                  <span className="text-gray-500 dark:text-gray-400">게시글, 뉴스, 팀 검색...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ContainerContent>
+      </Container>
+
+      <FlowArrow label="검색어 입력 후 검색" />
+
+      {/* 검색 결과 페이지 */}
+      <div className="space-y-4">
+        {/* 검색 헤더 */}
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerContent>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">&ldquo;아스널&rdquo; 에 대한 검색결과</h2>
+          </ContainerContent>
+        </Container>
+
+        {/* 탭 — 실제 TabList default variant */}
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden flex">
+          {tabs.map((tab) => {
+            const isActive = tab.id === 'all';
+            return (
+              <button
+                key={tab.id}
+                className={`flex-1 h-12 px-3 flex items-center justify-center text-xs font-medium whitespace-nowrap transition-colors ${
+                  isActive
+                    ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 팀 검색 결과 — 실제 TeamSearchResults 테이블 */}
+        <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden">
+          <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
+            <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">팀 (1개)</h3>
+          </div>
+          <table className="w-full table-fixed">
+            <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
+              <tr>
+                <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full sm:w-auto">팀 정보</th>
+                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 md:w-36">리그</th>
+                <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">국가</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">홈구장</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/5 dark:divide-white/10">
+              <tr className="bg-[#F5F5F5] dark:bg-[#262626] transition-colors cursor-pointer">
+                <td className="px-2 sm:px-4 py-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    {images.teamLogos[42] ? (
+                      <Image src={images.teamLogos[42]} alt="아스널" width={28} height={28} className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0" />
+                    ) : (
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-[13px]">
+                        <span className="bg-yellow-100 dark:bg-yellow-900/30">아스널</span>
+                      </span>
+                      <div className="sm:hidden mt-0.5">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">프리미어리그 · 잉글랜드</span>
+                      </div>
+                    </div>
+                    {/* 드롭다운 토글 — 클릭 유도 + 호버 */}
+                    <div className="flex items-center ml-1 sm:ml-2 flex-shrink-0 gap-1">
+                      <motion.div
+                        animate={{ x: [0, 3, 0] }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                        className="flex items-center gap-0.5 pointer-events-none"
+                      >
+                        <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+                        <span className="text-lg">👉</span>
+                      </motion.div>
+                      <div className={`p-1.5 rounded-md text-gray-700 dark:text-gray-300 transition-colors ${hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}>
+                        <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="hidden sm:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0]">프리미어리그</td>
+                <td className="hidden md:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0]">잉글랜드</td>
+                <td className="hidden lg:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] text-right">Emirates Stadium</td>
+              </tr>
+
+              {/* 최근 경기 — 항상 열린 상태 */}
+              <tr>
+                  <td colSpan={4} className="px-4 py-4 bg-[#F5F5F5] dark:bg-[#262626] border-t border-black/5 dark:border-white/10">
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900 dark:text-[#F0F0F0] text-[13px]">최근 경기</h4>
+                      <div className="space-y-2">
+                        {[
+                          { opponent: '첼시', opponentId: 49, league: '프리미어리그', date: '3월 28일 (금)', score: '2 - 1', status: 'FT' },
+                          { opponent: '리버풀', opponentId: 40, league: '프리미어리그', date: '3월 21일 (금)', score: '1 - 1', status: 'FT' },
+                          { opponent: '맨체스터 시티', opponentId: 50, league: '프리미어리그', date: '3월 14일 (금)', score: '3 - 0', status: 'FT' },
+                          { opponent: '토트넘', opponentId: 47, league: 'FA컵', date: '4월 5일 (토)', score: null, status: 'NS' },
+                        ].map((match, i) => (
+                          <div key={i} className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
+                            <div className="flex items-center justify-between p-3 text-[13px]">
+                              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                {images.teamLogos[match.opponentId] ? (
+                                  <Image src={images.teamLogos[match.opponentId]} alt={match.opponent} width={20} height={20} className="w-5 h-5 object-contain flex-shrink-0" />
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
+                                )}
+                                <div className="min-w-0">
+                                  <div className="font-medium text-gray-900 dark:text-[#F0F0F0] truncate">vs {match.opponent}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{match.league} • {match.date}</div>
+                                </div>
+                              </div>
+                              <div className="text-right flex-shrink-0 ml-3">
+                                {match.status === 'FT' ? (
+                                  <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{match.score}</span>
+                                ) : (
+                                  <span className="text-[13px] text-gray-700 dark:text-gray-300">예정</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* 게시글 검색 결과 */}
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader className="bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle>게시글 (20개)</ContainerTitle>
+          </ContainerHeader>
+          <ContainerContent className="p-0">
+            {[
+              { title: '아스널 vs 첼시 경기 분석', board: '해외 축구', author: '분석가', views: 342, likes: 15, date: '2시간 전' },
+              { title: '아스널 이번 시즌 우승 가능성은?', board: '해외 축구', author: '축구팬456', views: 128, likes: 8, date: '5시간 전' },
+              { title: '아스널 새 영입 선수 평가', board: '프리미어리그', author: '이적전문가', views: 89, likes: 4, date: '1일 전' },
+            ].map((post, i) => (
+              <div key={i} className="px-4 py-3 border-b border-black/5 dark:border-white/10 last:border-b-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors cursor-pointer">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] line-clamp-1">
+                  <span className="bg-yellow-100 dark:bg-yellow-900/30">아스널</span>{post.title.replace('아스널', '')}
+                </p>
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <span>{post.author}</span>
+                  <span>·</span>
+                  <span>{post.board}</span>
+                  <span>·</span>
+                  <span>조회 {post.views}</span>
+                  <span>·</span>
+                  <span>추천 {post.likes}</span>
+                  <span>·</span>
+                  <span>{post.date}</span>
+                </div>
+              </div>
+            ))}
+            <div className="px-4 py-3 text-center">
+              <span className="text-[13px] text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors">게시글 더보기 →</span>
+            </div>
+          </ContainerContent>
+        </Container>
+
+        {/* 댓글 검색 결과 */}
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader className="bg-[#F5F5F5] dark:bg-[#262626]">
+            <ContainerTitle>댓글 (5개)</ContainerTitle>
+          </ContainerHeader>
+          <ContainerContent className="p-0">
+            {[
+              { content: '아스널 이번 시즌 진짜 잘하네요', post: '프리미어리그 순위 예측', author: '축구팬789', date: '3시간 전' },
+              { content: '아스널 수비 안정감이 좋아졌어요', post: '아스널 vs 첼시 경기 분석', author: '분석러', date: '6시간 전' },
+            ].map((comment, i) => (
+              <div key={i} className="px-4 py-3 border-b border-black/5 dark:border-white/10 last:border-b-0 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors cursor-pointer">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] px-1.5 py-0.5 rounded">댓글</span>
+                  <p className="text-[13px] text-gray-900 dark:text-[#F0F0F0] line-clamp-1">
+                    <span className="bg-yellow-100 dark:bg-yellow-900/30">아스널</span>{comment.content.replace('아스널', '')}
+                  </p>
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-1">{comment.post}</p>
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <span>{comment.author}</span>
+                  <span>·</span>
+                  <span>{comment.date}</span>
+                </div>
+              </div>
+            ))}
+          </ContainerContent>
+        </Container>
+      </div>
+    </>
+  );
+}
+
+function ProfileIconDemo({ images }: { images: GuideDemoImages }) {
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [hoverOn, setHoverOn] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 레벨 5 기본 아이콘 URL (level 5-8 → level-2.png)
+  const levelIconUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png';
+
+  // 첼시만 고정 (상점에서 첼시를 구매한 시나리오)
+  const ownedIcons = [{ id: 49, name: '첼시' }];
+
+  const displayIcon = selectedId !== null
+    ? ownedIcons.find((i) => i.id === selectedId)
+    : null;
+
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  // 첼시에 클릭 유도
+  const targetId = 49;
+
+  return (
+    <Container className="dark:border dark:border-white/10">
+      <ContainerHeader className="h-auto py-3">
+        <ContainerTitle>아이콘 선택</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent>
+        {/* 현재 아이콘 */}
+        <div className="flex items-center gap-3 mb-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white dark:bg-[#1D1D1D] flex items-center justify-center border border-black/7 dark:border-white/10">
+            {displayIcon && images.teamLogos[displayIcon.id] ? (
+              <Image src={images.teamLogos[displayIcon.id]} alt={displayIcon.name} width={20} height={20} className="object-contain" />
+            ) : (
+              <Image src={levelIconUrl} alt="레벨 5 기본 아이콘" width={20} height={20} className="object-contain" />
+            )}
+          </div>
+          <div>
+            <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+              {saved ? '아이콘이 변경되었습니다!' : (displayIcon?.name ?? '레벨 5 기본 아이콘')}
+            </div>
+            <div className="text-[11px] text-gray-500 dark:text-gray-400">현재 사용 중</div>
+          </div>
+        </div>
+
+        {/* 아이콘 그리드 */}
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
+          {/* 기본 레벨 아이콘 */}
+          <button
+            onClick={() => setSelectedId(null)}
+            className={`relative p-2 rounded-lg border-2 transition-colors aspect-square flex items-center justify-center ${
+              selectedId === null
+                ? 'border-[#262626] dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
+                : 'border-black/7 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
+            }`}
+            title="레벨 5 기본 아이콘"
+          >
+            <div className="w-5 h-5 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+              <Image src={levelIconUrl} alt="레벨 5 기본 아이콘" width={20} height={20} className="object-contain" />
+            </div>
+            {selectedId === null && (
+              <div className="absolute top-1 right-1 bg-[#262626] dark:bg-[#F0F0F0] rounded-full p-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white dark:text-[#262626]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+          </button>
+
+          {/* 보유 아이콘 */}
+          {ownedIcons.map((icon) => {
+            const isSelected = selectedId === icon.id;
+            const isTarget = icon.id === targetId && !isSelected;
+
+            return (
+              <div key={icon.id} className="relative">
+                {isTarget && (
+                  <motion.div
+                    animate={{ y: [0, 5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                  >
+                    <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                    <span className="text-lg">👇</span>
+                  </motion.div>
+                )}
+                <button
+                  onClick={() => setSelectedId(icon.id)}
+                  className={`relative w-full p-2 rounded-lg border-2 transition-colors aspect-square flex items-center justify-center ${
+                    isSelected
+                      ? 'border-[#262626] dark:border-[#F0F0F0] bg-[#EAEAEA] dark:bg-[#333333]'
+                      : `border-black/7 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] ${isTarget && hoverOn ? 'bg-[#F5F5F5] dark:bg-[#262626] border-black/15 dark:border-white/20' : ''}`
+                  }`}
+                  title={icon.name}
+                >
+                  <div className="w-5 h-5 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+                    {images.teamLogos[icon.id] ? (
+                      <Image src={images.teamLogos[icon.id]} alt={icon.name} width={20} height={20} className="object-contain" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                    )}
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 bg-[#262626] dark:bg-[#F0F0F0] rounded-full p-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 text-white dark:text-[#262626]" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 저장 버튼 */}
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-[13px] text-gray-500 dark:text-gray-400">
+            더 많은 아이콘 보기 →
+          </span>
+          <div className="relative">
+            {!saved && (
+              <motion.div
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+              >
+                <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                <span className="text-lg">👇</span>
+              </motion.div>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saved}
+              className={`px-4 py-2 text-[13px] font-medium rounded-lg transition ${
+                saved
+                  ? 'bg-green-600 text-white'
+                  : `bg-[#262626] dark:bg-[#F0F0F0] text-white dark:text-[#1D1D1D] hover:bg-[#3F3F3F] dark:hover:bg-gray-200 ${hoverOn ? 'bg-[#3F3F3F] dark:bg-gray-200' : ''}`
+              }`}
+            >
+              {saved ? '저장 완료!' : '아이콘 저장'}
+            </button>
+          </div>
+        </div>
+      </ContainerContent>
+    </Container>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   데모: 이모티콘
+   ───────────────────────────────────────────── */
+function EmoticonDemo() {
+  const [selectedPack, setSelectedPack] = useState<{ name: string; count: number; price: number; thumbnail: string } | null>(null);
+  const [purchased, setPurchased] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hoverOn, setHoverOn] = useState(false);
+  const userPoints = 12500;
+
+  useEffect(() => {
+    const cycle = () => {
+      setHoverOn(true);
+      setTimeout(() => setHoverOn(false), 1000);
+    };
+    cycle();
+    const timer = setInterval(cycle, 1500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const shopTabs = [
+    { id: 'icons', label: '팀 아이콘' },
+    { id: 'emoticons', label: '이모티콘' },
+    { id: 'special', label: '특수 아이템' },
+  ];
+
+  const emoticonPacks = [
+    { name: '축구 기본팩', count: 12, price: 0, thumbnail: '⚽' },
+    { name: '골세레머니팩', count: 15, price: 300, thumbnail: '🎉' },
+    { name: '심판 리액션팩', count: 10, price: 200, thumbnail: '🟨' },
+    { name: '팬 응원팩', count: 18, price: 500, thumbnail: '📣' },
+  ];
+
+  const handlePurchase = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setPurchased(true);
+      setIsProcessing(false);
+    }, 800);
+  };
+
+  const targetPack = emoticonPacks[1];
+
+  return (
+    <>
+      <div className="space-y-4 overflow-visible">
+        {/* 상단 탭 — 이모티콘 활성 상태로 고정 */}
+        <div className="bg-[#F5F5F5] dark:bg-[#262626] md:rounded-lg border border-black/7 dark:border-0 overflow-visible flex">
+          {[
+            { id: 'icons', label: '팀 아이콘' },
+            { id: 'emoticons', label: '이모티콘' },
+            { id: 'special', label: '특수 아이템' },
+          ].map((tab) => {
+            const isActive = tab.id === 'emoticons';
+            const isEmoticon = tab.id === 'emoticons';
+            return (
+              <div key={tab.id} className="relative flex-1 overflow-visible">
+                {isEmoticon && (
+                  <motion.div
+                    animate={{ y: [0, 5, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                  >
+                    <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                    <span className="text-lg">👇</span>
+                  </motion.div>
+                )}
+                <button
+                  className={`w-full h-12 px-3 flex items-center justify-center text-xs font-medium whitespace-nowrap transition-colors ${
+                    isActive
+                      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+                      : 'text-gray-700 dark:text-gray-300'
+                  } ${isEmoticon && hoverOn && !isActive ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                >
+                  {tab.label}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 이모티콘 스튜디오 링크 — 실제 UI와 동일 */}
+        <div
+          className={`relative flex items-center px-4 py-3 border border-black/7 dark:border-0 md:rounded-lg transition-colors cursor-pointer overflow-visible ${
+            hoverOn ? 'bg-[#F5F5F5] dark:bg-[#262626]' : 'bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
+          }`}
+        >
+          <span className="text-[13px] text-gray-500 dark:text-gray-400">나만의 이모티콘 만들기</span>
+          <span className="absolute left-1/2 -translate-x-1/2 text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
+            {/* 클릭 유도 — 좌→우 */}
+            <motion.span
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute top-0 -left-14 flex items-center gap-0.5 pointer-events-none z-10"
+            >
+              <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+              <span className="text-lg">👉</span>
+            </motion.span>
+            이모티콘 스튜디오 →
+          </span>
+        </div>
+
+        {/* 이모티콘 팩 그리드 */}
+        <Container className="bg-white dark:bg-[#1D1D1D] overflow-visible">
+          <ContainerContent className="overflow-visible pt-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+              {emoticonPacks.map((pack) => {
+                const isFree = pack.price === 0;
+                const isTarget = pack.name === targetPack.name && !purchased;
+                const isOwned = pack.name === '축구 기본팩' || (purchased && pack.name === targetPack.name);
+
+                return (
+                  <div key={pack.name} className="relative">
+                    {isTarget && (
+                      <motion.div
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute top-1/2 -translate-y-1/2 -left-8 flex items-center gap-0.5 pointer-events-none z-10"
+                      >
+                        <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+                        <span className="text-lg">👉</span>
+                      </motion.div>
+                    )}
+                    <button
+                      onClick={() => { if (!isOwned) setSelectedPack(pack); }}
+                      className={`w-full flex flex-col items-center p-2.5 sm:p-3 rounded-md border border-black/7 dark:border-0 shadow-sm transition-all group ${
+                        isOwned ? 'cursor-default bg-white dark:bg-[#1D1D1D]' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer'
+                      } ${isTarget && hoverOn ? 'bg-[#EAEAEA] dark:bg-[#333333]' : 'bg-white dark:bg-[#1D1D1D]'}`}
+                    >
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center mb-2">
+                        <span className="text-[60px] group-hover:scale-105 transition-transform">{pack.thumbnail}</span>
+                      </div>
+                      <p className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate w-full text-center leading-tight">{pack.name}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-0.5">{pack.count}개</p>
+                      <div className="mt-1.5">
+                        {isOwned ? (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-xs text-blue-500 dark:text-blue-400 font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            보유중
+                          </span>
+                        ) : isFree ? (
+                          <span className="inline-flex items-center text-[10px] sm:text-xs text-green-600 dark:text-green-400 font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20">무료</span>
+                        ) : (
+                          <span className="text-xs sm:text-[13px] tabular-nums font-semibold text-gray-900 dark:text-[#F0F0F0]">{pack.price.toLocaleString()} P</span>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </ContainerContent>
+        </Container>
+      </div>
+
+      {/* 이모티콘 팩 상세 모달 데모 — 실제 EmoticonPackDetailContent와 동일 */}
+      <>
+          <FlowArrow label="이모티콘 팩 클릭" />
+          <div className="max-w-[692px] mx-auto w-full border border-black/7 dark:border-white/10 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-lg">
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between px-4 border-b border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] h-11">
+              <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">팩 상세</span>
+              <button className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {/* 팩 정보 */}
+            <div className="px-4 py-3 border-b border-black/5 dark:border-white/10">
+              <div className="flex items-stretch gap-3">
+                <div className="w-[60px] h-[60px] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-[48px]">{selectedPack?.thumbnail ?? targetPack.thumbnail}</span>
+                </div>
+                <div className="flex flex-col min-w-0 w-[20%] flex-shrink-0">
+                  <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">{selectedPack?.name ?? targetPack.name}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{selectedPack?.count ?? targetPack.count}개 이모티콘</p>
+                  <span className="text-[11px] tabular-nums font-bold text-gray-900 dark:text-[#F0F0F0] mt-auto">
+                    {(selectedPack?.price ?? targetPack.price) === 0 ? '무료' : `${(selectedPack?.price ?? targetPack.price).toLocaleString()} P`}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] px-3 py-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    축구 경기의 다양한 골 세레머니를 표현한 이모티콘 팩입니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 이모티콘 미리보기 그리드 */}
+            <div className="px-4 py-3">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">이모티콘 미리보기</p>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {['🎉', '🥳', '💃', '🕺', '🙌', '✨', '🏆', '⚽', '🎯', '🔥', '💪', '👏'].map((emoji, i) => (
+                  <div key={i} className="aspect-square flex items-center justify-center p-1 rounded">
+                    <span className="text-[40px] sm:text-[48px]">{emoji}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 푸터 — 신고 + 구매 버튼 */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-black/5 dark:border-white/10">
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1 mr-3">
+                <p className="text-[10px] leading-tight text-gray-400 dark:text-gray-500">
+                  부적절하거나 저작권을 위반한 이모티콘은 별도 통보 없이 판매중지될 수 있습니다.
+                </p>
+                <button type="button" className="text-[11px] text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-left transition-colors w-fit">
+                  신고
+                </button>
+              </div>
+              <div className="relative flex-shrink-0 overflow-visible">
+                <motion.div
+                  animate={{ y: [0, 5, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+                >
+                  <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap mb-0.5">클릭!</span>
+                  <span className="text-lg">👇</span>
+                </motion.div>
+                <button
+                  onClick={handlePurchase}
+                  disabled={isProcessing || purchased}
+                  className={`px-4 h-9 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-50 ${
+                    purchased
+                      ? 'bg-green-600 text-white'
+                      : `hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] ${hoverOn ? 'bg-[#3F3F3F] dark:bg-[#4A4A4A] text-white' : 'bg-[#262626] dark:bg-[#3F3F3F] text-white'}`
+                  }`}
+                >
+                  {purchased ? '구매 완료!' : isProcessing ? '처리 중...' : '구매하기'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
    메인 컴포넌트
    ───────────────────────────────────────────── */
 export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoImages }) {
@@ -1960,12 +3505,186 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
         </Section>
 
-        {/* 하단 CTA */}
+        {/* ───── 7. 상점 ───── */}
+        <Section id="shop" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={ShoppingBag} title="상점" desc="포인트로 아이템 구매" color="violet" />
+
+          <GuideBox title="소개">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              활동으로 모은 포인트로 <strong className="text-gray-900 dark:text-gray-100">팀 아이콘</strong>, <strong className="text-gray-900 dark:text-gray-100">이모티콘 팩</strong>, <strong className="text-gray-900 dark:text-gray-100">닉네임 변경권</strong> 등을 구매할 수 있습니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="구매한 아이템 사용">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li><strong className="text-gray-900 dark:text-gray-100">팀 아이콘</strong> — 프로필에 표시되어 내가 응원하는 팀을 나타냅니다</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">이모티콘 팩</strong> — 댓글에서 이모티콘으로 사용할 수 있습니다</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">닉네임 변경권</strong> — 닉네임을 변경할 수 있습니다</li>
+            </ul>
+          </GuideBox>
+
+          <GuideBox title="경로">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              상단 메뉴 &rarr; <strong className="text-gray-900 dark:text-gray-100">상점</strong>
+            </p>
+          </GuideBox>
+
+          <ShopDemo images={demoImages} />
+        </Section>
+
+        {/* ───── 8. 이모티콘 스튜디오 ───── */}
+        <Section id="emoticon-studio" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={Palette} title="이모티콘" desc="이모티콘 구매 및 제작" color="amber" />
+
+          <GuideBox title="이모티콘 구매">
+            <ol className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-decimal list-inside">
+              <li>상점에서 <strong className="text-gray-900 dark:text-gray-100">이모티콘</strong> 탭을 클릭</li>
+              <li>원하는 이모티콘 팩을 선택하여 구매</li>
+            </ol>
+          </GuideBox>
+
+          <GuideBox title="이모티콘 스튜디오">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">
+              나만의 이모티콘 팩을 직접 제작하여 제출할 수 있습니다.<br />
+              운영팀 심사 후 승인되면 상점에 등록됩니다.
+            </p>
+            <ol className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-decimal list-inside">
+              <li>이모티콘 스튜디오에서 팩 이름, 설명, 가격을 입력</li>
+              <li>이모티콘 이미지를 업로드 (최소 8개)</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">제출</strong> 버튼을 클릭하면 운영팀에 심사 요청</li>
+              <li>승인되면 상점에 자동 등록되어 다른 유저들이 구매 가능</li>
+            </ol>
+          </GuideBox>
+
+          <GuideBox title="경로">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li>이모티콘 구매: 상점 &rarr; <strong className="text-gray-900 dark:text-gray-100">이모티콘</strong> 탭</li>
+              <li>이모티콘 제작: 상점 &rarr; 이모티콘 탭 &rarr; <strong className="text-gray-900 dark:text-gray-100">이모티콘 스튜디오 →</strong></li>
+            </ul>
+          </GuideBox>
+
+          <EmoticonDemo />
+
+          {/* 소제목: 이모티콘 사용 */}
+          <div className="pt-4 border-t border-black/5 dark:border-white/10">
+            <h3 className="text-[15px] font-bold text-gray-900 dark:text-[#F0F0F0] mb-1">이모티콘 사용 (댓글 삽입)</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">구매한 이모티콘을 댓글에서 사용</p>
+          </div>
+
+          <GuideBox title="사용 방법">
+            <ol className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-decimal list-inside">
+              <li>게시글 하단 댓글 입력창에서 <strong className="text-gray-900 dark:text-gray-100">이모티콘 버튼</strong>을 클릭</li>
+              <li>보유한 이모티콘 팩 중 원하는 이모티콘을 선택</li>
+              <li>선택한 이모티콘이 댓글에 삽입됩니다</li>
+            </ol>
+          </GuideBox>
+
+          <EmoticonPickerDemo />
+        </Section>
+
+        {/* ───── 9. 고객센터 문의 ───── */}
+        <Section id="chatbot" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={Bot} title="고객센터 문의" desc="사이트 이용 문의, 신고, 의견 제출" color="green" />
+
+          <GuideBox title="소개">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              사이트 이용 중 궁금한 점이나 불편사항을 챗봇을 통해 문의할 수 있습니다.<br />
+              화면 우하단의 문의 버튼을 클릭하면 채팅 창이 열립니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="문의 유형">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li><strong className="text-gray-900 dark:text-gray-100">커뮤니티 이용문의</strong> — 계정, 이용 방법, 기능 관련 질문</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">약관 및 정보처리방침</strong> — 이용약관, 개인정보 관련 문의</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">회원신고</strong> — 스팸, 욕설, 사칭 등 부적절한 사용자 신고</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">의견제출</strong> — 기능 요청, UI 개선, 성능 피드백</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">게시글/댓글 삭제요청</strong> — 게시글 또는 댓글 삭제 요청</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">버그신고</strong> — 오류 발견 시 브라우저, 페이지, 재현 방법 포함 신고</li>
+            </ul>
+          </GuideBox>
+
+          <GuideBox title="경로">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li>푸터 &rarr; <strong className="text-gray-900 dark:text-gray-100">문의하기</strong></li>
+              <li>헤더 프로필 &rarr; <strong className="text-gray-900 dark:text-gray-100">문의하기</strong></li>
+            </ul>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-2">
+              문의하기를 클릭하면 화면 우하단에 채팅 버튼이 나타나고 채팅창이 열립니다.
+            </p>
+          </GuideBox>
+
+          <ChatbotDemo />
+        </Section>
+
+        {/* ───── 10. 알림 ───── */}
+        <Section id="notification" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={Bell} title="알림" desc="댓글, 추천, 멘션 알림" color="red" />
+
+          <GuideBox title="소개">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              내 글에 댓글, 추천, 멘션이 달리면 실시간으로 알림이 발송됩니다.<br />
+              상단 알림 아이콘에서 확인할 수 있으며, 읽음 처리 및 삭제가 가능합니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="알림 종류">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li><strong className="text-gray-900 dark:text-gray-100">댓글</strong> — 내 게시글에 댓글이 달렸을 때</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">답글</strong> — 내 댓글에 답글이 달렸을 때</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">좋아요</strong> — 내 게시글/댓글이 추천되었을 때</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">인기 게시글</strong> — 내 게시글이 인기글에 선정되었을 때</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">레벨업</strong> — 레벨이 올랐을 때</li>
+            </ul>
+          </GuideBox>
+
+          <GuideBox title="경로">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              상단 헤더 &rarr; <strong className="text-gray-900 dark:text-gray-100">알림 아이콘 (종 모양)</strong>
+            </p>
+          </GuideBox>
+
+          <NotificationDemo />
+        </Section>
+
+        {/* ───── 11. 검색 ───── */}
+        <Section id="search" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={Search} title="검색" desc="게시글, 팀, 댓글 통합 검색" color="blue" />
+
+          <GuideBox title="소개">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              게시글, 댓글, 팀을 통합 검색할 수 있습니다.<br />
+              검색 결과에서 탭을 전환하여 원하는 유형만 필터링할 수 있습니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="검색 대상">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li><strong className="text-gray-900 dark:text-gray-100">게시글</strong> — 제목으로 검색, 조회수·추천순 정렬 가능</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">댓글</strong> — 댓글 내용으로 검색</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">팀</strong> — 팀 이름, 리그, 경기장으로 검색, 최근 경기 확인 가능</li>
+            </ul>
+          </GuideBox>
+
+          <GuideBox title="경로">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li>데스크톱: 상단 헤더 &rarr; <strong className="text-gray-900 dark:text-gray-100">검색바</strong></li>
+              <li>모바일: 상단 헤더 &rarr; <strong className="text-gray-900 dark:text-gray-100">검색 아이콘 (돋보기)</strong></li>
+            </ul>
+          </GuideBox>
+
+          <SearchDemo images={demoImages} />
+        </Section>
+
+        {/* 마무리 + CTA */}
         <Section>
           <Container className="dark:border dark:border-white/10">
             <ContainerContent className="text-center py-6">
+              <p className="text-[15px] font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
+                4590 Football의 주요 기능을 모두 살펴보았습니다.
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                궁금한 점이 있으시면 공지사항을 확인하거나 문의해주세요.
+                더 궁금한 점이 있으면 공지사항을 확인하거나 문의해주세요.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
                 <Link

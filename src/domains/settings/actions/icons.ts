@@ -23,15 +23,17 @@ export async function getUserIcons(userId: string): Promise<ActionResponse<IconI
     
     const supabase = await getSupabaseServer();
     
-    // 사용자의 아이콘 목록 조회 (소모품 제외 - 닉네임 변경권 등)
+    // 사용자의 아이콘 목록 조회 (소모품, 이모티콘, 특수 아이템 제외)
+    const EXCLUDED_CATEGORY_IDS = [24, 25]; // 24: 특수 아이템, 25: 이모티콘
     const { data, error } = await supabase
       .from('user_items')
       .select(`
         item_id,
-        shop_items!inner(id, name, image_url, is_consumable)
+        shop_items!inner(id, name, image_url, is_consumable, category_id)
       `)
       .eq('user_id', userId)
-      .eq('shop_items.is_consumable', false);
+      .eq('shop_items.is_consumable', false)
+      .not('shop_items.category_id', 'in', `(${EXCLUDED_CATEGORY_IDS.join(',')})`);
     
     if (error) {
       console.error('아이콘 목록 조회 오류:', error);
@@ -166,15 +168,17 @@ export async function getIconSettingsData(userId: string, iconId: number | null)
 
     const supabase = await getSupabaseServer();
 
-    // 보유 아이콘 목록 조회 (1회 쿼리)
+    // 보유 아이콘 목록 조회 (소모품, 이모티콘, 특수 아이템 제외)
+    const EXCLUDED_CATEGORY_IDS = [24, 25]; // 24: 특수 아이템, 25: 이모티콘
     const { data, error } = await supabase
       .from('user_items')
       .select(`
         item_id,
-        shop_items!inner(id, name, image_url, is_consumable)
+        shop_items!inner(id, name, image_url, is_consumable, category_id)
       `)
       .eq('user_id', userId)
-      .eq('shop_items.is_consumable', false);
+      .eq('shop_items.is_consumable', false)
+      .not('shop_items.category_id', 'in', `(${EXCLUDED_CATEGORY_IDS.join(',')})`);
 
     if (error) {
       console.error('아이콘 목록 조회 오류:', error);

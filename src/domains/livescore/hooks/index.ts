@@ -17,8 +17,9 @@ export {
   useLiveScore,
 } from './useLiveScoreQueries';
 
-// LiveScore 멀티데이 공유 훅 (메인페이지 위젯/헤더/모달 공유)
+// LiveScore 공유 훅 (메인페이지 위젯/헤더/모달 공유)
 export {
-  useMultiDayMatches,
+  useTodayMatches,
+  useDateMatches,
   useTodayMatchCount,
 } from './useLiveScoreData';

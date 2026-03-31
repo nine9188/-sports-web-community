@@ -203,6 +203,29 @@ export default function NoticeManagement() {
 
   return (
     <div className="space-y-8">
+      {/* 공지 시스템 가이드 */}
+      <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-5 border border-black/7 dark:border-white/10">
+        <h2 className="text-[15px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">공지 시스템 가이드</h2>
+        <div className="space-y-3 text-[13px] text-gray-700 dark:text-gray-300">
+          <div>
+            <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">공지 타입 (우선순위순)</p>
+            <ul className="space-y-1 ml-3">
+              <li><span className="inline-block px-1.5 py-0.5 bg-red-600 text-white text-[11px] font-medium rounded mr-1.5">필독</span>모든 게시판 최상단에 고정. 가장 중요한 공지에만 사용</li>
+              <li><span className="inline-block px-1.5 py-0.5 bg-red-100 text-red-700 text-[11px] font-medium rounded mr-1.5">전체공지</span>사이트 모든 게시판에 표시</li>
+              <li><span className="inline-block px-1.5 py-0.5 bg-red-700 text-red-100 text-[11px] font-medium rounded mr-1.5">게시판공지</span>선택한 게시판에만 표시</li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">표시 순서</p>
+            <p>필독 (최신순) &rarr; 전체공지 (최신순) &rarr; 게시판공지 (최신순) &rarr; 일반 게시글</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">위젯 표시</p>
+            <p>&ldquo;전체 게시글 위젯에 표시&rdquo;를 켜면 홈 페이지 전체글 위젯 상단에 노출됩니다.</p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg p-6 border border-black/7 dark:border-white/10">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">
           공지 설정

@@ -4,6 +4,7 @@ export { default as AllPostsWidget } from './AllPostsWidget';
 export { LiveScoreWidgetV2 } from './live-score-widget';
 export { BoardCollectionWidget } from './board-collection-widget';
 export { BoardQuickLinksWidget } from './board-quick-links-widget';
+export { TransferBannerWidget } from './transfer-banner-widget';
 
 // board-quick-links 관련 exports
 export * from './board-quick-links-widget';

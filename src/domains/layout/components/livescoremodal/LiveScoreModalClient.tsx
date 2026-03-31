@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Clock, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import Link from 'next/link';
-import { useMultiDayMatches } from '@/domains/livescore/hooks/useLiveScoreData';
+import { useTodayMatches, useDateMatches } from '@/domains/livescore/hooks/useLiveScoreData';
 import LiveScoreContent from './LiveScoreContent';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
+import Spinner from '@/shared/components/Spinner';
 
 
 interface LiveScoreModalProps {
@@ -20,8 +21,18 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
 
-  // CacheSeeder로 주입된 캐시에서 데이터 사용 (추가 API 호출 없음)
-  const { data: liveScoreData, isLoading } = useMultiDayMatches();
+  // 오늘 데이터: CacheSeeder로 주입된 캐시에서 사용
+  const { data: todayData } = useTodayMatches();
+
+  // 어제/내일 데이터: 탭 클릭 시 lazy fetch
+  const { data: yesterdayMatches, isLoading: isLoadingYesterday } = useDateMatches(
+    'yesterday',
+    selectedDate === 'yesterday'
+  );
+  const { data: tomorrowMatches, isLoading: isLoadingTomorrow } = useDateMatches(
+    'tomorrow',
+    selectedDate === 'tomorrow'
+  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -32,7 +43,21 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
     setSelectedDate(newDate);
   };
 
+  // 선택된 날짜의 경기 데이터 + 로딩 상태
+  const getSelectedMatches = () => {
+    switch (selectedDate) {
+      case 'yesterday':
+        return { matches: yesterdayMatches || [], isLoading: isLoadingYesterday };
+      case 'today':
+        return { matches: todayData?.data?.today?.matches || [], isLoading: false };
+      case 'tomorrow':
+        return { matches: tomorrowMatches || [], isLoading: isLoadingTomorrow };
+    }
+  };
+
   if (!isMounted) return null;
+
+  const { matches: currentMatches, isLoading } = getSelectedMatches();
 
   return (
     <>
@@ -55,7 +80,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
             <Circle className="h-4 w-4 text-green-600 fill-green-600" />
             <div>
               <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
-              <p className="text-xs text-gray-600 dark:text-gray-400">최근 3일간 주요 경기</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">주요 경기 일정</p>
             </div>
           </div>
           <Button
@@ -100,11 +125,17 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
             </div>
           )}
 
-          <LiveScoreContent
-            selectedDate={selectedDate}
-            onClose={onClose}
-            initialData={liveScoreData}
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner size="md" />
+            </div>
+          ) : (
+            <LiveScoreContent
+              selectedDate={selectedDate}
+              onClose={onClose}
+              matches={currentMatches}
+            />
+          )}
         </div>
 
         {/* 푸터 */}
