@@ -14,7 +14,7 @@ export async function generateMetadata() {
     title: '인기글 - HOT 게시글',
     description: '해외축구, 국내축구, 축구 분석 게시판에서 가장 많이 읽히는 HOT 게시글을 확인하세요. 축구 커뮤니티 4590 Football.',
     path: '/boards/popular',
-    keywords: ['축구 커뮤니티', '해외축구 게시판', '국내축구 게시판', '축구 분석', '인기글'],
+    keywords: ['축구 커뮤니티', '4590', '4590football', '해외축구 게시판', '국내축구 게시판', '축구 분석', '인기글'],
   });
 }
 

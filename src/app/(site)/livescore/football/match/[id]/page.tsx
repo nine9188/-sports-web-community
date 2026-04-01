@@ -99,7 +99,7 @@ export async function generateMetadata({
     title,
     description,
     path: `/livescore/football/match/${id}`,
-    keywords: [`${homeTeam} ${awayTeam}`, `${homeTeam} 라인업`, `${awayTeam} 라인업`, `${leagueName} 경기결과`, '실시간 스코어', '축구 커뮤니티'],
+    keywords: [`${homeTeam} ${awayTeam}`, `${homeTeam} 라인업`, `${awayTeam} 라인업`, `${leagueName} 경기결과`, '실시간 스코어', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${board.name} - 모바일 핫딜`,
     description: board.description || `스마트폰, 태블릿, 모바일 기기 핫딜과 최저가 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
-    keywords: ['모바일 핫딜', '스마트폰 특가', '태블릿 할인', '핫딜', '축구 커뮤니티'],
+    keywords: ['모바일 핫딜', '스마트폰 특가', '태블릿 할인', '핫딜', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

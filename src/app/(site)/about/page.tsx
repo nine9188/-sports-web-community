@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: '소개',
     description: '축구 커뮤니티 4590 Football. 라이브스코어, 경기 분석, 축구 승부예측, 해외축구·국내축구 게시판을 제공하는 축구 커뮤니티입니다.',
     path: '/about',
-    keywords: ['축구 커뮤니티', '4590 Football', '라이브스코어', '축구 분석', '축구 승부예측'],
+    keywords: ['축구 커뮤니티', '4590', '4590football', '4590 Football', '라이브스코어', '축구 분석', '축구 승부예측'],
   });
 }
 

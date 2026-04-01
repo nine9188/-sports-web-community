@@ -21,7 +21,7 @@ function getBoardSeoData(slug: string, boardName: string) {
     return {
       title: `${boardName} - 축구 뉴스`,
       desc: `${boardName}을 빠르게 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [boardName, '축구 뉴스', '축구 소식', slug.includes('foreign') || slug === 'news' ? '해외축구 뉴스' : '국내축구 뉴스', '축구 커뮤니티'],
+      keywords: [boardName, '축구 뉴스', '축구 소식', slug.includes('foreign') || slug === 'news' ? '해외축구 뉴스' : '국내축구 뉴스', '축구 커뮤니티', '4590', '4590football'],
     };
   }
 
@@ -30,7 +30,7 @@ function getBoardSeoData(slug: string, boardName: string) {
     return {
       title: `${boardName} - 축구 분석 게시판`,
       desc: `${boardName} 게시판. 경기 분석, 전문가 예측, 데이터 기반 분석글을 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [boardName, '축구 분석', '축구 경기 분석', '축구 분석 커뮤니티', '전문가 예상 스코어', '축구 커뮤니티'],
+      keywords: [boardName, '축구 분석', '축구 경기 분석', '축구 분석 커뮤니티', '전문가 예상 스코어', '축구 커뮤니티', '4590', '4590football'],
     };
   }
 
@@ -39,7 +39,7 @@ function getBoardSeoData(slug: string, boardName: string) {
     return {
       title: `${boardName} - 리그 게시판`,
       desc: `${boardName} 최신 소식, 경기 결과, 순위, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [`${boardName} 순위`, `${boardName} 일정`, `${boardName} 소식`, '축구 커뮤니티'],
+      keywords: [`${boardName} 순위`, `${boardName} 일정`, `${boardName} 소식`, '축구 커뮤니티', '4590', '4590football'],
     };
   }
 
@@ -51,7 +51,7 @@ function getBoardSeoData(slug: string, boardName: string) {
     return {
       title: `${boardName} 게시판 - 팬 커뮤니티`,
       desc: `${boardName} 최신 소식, 경기 결과, 이적 루머, 라인업 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [`${boardName} 소식`, `${boardName} 경기`, `${boardName} 이적`, `${boardName} 라인업`, '축구 커뮤니티'],
+      keywords: [`${boardName} 소식`, `${boardName} 경기`, `${boardName} 이적`, `${boardName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
     };
   }
 
@@ -59,7 +59,7 @@ function getBoardSeoData(slug: string, boardName: string) {
   return {
     title: `${boardName} - 축구 커뮤니티`,
     desc: `${boardName} 게시판의 최신 글을 확인하세요. 축구 커뮤니티 4590 Football.`,
-    keywords: [boardName, '축구 커뮤니티', '축구 게시판'],
+    keywords: [boardName, '축구 커뮤니티', '4590', '4590football', '축구 게시판'],
   };
 }
 

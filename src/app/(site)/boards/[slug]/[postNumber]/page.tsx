@@ -167,7 +167,7 @@ export async function generateMetadata({
     type: 'article',
     publishedTime: post.created_at ?? undefined,
     modifiedTime: post.updated_at ?? undefined,
-    keywords: [board.name, '축구 커뮤니티', '축구 게시판'],
+    keywords: [board.name, '축구 커뮤니티', '4590', '4590football', '축구 게시판'],
   });
 }
 

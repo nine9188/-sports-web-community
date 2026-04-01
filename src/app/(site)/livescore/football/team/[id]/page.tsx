@@ -46,7 +46,7 @@ export async function generateMetadata({
     title: `${teamName} - 순위·선수단·일정`,
     description,
     path: `/livescore/football/team/${id}`,
-    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티'],
+    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

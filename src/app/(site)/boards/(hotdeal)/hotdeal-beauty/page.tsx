@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${board.name} - 뷰티 핫딜`,
     description: board.description || `화장품, 뷰티 제품 핫딜과 최저가 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
-    keywords: ['뷰티 핫딜', '화장품 특가', '뷰티 최저가', '핫딜', '축구 커뮤니티'],
+    keywords: ['뷰티 핫딜', '화장품 특가', '뷰티 최저가', '핫딜', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

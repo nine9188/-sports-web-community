@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${board.name} - 가전 핫딜`,
     description: board.description || `가전제품 핫딜, 최저가 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
-    keywords: ['가전 핫딜', '가전제품 특가', '가전 최저가', '핫딜', '축구 커뮤니티'],
+    keywords: ['가전 핫딜', '가전제품 특가', '가전 최저가', '핫딜', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

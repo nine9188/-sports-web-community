@@ -12,10 +12,12 @@ const SITEMAPS = [
 
 export async function GET() {
   const baseUrl = siteConfig.url;
+  const now = new Date().toISOString();
 
   const sitemapEntries = SITEMAPS.map(
     (name) => `  <sitemap>
     <loc>${baseUrl}/sitemaps/${name}.xml</loc>
+    <lastmod>${now}</lastmod>
   </sitemap>`
   ).join('\n');
 

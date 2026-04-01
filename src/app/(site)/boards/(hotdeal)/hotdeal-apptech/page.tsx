@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${board.name} - 앱테크 핫딜`,
     description: board.description || `앱테크, 포인트 적립, 리워드 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
-    keywords: ['앱테크', '포인트 적립', '리워드', '핫딜', '축구 커뮤니티'],
+    keywords: ['앱테크', '포인트 적립', '리워드', '핫딜', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

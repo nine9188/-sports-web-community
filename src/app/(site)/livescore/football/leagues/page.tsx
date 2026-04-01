@@ -13,7 +13,7 @@ export async function generateMetadata() {
     title: '축구 리그 순위 · 팀 정보',
     description: 'EPL 순위, 라리가 순위, 세리에A 순위, 분데스리가 순위, K리그 순위표와 팀별 선수단, 경기 일정, 통계를 한눈에 확인하세요. 축구 커뮤니티 4590 Football.',
     path: '/livescore/football/leagues',
-    keywords: ['EPL 순위', '프리미어리그 순위', '라리가 순위', 'K리그 순위', '세리에A 득점 순위', '챔피언스리그 대진표', '축구 리그 순위표', '해외축구', '축구 커뮤니티'],
+    keywords: ['EPL 순위', '프리미어리그 순위', '라리가 순위', 'K리그 순위', '세리에A 득점 순위', '챔피언스리그 대진표', '축구 리그 순위표', '해외축구', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

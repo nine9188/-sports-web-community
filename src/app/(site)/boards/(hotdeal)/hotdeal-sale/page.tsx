@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${board.name} - 세일 정보`,
     description: board.description || `각종 세일, 할인 행사 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
-    keywords: ['세일', '할인 행사', '특가 세일', '핫딜', '축구 커뮤니티'],
+    keywords: ['세일', '할인 행사', '특가 세일', '핫딜', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

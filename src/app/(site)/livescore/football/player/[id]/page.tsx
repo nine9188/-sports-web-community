@@ -59,7 +59,7 @@ export async function generateMetadata({
     title: `${playerName} - 통계·기록·프로필`,
     description,
     path: `/livescore/football/player/${id}`,
-    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티'],
+    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
   });
 }
 

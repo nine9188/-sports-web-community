@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: LeaguePageProps) {
     title: `${league.name} 순위표 - 팀 순위·득점 순위`,
     description: `${league.name} (${league.country}) 리그 순위표, 득점 순위, 도움 순위를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/livescore/football/leagues/${id}`,
-    keywords: [`${league.name} 순위`, `${league.name} 득점 순위`, `${league.name} 일정`, `${league.name} 결과`, '축구 리그 순위표', '축구 커뮤니티'],
+    keywords: [`${league.name} 순위`, `${league.name} 득점 순위`, `${league.name} 일정`, `${league.name} 결과`, '축구 리그 순위표', '축구 커뮤니티', '4590', '4590football'],
   });
 }
 
