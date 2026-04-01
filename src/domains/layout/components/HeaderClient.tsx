@@ -19,7 +19,6 @@ const UserProfileClient = dynamic(() => import('./UserProfileClient'), { ssr: fa
 const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { ssr: false });
 import RecentlyVisited from './RecentlyVisited';
 import TransferTicker from './TransferTicker';
-import type { BannerTransferItem } from '@/domains/livescore/actions/transfers/bannerTransfers';
 import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
@@ -32,7 +31,6 @@ type HeaderClientProps = {
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
   totalPostCount?: number;
-  bannerTransfers?: BannerTransferItem[];
 };
 
 // 검색 모달 컴포넌트
@@ -136,7 +134,6 @@ export default function HeaderClient({
   boards,
   isAdmin = false,
   totalPostCount,
-  bannerTransfers
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
@@ -373,10 +370,8 @@ export default function HeaderClient({
         </div>
         {/* 전체 너비 구분선 */}
         <div className="border-b border-black/5 dark:border-white/10" />
-        {/* 이적시장 롤링 티커 */}
-        {bannerTransfers && bannerTransfers.length > 0 && (
-          <TransferTicker items={bannerTransfers} />
-        )}
+        {/* 이적시장 롤링 티커 (자체 fetch) */}
+        <TransferTicker />
         <RecentlyVisited />
       </div>
 

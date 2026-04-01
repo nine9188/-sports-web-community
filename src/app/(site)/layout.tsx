@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
-import { fetchBannerTransfers } from '@/domains/livescore/actions/transfers/bannerTransfers';
 import SiteLayoutClient from './SiteLayoutClient';
 
 /**
@@ -32,11 +31,8 @@ export default async function SiteLayout({
   // 봇이면 RightSidebar 스킵 (API-Sports 쿼타 보호 - 미들웨어에서 설정)
   const isBot = headersList.get('x-is-bot') === '1';
 
-  // 서버 컴포넌트에서 게시판 데이터 + 이적 배너 데이터 fetch
-  const [headerBoardsData, bannerTransfers] = await Promise.all([
-    getBoardsForNavigation({ includeTotalPostCount: true }),
-    fetchBannerTransfers(20),
-  ]);
+  // 서버 컴포넌트에서 게시판 데이터 fetch (이적 배너는 클라이언트에서 자체 fetch)
+  const headerBoardsData = await getBoardsForNavigation({ includeTotalPostCount: true });
 
   // 컴포넌트 생성 - layout에서 가져온 데이터를 전달
   const boardNav = (
@@ -61,7 +57,6 @@ export default async function SiteLayout({
         headerBoards={headerBoardsData.boardData}
         headerTotalPostCount={headerBoardsData.totalPostCount}
         isMobilePhone={isMobilePhone}
-        bannerTransfers={bannerTransfers}
       >
         {children}
       </SiteLayoutClient>

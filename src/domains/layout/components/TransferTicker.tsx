@@ -2,15 +2,27 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+import { fetchBannerTransfers } from '@/domains/livescore/actions/transfers/bannerTransfers';
 import type { BannerTransferItem } from '@/domains/livescore/actions/transfers/bannerTransfers';
 
 interface TransferTickerProps {
-  items: BannerTransferItem[];
+  items?: BannerTransferItem[];
 }
 
-export default function TransferTicker({ items }: TransferTickerProps) {
+export default function TransferTicker({ items: initialItems }: TransferTickerProps) {
   const [paused, setPaused] = useState(false);
+
+  // 서버에서 전달받은 초기 데이터가 없으면 클라이언트에서 자체 fetch
+  const { data: fetchedItems } = useQuery({
+    queryKey: ['bannerTransfers'],
+    queryFn: () => fetchBannerTransfers(20),
+    staleTime: 5 * 60 * 1000,
+    enabled: !initialItems || initialItems.length === 0,
+  });
+
+  const items = initialItems && initialItems.length > 0 ? initialItems : fetchedItems;
 
   if (!items || items.length === 0) return null;
 

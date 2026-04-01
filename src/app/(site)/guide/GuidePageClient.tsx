@@ -3599,6 +3599,12 @@ function EmoticonDemo() {
    메인 컴포넌트
    ───────────────────────────────────────────── */
 export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoImages }) {
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  const toggleSection = (id: string) => {
+    setActiveSection(prev => prev === id ? null : id);
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#F5F5F5] dark:bg-[#111111]">
       {/* 로고 */}
@@ -3620,13 +3626,13 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
               <BookOpen className="w-10 h-10 text-blue-500 dark:text-blue-400 mx-auto mb-3" />
               <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                 4590 Football의 주요 기능과 사용법을 안내합니다.<br />
-                아래 항목을 클릭하면 해당 섹션으로 이동합니다.
+                아래 항목을 클릭하면 상세 내용을 확인할 수 있습니다.
               </p>
             </ContainerContent>
           </Container>
         </Section>
 
-        {/* 목차 */}
+        {/* 목차 (아코디언) */}
         <Section>
           <Container className="dark:border dark:border-white/10">
             <ContainerHeader>
@@ -3634,25 +3640,26 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
             </ContainerHeader>
             <ContainerContent className="px-0 py-0">
               {TOC_ITEMS.map(({ id, icon: Icon, label, desc }, i) => (
-                <a
+                <button
                   key={id}
-                  href={`#${id}`}
-                  className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors ${i < TOC_ITEMS.length - 1 ? 'border-b border-gray-50 dark:border-gray-800/50' : ''}`}
+                  type="button"
+                  onClick={() => toggleSection(id)}
+                  className={`flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors ${i < TOC_ITEMS.length - 1 ? 'border-b border-gray-50 dark:border-gray-800/50' : ''} ${activeSection === id ? 'bg-gray-50 dark:bg-[#252525]' : ''}`}
                 >
-                  <Icon className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 ${activeSection === id ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} />
                   <div className="flex-1 min-w-0">
-                    <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{label}</span>
+                    <span className={`text-[13px] font-medium ${activeSection === id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'}`}>{label}</span>
                     <span className="text-[11px] text-gray-500 dark:text-gray-400 ml-2">{desc}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0" />
-                </a>
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${activeSection === id ? 'rotate-180 text-blue-500 dark:text-blue-400' : 'text-gray-300 dark:text-gray-600'}`} />
+                </button>
               ))}
             </ContainerContent>
           </Container>
         </Section>
 
         {/* ───── 1. 리그·팀 ───── */}
-        <Section id="league" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'league' && <Section id="league" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Trophy} title="리그·팀 페이지" desc="리그를 선택해 순위표와 팀 정보를 확인하세요" color="blue" />
 
           <GuideBox title="사용 방법">
@@ -3697,10 +3704,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
               <li><strong className="text-gray-900 dark:text-gray-100">트로피</strong> — 우승, 준우승 등 수상 이력</li>
             </ul>
           </GuideBox>
-        </Section>
+        </Section>}
 
         {/* ───── 4. 라이브스코어·매치 ───── */}
-        <Section id="match" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'match' && <Section id="match" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Tv} title="라이브스코어 · 매치 페이지" desc="실시간 스코어, 라인업, 경기 통계" color="red" />
 
           <GuideBox title="사용 방법">
@@ -3732,10 +3739,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
           <FlowArrow label="라인업에서 선수 클릭" />
           <PlayerStatsModalDemo images={demoImages} />
-        </Section>
+        </Section>}
 
         {/* ───── 5. 이적시장 ───── */}
-        <Section id="transfer" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'transfer' && <Section id="transfer" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={ArrowLeftRight} title="이적시장" desc="최신 이적, 임대, 자유계약 소식" color="amber" />
 
           <GuideBox title="사용 방법">
@@ -3766,10 +3773,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <TransferDemo images={demoImages} />
-        </Section>
+        </Section>}
 
         {/* ───── 6. 게시글 카드 삽입 ───── */}
-        <Section id="editor" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'editor' && <Section id="editor" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={PenTool} title="게시글에 카드 삽입하기" desc="팀, 선수, 매치 카드를 게시글에 삽입" color="cyan" />
 
           <GuideBox title="카드 삽입 방법">
@@ -3782,10 +3789,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
           <EditorCardDemo images={demoImages} />
 
-        </Section>
+        </Section>}
 
         {/* ───── 7. 상점 ───── */}
-        <Section id="shop" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'shop' && <Section id="shop" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={ShoppingBag} title="상점" desc="포인트로 아이템 구매" color="violet" />
 
           <GuideBox title="소개">
@@ -3809,10 +3816,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <ShopDemo images={demoImages} />
-        </Section>
+        </Section>}
 
         {/* ───── 8. 이모티콘 스튜디오 ───── */}
-        <Section id="emoticon-studio" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'emoticon-studio' && <Section id="emoticon-studio" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Palette} title="이모티콘" desc="이모티콘 구매 및 제작" color="amber" />
 
           <GuideBox title="이모티콘 구매">
@@ -3859,10 +3866,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <EmoticonPickerDemo />
-        </Section>
+        </Section>}
 
         {/* ───── 9. 고객센터 문의 ───── */}
-        <Section id="chatbot" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'chatbot' && <Section id="chatbot" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Bot} title="고객센터 문의" desc="사이트 이용 문의, 신고, 의견 제출" color="green" />
 
           <GuideBox title="소개">
@@ -3895,10 +3902,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <ChatbotDemo />
-        </Section>
+        </Section>}
 
         {/* ───── 10. 알림 ───── */}
-        <Section id="notification" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'notification' && <Section id="notification" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Bell} title="알림" desc="댓글, 추천, 멘션 알림" color="red" />
 
           <GuideBox title="소개">
@@ -3925,10 +3932,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <NotificationDemo />
-        </Section>
+        </Section>}
 
         {/* ───── 11. 검색 ───── */}
-        <Section id="search" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {activeSection === 'search' && <Section id="search" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Search} title="검색" desc="게시글, 팀, 댓글 통합 검색" color="blue" />
 
           <GuideBox title="소개">
@@ -3954,7 +3961,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <SearchDemo images={demoImages} />
-        </Section>
+        </Section>}
 
         {/* 마무리 + CTA */}
         <Section>

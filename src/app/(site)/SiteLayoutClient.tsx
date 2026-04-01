@@ -10,8 +10,6 @@ import { Board } from '@/domains/layout/types/board';
 import { HeaderUserData } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 import Footer from '@/shared/components/Footer';
-import type { BannerTransferItem } from '@/domains/livescore/actions/transfers/bannerTransfers';
-
 interface SiteLayoutClientProps {
   children?: React.ReactNode;
   boardNavigation: React.ReactNode;
@@ -19,7 +17,6 @@ interface SiteLayoutClientProps {
   headerBoards?: Board[];
   headerTotalPostCount?: number;
   isMobilePhone?: boolean;
-  bannerTransfers?: BannerTransferItem[];
 }
 
 export default function SiteLayoutClient({
@@ -29,7 +26,6 @@ export default function SiteLayoutClient({
   headerBoards,
   headerTotalPostCount,
   isMobilePhone,
-  bannerTransfers,
 }: SiteLayoutClientProps) {
   // idle 이후에만 유저 데이터 fetch (TBT 최적화: 초기 렌더 차단 방지)
   const [isIdle, setIsIdle] = useState(false);
@@ -160,7 +156,6 @@ export default function SiteLayoutClient({
       onProfileClose={closeProfileSidebar}
       onProfileClick={toggleProfileSidebar}
       isMobilePhone={isMobilePhone}
-      bannerTransfers={bannerTransfers}
     >
       {children}
     </AuthStateManager>

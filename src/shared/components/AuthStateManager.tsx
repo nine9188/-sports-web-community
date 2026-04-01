@@ -7,11 +7,9 @@ import HeaderClient from '@/domains/layout/components/HeaderClient';
 import Footer from '@/shared/components/Footer';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
-import type { BannerTransferItem } from '@/domains/livescore/actions/transfers/bannerTransfers';
-
 // 사이드바 컴포넌트들을 lazy load (모바일에서는 숨겨져있으므로)
-const Sidebar = dynamic(() => import('@/domains/sidebar/components/Sidebar'), { ssr: true });
-const ProfileSidebar = dynamic(() => import('@/domains/sidebar/components/ProfileSidebar'), { ssr: true });
+const Sidebar = dynamic(() => import('@/domains/sidebar/components/Sidebar'), { ssr: false });
+const ProfileSidebar = dynamic(() => import('@/domains/sidebar/components/ProfileSidebar'), { ssr: false });
 const UniversalChatbot = dynamic(
   () => import('@/domains/chatbot/components/UniversalChatbot').then(mod => ({ default: mod.UniversalChatbot })),
   { ssr: false }
@@ -34,7 +32,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onProfileClose,
   onProfileClick,
   isMobilePhone,
-  bannerTransfers
 }: {
   children: React.ReactNode,
   authSection: React.ReactNode,
@@ -51,7 +48,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   onProfileClose: () => void,
   onProfileClick: () => void,
   isMobilePhone?: boolean,
-  bannerTransfers?: BannerTransferItem[]
 }) {
   const pathname = usePathname();
 
@@ -67,7 +63,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
         boards={headerBoards || []}
         isAdmin={headerIsAdmin}
         totalPostCount={headerTotalPostCount}
-        bannerTransfers={bannerTransfers}
       />
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
         {!isMobilePhone && (
