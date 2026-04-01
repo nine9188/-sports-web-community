@@ -78,10 +78,10 @@ export default function EmoticonShopSection({
       {/* 이모티콘 스튜디오 링크 */}
       <Link
         href="/shop/emoticon-studio"
-        className="relative flex items-center px-4 py-3 bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] border border-black/7 dark:border-0 md:rounded-lg transition-colors"
+        className="flex flex-col items-center gap-0.5 sm:flex-row px-4 py-3 bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] border border-black/7 dark:border-0 md:rounded-lg transition-colors"
       >
-        <span className="text-[13px] text-gray-500 dark:text-gray-400">나만의 이모티콘 만들기</span>
-        <span className="absolute left-1/2 -translate-x-1/2 text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">이모티콘 스튜디오 →</span>
+        <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] sm:absolute sm:left-1/2 sm:-translate-x-1/2">이모티콘 스튜디오 →</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 sm:mr-auto">나만의 이모티콘 만들기</span>
       </Link>
 
       {/* 필터 + 검색 */}
