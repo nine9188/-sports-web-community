@@ -93,12 +93,13 @@ export async function generateMetadata({
   const score = isNotStarted ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
 
   const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
-  const description = `${leagueName} - ${homeTeam} vs ${awayTeam} 경기 정보, 라인업, 통계, 하이라이트를 확인하세요.`;
+  const description = `${leagueName} ${homeTeam} vs ${awayTeam} 경기 라인업, 통계, 하이라이트를 확인하세요. 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
     title,
     description,
     path: `/livescore/football/match/${id}`,
+    keywords: [`${homeTeam} ${awayTeam}`, `${homeTeam} 라인업`, `${awayTeam} 라인업`, `${leagueName} 경기결과`, '실시간 스코어', '축구 커뮤니티'],
   });
 }
 

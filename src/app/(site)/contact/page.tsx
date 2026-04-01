@@ -7,7 +7,7 @@ import { Mail, Handshake, Megaphone, HelpCircle } from 'lucide-react';
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     title: '제휴/광고 문의',
-    description: '4590 Football 제휴, 광고, 기타 문의를 위한 연락처 안내 페이지입니다.',
+    description: '축구 커뮤니티 4590 Football 제휴, 광고, 스폰서십 문의 안내 페이지입니다.',
     path: '/contact',
   });
 }

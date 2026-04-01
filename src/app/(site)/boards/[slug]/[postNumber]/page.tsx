@@ -158,7 +158,7 @@ export async function generateMetadata({
     notFound();
   }
 
-  const description = extractDescription(post.content) || `${board.name} 게시판의 게시글입니다.`;
+  const description = extractDescription(post.content) || `${board.name} 게시판의 게시글입니다. 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
     title: `${post.title} - ${board.name}`,
@@ -167,6 +167,7 @@ export async function generateMetadata({
     type: 'article',
     publishedTime: post.created_at ?? undefined,
     modifiedTime: post.updated_at ?? undefined,
+    keywords: [board.name, '축구 커뮤니티', '축구 게시판'],
   });
 }
 

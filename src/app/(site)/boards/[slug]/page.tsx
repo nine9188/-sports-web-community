@@ -12,6 +12,57 @@ import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUt
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+/**
+ * 게시판 slug 기반으로 SEO 키워드/설명을 동적 생성
+ */
+function getBoardSeoData(slug: string, boardName: string) {
+  // 축구 소식/뉴스
+  if (slug === 'news' || slug === 'foreign-news' || slug === 'domestic-news' || slug === 'official') {
+    return {
+      title: `${boardName} - 축구 뉴스`,
+      desc: `${boardName}을 빠르게 확인하세요. 축구 커뮤니티 4590 Football.`,
+      keywords: [boardName, '축구 뉴스', '축구 소식', slug.includes('foreign') || slug === 'news' ? '해외축구 뉴스' : '국내축구 뉴스', '축구 커뮤니티'],
+    };
+  }
+
+  // 축구 분석
+  if (slug.includes('analysis') || slug === 'data-analysis') {
+    return {
+      title: `${boardName} - 축구 분석 게시판`,
+      desc: `${boardName} 게시판. 경기 분석, 전문가 예측, 데이터 기반 분석글을 확인하세요. 축구 커뮤니티 4590 Football.`,
+      keywords: [boardName, '축구 분석', '축구 경기 분석', '축구 분석 커뮤니티', '전문가 예상 스코어', '축구 커뮤니티'],
+    };
+  }
+
+  // 리그 게시판
+  if (['premier', 'laliga', 'serie-a', 'bundesliga', 'LIGUE1', 'k-league', 'k-league-1', 'k-league-2'].includes(slug)) {
+    return {
+      title: `${boardName} - 리그 게시판`,
+      desc: `${boardName} 최신 소식, 경기 결과, 순위, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
+      keywords: [`${boardName} 순위`, `${boardName} 일정`, `${boardName} 소식`, '축구 커뮤니티'],
+    };
+  }
+
+  // 팀 게시판 (slug에 팀명이 들어감 - 리그/분석/핫딜/마켓/일반 slug가 아닌 나머지)
+  const NON_TEAM_SLUGS = ['free', 'free-talk', 'humor', 'issue', 'qna', 'information', 'tips', 'creative', 'creative-video', 'creative-fanart', 'creative-gif', 'notice', 'review', 'review-purchase', 'review-general', 'review-stadium', 'market', 'market-sell', 'market-buy', 'market-exchange', 'market-share', 'market-free', 'market-ali', 'market-deal', 'market-click', 'market-groupbuy', 'market-quiz', 'market-lottery', 'market-review'];
+  const isTeamBoard = !slug.startsWith('hotdeal') && !slug.startsWith('foreign-analysis') && !NON_TEAM_SLUGS.includes(slug);
+
+  if (isTeamBoard) {
+    return {
+      title: `${boardName} 게시판 - 팬 커뮤니티`,
+      desc: `${boardName} 최신 소식, 경기 결과, 이적 루머, 라인업 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
+      keywords: [`${boardName} 소식`, `${boardName} 경기`, `${boardName} 이적`, `${boardName} 라인업`, '축구 커뮤니티'],
+    };
+  }
+
+  // 일반 커뮤니티 게시판 (자유, 유머, 이슈 등)
+  return {
+    title: `${boardName} - 축구 커뮤니티`,
+    desc: `${boardName} 게시판의 최신 글을 확인하세요. 축구 커뮤니티 4590 Football.`,
+    keywords: [boardName, '축구 커뮤니티', '축구 게시판'],
+  };
+}
+
 // 게시판 메타데이터 생성
 export async function generateMetadata({
   params
@@ -37,10 +88,13 @@ export async function generateMetadata({
     });
   }
 
+  const seo = getBoardSeoData(slug, board.name);
+
   return buildMetadata({
-    title: board.name,
-    description: board.description || `${board.name} 게시판의 최신 글을 확인하세요.`,
+    title: seo.title,
+    description: board.description ? `${board.description} 축구 커뮤니티 4590 Football.` : seo.desc,
     path: `/boards/${slug}`,
+    keywords: seo.keywords,
   });
 }
 
@@ -116,8 +170,54 @@ export default async function BoardDetailPage({
       };
     }
 
-    // 5. 레이아웃 렌더링
+    // 5. 게시판 JSON-LD 구조화 데이터 (AI/검색엔진용)
+    const childBoards = result.hoverChildBoardsMap[result.boardData.id] || [];
+    const boardUrl = `https://4590football.com/boards/${slug}`;
+    const boardJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: result.boardData.name,
+      description: result.boardData.description || `${result.boardData.name} - 축구 커뮤니티 4590 Football 게시판`,
+      url: boardUrl,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: '4590 Football',
+        url: 'https://4590football.com',
+      },
+      ...(childBoards.length > 0 && {
+        hasPart: childBoards.map((child, index) => ({
+          '@type': 'CollectionPage',
+          name: child.name,
+          url: `https://4590football.com/boards/${child.slug || ''}`,
+          position: index + 1,
+        })),
+      }),
+      ...(result.boardData.team_id && {
+        about: {
+          '@type': 'SportsTeam',
+          name: result.boardData.name,
+        },
+      }),
+      ...(result.boardData.league_id && {
+        about: {
+          '@type': 'SportsOrganization',
+          name: result.boardData.name,
+        },
+      }),
+      provider: {
+        '@type': 'Organization',
+        name: '4590 Football',
+        url: 'https://4590football.com',
+      },
+    };
+
+    // 6. 레이아웃 렌더링
     return (
+      <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(boardJsonLd) }}
+      />
       <BoardDetailLayout
         boardData={{
           ...result.boardData,
@@ -147,6 +247,7 @@ export default async function BoardDetailPage({
         leagueLogoUrl={result.leagueLogoUrl}
         leagueLogoUrlDark={result.leagueLogoUrlDark}
       />
+      </>
     );
   } catch (error) {
     console.error("BoardDetailPage Error:", error);

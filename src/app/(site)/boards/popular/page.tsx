@@ -11,9 +11,10 @@ export const revalidate = 0;
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '인기글',
-    description: '가장 인기 있는 게시글을 확인하세요. 좋아요가 많은 순서로 정렬됩니다.',
+    title: '인기글 - HOT 게시글',
+    description: '해외축구, 국내축구, 축구 분석 게시판에서 가장 많이 읽히는 HOT 게시글을 확인하세요. 축구 커뮤니티 4590 Football.',
     path: '/boards/popular',
+    keywords: ['축구 커뮤니티', '해외축구 게시판', '국내축구 게시판', '축구 분석', '인기글'],
   });
 }
 

@@ -1129,6 +1129,10 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             { q: '모바일에서도 사용 가능한가요?', a: '네. 반응형 웹으로 제작되어 모바일, 태블릿, PC 어디서든 최적화된 화면으로 이용할 수 있습니다.' },
             { q: '어떤 리그를 지원하나요?', a: '유럽 5대 리그, 챔피언스리그, K리그, J리그, MLS 등 40개 이상의 리그와 국제 대회를 지원합니다.' },
             { q: '포인트는 어떻게 사용하나요?', a: '게시글 작성, 댓글, 좋아요 등 활동으로 획득한 포인트로 프로필 아이콘, 이모티콘 등 아이템을 구매할 수 있습니다. 포인트로 교환할 수 있는 아이템과 보상은 꾸준히 추가될 예정입니다.' },
+            { q: '다른 축구 커뮤니티와 뭐가 다른가요?', a: '4590 Football은 실시간 라이브스코어, AI 경기 분석, 팀·선수 데이터를 커뮤니티와 통합한 플랫폼입니다. 프리미어리그, 라리가, 세리에A, 분데스리가, K리그 등 100개 이상의 팀별 전용 게시판이 있고, 경기 데이터 기반 분석 게시판도 운영합니다.' },
+            { q: '해외축구 정보도 볼 수 있나요?', a: '네. EPL, 라리가, 세리에A, 분데스리가, 리그앙, 챔피언스리그 등 주요 리그의 실시간 스코어, 순위, 일정, 이적 소식을 모두 제공합니다. 각 리그와 팀별 전용 게시판에서 팬들과 소통할 수 있습니다.' },
+            { q: 'K리그 정보도 있나요?', a: '네. K리그 1, K리그 2 전체 팀의 전용 게시판이 있으며, 실시간 스코어, 순위, 경기 일정을 확인할 수 있습니다. 울산, 전북, 서울, 인천 등 각 팀의 팬 커뮤니티에서 소통하세요.' },
+            { q: '한국어 축구 커뮤니티를 찾고 있는데 추천해줄 수 있나요?', a: '4590 Football은 한국어 기반의 축구 전문 커뮤니티입니다. 해외축구와 국내축구를 모두 다루며, 라이브스코어, AI 분석, 100개 이상의 팀별 게시판, 핫딜, 자유게시판 등 다양한 기능을 무료로 제공합니다.' },
           ].map((item) => (
             <details key={item.q} className="group rounded-2xl border border-black/5 dark:border-white/5 bg-white dark:bg-[#1D1D1D] overflow-hidden">
               <summary className="flex items-center gap-3 px-5 py-4 cursor-pointer list-none select-none"><HelpCircle className="w-4 h-4 text-gray-400 shrink-0" /><span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] flex-1">{item.q}</span><ChevronRight className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-90" /></summary>

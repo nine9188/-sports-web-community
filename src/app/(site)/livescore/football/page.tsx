@@ -9,9 +9,10 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '라이브스코어',
-    description: '실시간 축구 경기 결과와 일정을 확인하세요. 전 세계 주요 리그 경기를 한눈에.',
+    title: '축구 라이브스코어 - 실시간 경기결과',
+    description: '오늘 축구 경기결과와 일정을 실시간으로 확인하세요. EPL, 라리가, 세리에A, 분데스리가, 챔피언스리그, K리그 라이브스코어. 축구 커뮤니티 4590 Football.',
     path: '/livescore/football',
+    keywords: ['라이브스코어', '실시간 스코어', '해외축구 스코어', '실시간 축구 결과', '오늘 축구 경기', '축구 경기결과', 'EPL 순위', '챔피언스리그 일정', 'K리그 일정', '축구 커뮤니티'],
   });
 }
 

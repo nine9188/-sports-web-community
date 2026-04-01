@@ -10,9 +10,10 @@ import TransfersPageContent from '@/domains/livescore/components/football/transf
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '이적시장',
-    description: '17개 리그 축구 이적 소식, 영입 정보, 방출 소식을 확인하세요. 매주 업데이트.',
+    title: '축구 이적 소식 - 영입·방출·루머',
+    description: 'EPL, 라리가, 세리에A, 분데스리가, K리그 등 최신 축구 이적 소식과 이적 시장 루머. 선수 영입, 방출, 임대 정보를 확인하세요. 축구 커뮤니티 4590 Football.',
     path: '/transfers',
+    keywords: ['축구 이적', '이적시장', '이적 시장 루머', 'EPL 이적', '프리미어리그 이적', '선수 영입', '해외축구 이적', '축구 커뮤니티'],
   });
 }
 

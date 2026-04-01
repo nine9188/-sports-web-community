@@ -39,12 +39,14 @@ export async function generateMetadata({
   }
 
   const team = teamData.teamData.team.team;
-  const description = `${team.name}의 경기 일정, 순위, 선수단, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''}`;
+  const teamName = team.name;
+  const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
-    title: `${team.name} - 팀 정보`,
+    title: `${teamName} - 순위·선수단·일정`,
     description,
     path: `/livescore/football/team/${id}`,
+    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티'],
   });
 }
 

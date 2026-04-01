@@ -27,9 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   return buildMetadata({
-    title: board.name,
-    description: board.description || `${board.name} 게시판의 최신 글을 확인하세요.`,
+    title: `${board.name} - 세일 정보`,
+    description: board.description || `각종 세일, 할인 행사 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
     path: `/boards/${SLUG}`,
+    keywords: ['세일', '할인 행사', '특가 세일', '핫딜', '축구 커뮤니티'],
   });
 }
 

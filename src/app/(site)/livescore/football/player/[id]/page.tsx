@@ -53,12 +53,13 @@ export async function generateMetadata({
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
   const position = statistics?.[0]?.games?.position || '';
 
-  const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 프로필 정보를 확인하세요.`;
+  const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
-    title: `${playerName} - 선수 정보`,
+    title: `${playerName} - 통계·기록·프로필`,
     description,
     path: `/livescore/football/player/${id}`,
+    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티'],
   });
 }
 

@@ -12,9 +12,10 @@ export const revalidate = 0;
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '전체글',
-    description: '모든 게시판의 최신 게시글을 한곳에서 확인하세요.',
+    title: '전체글 - 해외축구·국내축구 게시판',
+    description: '해외축구, 국내축구, 축구 분석, 자유게시판 등 모든 게시판의 최신 글을 한곳에서 확인하세요. 축구 커뮤니티 4590 Football.',
     path: '/boards/all',
+    keywords: ['해외축구 게시판', '국내축구 게시판', '축구 분석 커뮤니티', '축구 커뮤니티', '해외축구', '국내축구'],
   });
 }
 

@@ -6,7 +6,7 @@ import GuidePageClient from './GuidePageClient';
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     title: '이용 가이드',
-    description: '4590 Football 이용 가이드 — 리그·팀 탐색, 선수 정보, 라이브스코어, 게시글 카드 삽입 등 사이트 사용법을 안내합니다.',
+    description: '축구 커뮤니티 4590 Football 이용 가이드. 라이브스코어, 리그·팀 탐색, 선수 정보, 게시글 작성, 승부예측 등 사용법을 안내합니다.',
     path: '/guide',
   });
 }
