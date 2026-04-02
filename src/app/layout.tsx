@@ -84,6 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     '@type': 'ImageObject',
                     url: `${siteConfig.url}/logo/4590football-logo.svg`,
                   },
+                  sameAs: [
+                    'https://www.instagram.com/4590_football',
+                  ],
                   email: 'support@4590football.com',
                   contactPoint: {
                     '@type': 'ContactPoint',

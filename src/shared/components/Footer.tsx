@@ -116,40 +116,13 @@ export default function Footer() {
           {/* 소셜 미디어 */}
           <div className="flex items-center gap-4">
             <a
-              href="#"
+              href="https://www.instagram.com/4590_football"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
               aria-label="Instagram"
             >
               <InstagramIcon className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
-              aria-label="YouTube"
-            >
-              <YoutubeIcon className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
-              aria-label="X (Twitter)"
-            >
-              <TwitterIcon className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
-              aria-label="Discord"
-            >
-              <DiscordIcon className="w-5 h-5" />
             </a>
           </div>
         </div>
