@@ -91,21 +91,16 @@ export async function getAllPopularPosts({
 
     switch (period) {
       case 'week':
-        startDate = new Date(now);
-        const dayOfWeek = now.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate.setDate(now.getDate() - diff);
-        startDate.setHours(0, 0, 0, 0);
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         windowDays = 7;
         break;
       case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        windowDays = 31;
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        windowDays = 30;
         break;
       case 'all':
       default:
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
         windowDays = 365;
         break;
     }

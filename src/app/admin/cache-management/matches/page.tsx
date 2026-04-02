@@ -87,7 +87,7 @@ export default function MatchCacheManagement() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">경기 캐시 관리</h2>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">경기 캐시 관리</h1>
 
       {/* 통계 */}
       {stats && (
@@ -120,7 +120,7 @@ export default function MatchCacheManagement() {
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0]">만료 데이터 정리</h3>
+            <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0]">만료 데이터 정리</h2>
             <p className="text-[13px] text-gray-500 dark:text-gray-400">AI 예측 만료, 에러 이미지, 오래된 투표 등 정리</p>
           </div>
           <button
@@ -143,7 +143,7 @@ export default function MatchCacheManagement() {
 
       {/* 경기 ID 검색 */}
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-        <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">경기 ID 검색</h3>
+        <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">경기 ID 검색</h2>
         <div className="flex gap-2">
           <input
             type="number"
@@ -184,9 +184,9 @@ export default function MatchCacheManagement() {
       {/* 불완전 캐시 목록 */}
       {incompleteEntries.length > 0 && (
         <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">
+          <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">
             불완전 캐시 ({incompleteEntries.length}건)
-          </h3>
+          </h2>
           <div className="space-y-2">
             {incompleteEntries.map((entry) => (
               <CacheEntryRow

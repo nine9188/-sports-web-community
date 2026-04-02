@@ -60,15 +60,11 @@ export async function getBoardPopularPosts(boardId: string) {
   const now = new Date();
   const nowMs = now.getTime();
 
-  // 이번주 월요일 00:00:00
-  const weekStart = new Date(now);
-  const dayOfWeek = now.getDay();
-  const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  weekStart.setDate(now.getDate() - diff);
-  weekStart.setHours(0, 0, 0, 0);
+  // 최근 7일 (롤링)
+  const weekStart = new Date(nowMs - 7 * 24 * 60 * 60 * 1000);
 
-  // 이번달 1일 00:00:00
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // 최근 30일 (롤링)
+  const monthStart = new Date(nowMs - 30 * 24 * 60 * 60 * 1000);
 
   // 현재 게시판과 모든 하위 게시판 ID 가져오기
   const allBoardIds = await getCachedChildBoardIds(boardId);

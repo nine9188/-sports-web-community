@@ -139,7 +139,7 @@ export default function TransferBannerCard({ items }: TransferBannerCardProps) {
                   </div>
                 </div>
 
-                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${item.transferTypeColor}`}>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
                   {item.transferTypeFormatted}
                 </span>
               </Link>

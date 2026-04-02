@@ -53,9 +53,9 @@ export default function AdminDashboard() {
 
       {/* 관리자 기능 안내 */}
       <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] mb-6">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] mb-6">
           관리자 기능 안내
-        </h2>
+        </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FeatureItem
             icon={<Users className="h-6 w-6 text-gray-600 dark:text-gray-400" />}

@@ -76,7 +76,7 @@ export default function AssetCacheManagement() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">이미지 캐시 관리</h2>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">이미지 캐시 관리</h1>
 
       {/* 통계 */}
       {stats && (
@@ -111,7 +111,7 @@ export default function AssetCacheManagement() {
 
       {/* 수동 검색 및 강제 재다운로드 */}
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-        <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">이미지 강제 재다운로드</h3>
+        <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">이미지 강제 재다운로드</h2>
         <div className="flex gap-2">
           <select
             value={searchType}
@@ -152,9 +152,9 @@ export default function AssetCacheManagement() {
       {/* 에러 목록 */}
       {errors.length > 0 && (
         <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">
+          <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">
             에러 목록 ({errors.length}건)
-          </h3>
+          </h2>
           <div className="space-y-2">
             {errors.map((err) => {
               const key = `${err.type}-${err.entity_id}`;

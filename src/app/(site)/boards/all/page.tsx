@@ -135,7 +135,7 @@ export default async function AllPostsPage({
     return (
       <div className="container mx-auto">
         <div className={errorBoxStyles}>
-          <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+          <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
           <p className={errorMessageStyles}>전체 게시글을 불러오는 중 오류가 발생했습니다.</p>
           <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
         </div>

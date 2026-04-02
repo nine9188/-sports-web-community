@@ -4,6 +4,8 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // X-Powered-By 헤더 제거 (프레임워크 정보 노출 방지)
+  poweredByHeader: false,
   // CSS 최적화: critical CSS 인라인
   experimental: {
     optimizeCss: true,

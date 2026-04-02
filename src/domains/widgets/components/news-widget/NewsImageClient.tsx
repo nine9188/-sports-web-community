@@ -7,6 +7,15 @@ import { siteConfig } from '@/shared/config';
 const IMAGE_TIMEOUT_MS = 5000;
 const FALLBACK_LOGO = siteConfig.logo;
 
+/** 외부 이미지 URL을 proxy-image API 경유 URL로 변환 */
+function toProxyUrl(url: string): string {
+  // 로컬 경로나 이미 프록시된 URL은 그대로
+  if (url.startsWith('/') || url.includes('/api/proxy-image')) return url;
+  // Supabase Storage URL은 remotePatterns에 등록되어 있으므로 그대로
+  if (url.includes('supabase.co')) return url;
+  return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+}
+
 type ImageLoadingState = 'idle' | 'loading' | 'loaded' | 'error' | 'timeout';
 
 interface NewsImageClientProps {
@@ -40,7 +49,7 @@ export default function NewsImageClient({
 
   const hasValidUrl = !!(imageUrl && typeof imageUrl === 'string' && imageUrl.trim());
   const useFallback = !hasValidUrl || state === 'error' || state === 'timeout';
-  const finalImageUrl = useFallback ? FALLBACK_LOGO : imageUrl!;
+  const finalImageUrl = useFallback ? FALLBACK_LOGO : toProxyUrl(imageUrl!);
 
   const handleLoadStart = useCallback(() => {
     setState('loading');
@@ -78,7 +87,7 @@ export default function NewsImageClient({
         src={finalImageUrl}
         alt={alt}
         fill
-        unoptimized={!useFallback}
+        unoptimized={false}
         className={useFallback
           ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"

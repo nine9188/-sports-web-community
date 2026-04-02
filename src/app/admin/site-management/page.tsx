@@ -79,9 +79,9 @@ export default function SiteManagementDashboard() {
 
               {/* 내용 */}
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">
                   {section.title}
-                </h3>
+                </h2>
                 <p className="mt-1 text-[13px] text-gray-600 dark:text-gray-400">
                   {section.description}
                 </p>
@@ -96,7 +96,7 @@ export default function SiteManagementDashboard() {
 
       {/* 도움말 */}
       <div className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">사용 안내</h4>
+        <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">사용 안내</h3>
         <ul className="space-y-1 text-[13px] text-gray-600 dark:text-gray-400">
           <li>• <strong>SEO 설정</strong>: 전역 SEO 설정 및 페이지별 메타데이터를 관리합니다 (제목, 설명, 키워드, OG 이미지)</li>
           <li>• <strong>브랜딩 관리</strong>: 로고, 파비콘 등 시각적 요소를 업로드하고 관리합니다</li>
@@ -105,7 +105,7 @@ export default function SiteManagementDashboard() {
 
       {/* 최근 활동 (추후 구현 가능) */}
       <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">최근 활동</h3>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">최근 활동</h2>
         <p className="text-[13px] text-gray-500 dark:text-gray-400">아직 활동 내역이 없습니다.</p>
       </div>
     </div>

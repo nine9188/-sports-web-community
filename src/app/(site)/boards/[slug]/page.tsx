@@ -123,7 +123,7 @@ export default async function BoardDetailPage({
         return (
           <div className="container mx-auto">
             <div className={errorBoxStyles}>
-              <h2 className={errorTitleStyles}>게시판을 찾을 수 없습니다</h2>
+              <h1 className={errorTitleStyles}>게시판을 찾을 수 없습니다</h1>
               <p className={errorMessageStyles}>{result.error}</p>
               <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
             </div>
@@ -133,7 +133,7 @@ export default async function BoardDetailPage({
       return (
         <div className="container mx-auto">
           <div className={errorBoxStyles}>
-            <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+            <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
             <p className={errorMessageStyles}>{result.error}</p>
             <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
           </div>
@@ -254,7 +254,7 @@ export default async function BoardDetailPage({
     return (
       <div className="container mx-auto">
         <div className={errorBoxStyles}>
-          <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
+          <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
           <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
           <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
         </div>

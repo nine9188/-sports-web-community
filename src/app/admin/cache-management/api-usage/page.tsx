@@ -50,12 +50,12 @@ export default function ApiUsagePage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">API 사용량</h2>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">API 사용량</h1>
 
       {/* 오늘 요약 */}
       {summary && (
         <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">오늘 현황</h3>
+          <h2 className="font-semibold text-gray-900 dark:text-[#F0F0F0] mb-4">오늘 현황</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">{summary.totalCalls}</div>

@@ -69,7 +69,7 @@ export default function CacheManagementPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">캐시 관리</h2>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">캐시 관리</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
@@ -98,7 +98,7 @@ export default function CacheManagementPage() {
           >
             <div className="flex items-center gap-4 mb-3">
               {page.icon}
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">{page.title}</h3>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">{page.title}</h2>
             </div>
             <p className="text-[13px] text-gray-600 dark:text-gray-400">{page.stats}</p>
           </Link>
