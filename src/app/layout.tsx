@@ -78,9 +78,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   '@id': `${siteConfig.url}#organization`,
                   name: siteConfig.name,
                   url: siteConfig.url,
+                  description: siteConfig.description,
+                  foundingDate: '2026-03-15',
                   logo: {
                     '@type': 'ImageObject',
                     url: `${siteConfig.url}/logo/4590football-logo.svg`,
+                  },
+                  contactPoint: {
+                    '@type': 'ContactPoint',
+                    contactType: 'Customer Support',
+                    url: `${siteConfig.url}/contact`,
                   },
                 },
                 {

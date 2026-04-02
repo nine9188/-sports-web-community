@@ -26,7 +26,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
                 level={profile.level}
                 exp={profile.exp}
                 size={24}
-                alt=""
+                alt={`${profile.nickname} 프로필`}
               />
             </div>
             <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
@@ -70,7 +70,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
                 level={profile.level}
                 exp={profile.exp}
                 size={20}
-                alt=""
+                alt={`${profile.nickname} 프로필`}
               />
             </div>
             <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">

@@ -54,7 +54,7 @@ export default function ClientUserProfile({ profileData, showActions = true }: C
               level={profileData.level}
               exp={profileData.exp}
               size={20}
-              alt=""
+              alt={`${profileData.nickname || '사용자'} 프로필`}
               className="object-cover"
             />
           </div>

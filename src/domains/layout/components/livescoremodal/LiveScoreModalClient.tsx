@@ -79,7 +79,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
           <div className="flex items-center gap-2">
             <Circle className="h-4 w-4 text-green-600 fill-green-600" />
             <div>
-              <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</h2>
+              <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">라이브스코어</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">주요 경기 일정</p>
             </div>
           </div>

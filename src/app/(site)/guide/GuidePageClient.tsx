@@ -739,7 +739,7 @@ function EditorCardDemo({ images }: { images: GuideDemoImages }) {
         {/* 경기 결과 + 팀/선수 버튼 (각각 클릭 안내) */}
         <div className="relative">
           <button className={`h-auto w-auto p-1.5 md:p-2 rounded transition-colors ${hoverToolbar ? 'bg-[#EAEAEA] dark:bg-[#333333]' : 'text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`} title="경기 결과 추가">
-            <Image src="/icons/live.png" alt="경기 결과" width={18} height={18} className="dark:invert" />
+            <Image src="/icons/live.webp" alt="경기 결과" width={18} height={18} className="dark:invert" />
           </button>
           <motion.div
             animate={{ y: [0, -3, 0] }}

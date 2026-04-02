@@ -375,6 +375,14 @@ export default async function PostDetailPage({
       ...(result.post.profiles?.public_id && {
         url: `${siteUrl}/user/${result.post.profiles.public_id}`,
       }),
+      ...(result.post.profiles?.level && {
+        description: `4590 Football 레벨 ${result.post.profiles.level} 회원`,
+      }),
+      memberOf: {
+        '@type': 'Organization',
+        '@id': `${siteUrl}#organization`,
+        name: '4590 Football',
+      },
     };
 
     // content_type에 따라 스키마 분기

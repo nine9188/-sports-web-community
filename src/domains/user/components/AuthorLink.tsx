@@ -170,7 +170,7 @@ export default function AuthorLink({
             level={level}
             exp={exp}
             size={iconSize}
-            alt=""
+            alt={`${nickname || '익명'} 프로필`}
             priority={priority}
           />
         </div>

@@ -17,12 +17,12 @@ export type BoardQuickLinksWidgetProps = {
 };
 
 const DEFAULT_ITEMS: QuickLinkItem[] = [
-  { key: 'popular', label: '인기', href: '/boards/popular', iconImage: '/icons/popular.png', ariaLabel: '인기 게시판' },
-  { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/post.png', ariaLabel: '전체 게시판' },
-  { key: 'notice', label: '공지', href: '/boards/notice', iconImage: '/icons/notice.png', ariaLabel: '공지 게시판' },
-  { key: 'news', label: '소식', href: '/boards/news', iconImage: '/icons/news.png', ariaLabel: '소식 게시판' },
-  { key: 'live', label: '경기 확인', href: '/livescore/football', iconImage: '/icons/livescore.png', ariaLabel: '경기 확인' },
-  { key: 'data-center', label: '리그·팀', href: '/livescore/football/leagues', iconImage: '/icons/data.png', ariaLabel: '리그·팀' },
+  { key: 'popular', label: '인기', href: '/boards/popular', iconImage: '/icons/popular.webp', ariaLabel: '인기 게시판' },
+  { key: 'all', label: '전체', href: '/boards/all', iconImage: '/icons/post.webp', ariaLabel: '전체 게시판' },
+  { key: 'notice', label: '공지', href: '/boards/notice', iconImage: '/icons/notice.webp', ariaLabel: '공지 게시판' },
+  { key: 'news', label: '소식', href: '/boards/news', iconImage: '/icons/news.webp', ariaLabel: '소식 게시판' },
+  { key: 'live', label: '경기 확인', href: '/livescore/football', iconImage: '/icons/livescore.webp', ariaLabel: '경기 확인' },
+  { key: 'data-center', label: '리그·팀', href: '/livescore/football/leagues', iconImage: '/icons/data.webp', ariaLabel: '리그·팀' },
 ];
 
 function classNames(...classes: Array<string | undefined | false>) {
@@ -75,7 +75,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
             {item.iconImage ? (
               <Image
                 src={item.iconImage}
-                alt=""
+                alt={`${item.label} 아이콘`}
                 width={28}
                 height={28}
                 className="w-7 h-7 object-contain dark:invert"
@@ -94,7 +94,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
             {item.iconImage ? (
               <Image
                 src={item.iconImage}
-                alt=""
+                alt={`${item.label} 아이콘`}
                 width={20}
                 height={20}
                 className="w-5 h-5 object-contain dark:invert"

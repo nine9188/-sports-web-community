@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget, TransferBannerWidget } from '@/domains/widgets/components';
+import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
@@ -84,10 +84,10 @@ export default function HomePage() {
       <Suspense fallback={<LiveScoreSkeleton />}>
         <LiveScoreWidgetStreaming />
       </Suspense>
-      {/* 이적시장 배너 슬라이드 */}
-      <Suspense>
+      {/* 이적시장 배너 슬라이드 - 임시 비활성화 */}
+      {/* <Suspense>
         <TransferBannerWidget />
-      </Suspense>
+      </Suspense> */}
 
       {/* 게시판 모음 위젯 - Suspense 스트리밍 */}
       <Suspense>

@@ -703,7 +703,7 @@ function CommunityDemo() {
                   <div className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden">
                     <div className="flex items-center text-xs gap-1">
                       <div className="relative w-5 h-5 shrink-0">
-                        <Image src={siteConfig.logo} alt="" width={20} height={20} className="object-contain w-5 h-5 dark:invert" />
+                        <Image src={siteConfig.logo} alt="사이트 로고" width={20} height={20} className="object-contain w-5 h-5 dark:invert" />
                       </div>
                       <span className="truncate flex-1 min-w-0">{p.title}</span>
                       <span className="text-gray-500 dark:text-gray-400 ml-auto shrink-0 flex items-center gap-2">
@@ -770,7 +770,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       <section className="relative overflow-hidden md:rounded-lg border border-black/7 dark:border-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black" />
         <div className="absolute inset-0">
-          <Image src="/images/connor-coyne-OgqWLzWRSaI-unsplash.jpg" alt="" fill className="object-cover opacity-15" />
+          <Image src="/images/connor-coyne-OgqWLzWRSaI-unsplash.webp" alt="경기장 배경" fill className="object-cover opacity-15" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         <div className="relative px-6 py-20 md:px-12 md:py-32 text-center max-w-3xl mx-auto">
@@ -995,7 +995,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       <Section className="relative overflow-hidden md:rounded-lg border border-black/7 dark:border-0 mt-4">
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/about/mockup-overview.png" alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+          <img src="/images/about/mockup-overview.webp" alt="서비스 화면 미리보기" className="absolute inset-0 w-full h-full object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-black/85" />
         <div className="relative px-6 py-20 md:px-12 md:py-28">
@@ -1106,7 +1106,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       <Section className="relative overflow-hidden md:rounded-lg border border-black/7 dark:border-0 mt-4">
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/about/mockup-devices.png" alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+          <img src="/images/about/mockup-devices.webp" alt="다양한 디바이스 화면" className="absolute inset-0 w-full h-full object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent dark:from-[#111]/90 dark:via-[#111]/50 dark:to-transparent" />
         <div className="relative px-6 py-28 md:px-12 md:py-40 text-center max-w-2xl mx-auto">

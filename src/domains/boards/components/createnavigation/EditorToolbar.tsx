@@ -204,7 +204,7 @@ export default function EditorToolbar({
         className={`h-auto w-auto p-1.5 md:p-2 text-gray-900 dark:text-[#F0F0F0] ${showMatchModal ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
         title="경기 결과 추가"
       >
-        <Image src="/icons/live.png" alt="경기 결과" width={18} height={18} className="dark:invert" />
+        <Image src="/icons/live.webp" alt="경기 결과" width={18} height={18} className="dark:invert" />
       </Button>
 
       {/* 팀/선수 선택 버튼 */}

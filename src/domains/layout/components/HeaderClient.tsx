@@ -214,7 +214,7 @@ export default function HeaderClient({
                 level={userLevel}
                 exp={userData?.exp}
                 size={20}
-                alt=""
+                alt="내 프로필"
                 className="rounded-full object-cover"
               />
             </Button>

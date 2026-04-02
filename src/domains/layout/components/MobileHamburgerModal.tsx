@@ -72,7 +72,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
       >
         {/* 헤더 - 고정 */}
         <div className="flex items-center justify-between p-4 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-          <h2 className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</h2>
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">게시판 선택</p>
           <Button
             variant="ghost"
             size="icon"

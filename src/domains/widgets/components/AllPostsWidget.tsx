@@ -71,7 +71,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     // 헤더 컨텐츠 렌더링
     const headerContent = (
       <div className="w-full h-full flex items-center justify-between">
-        <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h3>
+        <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h2>
         <Link
           href="/boards/all"
           className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
