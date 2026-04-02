@@ -54,7 +54,7 @@ export default function TransferBannerCard({ items }: TransferBannerCardProps) {
   const pageItems = items.slice(page * perPage, page * perPage + perPage);
 
   return (
-    <Container className="bg-white dark:bg-[#1D1D1D]">
+    <Container className="bg-white dark:bg-[#1D1D1D] max-md:border max-md:border-black/7 max-md:dark:border-0">
       <ContainerHeader className="justify-between">
         <div className="flex items-center gap-2">
           <ContainerTitle>최근 이적</ContainerTitle>
@@ -100,7 +100,7 @@ export default function TransferBannerCard({ items }: TransferBannerCardProps) {
                 href="/transfers"
                 className="flex flex-col items-center gap-2 px-3 py-4 md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#333333] flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex-shrink-0">
                   <UnifiedSportsImageClient
                     src={item.playerPhoto}
                     alt={item.playerName}
@@ -111,7 +111,7 @@ export default function TransferBannerCard({ items }: TransferBannerCardProps) {
                   />
                 </div>
 
-                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center truncate w-full">
+                <p className="text-[12px] md:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center line-clamp-1 w-full">
                   {item.playerName}
                 </p>
 

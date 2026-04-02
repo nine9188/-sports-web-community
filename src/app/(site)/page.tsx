@@ -67,11 +67,12 @@ const homeJsonLd = {
 // blocking await 없음 → 즉시 HTML 스트리밍 시작 (TTFB 최적화)
 export default function HomePage() {
   return (
-    <main className="bg-transparent space-y-4 overflow-visible">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
+    <main className="bg-transparent space-y-4 overflow-visible">
       {/* 게시판 바로가기 아이콘 - 즉시 렌더 (서버 컴포넌트, 데이터 fetch 없음) */}
       <div className="bg-transparent overflow-visible">
         <h1 className="sr-only">4590 Football - 실시간 축구 스코어, 커뮤니티</h1>
@@ -111,5 +112,6 @@ export default function HomePage() {
         <NewsWidget />
       </Suspense>
     </main>
+    </>
   );
 }

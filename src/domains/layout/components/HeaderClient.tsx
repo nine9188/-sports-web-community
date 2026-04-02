@@ -18,7 +18,6 @@ const LiveScoreModal = dynamic(() => import('./livescoremodal'), { ssr: false })
 const UserProfileClient = dynamic(() => import('./UserProfileClient'), { ssr: false });
 const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { ssr: false });
 import RecentlyVisited from './RecentlyVisited';
-import TransferTicker from './TransferTicker';
 import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
@@ -370,8 +369,6 @@ export default function HeaderClient({
         </div>
         {/* 전체 너비 구분선 */}
         <div className="border-b border-black/5 dark:border-white/10" />
-        {/* 이적시장 롤링 티커 (자체 fetch) */}
-        <TransferTicker />
         <RecentlyVisited />
       </div>
 

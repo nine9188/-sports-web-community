@@ -166,7 +166,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
   }
 
   return (
-    <>
+    <div>
       {/* 데스크톱: 2열 레이아웃 */}
       <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader className="justify-between">
@@ -227,6 +227,6 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
           <PostList posts={domestic.posts} />
         </Container>
       </div>
-    </>
+    </div>
   );
 }
