@@ -994,8 +994,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       {/* 왜 4590인가? — 배경 이미지 1 */}
       <Section className="relative overflow-hidden md:rounded-lg border border-black/7 dark:border-0 mt-4">
         <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/about/mockup-overview.webp" alt="서비스 화면 미리보기" className="absolute inset-0 w-full h-full object-cover object-center" />
+          <Image src="/images/about/mockup-overview.webp" alt="서비스 화면 미리보기" fill className="object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-black/85" />
         <div className="relative px-6 py-20 md:px-12 md:py-28">
@@ -1105,8 +1104,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
       {/* 실제 화면 미리보기 — 배경 이미지 2 */}
       <Section className="relative overflow-hidden md:rounded-lg border border-black/7 dark:border-0 mt-4">
         <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/about/mockup-devices.webp" alt="다양한 디바이스 화면" className="absolute inset-0 w-full h-full object-cover object-center" />
+          <Image src="/images/about/mockup-devices.webp" alt="다양한 디바이스 화면" fill className="object-cover object-center" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent dark:from-[#111]/90 dark:via-[#111]/50 dark:to-transparent" />
         <div className="relative px-6 py-28 md:px-12 md:py-40 text-center max-w-2xl mx-auto">

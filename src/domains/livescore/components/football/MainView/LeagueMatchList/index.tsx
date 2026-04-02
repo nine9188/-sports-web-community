@@ -115,9 +115,9 @@ export default function LeagueMatchList({
                     className="w-5 h-5 object-contain"
                   />
                 )}
-                <span className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
+                <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
                   {group.name}
-                </span>
+                </h2>
               </div>
 
               <div className="flex items-center gap-3">

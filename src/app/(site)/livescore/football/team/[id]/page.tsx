@@ -155,6 +155,23 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
       } : (team.country ? { '@type': 'Country', name: team.country } : undefined),
     } : null;
 
+    // BreadcrumbList JSON-LD
+    const teamDisplayName = teamMapping?.name_ko || team?.name || '';
+    const leagueDisplayName = leagueMapping?.nameKo || initialData.standings?.standings?.league?.name || '';
+    const leagueId = initialData.standings?.standings?.league?.id;
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
+        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
+        ...(leagueDisplayName && leagueId ? [{
+          '@type': 'ListItem', position: 3, name: leagueDisplayName, item: `${siteConfig.url}/livescore/football/leagues/${leagueId}`,
+        }] : []),
+        { '@type': 'ListItem', position: leagueDisplayName && leagueId ? 4 : 3, name: teamDisplayName, item: teamUrl },
+      ],
+    };
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
@@ -164,6 +181,10 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
             dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsTeamSchema) }}
           />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
         <TeamPageClient
           teamId={id}
           initialTab={initialTab}

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
@@ -164,6 +165,23 @@ export default async function PlayerPage({
       } : {}),
     } : null;
 
+    // BreadcrumbList JSON-LD
+    const playerDisplayName = playerKoreanName || playerInfo?.name || '';
+    const currentTeamMapping = currentTeam?.id ? getTeamById(currentTeam.id) : null;
+    const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
+        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
+        ...(currentTeam?.id && teamDisplayName ? [{
+          '@type': 'ListItem', position: 3, name: teamDisplayName, item: `${siteConfig.url}/livescore/football/team/${currentTeam.id}`,
+        }] : []),
+        { '@type': 'ListItem', position: currentTeam?.id && teamDisplayName ? 4 : 3, name: playerDisplayName, item: `${siteConfig.url}/livescore/football/player/${playerId}` },
+      ],
+    };
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
@@ -173,6 +191,10 @@ export default async function PlayerPage({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
           />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
         <PlayerPageClient
           playerId={playerId}
           initialTab={initialTab}

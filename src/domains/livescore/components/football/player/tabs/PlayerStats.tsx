@@ -158,9 +158,9 @@ export default function PlayerStats({
                     <div className="flex items-center gap-2 flex-1">
                       <LeagueLogo name={stat.league.name} logoUrl={getLeagueLogo(stat.league.id)} />
                       <div className="flex items-center">
-                        <h3 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
+                        <h2 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
-                        </h3>
+                        </h2>
                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
                       </div>
                       <Link
@@ -372,9 +372,9 @@ export default function PlayerStats({
                     <div className="flex items-center gap-2 flex-1">
                       <LeagueLogo name={stat.league.name} logoUrl={getLeagueLogo(stat.league.id)} />
                       <div className="flex items-center">
-                        <h3 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
+                        <h2 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
-                        </h3>
+                        </h2>
                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
                       </div>
                       <Link

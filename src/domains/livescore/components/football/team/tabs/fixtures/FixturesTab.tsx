@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-import { Container } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { Match } from '../overview/components/MatchItems';
@@ -135,7 +135,9 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
   return (
     <div>
       <Container className="bg-white dark:bg-[#1D1D1D]">
-        {/* 탭 (헤더 역할) */}
+        <ContainerHeader>
+          <ContainerTitle>경기 일정</ContainerTitle>
+        </ContainerHeader>
         <TabList
           tabs={MATCH_TABS}
           activeTab={activeTab}

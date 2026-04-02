@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 type BrandingVariant = 'signin' | 'signup' | 'social-signup' | 'find-id' | 'find-password' | 'reset-password' | 'account-found';
 
 interface BrandingContent {
@@ -295,10 +297,11 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
     <>
       {/* 모바일 상단 배너 */}
       <div className="lg:hidden w-full relative overflow-hidden rounded-lg md:rounded-t-lg md:rounded-b-none mb-6 md:mb-0">
-        <img
+        <Image
           src="/images/connor-coyne-OgqWLzWRSaI-unsplash.webp"
           alt="경기장 배경"
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
         <div className={`relative z-10 px-6 text-center ${variant === 'signup' ? 'py-4' : 'py-8'}`}>
@@ -337,17 +340,20 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
 
       {/* 데스크톱 사이드 패널 */}
       <div className="hidden lg:flex lg:w-1/2 min-h-[680px] relative overflow-hidden flex-col rounded-l-lg flex-shrink-0">
-        <img
+        <Image
           src="/images/connor-coyne-OgqWLzWRSaI-unsplash.webp"
           alt="경기장 배경"
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/55" />
 
         <div className="relative z-10 p-5">
-          <img
+          <Image
             src="/logo/4590football-logo-white.webp"
             alt="4590 Football"
+            width={120}
+            height={32}
             className="h-8 w-auto"
           />
         </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import ItemCard from './ItemCard'
 import PurchaseModal from './PurchaseModal'
 import { ShopItem } from '../types'
@@ -67,10 +68,7 @@ export default function ItemGrid({
               <td className="px-3 py-2 align-middle">
                 <div className="w-5 h-5 relative">
                   {/* LCP 고려: Next Image 사용 */}
-                  <picture>
-                    <source srcSet={item.image_url} />
-                    <img src={item.image_url} alt={item.name} width={20} height={20} className="w-5 h-5 object-contain" loading="eager" />
-                  </picture>
+                  <Image src={item.image_url} alt={item.name} width={20} height={20} className="w-5 h-5 object-contain" />
                 </div>
               </td>
               <td className="px-3 py-2 align-middle">

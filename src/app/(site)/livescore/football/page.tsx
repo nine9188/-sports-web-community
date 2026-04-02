@@ -6,6 +6,7 @@ import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -66,9 +67,26 @@ export default async function FootballLiveScorePage({
     }),
   ]);
 
+  const pageUrl = `${siteConfig.url}/livescore/football`;
+
   return (
     <>
       <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
+      <h1 className="sr-only">축구 라이브스코어</h1>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: '축구 라이브스코어 - 실시간 경기결과',
+            description: '오늘 축구 경기결과와 일정을 실시간으로 확인하세요. EPL, 라리가, 세리에A, 분데스리가, 챔피언스리그, K리그 라이브스코어.',
+            url: pageUrl,
+            isPartOf: { '@id': `${siteConfig.url}#website` },
+            publisher: { '@id': `${siteConfig.url}#organization` },
+          }),
+        }}
+      />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <LiveScoreView initialDate={dateParam} />
       </HydrationBoundary>

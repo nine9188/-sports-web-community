@@ -8,7 +8,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 // 4590 표준: placeholder URLs
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-import { Container } from '@/shared/components/ui/container';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
@@ -114,7 +114,9 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   return (
     <div>
       <Container className="bg-white dark:bg-[#1D1D1D]">
-        {/* 탭 (헤더 역할) */}
+        <ContainerHeader>
+          <ContainerTitle>이적 내역</ContainerTitle>
+        </ContainerHeader>
         <TabList
           tabs={TRANSFER_TABS}
           activeTab={activeTab}

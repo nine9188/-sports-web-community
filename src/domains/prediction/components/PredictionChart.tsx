@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
   Radar,
   RadarChart,
@@ -258,7 +259,7 @@ function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label
             <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">{teamNameKo}</span>
             {team.logo && (
               <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center">
-                <img src={team.logo} alt={teamNameKo} className="max-w-full max-h-full object-contain" />
+                <Image src={team.logo} alt={teamNameKo} width={28} height={28} className="object-contain" />
               </div>
             )}
           </div>
@@ -542,7 +543,7 @@ export default function PredictionChart({
             <div className="flex items-center gap-1.5 md:gap-3">
               {teams.home.logo && (
                 <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
-                  <img src={teams.home.logo} alt={homeNameKo} className="max-w-full max-h-full object-contain" />
+                  <Image src={teams.home.logo} alt={homeNameKo} width={48} height={48} className="object-contain" />
                 </div>
               )}
               <div className="text-center">
@@ -563,7 +564,7 @@ export default function PredictionChart({
               </div>
               {teams.away.logo && (
                 <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
-                  <img src={teams.away.logo} alt={awayNameKo} className="max-w-full max-h-full object-contain" />
+                  <Image src={teams.away.logo} alt={awayNameKo} width={48} height={48} className="object-contain" />
                 </div>
               )}
             </div>

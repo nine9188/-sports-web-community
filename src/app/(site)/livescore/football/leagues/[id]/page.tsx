@@ -96,11 +96,26 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
     })),
   } : null;
 
+  // BreadcrumbList JSON-LD
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
+      { '@type': 'ListItem', position: 3, name: league.name, item: `${siteConfig.url}/livescore/football/leagues/${leagueId}` },
+    ],
+  };
+
   return (
     <div className="min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(leagueSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       {teamListSchema && (
         <script

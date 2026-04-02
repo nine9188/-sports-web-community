@@ -338,6 +338,20 @@ export default async function MatchPage({
       },
     } : null;
 
+    // BreadcrumbList JSON-LD
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
+        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
+        ...(leagueName && match?.league?.id ? [{
+          '@type': 'ListItem', position: 3, name: leagueName, item: `${siteConfig.url}/livescore/football/leagues/${match.league.id}`,
+        }] : []),
+        { '@type': 'ListItem', position: leagueName && match?.league?.id ? 4 : 3, name: `${homeTeamName} vs ${awayTeamName}`, item: matchUrl },
+      ],
+    };
+
     return (
       <div className="container">
         {sportsEventSchema && (
@@ -346,6 +360,10 @@ export default async function MatchPage({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventSchema) }}
           />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
         {/* Suspense 스트리밍: matchData 즉시 전달, 나머지는 MatchContentLoader에서 병렬 로드 */}
         <Suspense fallback={<MatchContentSkeleton />}>
           <MatchContentLoader

@@ -83,6 +83,7 @@ export default function PlayerRankings({
 
   return (
     <div className="space-y-4">
+      <h2 className="sr-only">시즌 랭킹</h2>
       {/* 랭킹 타입 선택 */}
       <TabList
         tabs={rankingTypes}
