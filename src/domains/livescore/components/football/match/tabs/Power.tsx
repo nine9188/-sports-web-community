@@ -591,7 +591,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
@@ -620,7 +620,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
@@ -667,7 +667,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
@@ -696,7 +696,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                     </div>
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
@@ -748,7 +748,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
@@ -777,7 +777,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
@@ -826,7 +826,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                       </div>
                     </Link>
@@ -855,7 +855,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" />
+                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                         </div>
                       </div>
                     </Link>
