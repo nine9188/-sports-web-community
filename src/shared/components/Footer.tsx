@@ -124,6 +124,15 @@ export default function Footer() {
             >
               <InstagramIcon className="w-5 h-5" />
             </a>
+            <a
+              href="https://www.youtube.com/@4590football"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
+              aria-label="YouTube"
+            >
+              <YoutubeIcon className="w-5 h-5" />
+            </a>
           </div>
         </div>
       </div>

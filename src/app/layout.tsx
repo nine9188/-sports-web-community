@@ -86,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   },
                   sameAs: [
                     'https://www.instagram.com/4590_football',
+                    'https://www.youtube.com/@4590football',
                   ],
                   email: 'support@4590football.com',
                   contactPoint: {
