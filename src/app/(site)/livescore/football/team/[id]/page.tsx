@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
@@ -7,6 +8,7 @@ import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+import { TeamPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 interface TeamPageProps {
   params: Promise<{ id: string }>;
@@ -53,10 +55,8 @@ export async function generateMetadata({
 // 유효한 탭 목록
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'stats'];
 
-export default async function TeamPage({ params, searchParams }: TeamPageProps) {
-  const { id } = await params;
-  const { tab = 'overview' } = await searchParams;
-
+/** 팀 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
   try {
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as TeamTabType)
@@ -193,8 +193,19 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
         />
       </>
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('팀 페이지 로딩 오류:', error);
     notFound();
   }
-} 
+}
+
+export default async function TeamPage({ params, searchParams }: TeamPageProps) {
+  const { id } = await params;
+  const { tab = 'overview' } = await searchParams;
+
+  return (
+    <Suspense fallback={<TeamPageSkeleton />}>
+      <TeamPageContent id={id} tab={tab} />
+    </Suspense>
+  );
+}

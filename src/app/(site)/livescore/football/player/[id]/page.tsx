@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
@@ -7,6 +8,7 @@ import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
+import { PlayerPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 /**
  * ============================================
@@ -67,18 +69,9 @@ export async function generateMetadata({
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
 
-export default async function PlayerPage({
-  params,
-  searchParams
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string }>;
-}) {
+/** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: string }) {
   try {
-    // URL에서 ID 및 탭 가져오기
-    const { id: playerId } = await params;
-    const { tab = 'stats' } = await searchParams;
-
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as PlayerTabType)
       ? (tab as PlayerTabType)
@@ -208,4 +201,21 @@ export default async function PlayerPage({
     console.error('플레이어 페이지 로딩 오류:', error);
     return notFound();
   }
+}
+
+export default async function PlayerPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { id: playerId } = await params;
+  const { tab = 'stats' } = await searchParams;
+
+  return (
+    <Suspense fallback={<PlayerPageSkeleton />}>
+      <PlayerPageContent playerId={playerId} tab={tab} />
+    </Suspense>
+  );
 }

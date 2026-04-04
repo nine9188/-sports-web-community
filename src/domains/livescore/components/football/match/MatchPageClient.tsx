@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import MatchHeader from './MatchHeader';
 import TabNavigation from './TabNavigation';
 import TabContent from './TabContent';
-import { MatchHeaderSkeleton } from '@/domains/livescore/components/common/HeadersUI';
+import { MatchHeaderSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import AdBanner from '@/shared/components/AdBanner';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';

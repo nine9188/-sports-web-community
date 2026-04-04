@@ -139,7 +139,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                     key={board.id}
                     href={`/boards/${board.slug || board.id}`}
                     onClick={onClose}
-                    className="block px-4 py-3 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                    className="block px-4 py-3 text-[14px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                   >
                     {board.name}
                   </Link>
@@ -156,6 +156,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                 initialData={{ rootBoards: boards, totalPostCount }}
                 onNavigate={onClose}
                 showAdminLink={isAdmin}
+                compact={false}
               />
             </div>
           )}

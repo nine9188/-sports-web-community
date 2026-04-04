@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { PostDetailSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -171,35 +172,16 @@ export async function generateMetadata({
   });
 }
 
-export default async function PostDetailPage({ 
-  params,
-  searchParams 
-}: { 
-  params: Promise<{ slug: string, postNumber: string }>,
-  searchParams: Promise<{ from?: string, page?: string }>
+/** 게시글 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+async function PostDetailContent({
+  slug, postNumber, fromBoardId, pageParam
+}: {
+  slug: string; postNumber: string; fromBoardId?: string; pageParam: number;
 }) {
   try {
-    // 두 개의 비동기 값을 병렬로 처리
-    const [{ slug, postNumber }, resolvedSearchParams] = await Promise.all([
-      params,
-      searchParams
-    ]);
-    
-    // 이제 resolvedSearchParams에서 from/page 값 추출
-    const fromBoardId = resolvedSearchParams?.from;
-    const pageFromQuery = resolvedSearchParams?.page;
-    const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
-    const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
-    
-    // 특수 케이스 처리: 'undefined'가 문자열로 전달된 경우
-    const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
-    
-    if (!slug || !postNumber) {
-      return notFound();
-    }
-    
     // 서버 액션을 통해 모든 데이터 로드 (page 전달)
-    const result = await getPostPageData(slug, postNumber, normalizedFromBoardId, safePage);
+    const normalizedFromBoardId = fromBoardId === 'undefined' ? undefined : fromBoardId;
+    const result = await getPostPageData(slug, postNumber, normalizedFromBoardId, pageParam);
 
     if (!result.success) {
       // 모든 실패 케이스 → 404 반환
@@ -634,4 +616,37 @@ export default async function PostDetailPage({
     console.error('게시글 페이지 오류:', error);
     notFound();
   }
-} 
+}
+
+export default async function PostDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ slug: string, postNumber: string }>,
+  searchParams: Promise<{ from?: string, page?: string }>
+}) {
+  const [{ slug, postNumber }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams
+  ]);
+
+  const fromBoardId = resolvedSearchParams?.from;
+  const pageFromQuery = resolvedSearchParams?.page;
+  const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
+  const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+  if (!slug || !postNumber) {
+    return notFound();
+  }
+
+  return (
+    <Suspense fallback={<PostDetailSkeleton />}>
+      <PostDetailContent
+        slug={slug}
+        postNumber={postNumber}
+        fromBoardId={fromBoardId}
+        pageParam={safePage}
+      />
+    </Suspense>
+  );
+}

@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { MatchPageSkeleton, MatchHeaderSkeleton, MatchContentSkeleton, MatchSidebarSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
@@ -116,42 +117,6 @@ export async function generateMetadata({
  * 4. MatchContentLoader 준비되면 스트리밍으로 교체
  */
 
-// 매치 컨텐츠 스켈레톤 (Suspense fallback)
-function MatchContentSkeleton() {
-  return (
-    <div className="flex gap-4">
-      <div className="flex-1 min-w-0">
-        {/* 탭 네비게이션 스켈레톤 */}
-        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm mb-4 animate-pulse">
-          <div className="flex gap-1 p-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-9 flex-1 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
-            ))}
-          </div>
-        </div>
-        {/* 콘텐츠 영역 스켈레톤 */}
-        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm p-4 animate-pulse">
-          <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
-            ))}
-          </div>
-        </div>
-      </div>
-      {/* 사이드바 스켈레톤 */}
-      <aside className="hidden xl:block w-[300px] shrink-0 space-y-4">
-        <div className="bg-white dark:bg-[#1D1D1D] rounded-lg shadow-sm p-4 animate-pulse">
-          <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded" />
-            ))}
-          </div>
-        </div>
-      </aside>
-    </div>
-  );
-}
-
 /**
  * 별도 async 서버 컴포넌트 — Suspense 스트리밍용
  * 무거운 데이터(sidebar, power, playerStats, 한글명, 하이라이트)를 병렬로 로드
@@ -240,17 +205,9 @@ async function MatchContentLoader({
   );
 }
 
-export default async function MatchPage({
-  params,
-  searchParams
-}: {
-  params: Promise<{ id: string }>,
-  searchParams: Promise<{ tab?: string }>
-}) {
+/** 매치 전체 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+async function MatchPageContent({ matchId, tab }: { matchId: string; tab?: string }) {
   try {
-    const { id: matchId } = await params;
-    const { tab } = await searchParams;
-
     const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
       ? (tab as MatchTabType)
       : DEFAULT_TAB;
@@ -364,8 +321,18 @@ export default async function MatchPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
         />
-        {/* Suspense 스트리밍: matchData 즉시 전달, 나머지는 MatchContentLoader에서 병렬 로드 */}
-        <Suspense fallback={<MatchContentSkeleton />}>
+        {/* Suspense 스트리밍: matchData는 이미 로드됨, 나머지(sidebar/power/playerStats)를 병렬 로드 */}
+        <Suspense fallback={
+          <div className="flex gap-4">
+            <div className="flex-1 min-w-0">
+              <MatchHeaderSkeleton />
+              <MatchContentSkeleton />
+            </div>
+            <aside className="hidden xl:block w-[300px] shrink-0">
+              <MatchSidebarSkeleton />
+            </aside>
+          </div>
+        }>
           <MatchContentLoader
             matchId={matchId}
             matchData={matchData}
@@ -384,4 +351,21 @@ export default async function MatchPage({
       </div>
     );
   }
+}
+
+export default async function MatchPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { id: matchId } = await params;
+  const { tab } = await searchParams;
+
+  return (
+    <Suspense fallback={<MatchPageSkeleton />}>
+      <MatchPageContent matchId={matchId} tab={tab} />
+    </Suspense>
+  );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
@@ -7,6 +8,7 @@ import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles }
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
+import { BoardListSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
@@ -98,17 +100,13 @@ export async function generateMetadata({
   });
 }
 
-export default async function BoardDetailPage({
-  params,
-  searchParams
+/** 게시판 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
+async function BoardDetailContent({
+  slug, page, fromParam, store, search, searchType
 }: {
-  params: Promise<{ slug: string }>,
-  searchParams: Promise<{ page?: string; from?: string; store?: string; search?: string; searchType?: string }>
+  slug: string; page: string; fromParam?: string; store?: string; search?: string; searchType?: string;
 }) {
   try {
-    // 1. 파라미터 추출
-    const { slug } = await params;
-    const { page = '1', from: fromParam, store, search, searchType } = await searchParams;
     const currentPage = isNaN(parseInt(page, 10)) || parseInt(page, 10) < 1
       ? 1
       : parseInt(page, 10);
@@ -261,4 +259,28 @@ export default async function BoardDetailPage({
       </div>
     );
   }
+}
+
+export default async function BoardDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ slug: string }>,
+  searchParams: Promise<{ page?: string; from?: string; store?: string; search?: string; searchType?: string }>
+}) {
+  const { slug } = await params;
+  const { page = '1', from: fromParam, store, search, searchType } = await searchParams;
+
+  return (
+    <Suspense fallback={<BoardListSkeleton />}>
+      <BoardDetailContent
+        slug={slug}
+        page={page}
+        fromParam={fromParam}
+        store={store}
+        search={search}
+        searchType={searchType}
+      />
+    </Suspense>
+  );
 }

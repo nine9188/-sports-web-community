@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standingsData';
@@ -7,6 +8,7 @@ import { siteConfig } from '@/shared/config';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
 import AdBanner from '@/shared/components/AdBanner';
+import { LeagueDetailSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 interface LeaguePageProps {
   params: Promise<{ id: string }>;
@@ -33,8 +35,8 @@ export async function generateMetadata({ params }: LeaguePageProps) {
   });
 }
 
-export default async function LeaguePage({ params }: LeaguePageProps) {
-  const { id } = await params;
+/** 리그 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
+async function LeaguePageContent({ id }: { id: string }) {
   const leagueId = parseInt(id, 10);
 
   // 리그 정보, 순위 데이터, 득점/도움 순위를 병렬로 가져오기
@@ -160,4 +162,14 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
       </div>
     </div>
   );
-} 
+}
+
+export default async function LeaguePage({ params }: LeaguePageProps) {
+  const { id } = await params;
+
+  return (
+    <Suspense fallback={<LeagueDetailSkeleton />}>
+      <LeaguePageContent id={id} />
+    </Suspense>
+  );
+}

@@ -27,6 +27,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
       { userAgent: 'Amazonbot', disallow: '/' },
+      { userAgent: 'SERankingBot', disallow: '/' },
       { userAgent: 'Yeti', allow: '/' },
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,

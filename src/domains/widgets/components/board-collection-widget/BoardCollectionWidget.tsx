@@ -200,7 +200,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
         {/* 해외축구 분석 */}
         <Container className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader className="justify-between">
-            <ContainerTitle>{foreign.boardName}</ContainerTitle>
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{foreign.boardName}</h3>
             <Link
               href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
               className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
@@ -215,7 +215,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
         {/* 국내축구 분석 */}
         <Container className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader className="justify-between">
-            <ContainerTitle>{domestic.boardName}</ContainerTitle>
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{domestic.boardName}</h3>
             <Link
               href={`/boards/${DOMESTIC_ANALYSIS_SLUG}`}
               className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"

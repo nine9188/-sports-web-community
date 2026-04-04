@@ -36,7 +36,7 @@ export default function Sidebar({
           {/* 사용자 정보 섹션 */}
           <Container className="mb-4">
             <ContainerHeader>
-              <ContainerTitle>계정</ContainerTitle>
+              <p className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">계정</p>
             </ContainerHeader>
             <ContainerContent>
               {authSection}
@@ -68,7 +68,7 @@ export default function Sidebar({
           {/* 게시판 이동 섹션 */}
           <Container className="mb-4">
             <ContainerHeader>
-              <ContainerTitle>게시판 이동</ContainerTitle>
+              <p className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">게시판 이동</p>
             </ContainerHeader>
             <ContainerContent className="px-0 py-0">
               {children}
@@ -104,7 +104,7 @@ export default function Sidebar({
           {/* 게시판 이동 섹션 */}
           <Container className="mb-4">
             <ContainerHeader>
-              <ContainerTitle>카테고리</ContainerTitle>
+              <p className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">카테고리</p>
             </ContainerHeader>
             <ContainerContent>
               {children}

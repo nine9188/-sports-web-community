@@ -157,7 +157,7 @@ export default function ProfileSidebar({
                 <div className="w-16 h-16 mx-auto mb-4 bg-[#F5F5F5] dark:bg-[#262626] rounded-full flex items-center justify-center">
                   <User className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">로그인이 필요합니다</h3>
+                <p className="text-lg font-medium mb-2 text-gray-900 dark:text-[#F0F0F0]">로그인이 필요합니다</p>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-6">
                   더 많은 기능을 이용하려면 로그인해주세요
                 </p>

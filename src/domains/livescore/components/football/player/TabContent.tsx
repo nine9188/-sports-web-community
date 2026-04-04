@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense, memo, useMemo } from 'react';
-import { LoadingState } from '@/domains/livescore/components/common/CommonComponents';
+import { memo, useMemo } from 'react';
 import { usePlayerTabData, PlayerTabType } from '@/domains/livescore/hooks';
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { PlayerStatistic, FixtureData, TransferData, InjuryData, TrophyData, RankingsData } from '@/domains/livescore/types/player';
@@ -203,11 +202,6 @@ export default function TabContent({
 
   // 현재 탭에 따라 컴포넌트 렌더링
   const renderTabContent = useMemo(() => {
-    // 로딩 상태일 때
-    if (isLoading) {
-      return <LoadingState message={`${tabNameMap[currentTab]} 데이터를 불러오는 중...`} />;
-    }
-
     // 에러 상태 처리
     if (error) {
       return <ErrorDisplay message={error.message} />;
@@ -217,73 +211,57 @@ export default function TabContent({
       case 'stats': {
         const statistics = statsData?.statistics || [];
         return (
-          <Suspense fallback={<LoadingState message="통계 데이터를 불러오는 중..." />}>
-            <StatsTab
-              statistics={statistics}
-              teamLogoUrls={statsData?.teamLogoUrls || {}}
-              leagueLogoUrls={statsData?.leagueLogoUrls || {}}
-              leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
-            />
-          </Suspense>
+          <StatsTab
+            statistics={statistics}
+            teamLogoUrls={statsData?.teamLogoUrls || {}}
+            leagueLogoUrls={statsData?.leagueLogoUrls || {}}
+            leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
+          />
         );
       }
 
       case 'fixtures': {
         const fixtures = fixturesData || { data: [], status: 'error', message: '경기 기록이 없습니다.' };
-        return (
-          <Suspense fallback={<LoadingState message="경기 기록을 불러오는 중..." />}>
-            <FixturesTab fixturesData={fixtures} />
-          </Suspense>
-        );
+        return <FixturesTab fixturesData={fixtures} />;
       }
 
       case 'trophies': {
         const trophies = trophiesData || [];
         return (
-          <Suspense fallback={<LoadingState message="트로피 정보를 불러오는 중..." />}>
-            <TrophiesTab
-              playerId={playerIdNum}
-              trophiesData={trophies}
-              leagueLogoUrls={trophiesLeagueLogoUrls}
-              leagueLogoDarkUrls={trophiesLeagueLogoDarkUrls}
-            />
-          </Suspense>
+          <TrophiesTab
+            playerId={playerIdNum}
+            trophiesData={trophies}
+            leagueLogoUrls={trophiesLeagueLogoUrls}
+            leagueLogoDarkUrls={trophiesLeagueLogoDarkUrls}
+          />
         );
       }
 
       case 'transfers': {
         const transfers = transfersData || [];
         return (
-          <Suspense fallback={<LoadingState message="이적 기록을 불러오는 중..." />}>
-            <TransfersTab
-              playerId={playerIdNum}
-              transfersData={transfers}
-              teamLogoUrls={transfersTeamLogoUrls}
-            />
-          </Suspense>
+          <TransfersTab
+            playerId={playerIdNum}
+            transfersData={transfers}
+            teamLogoUrls={transfersTeamLogoUrls}
+          />
         );
       }
 
       case 'injuries': {
         const injuries = injuriesData || [];
         return (
-          <Suspense fallback={<LoadingState message="부상 기록을 불러오는 중..." />}>
-            <InjuriesTab
-              playerId={playerIdNum}
-              injuriesData={injuries}
-              teamLogoUrls={injuriesTeamLogoUrls}
-            />
-          </Suspense>
+          <InjuriesTab
+            playerId={playerIdNum}
+            injuriesData={injuries}
+            teamLogoUrls={injuriesTeamLogoUrls}
+          />
         );
       }
 
       case 'rankings': {
         const rankings = rankingsData || {} as RankingsData;
-        return (
-          <Suspense fallback={<LoadingState message="순위 정보를 불러오는 중..." />}>
-            <RankingsTab playerId={playerIdNum} rankingsData={rankings} playerKoreanNames={rankingsKoreanNames} />
-          </Suspense>
-        );
+        return <RankingsTab playerId={playerIdNum} rankingsData={rankings} playerKoreanNames={rankingsKoreanNames} />;
       }
 
       default:
@@ -293,7 +271,7 @@ export default function TabContent({
           </div>
         );
     }
-  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData, playerIdNum, isLoading, error, tabNameMap, rankingsKoreanNames]);
+  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData, playerIdNum, error, tabNameMap, rankingsKoreanNames]);
 
   return renderTabContent;
 }

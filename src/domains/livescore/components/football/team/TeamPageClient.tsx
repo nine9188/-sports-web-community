@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useCallback, Suspense, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import TeamHeader from './TeamHeader';
 import TabNavigation from './TabNavigation';
 import TabContent from './TabContent';
-import Spinner from '@/shared/components/Spinner';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
 import { scrollToTop } from '@/shared/utils/scroll';
 import AdBanner from '@/shared/components/AdBanner';
@@ -123,21 +122,12 @@ export default function TeamPageClient({
 
   return (
     <>
-      {/* TeamHeader - 초기 데이터 전달 */}
-      <Suspense fallback={
-        <div className="mb-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 p-4">
-          <div className="flex justify-center items-center py-8">
-            <Spinner size="xl" className="mx-auto" />
-            <span className="ml-3 text-gray-600 dark:text-gray-400">팀 정보를 불러오는 중...</span>
-          </div>
-        </div>
-      }>
-        <TeamHeader
-          initialData={initialData.teamData}
-          teamLogoUrl={initialData.teamLogoUrls?.[parseInt(teamId, 10)]}
-          venueImageUrl={initialData.venueImageUrl}
-        />
-      </Suspense>
+      {/* TeamHeader - initialData가 서버에서 이미 로드됨 */}
+      <TeamHeader
+        initialData={initialData.teamData}
+        teamLogoUrl={initialData.teamLogoUrls?.[parseInt(teamId, 10)]}
+        venueImageUrl={initialData.venueImageUrl}
+      />
 
       {/* 배너 광고 */}
       <div className="mb-4">

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useCallback, Suspense, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import PlayerHeader from './PlayerHeader';
 import PlayerTabNavigation from './TabNavigation';
 import TabContent from './TabContent';
-import { LoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import AdBanner from '@/shared/components/AdBanner';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
@@ -157,15 +156,13 @@ export default function PlayerPageClient({
         onTabChange={handleTabChange}
       />
 
-      {/* 탭 컨텐츠 - React Query로 데이터 관리 */}
-      <Suspense fallback={<LoadingState message="데이터를 불러오는 중..." />}>
-        <TabContent
-          playerId={playerId}
-          currentTab={currentTab}
-          initialData={initialData}
-          rankingsKoreanNames={rankingsKoreanNames}
-        />
-      </Suspense>
+      {/* 탭 컨텐츠 - initialData가 서버에서 이미 로드됨 */}
+      <TabContent
+        playerId={playerId}
+        currentTab={currentTab}
+        initialData={initialData}
+        rankingsKoreanNames={rankingsKoreanNames}
+      />
     </>
   );
 }

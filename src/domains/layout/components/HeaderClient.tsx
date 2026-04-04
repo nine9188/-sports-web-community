@@ -165,7 +165,7 @@ export default function HeaderClient({
 
   // 모바일에서 hover 상태 제거를 위한 터치 이벤트 핸들러
   const handleMobileMenuTouch = useCallback((e: React.TouchEvent) => {
-    // 터치 후 hover 상태 제거
+    e.preventDefault(); // click 이벤트 중복 발생 방지
     const target = e.currentTarget as HTMLElement;
     target.blur();
     toggleMobileMenu();

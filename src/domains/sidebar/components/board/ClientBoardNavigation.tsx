@@ -90,13 +90,14 @@ const createNavBoards = (boards: Board[]): Board[] => {
 };
 
 // 게시판 카테고리 컴포넌트 타입 정의
-type BoardCategoryItemProps = { 
+type BoardCategoryItemProps = {
   board: HierarchicalBoard;
   pathname: string;
   depth?: number;
   expandedCategories: Set<string>;
   toggleCategory: (id: string) => void;
   onNavigate?: () => void;
+  compact?: boolean;
 };
 
 // 게시판 카테고리 아이템 컴포넌트
@@ -106,8 +107,11 @@ const BoardCategoryItem = ({
   depth = 0,
   expandedCategories,
   toggleCategory,
-  onNavigate
+  onNavigate,
+  compact = true
 }: BoardCategoryItemProps) => {
+  const itemPy = compact ? 'py-2' : 'py-3';
+  const itemText = compact ? 'text-[13px]' : 'text-[14px]';
   const boardSlug = board.slug || board.id;
   const isActive = pathname === `/boards/${boardSlug}`;
   const hasChildren = board.children && board.children.length > 0;
@@ -120,7 +124,7 @@ const BoardCategoryItem = ({
     return (
       <div key={board.id}>
         <div
-          className="flex items-center text-[13px] py-2 px-4 text-gray-500 dark:text-gray-400 cursor-pointer"
+          className={`flex items-center ${itemText} ${itemPy} px-4 text-gray-500 dark:text-gray-400 cursor-pointer`}
           style={{ paddingLeft: `${depth * 12 + 16}px` }}
           onClick={() => toggleCategory(board.id)}
         >
@@ -150,6 +154,7 @@ const BoardCategoryItem = ({
                 expandedCategories={expandedCategories}
                 toggleCategory={toggleCategory}
                 onNavigate={onNavigate}
+                compact={compact}
               />
             ))}
           </div>
@@ -165,7 +170,7 @@ const BoardCategoryItem = ({
         <Link
           href={`/boards/${boardSlug}`}
           onClick={onNavigate}
-          className={`flex items-center text-[13px] py-2 px-4 transition-colors ${
+          className={`flex items-center ${itemText} ${itemPy} px-4 transition-colors ${
             isActive
               ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
               : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -184,11 +189,13 @@ const BoardCategoryItem = ({
 export default function ClientBoardNavigation({
   initialData,
   onNavigate,
-  showAdminLink
+  showAdminLink,
+  compact = true
 }: {
   initialData: BoardNavigationData;
   onNavigate?: () => void;
   showAdminLink?: boolean;
+  compact?: boolean;
 }) {
   const pathname = usePathname() || '';
 
@@ -229,13 +236,16 @@ export default function ClientBoardNavigation({
     return count.toLocaleString();
   };
 
+  const itemPy = compact ? 'py-2' : 'py-3';
+  const itemText = compact ? 'text-[13px]' : 'text-[14px]';
+
   return (
     <div>
       {/* 전체글 (개수 표시) */}
       <Link
         href="/boards/all"
         onClick={onNavigate}
-        className={`flex items-center justify-between text-[13px] py-2 px-4 transition-colors ${
+        className={`flex items-center justify-between ${itemText} ${itemPy} px-4 transition-colors ${
           isAllPostsActive
             ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
             : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -260,7 +270,7 @@ export default function ClientBoardNavigation({
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center gap-3 text-[13px] py-2 px-4 transition-colors ${
+            className={`flex items-center gap-3 ${itemText} ${itemPy} px-4 transition-colors ${
               isActive
                 ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
                 : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -275,7 +285,7 @@ export default function ClientBoardNavigation({
         <Link
           href="/admin"
           onClick={onNavigate}
-          className={`flex items-center gap-3 text-[13px] py-2 px-4 transition-colors ${
+          className={`flex items-center gap-3 ${itemText} ${itemPy} px-4 transition-colors ${
             pathname.startsWith('/admin')
               ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
               : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
@@ -298,6 +308,7 @@ export default function ClientBoardNavigation({
           expandedCategories={expandedCategories}
           toggleCategory={toggleCategory}
           onNavigate={onNavigate}
+          compact={compact}
         />
       ))}
     </div>
