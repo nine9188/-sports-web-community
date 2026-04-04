@@ -33,6 +33,8 @@ const BOT_USER_AGENTS = [
   'JEECRAWL',
   'Yeti',
   'SERankingBot',
+  'SERankingBacklinksBot',
+  'seranking',
 ]
 
 // robots.txt에서 Disallow: / 로 차단한 봇 → 403 반환
@@ -53,6 +55,8 @@ const BLOCKED_BOTS = [
   'Go-http-client',
   'Scrapy',
   'SERankingBot',
+  'SERankingBacklinksBot',
+  'seranking',
 ]
 
 function detectBot(ua: string | null): { isBot: boolean; isBlocked: boolean } {
