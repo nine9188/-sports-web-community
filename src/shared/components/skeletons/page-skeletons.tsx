@@ -703,7 +703,7 @@ export function BoardListSkeleton() {
     <div className="container mx-auto animate-pulse">
       {/* 브레드크럼 — 실제 BoardBreadcrumbs: Container + px-4 py-2.5 + text-[13px] + ChevronRight + 각 항목 px-2 py-1 */}
       <div className={`${card} mb-4`}>
-        <div className="px-4 py-2.5 flex items-center whitespace-nowrap">
+        <div className="px-4 py-3 flex items-center whitespace-nowrap">
           <div className="px-2 py-1"><div className={`h-[13px] w-[56px] ${sk}`} /></div>
           <div className="h-3.5 w-3.5 mx-1.5 flex-shrink-0 rounded-sm bg-gray-200 dark:bg-[#3A3A3A]" />
           <div className="px-2 py-1"><div className={`h-[13px] w-[72px] ${sk}`} /></div>
@@ -895,86 +895,118 @@ export function BoardListSkeleton() {
 /** 게시글 상세 스켈레톤 — PostDetailLayout 매칭 */
 export function PostDetailSkeleton() {
   return (
-    <div className="container mx-auto">
-      {/* 브레드크럼 */}
-      <div className="py-2 px-4 sm:px-0">
-        <div className={`h-4 w-56 ${sk}`} />
+    <div className="container mx-auto animate-pulse">
+      {/* 브레드크럼 — BoardBreadcrumbs: Container + px-4 py-2.5 + 항목 px-2 py-1 */}
+      <div className={`${card} mb-4`}>
+        <div className="px-4 py-3 flex items-center whitespace-nowrap">
+          <div className="px-2 py-1"><div className={`h-[13px] w-[56px] ${sk}`} /></div>
+          <div className="h-3.5 w-3.5 mx-1.5 flex-shrink-0 rounded-sm bg-gray-200 dark:bg-[#3A3A3A]" />
+          <div className="px-2 py-1"><div className={`h-[13px] w-[72px] ${sk}`} /></div>
+          <div className="h-3.5 w-3.5 mx-1.5 flex-shrink-0 rounded-sm bg-gray-200 dark:bg-[#3A3A3A]" />
+          <div className="px-2 py-1"><div className={`h-[13px] w-[64px] ${sk}`} /></div>
+        </div>
       </div>
 
       {/* 게시글 본문 */}
-      <div className={`${card} mb-4 animate-pulse`}>
-        {/* 제목 + 작성자 */}
+      <div className={`${card} mb-4`}>
+        {/* 제목 + 작성자 — 실제: px-4 py-3, 제목 text-lg mb-2 */}
         <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10 px-4 py-3">
-          <div className={`h-5 w-3/4 ${sk} mb-3`} />
-          {/* 모바일 */}
-          <div className="md:hidden space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className={`h-3 w-16 ${sk}`} />
-              <div className={`h-3 w-20 ${sk}`} />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`h-3 w-12 ${sk}`} />
-              <div className={`h-3 w-8 ${sk}`} />
-              <div className={`h-3 w-8 ${sk}`} />
-            </div>
-          </div>
-          {/* 데스크톱 */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`h-3 w-16 ${sk}`} />
+          <div className={`h-5 w-3/4 ${sk} mb-2`} />
+          {/* 모바일 — 실제: flex-wrap justify-between text-xs mb-1 + flex justify-end space-x-3 */}
+          <div className="md:hidden">
+            <div className="flex flex-wrap items-center justify-between text-xs mb-1">
+              <div className="flex items-center space-x-2">
+                <div className={`w-5 h-5 ${skCircle}`} />
+                <div className={`h-3 w-16 ${sk}`} />
+              </div>
               <div className={`h-3 w-24 ${sk}`} />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex justify-end space-x-3">
+              <div className={`h-3 w-14 ${sk}`} />
+              <div className={`h-3 w-10 ${sk}`} />
+              <div className={`h-3 w-10 ${sk}`} />
+            </div>
+          </div>
+          {/* 데스크톱 — 실제: flex-wrap justify-between text-xs, stats space-x-4 */}
+          <div className="hidden md:flex flex-wrap items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className={`w-5 h-5 ${skCircle}`} />
+              <div className={`h-3 w-20 ${sk}`} />
+              <div className={`h-3 w-28 ${sk}`} />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className={`h-3 w-16 ${sk}`} />
               <div className={`h-3 w-12 ${sk}`} />
-              <div className={`h-3 w-8 ${sk}`} />
-              <div className={`h-3 w-8 ${sk}`} />
+              <div className={`h-3 w-12 ${sk}`} />
             </div>
           </div>
         </div>
-        {/* 본문 */}
+        {/* 본문 — 실제: p-4 sm:p-6 */}
         <div className="p-4 sm:p-6 space-y-3">
           <div className={`h-4 w-full ${sk}`} />
           <div className={`h-4 w-full ${sk}`} />
           <div className={`h-4 w-5/6 ${sk}`} />
-          <div className={`h-40 w-full ${sk} my-4`} />
+          <div className={`h-48 w-full ${sk} my-4`} />
           <div className={`h-4 w-full ${sk}`} />
           <div className={`h-4 w-4/5 ${sk}`} />
           <div className={`h-4 w-3/4 ${sk}`} />
         </div>
-        {/* 좋아요/싫어요 */}
-        <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10 flex justify-center gap-4">
-          <div className={`h-10 w-24 ${sk}`} />
-          <div className={`h-10 w-24 ${sk}`} />
+        {/* 좋아요/싫어요 — 실제: px-4 py-4 border-t, flex justify-center gap-4 mt-4 */}
+        <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
+          <div className="flex justify-center items-center gap-4 mt-4">
+            <div className={`h-10 w-24 ${sk} rounded-md`} />
+            <div className={`h-10 w-24 ${sk} rounded-md`} />
+          </div>
         </div>
       </div>
 
-      {/* 포스트 네비게이션 (이전/목록/다음) */}
-      <div className={`${card} mb-4 animate-pulse`}>
-        <div className="h-12 px-4 flex items-center justify-around">
-          <div className={`h-4 w-16 ${sk}`} />
-          <div className={`h-4 w-12 ${sk}`} />
-          <div className={`h-4 w-16 ${sk}`} />
+      {/* 포스트 네비게이션 — 실제: h-12 px-4 flex justify-around, 각 flex-1 text-center */}
+      <div className={`${card} mb-4`}>
+        <div className="h-12 px-4 flex flex-row items-center justify-around">
+          <div className="flex-1 flex justify-center">
+            <div className={`h-4 w-14 ${sk}`} />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className={`h-4 w-10 ${sk}`} />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className={`h-4 w-14 ${sk}`} />
+          </div>
         </div>
       </div>
 
-      {/* 댓글 섹션 */}
-      <div className={`${card} mb-4 animate-pulse`}>
+      {/* 댓글 섹션 — 실제: Container, h-12 header, comment py-3 px-4 */}
+      <div className={`${card} mb-4`}>
         <div className={`${header} border-b border-black/5 dark:border-white/10 md:rounded-t-lg`}>
-          <div className={`h-4 w-20 ${sk}`} />
+          <div className={`h-[13px] w-20 ${sk}`} />
         </div>
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="px-4 py-3 border-b border-black/5 dark:border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w-6 h-6 ${skCircle}`} />
-              <div className={`h-3 w-16 ${sk}`} />
+            {/* 작성자 + 날짜 — 실제: flex justify-between mb-1 */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center space-x-2">
+                <div className={`w-5 h-5 ${skCircle}`} />
+                <div className={`h-3 w-16 ${sk}`} />
+              </div>
               <div className={`h-3 w-20 ${sk}`} />
             </div>
-            <div className={`h-3.5 w-4/5 ${sk} ml-8`} />
+            {/* 댓글 내용 — 실제: text-[13px] mb-2 leading-relaxed */}
+            <div className={`h-4 w-4/5 ${sk} mb-2`} />
+            {/* 액션 버튼 — 실제: flex justify-between */}
+            <div className="flex items-center">
+              <div className="flex items-center space-x-4">
+                <div className={`h-3 w-8 ${sk}`} />
+                <div className={`h-3 w-8 ${sk}`} />
+              </div>
+            </div>
           </div>
         ))}
-        {/* 댓글 입력 */}
-        <div className="px-4 py-4">
-          <div className={`h-20 w-full ${sk}`} />
+        {/* 댓글 입력 — 실제: px-4 py-4 border-t, textarea rows=3 */}
+        <div className="px-4 py-4 border-t border-black/7 dark:border-white/10">
+          <div className={`h-[76px] w-full ${sk} rounded-lg mb-2`} />
+          <div className="flex justify-end">
+            <div className={`h-10 w-20 ${sk} rounded-md`} />
+          </div>
         </div>
       </div>
     </div>
