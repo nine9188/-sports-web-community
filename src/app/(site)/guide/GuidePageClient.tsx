@@ -3620,7 +3620,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         <Section>
           <Container className="dark:border dark:border-white/10">
             <ContainerHeader>
-              <ContainerTitle>이용 가이드</ContainerTitle>
+              <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이용 가이드</h1>
             </ContainerHeader>
             <ContainerContent className="text-center py-6">
               <BookOpen className="w-10 h-10 text-blue-500 dark:text-blue-400 mx-auto mb-3" />
