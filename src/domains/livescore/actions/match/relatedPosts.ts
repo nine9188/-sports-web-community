@@ -17,6 +17,7 @@ export interface RelatedPost {
   board_team_id: number | null;
   board_league_id: number | null;
   card_type: 'match' | 'team' | 'player' | 'board';
+  card_team_ids?: number[];
   // 4590 표준: 서버에서 미리 조회한 보드 로고 URL
   boardLogoUrl?: string;
 }
@@ -142,8 +143,10 @@ export const getRelatedPosts = cache(async (
         const priority = matchId && row.match_id === matchId && row.card_type === 'match' ? 0 : 1;
         const contentStr = typeof post.content === 'object' ? JSON.stringify(post.content) : String(post.content || '');
 
+        const cardTeamId = row.team_id ? Number(row.team_id) : null;
         const existing = postMap.get(post.id);
         if (!existing || priority < existing.priority) {
+          const prevTeamIds = existing?.card_team_ids || [];
           postMap.set(post.id, {
             id: post.id,
             title: post.title,
@@ -157,8 +160,11 @@ export const getRelatedPosts = cache(async (
             board_team_id: post.boards.team_id,
             board_league_id: post.boards.league_id,
             card_type: row.card_type as 'match' | 'team' | 'player',
+            card_team_ids: cardTeamId ? [...new Set([...prevTeamIds, cardTeamId])] : prevTeamIds,
             priority,
           });
+        } else if (existing && cardTeamId && !existing.card_team_ids?.includes(cardTeamId)) {
+          existing.card_team_ids = [...(existing.card_team_ids || []), cardTeamId];
         }
       }
     }

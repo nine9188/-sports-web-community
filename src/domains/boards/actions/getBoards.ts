@@ -218,6 +218,26 @@ function buildHierarchicalBoards(boards: Board[]): HierarchicalBoard[] {
  * 최적화: getCachedAllBoards()를 사용하여 캐시된 데이터 활용
  * - 같은 요청 내에서 여러 번 호출되어도 1번만 DB 조회
  */
+/**
+ * team_id로 해당 팀 게시판의 slug를 조회합니다.
+ * 캐시된 게시판 데이터를 사용하여 추가 DB 쿼리 없이 조회.
+ */
+export async function getBoardSlugByTeamId(teamId: number): Promise<string | null> {
+  const allBoards = await getCachedAllBoards();
+  const board = allBoards.find(b => b.team_id === teamId && b.slug);
+  return board?.slug ?? null;
+}
+
+/**
+ * league_id로 해당 리그 게시판의 slug를 조회합니다.
+ * 캐시된 게시판 데이터를 사용하여 추가 DB 쿼리 없이 조회.
+ */
+export async function getBoardSlugByLeagueId(leagueId: number): Promise<string | null> {
+  const allBoards = await getCachedAllBoards();
+  const board = allBoards.find(b => b.league_id === leagueId && b.slug);
+  return board?.slug ?? null;
+}
+
 export const getBoards = cache(async (): Promise<BoardsResponse> => {
   try {
     const boards = await getCachedAllBoards() as Board[];

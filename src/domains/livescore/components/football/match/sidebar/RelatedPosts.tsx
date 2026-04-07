@@ -4,15 +4,72 @@ import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 
+interface TeamInfo {
+  id: number;
+  name: string;
+  boardSlug?: string | null;
+}
+
 export default function RelatedPosts({
-  posts
+  posts,
+  boardSlug,
+  teams,
 }: {
   posts: RelatedPost[];
+  boardSlug?: string;
+  teams?: { home?: TeamInfo; away?: TeamInfo };
 }) {
+  // 팀 그룹핑 모드 (매치 페이지)
+  if (teams) {
+    const isHome = (p: RelatedPost) =>
+      p.board_team_id === teams.home?.id ||
+      (!p.board_team_id && teams.home?.id && p.card_team_ids?.includes(teams.home.id));
+    const isAway = (p: RelatedPost) =>
+      p.board_team_id === teams.away?.id ||
+      (!p.board_team_id && teams.away?.id && p.card_team_ids?.includes(teams.away.id));
+
+    const homePosts = posts.filter(p => isHome(p));
+    const awayPosts = posts.filter(p => !isHome(p) && isAway(p));
+    const otherPosts = posts.filter(p => !isHome(p) && !isAway(p));
+
+    return (
+      <Container className="bg-white dark:bg-[#1D1D1D] mt-4">
+        <ContainerHeader>
+          <ContainerTitle>관련 게시글</ContainerTitle>
+        </ContainerHeader>
+
+        <div>
+          <TeamSection
+            team={teams.home}
+            posts={homePosts}
+            label="홈"
+          />
+          <TeamSection
+            team={teams.away}
+            posts={awayPosts}
+            label="원정"
+          />
+          {otherPosts.length > 0 && (
+            <PostList posts={otherPosts} />
+          )}
+        </div>
+      </Container>
+    );
+  }
+
+  // 단일 리스트 모드 (팀/선수 페이지)
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mt-4">
-      <ContainerHeader>
+      <ContainerHeader className={boardSlug ? "justify-between" : ""}>
         <ContainerTitle>관련 게시글</ContainerTitle>
+        {boardSlug && (
+          <Link
+            href={`/boards/${boardSlug}`}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          >
+            게시판 이동 →
+          </Link>
+        )}
       </ContainerHeader>
 
       {!posts || posts.length === 0 ? (
@@ -20,19 +77,62 @@ export default function RelatedPosts({
           관련 글이 없습니다.
         </div>
       ) : (
-        <ul>
-          {posts.map((post, index) => (
-            <li key={post.id} className={index < posts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
-              <Link
-                href={`/boards/${post.board_slug}/${post.post_number}`}
-                className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
-              >
-                <span className="text-[13px] truncate block">{post.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <PostList posts={posts} />
       )}
     </Container>
+  );
+}
+
+function TeamSection({
+  team,
+  posts,
+  label,
+}: {
+  team?: TeamInfo;
+  posts: RelatedPost[];
+  label: string;
+}) {
+  if (!team) return null;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 dark:border-white/10 bg-gray-50 dark:bg-[#262626]">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+          {label} · {team.name}
+        </span>
+        {team.boardSlug && (
+          <Link
+            href={`/boards/${team.boardSlug}`}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          >
+            게시판 이동 →
+          </Link>
+        )}
+      </div>
+      {posts.length > 0 ? (
+        <PostList posts={posts} />
+      ) : (
+        <div className="px-3 py-3 text-[13px] text-gray-400 dark:text-gray-500">
+          관련 글이 없습니다.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostList({ posts }: { posts: RelatedPost[] }) {
+  return (
+    <ul>
+      {posts.map((post, index) => (
+        <li key={post.id} className={index < posts.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""}>
+          <Link
+            href={`/boards/${post.board_slug}/${post.post_number}`}
+            className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+          >
+            <span className="text-[13px] truncate block">{post.title}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -10,6 +10,7 @@ import PlayerTrophies from './tabs/PlayerTrophies';
 import PlayerTransfers from './tabs/PlayerTransfers';
 import PlayerInjuries from './tabs/PlayerInjuries';
 import PlayerRankings from './tabs/PlayerRankings';
+import SidebarRelatedPosts from '@/domains/sidebar/components/SidebarRelatedPosts';
 
 // ============================================
 // 탭 컴포넌트들 (메모이제이션)
@@ -211,12 +212,17 @@ export default function TabContent({
       case 'stats': {
         const statistics = statsData?.statistics || [];
         return (
-          <StatsTab
-            statistics={statistics}
-            teamLogoUrls={statsData?.teamLogoUrls || {}}
-            leagueLogoUrls={statsData?.leagueLogoUrls || {}}
-            leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
-          />
+          <>
+            <div className="xl:hidden mb-4">
+              <SidebarRelatedPosts />
+            </div>
+            <StatsTab
+              statistics={statistics}
+              teamLogoUrls={statsData?.teamLogoUrls || {}}
+              leagueLogoUrls={statsData?.leagueLogoUrls || {}}
+              leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
+            />
+          </>
         );
       }
 

@@ -167,6 +167,8 @@ export default function MatchPageClient({
           initialPowerData={initialPowerData}
           allPlayerStats={allPlayerStats}
           relatedPosts={sidebarData?.relatedPosts}
+          homeBoardSlug={sidebarData?.homeBoardSlug}
+          awayBoardSlug={sidebarData?.awayBoardSlug}
           playerKoreanNames={playerKoreanNames}
         />
       </div>

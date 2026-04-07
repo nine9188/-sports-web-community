@@ -81,7 +81,11 @@ export default async function ShopPage({ searchParams }: Props) {
   // searchParams에서 초기 카테고리만 추출 (클라이언트 필터링용)
   const sp = await (searchParams ??
     Promise.resolve({} as Record<string, string | string[] | undefined>));
-  const catParam = Array.isArray(sp["cat"]) ? sp["cat"][0] : sp["cat"];
+  const rawCat = Array.isArray(sp["cat"]) ? sp["cat"][0] : sp["cat"];
+  // slug 문자열이 들어온 경우 카테고리 ID로 변환 (예: "emoticon-packs" → "12")
+  const catParam = rawCat && isNaN(Number(rawCat))
+    ? String(activeCategories.find((c) => c.slug === rawCat)?.id ?? rawCat)
+    : rawCat;
 
   // 전체 아이템을 한 번에 로드 (탭 전환 시 서버 재요청 방지)
   const { items } =

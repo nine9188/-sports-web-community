@@ -7,6 +7,7 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
+import { getBoardSlugByLeagueId } from '@/domains/boards/actions/getBoards';
 import AdBanner from '@/shared/components/AdBanner';
 import { LeagueDetailSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
@@ -50,10 +51,11 @@ async function LeaguePageContent({ id }: { id: string }) {
     notFound();
   }
 
-  // 4590 표준: 리그 로고 + 다크모드 로고 + 순위 데이터 팀 로고 조회
-  const [leagueLogoUrl, leagueLogoUrlDark] = await Promise.all([
+  // 4590 표준: 리그 로고 + 다크모드 로고 + 게시판 slug 조회
+  const [leagueLogoUrl, leagueLogoUrlDark, boardSlug] = await Promise.all([
     getLeagueLogoUrl(leagueId),
     getLeagueLogoUrl(leagueId, true),
+    getBoardSlugByLeagueId(leagueId),
   ]);
 
   let teamLogoUrls: Record<number, string> = {};
@@ -130,6 +132,7 @@ async function LeaguePageContent({ id }: { id: string }) {
           league={league}
           leagueLogoUrl={leagueLogoUrl}
           leagueLogoUrlDark={leagueLogoUrlDark}
+          boardSlug={boardSlug}
         />
         <div className="px-4 py-2.5 bg-white dark:bg-[#1D1D1D]">
           <p className="text-sm text-gray-900 dark:text-gray-100">

@@ -135,7 +135,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
 
   const footer = (
     <div className={`flex items-center justify-center border-t border-black/5 dark:border-white/10 h-[64px] flex-shrink-0 ${isMobile ? 'mb-10' : ''}`}>
-      <Link href="/shop?category=emoticon-packs" className="text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
+      <Link href="/shop?cat=emoticon-packs" className="text-[13px] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors">
         이모티콘 상점 바로가기 →
       </Link>
     </div>

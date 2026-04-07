@@ -67,18 +67,31 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
             className="object-contain w-6 h-6"
           />
         </div>
-        <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{team.name}</span>
-      </div>
-      {isLoggedIn && (
         <Link
-          href={`/boards/${boardSlug || boardId}/create`}
-          aria-label="글쓰기"
-          title="글쓰기"
-          className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+          href={`/livescore/football/team/${team.id}`}
+          className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0] hover:underline"
         >
-          <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
+          {team.name}
         </Link>
-      )}
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Link
+          href={`/livescore/football/team/${team.id}`}
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors px-2 py-1"
+        >
+          팀 정보 →
+        </Link>
+        {isLoggedIn && (
+          <Link
+            href={`/boards/${boardSlug || boardId}/create`}
+            aria-label="글쓰기"
+            title="글쓰기"
+            className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+          >
+            <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
+          </Link>
+        )}
+      </div>
     </div>
   );
 } 

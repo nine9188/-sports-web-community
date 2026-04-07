@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -258,7 +259,13 @@ export function MatchInfoSection({
           />
 
           {/* 관련 게시글 섹션 */}
-          <RelatedPosts posts={sidebarData?.relatedPosts ?? []} />
+          <RelatedPosts
+            posts={sidebarData?.relatedPosts ?? []}
+            teams={{
+              home: matchData.teams?.home ? { id: matchData.teams.home.id, name: getTeamById(matchData.teams.home.id)?.name_ko || matchData.teams.home.name, boardSlug: sidebarData?.homeBoardSlug } : undefined,
+              away: matchData.teams?.away ? { id: matchData.teams.away.id, name: getTeamById(matchData.teams.away.id)?.name_ko || matchData.teams.away.name, boardSlug: sidebarData?.awayBoardSlug } : undefined,
+            }}
+          />
         </>
       )}
     </>

@@ -16,9 +16,10 @@ interface LeagueHeaderProps {
   // 4590 표준: 이미지 Storage URL
   leagueLogoUrl?: string;
   leagueLogoUrlDark?: string;
+  boardSlug?: string | null;
 }
 
-export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark }: LeagueHeaderProps) {
+export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark, boardSlug }: LeagueHeaderProps) {
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
 
@@ -42,7 +43,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
 
   return (
     <>
-      <ContainerHeader>
+      <ContainerHeader className="justify-between">
         {/* 상단 네비게이션 */}
         <Link
           href="/livescore/football/leagues"
@@ -53,6 +54,14 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark 
           </svg>
           <span className="font-bold">리그 선택</span>
         </Link>
+        {boardSlug && (
+          <Link
+            href={`/boards/${boardSlug}`}
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors px-2 py-1"
+          >
+            게시판 이동 →
+          </Link>
+        )}
       </ContainerHeader>
 
       <ContainerContent>

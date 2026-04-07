@@ -13,6 +13,7 @@ import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/typ
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
+import { getTeamById } from '@/domains/livescore/constants/teams';
 import Spinner from '@/shared/components/Spinner';
 
 /**
@@ -123,6 +124,8 @@ interface TabContentProps {
   // 통합된 선수 통계 데이터 (평점, 주장, 전체 통계 포함)
   allPlayerStats?: AllPlayerStatsResponse | null;
   relatedPosts?: RelatedPost[];
+  homeBoardSlug?: string | null;
+  awayBoardSlug?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
 }
 
@@ -132,7 +135,7 @@ interface TabContentProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, playerKoreanNames = {} }: TabContentProps) {
+export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, homeBoardSlug, awayBoardSlug, playerKoreanNames = {} }: TabContentProps) {
   // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData, teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl } = initialData;
 
@@ -223,7 +226,13 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
         <div className="space-y-4">
           <MatchPredictionClient matchData={matchData || {}} teamLogoUrls={teamLogoUrls} />
           <SupportCommentsSection matchData={matchData || {}} />
-          <RelatedPosts posts={relatedPosts ?? []} />
+          <RelatedPosts
+            posts={relatedPosts ?? []}
+            teams={{
+              home: homeTeam ? { id: homeTeam.id, name: getTeamById(homeTeam.id)?.name_ko || homeTeam.name, boardSlug: homeBoardSlug } : undefined,
+              away: awayTeam ? { id: awayTeam.id, name: getTeamById(awayTeam.id)?.name_ko || awayTeam.name, boardSlug: awayBoardSlug } : undefined,
+            }}
+          />
         </div>
       );
 

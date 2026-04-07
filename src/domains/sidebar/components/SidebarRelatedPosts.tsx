@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getRelatedPosts } from '@/domains/livescore/actions/match/relatedPosts';
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
+import { getBoardSlugByTeamId } from '@/domains/boards/actions/getBoards';
 import RelatedPosts from '@/domains/livescore/components/football/match/sidebar/RelatedPosts';
 
 export default function SidebarRelatedPosts() {
@@ -35,6 +36,15 @@ export default function SidebarRelatedPosts() {
     staleTime: 10 * 60 * 1000,
   });
 
+  // 팀 게시판 slug 조회
+  const teamIdForBoard = entityType === 'team' ? entityId : playerTeamId ? String(playerTeamId) : null;
+  const { data: boardSlug } = useQuery({
+    queryKey: ['team-board-slug', teamIdForBoard],
+    queryFn: () => getBoardSlugByTeamId(Number(teamIdForBoard)),
+    enabled: !!teamIdForBoard,
+    staleTime: 30 * 60 * 1000,
+  });
+
   // 관련 게시글 조회
   const { data: posts } = useQuery({
     queryKey: ['sidebar-related-posts', entityType, entityId, playerTeamId],
@@ -59,5 +69,5 @@ export default function SidebarRelatedPosts() {
   // 팀/선수 페이지가 아니면 렌더링하지 않음
   if (!entityType) return null;
 
-  return <RelatedPosts posts={posts ?? []} />;
+  return <RelatedPosts posts={posts ?? []} boardSlug={boardSlug ?? undefined} />;
 }

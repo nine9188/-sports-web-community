@@ -5,6 +5,7 @@ import { fetchCachedMatchData } from '@/domains/livescore/utils/matchDataApi';
 import { getUserPrediction, getPredictionStats, type MatchPrediction, type PredictionStats } from './predictions';
 import { getSupportComments, type SupportComment } from './supportComments';
 import { getRelatedPosts, type RelatedPost } from './relatedPosts';
+import { getBoardSlugByTeamId } from '@/domains/boards/actions/getBoards';
 
 // 사이드바 전체 데이터 타입
 export interface SidebarData {
@@ -13,6 +14,8 @@ export interface SidebarData {
   predictionStats: PredictionStats | null;
   comments: SupportComment[];
   relatedPosts: RelatedPost[];
+  homeBoardSlug: string | null;
+  awayBoardSlug: string | null;
 }
 
 // 사이드바 전체 데이터를 한 번에 가져오는 함수
@@ -42,12 +45,16 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
       userPredictionResult,
       predictionStatsResult,
       commentsResult,
-      relatedPostsResult
+      relatedPostsResult,
+      homeBoardSlug,
+      awayBoardSlug
     ] = await Promise.all([
       getUserPrediction(matchId),
       getPredictionStats(matchId),
       getSupportComments(matchId),
-      getRelatedPosts(matchId, homeTeamId, awayTeamId, 10)
+      getRelatedPosts(matchId, homeTeamId, awayTeamId, 10),
+      homeTeamId ? getBoardSlugByTeamId(homeTeamId) : Promise.resolve(null),
+      awayTeamId ? getBoardSlugByTeamId(awayTeamId) : Promise.resolve(null),
     ]);
 
     return {
@@ -57,7 +64,9 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
         userPrediction: userPredictionResult.success ? userPredictionResult.data as MatchPrediction : null,
         predictionStats: predictionStatsResult.success ? predictionStatsResult.data as PredictionStats : null,
         comments: commentsResult.success && Array.isArray(commentsResult.data) ? commentsResult.data as SupportComment[] : [],
-        relatedPosts: relatedPostsResult ?? []
+        relatedPosts: relatedPostsResult ?? [],
+        homeBoardSlug,
+        awayBoardSlug,
       }
     };
   } catch (error) {
