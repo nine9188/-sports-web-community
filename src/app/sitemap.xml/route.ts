@@ -29,37 +29,28 @@ export async function GET() {
       .not('slug', 'is', null);
 
     if (boards) {
-      // 각 게시판별 최신 게시글 시간 조회
-      const { data: latestPosts } = await supabase
+      // 게시판별 최신 게시글 시간: RPC 대신 간단한 쿼리 (최신 1개만)
+      const { data: latestPost } = await supabase
         .from('posts')
-        .select('created_at, board:boards!inner(slug)')
+        .select('created_at')
         .eq('is_deleted', false)
-        .order('created_at', { ascending: false });
-
-      const slugLastmod = new Map<string, string>();
-      if (latestPosts) {
-        for (const p of latestPosts) {
-          const slug = (p.board as { slug: string })?.slug;
-          if (slug && !slugLastmod.has(slug)) {
-            slugLastmod.set(slug, new Date(p.created_at!).toISOString());
-          }
-        }
-      }
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
       for (const board of boards) {
         if (board.slug) {
           sitemaps.push({
             loc: `${baseUrl}/sitemaps/posts/${board.slug}.xml`,
-            lastmod: slugLastmod.get(board.slug) || (board.created_at ? new Date(board.created_at).toISOString() : undefined),
+            lastmod: board.created_at ? new Date(board.created_at).toISOString() : undefined,
           });
         }
       }
 
       // recent (24시간 이내)
-      const recentLastmod = latestPosts?.[0]?.created_at;
       sitemaps.push({
         loc: `${baseUrl}/sitemaps/posts/recent.xml`,
-        lastmod: recentLastmod ? new Date(recentLastmod).toISOString() : now,
+        lastmod: latestPost?.created_at ? new Date(latestPost.created_at).toISOString() : now,
       });
     }
   } catch (error) {

@@ -14,7 +14,10 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ league: string; team: string }> }
 ) {
-  const { league, team } = await params;
+  const rawParams = await params;
+  // Next.js 동적 라우트 [team].xml에서 .xml이 포함될 수 있음
+  const league = rawParams.league.replace(/\.xml$/, '');
+  const team = rawParams.team.replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 

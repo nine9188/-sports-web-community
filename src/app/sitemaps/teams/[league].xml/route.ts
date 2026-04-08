@@ -13,7 +13,8 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ league: string }> }
 ) {
-  const { league } = await params;
+  const rawParams = await params;
+  const league = rawParams.league.replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 

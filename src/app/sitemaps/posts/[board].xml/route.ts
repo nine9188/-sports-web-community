@@ -14,7 +14,8 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ board: string }> }
 ) {
-  const { board } = await params;
+  const rawParams = await params;
+  const board = rawParams.board.replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 
