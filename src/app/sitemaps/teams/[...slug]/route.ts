@@ -9,12 +9,13 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+// /sitemaps/teams/epl.xml → slug = ["epl.xml"]
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ league: string }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  const rawParams = await params;
-  const league = rawParams.league.replace(/\.xml$/, '');
+  const { slug } = await params;
+  const league = (slug[0] || '').replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 

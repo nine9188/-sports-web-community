@@ -6,18 +6,20 @@ import {
   LEAGUES,
   teamNameToSlug,
   REVALIDATE,
-} from '../../../utils';
+} from '../../utils';
 
 export const dynamic = 'force-dynamic';
 
+// /sitemaps/players/epl/arsenal.xml → slug = ["epl", "arsenal.xml"]
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ league: string; team: string }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  const rawParams = await params;
-  // Next.js 동적 라우트 [team].xml에서 .xml이 포함될 수 있음
-  const league = rawParams.league.replace(/\.xml$/, '');
-  const team = rawParams.team.replace(/\.xml$/, '');
+  const { slug } = await params;
+  if (slug.length < 2) return sitemapResponse(buildUrlsetXml([]), REVALIDATE.STANDARD);
+
+  const league = slug[0];
+  const team = slug[1].replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 

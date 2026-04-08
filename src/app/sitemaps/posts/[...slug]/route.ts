@@ -7,15 +7,18 @@ import {
   REVALIDATE,
 } from '../../utils';
 
-// 일반 게시판은 1시간, recent는 10분
 export const dynamic = 'force-dynamic';
 
+// /sitemaps/posts/foreign-news.xml → slug = ["foreign-news.xml"]
+// /sitemaps/posts/recent.xml → slug = ["recent.xml"]
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ board: string }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  const rawParams = await params;
-  const board = rawParams.board.replace(/\.xml$/, '');
+  const { slug } = await params;
+  const board = (slug[0] || '').replace(/\.xml$/, '');
+  if (!board) return sitemapResponse(buildUrlsetXml([]), REVALIDATE.FREQUENT);
+
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 

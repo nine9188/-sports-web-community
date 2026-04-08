@@ -10,12 +10,13 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+// /sitemaps/matches/epl.xml → slug = ["epl.xml"]
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ league: string }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  const rawParams = await params;
-  const league = rawParams.league.replace(/\.xml$/, '');
+  const { slug } = await params;
+  const league = (slug[0] || '').replace(/\.xml$/, '');
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
 
@@ -45,13 +46,9 @@ export async function GET(
 
     // upcoming: 향후 7일 경기 (1시간 캐시)
     if (league === 'upcoming') {
-      const now = new Date();
-      const weekLater = new Date();
-      weekLater.setDate(weekLater.getDate() + 7);
-
       const { data: matches } = await supabase
         .from('match_cache')
-        .select('match_id, updated_at, data')
+        .select('match_id, updated_at')
         .eq('data_type', 'full')
         .eq('match_status', 'NS')
         .order('updated_at', { ascending: false })
@@ -74,7 +71,6 @@ export async function GET(
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    // match_cache의 data->match->league->id로 필터링
     const matches = await fetchAll((from, to) =>
       supabase
         .from('match_cache')
@@ -88,7 +84,7 @@ export async function GET(
     // JSON에서 리그 ID 필터
     const leagueMatches = matches.filter((m) => {
       try {
-        const leagueId = m.data?.match?.league?.id;
+        const leagueId = (m.data as { match?: { league?: { id?: number } } })?.match?.league?.id;
         return leagueId === leagueConfig.id || String(leagueId) === String(leagueConfig.id);
       } catch {
         return false;
