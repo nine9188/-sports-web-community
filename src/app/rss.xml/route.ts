@@ -85,6 +85,7 @@ export async function GET() {
     <description>${escapeXml(siteDescription)}</description>
     <language>ko</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <ttl>10</ttl>
     <atom:link href="${escapeXml(`${baseUrl}/rss.xml`)}" rel="self" type="application/rss+xml" />${rssItems}
   </channel>
 </rss>`;
@@ -92,7 +93,7 @@ export async function GET() {
     return new Response(rssFeed, {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'Cache-Control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=300',
       },
     });
   } catch (error) {
