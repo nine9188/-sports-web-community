@@ -3,6 +3,8 @@
 import { cache } from 'react';
 import { getTeamById } from '@/domains/livescore/constants/teams';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // 팀 정보 인터페이스
 export interface TeamData {
@@ -161,18 +163,29 @@ async function fetchTeamData(teamId: string): Promise<TeamResponse> {
     const teamInfo = teamData.response[0] as TeamInfo;
     
     // API에서 팀 스탯 가져오기 (현재 시즌)
-    const currentYear = new Date().getFullYear();
-    const currentSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
-    
-    // 먼저 팀이 속한 리그 정보를 찾습니다
+    // DB에서 팀의 리그 ID를 먼저 조회하여 정확한 시즌 결정
     let leagueId = 39; // 기본값으로 프리미어리그 설정
 
     try {
-      const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season: currentSeason });
+      const supabase = await getSupabaseServer();
+      const { data: teamRow } = await supabase
+        .from('football_teams')
+        .select('league_id')
+        .eq('team_id', Number(teamId))
+        .single();
+      if (teamRow?.league_id) {
+        leagueId = teamRow.league_id;
+      }
+    } catch {
+      // DB 조회 실패 시 API로 fallback
+    }
 
-      // 우선순위: 국내 리그 > 컵 대회 > 국제 대회
-      const leagues = leaguesData.response || [];
+    // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
+    let currentSeason = getCurrentSeasonForLeague(leagueId);
+    let dbLeagueFound = leagueId !== 39;
 
+    // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
+    if (!dbLeagueFound) {
       interface LeagueResponse {
         league: {
           id: number;
@@ -181,23 +194,39 @@ async function fetchTeamData(teamId: string): Promise<TeamResponse> {
         };
       }
 
-      const mainLeague = leagues.find(
-        (league: LeagueResponse) => league.league.type === 'League' &&
-          !league.league.name.includes('Champions') &&
-          !league.league.name.includes('Europa') &&
-          !league.league.name.includes('Conference')
-      );
+      const findMainLeague = (leagues: LeagueResponse[]) =>
+        leagues.find(
+          (league) => league.league.type === 'League' &&
+            !league.league.name.includes('Champions') &&
+            !league.league.name.includes('Europa') &&
+            !league.league.name.includes('Conference')
+        );
 
-      if (mainLeague) {
-        leagueId = mainLeague.league.id;
-      } else if (leagues.length > 0) {
-        // 첫 번째 리그 사용
-        leagueId = leagues[0].league.id;
+      const currentYear = new Date().getFullYear();
+      const europeanSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
+      const seasonsToTry = [...new Set([currentYear, europeanSeason])];
+
+      for (const season of seasonsToTry) {
+        try {
+          const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season });
+          const leagues = (leaguesData.response || []) as LeagueResponse[];
+          const mainLeague = findMainLeague(leagues);
+
+          if (mainLeague) {
+            leagueId = mainLeague.league.id;
+            currentSeason = getCurrentSeasonForLeague(leagueId);
+            break;
+          } else if (leagues.length > 0) {
+            leagueId = leagues[0].league.id;
+            currentSeason = getCurrentSeasonForLeague(leagueId);
+            break;
+          }
+        } catch {
+          // 다음 시즌 시도
+        }
       }
-    } catch {
-      // keep default leagueId = 39
     }
-    
+
     let statsData = null;
     try {
       const statsResult = await fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId });

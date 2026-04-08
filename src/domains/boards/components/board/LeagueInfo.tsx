@@ -81,20 +81,15 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
             className="object-contain w-6 h-6"
           />
         </div>
+        <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{leagueData.name}</span>
         <Link
           href={`/livescore/football/leagues/${leagueData.id}`}
-          className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0] hover:underline"
-        >
-          {leagueData.name}
-        </Link>
-      </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Link
-          href={`/livescore/football/leagues/${leagueData.id}`}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors px-2 py-1"
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
         >
           리그 정보 →
         </Link>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
       {isLoggedIn && (
         <Link
           href={`/boards/${boardSlug || boardId}/create`}
