@@ -30,7 +30,10 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'SERankingBot', disallow: '/' },
       { userAgent: 'Yeti', allow: '/' },
     ],
-    sitemap: `${siteConfig.url}/sitemap.xml`,
+    sitemap: [
+      `${siteConfig.url}/sitemap.xml`,
+      `${siteConfig.url}/rss.xml`,
+    ],
     host: siteConfig.url,
   };
 }

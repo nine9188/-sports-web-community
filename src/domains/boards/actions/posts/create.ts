@@ -7,6 +7,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { pingWebSubHub } from '@/shared/utils/websub-ping';
 import type { PostActionResponse } from './utils';
 
 // 생성된 게시글 타입
@@ -161,6 +162,8 @@ async function createPostInternal(params: {
       getActivityTypeValues().then(activityTypes =>
         rewardUserActivity(userId, activityTypes.POST_CREATION, data.id)
       ),
+      // WebSub Hub에 RSS 업데이트 알림 (구글 실시간 색인)
+      pingWebSubHub(),
       // 첫 게시글 마일스톤 체크
       supabase
         .from('posts')
