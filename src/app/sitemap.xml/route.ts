@@ -57,8 +57,18 @@ export async function GET() {
     console.error('Sitemap index: boards error', error);
   }
 
-  // ─── 3. players — 리그/팀별 ──────────────────────────────────────
+  // ─── 3. players — 리그/팀별 (선수가 있는 팀만) ────────────────────
   try {
+    // 선수가 존재하는 team_id 목록 조회
+    const { data: teamsWithPlayers } = await supabase
+      .from('football_players')
+      .select('team_id')
+      .limit(10000);
+
+    const teamIdsWithPlayers = new Set(
+      (teamsWithPlayers || []).map((p) => p.team_id)
+    );
+
     for (const league of LEAGUES) {
       const { data: teams } = await supabase
         .from('football_teams')
@@ -69,6 +79,8 @@ export async function GET() {
 
       if (teams) {
         for (const team of teams) {
+          // 선수가 없는 팀은 사이트맵 인덱스에서 제외
+          if (!teamIdsWithPlayers.has(team.team_id)) continue;
           sitemaps.push({
             loc: `${baseUrl}/sitemaps/players/${league.slug}/${teamNameToSlug(team.name)}.xml`,
             lastmod: team.updated_at ? new Date(team.updated_at).toISOString() : undefined,

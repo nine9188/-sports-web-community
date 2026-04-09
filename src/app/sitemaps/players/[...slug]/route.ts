@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
-  if (slug.length < 2) return sitemapResponse(buildUrlsetXml([]), REVALIDATE.STANDARD);
+  if (slug.length < 2) return new Response('Not Found', { status: 404 });
 
   const league = slug[0];
   const team = slug[1].replace(/\.xml$/, '');
@@ -26,7 +26,7 @@ export async function GET(
   try {
     const leagueConfig = LEAGUES.find((l) => l.slug === league);
     if (!leagueConfig) {
-      return sitemapResponse(buildUrlsetXml([]), REVALIDATE.STANDARD);
+      return new Response('Not Found', { status: 404 });
     }
 
     // 리그에 속한 팀 중 slug가 일치하는 팀 찾기
@@ -38,7 +38,7 @@ export async function GET(
 
     const matchedTeam = teams?.find((t) => teamNameToSlug(t.name) === team);
     if (!matchedTeam) {
-      return sitemapResponse(buildUrlsetXml([]), REVALIDATE.STANDARD);
+      return new Response('Not Found', { status: 404 });
     }
 
     // 해당 팀의 선수 목록
@@ -52,6 +52,11 @@ export async function GET(
       loc: `${baseUrl}/livescore/football/player/${p.id}`,
       lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
     }));
+
+    // 선수가 없으면 빈 urlset 대신 404 반환 (Google이 XML 태그 누락 에러를 보고하지 않도록)
+    if (urls.length === 0) {
+      return new Response('Not Found', { status: 404 });
+    }
 
     return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.STANDARD);
   } catch (error) {

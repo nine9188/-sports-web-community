@@ -71,27 +71,19 @@ export async function GET(
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
+    // DB에서 JSON 필터링 (data 컬럼 전체를 가져오지 않음)
     const matches = await fetchAll((from, to) =>
       supabase
         .from('match_cache')
-        .select('match_id, updated_at, data')
+        .select('match_id, updated_at')
         .eq('data_type', 'full')
+        .filter('data->match->league->>id', 'eq', String(leagueConfig.id))
         .gte('updated_at', threeMonthsAgo.toISOString())
         .order('updated_at', { ascending: false })
         .range(from, to)
     );
 
-    // JSON에서 리그 ID 필터
-    const leagueMatches = matches.filter((m) => {
-      try {
-        const leagueId = (m.data as { match?: { league?: { id?: number } } })?.match?.league?.id;
-        return leagueId === leagueConfig.id || String(leagueId) === String(leagueConfig.id);
-      } catch {
-        return false;
-      }
-    });
-
-    const urls = leagueMatches.map((m) => ({
+    const urls = matches.map((m) => ({
       loc: `${baseUrl}/livescore/football/match/${m.match_id}`,
       lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
     }));
