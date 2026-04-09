@@ -1,7 +1,6 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
 
 // Tier 1~3 리그 (cron으로 주 1회 갱신)
@@ -43,13 +42,30 @@ function isValidDate(dateString: string): boolean {
   return year >= 2020 && year <= 2030;
 }
 
+// 캐시 무시 직접 API 호출 (cron 갱신용)
+async function fetchTransfersNoCache(teamId: number) {
+  const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
+  const res = await fetch(
+    `https://v3.football.api-sports.io/transfers?team=${teamId}`,
+    {
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': apiKey,
+      },
+      cache: 'no-store', // Vercel Data Cache 무시
+    }
+  );
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
 async function fetchTeamTransferRecords(
   teamId: number,
   leagueId: number,
   fetchedAt: string
 ): Promise<TransferRecord[]> {
   try {
-    const data = await fetchFromFootballApi('transfers', { team: teamId });
+    const data = await fetchTransfersNoCache(teamId);
     if (!data.response || !Array.isArray(data.response)) return [];
 
     const records: TransferRecord[] = [];
@@ -112,9 +128,20 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
   let errors = 0;
 
   try {
-    // 1. 팀 목록
+    // 1. 팀 목록 (캐시 무시)
     const season = getCurrentSeasonForLeague(leagueId);
-    const teamsData = await fetchFromFootballApi('teams', { league: leagueId, season });
+    const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
+    const teamsRes = await fetch(
+      `https://v3.football.api-sports.io/teams?league=${leagueId}&season=${season}`,
+      {
+        headers: {
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+          'x-rapidapi-key': apiKey,
+        },
+        cache: 'no-store',
+      }
+    );
+    const teamsData = await teamsRes.json();
 
     if (!teamsData.response || teamsData.response.length === 0) {
       return { success: true, leagueId, teams: 0, transfers: 0, errors: 0, durationMs: Date.now() - startTime };
