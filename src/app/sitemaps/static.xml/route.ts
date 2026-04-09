@@ -1,7 +1,7 @@
 import { siteConfig } from '@/shared/config';
 import { getSitemapSupabase, buildUrlsetXml, sitemapResponse, REVALIDATE } from '../utils';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 21600; // 6시간
 
 export async function GET() {
   const baseUrl = siteConfig.url;

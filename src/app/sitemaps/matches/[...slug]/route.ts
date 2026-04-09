@@ -8,7 +8,7 @@ import {
   REVALIDATE,
 } from '../../utils';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 21600; // 6시간
 
 // /sitemaps/matches/epl.xml → slug = ["epl.xml"]
 export async function GET(

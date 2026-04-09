@@ -7,7 +7,7 @@ import {
   REVALIDATE,
 } from '../../utils';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1시간
 
 // /sitemaps/posts/foreign-news.xml → slug = ["foreign-news.xml"]
 // /sitemaps/posts/recent.xml → slug = ["recent.xml"]

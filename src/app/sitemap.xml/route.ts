@@ -1,92 +1,148 @@
 import { siteConfig } from '@/shared/config';
 import {
-  getSitemapSupabase,
   buildSitemapIndexXml,
   sitemapResponse,
-  LEAGUES,
-  ALL_MATCH_LEAGUES,
-  teamNameToSlug,
-  REVALIDATE,
 } from '../sitemaps/utils';
 
-export const dynamic = 'force-dynamic';
+// ISR: 1시간마다 자동 갱신
+export const revalidate = 3600;
+
+const BASE = siteConfig.url;
+
+// ─── 하드코딩 데이터 (DB 쿼리 없음) ─────────────────────────────────
+
+const BOARD_SLUGS = [
+  'free', 'free-talk', 'humor', 'issue', 'information', 'tips', 'qna',
+  'news', 'foreign-news', 'domestic-news', 'notice', 'official', 'soccer',
+  'data-analysis', 'domestic-analysis',
+  'foreign-analysis', 'foreign-analysis-premier', 'foreign-analysis-laliga',
+  'foreign-analysis-bundesliga', 'foreign-analysis-serie-a', 'foreign-analysis-ligue1',
+  'premier', 'laliga', 'bundesliga', 'serie-a', 'LIGUE1',
+  'k-league', 'k-league-1', 'k-league-2',
+  'creative', 'creative-fanart', 'creative-gif', 'creative-video',
+  'review', 'review-general', 'review-purchase', 'review-stadium',
+  'hotdeal', 'hotdeal-appliance', 'hotdeal-apptech', 'hotdeal-beauty',
+  'hotdeal-coupon', 'hotdeal-etc', 'hotdeal-fashion', 'hotdeal-food',
+  'hotdeal-game', 'hotdeal-living', 'hotdeal-mobile', 'hotdeal-overseas',
+  'hotdeal-package', 'hotdeal-pc', 'hotdeal-sale', 'hotdeal-sports',
+  'market', 'market-ali', 'market-buy', 'market-click', 'market-deal',
+  'market-exchange', 'market-free', 'market-groupbuy', 'market-lottery',
+  'market-quiz', 'market-review', 'market-sell', 'market-share',
+  // 팀 게시판
+  'arsenal', 'aston-villa', 'bournemouth', 'brentford', 'brighton', 'burnley',
+  'chelsea', 'crystal-palace', 'everton', 'fulham', 'leeds-united', 'liverpool',
+  'manchester-city', 'manchester-united', 'newcastle', 'nottingham-forest',
+  'sunderland', 'tottenham', 'west-ham', 'wolves',
+  'alaves', 'athletic-club', 'atletico-madrid', 'barcelona', 'celta-vigo',
+  'elche', 'espanyol', 'getafe', 'girona', 'levante', 'mallorca', 'osasuna',
+  'oviedo', 'rayo-vallecano', 'real-betis', 'real-madrid', 'real-sociedad',
+  'sevilla', 'valencia', 'villarreal',
+  '1899-hoffenheim', '1-fc-heidenheim', '1-fc-koeln', 'bayer-leverkusen',
+  'bayern-muenchen', 'borussia-dortmund', 'borussia-moenchengladbach',
+  'eintracht-frankfurt', 'fc-augsburg', 'fc-st-pauli', 'fsv-mainz-05',
+  'hamburger-sv', 'rb-leipzig', 'sc-freiburg', 'union-berlin',
+  'vfb-stuttgart', 'vfl-wolfsburg', 'werder-bremen',
+  'ac-milan', 'as-roma', 'atalanta', 'bologna', 'cagliari', 'como',
+  'cremonese', 'fiorentina', 'genoa', 'inter', 'juventus', 'lazio',
+  'lecce', 'napoli', 'parma', 'pisa', 'sassuolo', 'torino', 'udinese', 'verona',
+  'angers', 'auxerre', 'le-havre', 'lens', 'lille', 'lorient', 'lyon',
+  'marseille', 'metz', 'monaco', 'nantes', 'nice', 'paris-fc',
+  'paris-saint-germain', 'rennes', 'stade-brestois-29', 'strasbourg', 'toulouse',
+  'bucheon-fc-1995', 'daejeon-citizen', 'fc-anyang', 'fc-seoul', 'gangwon-fc',
+  'gimcheon-sangmu-fc', 'gwangju-fc', 'incheon-united', 'jeju-united-fc',
+  'jeonbuk-motors', 'pohang-steelers', 'ulsan-hyundai-fc',
+];
+
+const MATCH_LEAGUE_SLUGS = [
+  'epl', 'laliga', 'bundesliga', 'seriea', 'ligue1',
+  'eredivisie', 'primeira', 'kleague',
+  'ucl', 'uel', 'uecl',
+];
+
+const TEAM_LEAGUE_SLUGS = [
+  'epl', 'laliga', 'bundesliga', 'seriea', 'ligue1',
+  'eredivisie', 'primeira', 'kleague',
+];
+
+// teamNameToSlug 결과를 미리 계산해서 하드코딩
+const PLAYER_TEAMS: Record<string, string[]> = {
+  epl: [
+    'arsenal', 'aston-villa', 'bournemouth', 'brentford', 'brighton', 'burnley',
+    'chelsea', 'crystal-palace', 'everton', 'fulham', 'leeds', 'liverpool',
+    'manchester-city', 'manchester-united', 'newcastle', 'nottingham-forest',
+    'sunderland', 'tottenham', 'west-ham', 'wolves',
+  ],
+  laliga: [
+    'alaves', 'athletic-club', 'atletico-madrid', 'barcelona', 'celta-vigo',
+    'elche', 'espanyol', 'getafe', 'girona', 'levante', 'mallorca', 'osasuna',
+    'oviedo', 'rayo-vallecano', 'real-betis', 'real-madrid', 'real-sociedad',
+    'sevilla', 'valencia', 'villarreal',
+  ],
+  bundesliga: [
+    '1899-hoffenheim', '1-fc-heidenheim', '1fc-kln', 'bayer-leverkusen',
+    'bayern-mnchen', 'borussia-dortmund', 'borussia-mnchengladbach',
+    'eintracht-frankfurt', 'fc-augsburg', 'fc-st-pauli', 'fsv-mainz-05',
+    'hamburger-sv', 'rb-leipzig', 'sc-freiburg', 'union-berlin',
+    'vfb-stuttgart', 'vfl-wolfsburg', 'werder-bremen',
+  ],
+  seriea: [
+    'ac-milan', 'as-roma', 'atalanta', 'bologna', 'cagliari', 'como',
+    'cremonese', 'fiorentina', 'genoa', 'inter', 'juventus', 'lazio',
+    'lecce', 'napoli', 'parma', 'pisa', 'sassuolo', 'torino', 'udinese', 'verona',
+  ],
+  ligue1: [
+    'angers', 'auxerre', 'le-havre', 'lens', 'lille', 'lorient', 'lyon',
+    'marseille', 'metz', 'monaco', 'nantes', 'nice', 'paris-fc',
+    'paris-saint-germain', 'rennes', 'stade-brestois-29', 'strasbourg', 'toulouse',
+  ],
+  eredivisie: [
+    'ajax', 'az-alkmaar', 'excelsior', 'fc-volendam', 'feyenoord',
+    'fortuna-sittard', 'go-ahead-eagles', 'groningen', 'heerenveen', 'heracles',
+    'nac-breda', 'nec-nijmegen', 'pec-zwolle', 'psv-eindhoven',
+    'sparta-rotterdam', 'telstar', 'twente', 'utrecht',
+  ],
+  primeira: [
+    'alverca', 'arouca', 'avs', 'benfica', 'casa-pia', 'estoril', 'estrela',
+    'famalicao', 'fc-porto', 'gil-vicente', 'guimaraes', 'moreirense',
+    'nacional', 'rio-ave', 'santa-clara', 'sc-braga', 'sporting-cp', 'tondela',
+  ],
+  kleague: [
+    'daegu-fc', 'daejeon-citizen', 'fc-anyang', 'fc-seoul', 'gangwon-fc',
+    'gimcheon-sangmu-fc', 'gwangju-fc', 'jeju-united-fc', 'jeonbuk-motors',
+    'pohang-steelers', 'suwon-city-fc', 'ulsan-hyundai-fc',
+  ],
+};
+
+// ─── 라우트 핸들러 ─────────────────────────────────────────────────
 
 export async function GET() {
-  const baseUrl = siteConfig.url;
-  const supabase = getSitemapSupabase();
-  const now = new Date().toISOString();
+  const sitemaps: { loc: string }[] = [];
 
-  const sitemaps: { loc: string; lastmod?: string }[] = [];
+  // 1. static
+  sitemaps.push({ loc: `${BASE}/sitemaps/static.xml` });
 
-  // ─── 1. static.xml ───────────────────────────────────────────────
-  sitemaps.push({ loc: `${baseUrl}/sitemaps/static.xml`, lastmod: now });
+  // 2. posts (게시판별 + recent)
+  for (const slug of BOARD_SLUGS) {
+    sitemaps.push({ loc: `${BASE}/sitemaps/posts/${slug}.xml` });
+  }
+  sitemaps.push({ loc: `${BASE}/sitemaps/posts/recent.xml` });
 
-  // ─── 2. posts — 게시판별 ─────────────────────────────────────────
-  try {
-    const { data: boards } = await supabase
-      .from('boards')
-      .select('slug, created_at')
-      .not('slug', 'is', null);
+  // 3. matches (리그별)
+  for (const slug of MATCH_LEAGUE_SLUGS) {
+    sitemaps.push({ loc: `${BASE}/sitemaps/matches/${slug}.xml` });
+  }
 
-    if (boards) {
-      for (const board of boards) {
-        if (board.slug) {
-          sitemaps.push({
-            loc: `${baseUrl}/sitemaps/posts/${board.slug}.xml`,
-            lastmod: board.created_at ? new Date(board.created_at).toISOString() : undefined,
-          });
-        }
-      }
+  // 4. teams (리그별)
+  for (const slug of TEAM_LEAGUE_SLUGS) {
+    sitemaps.push({ loc: `${BASE}/sitemaps/teams/${slug}.xml` });
+  }
 
-      sitemaps.push({ loc: `${baseUrl}/sitemaps/posts/recent.xml`, lastmod: now });
+  // 5. players (리그/팀별)
+  for (const [league, teams] of Object.entries(PLAYER_TEAMS)) {
+    for (const team of teams) {
+      sitemaps.push({ loc: `${BASE}/sitemaps/players/${league}/${team}.xml` });
     }
-  } catch (error) {
-    console.error('Sitemap index: boards error', error);
   }
 
-  // ─── 3. players — 리그/팀별 + teams — 리그별 (단일 쿼리로 통합) ────
-  try {
-    // 선수가 존재하는 team_id 목록 (1회 쿼리)
-    const { data: playerRows } = await supabase
-      .from('football_players')
-      .select('team_id')
-      .limit(10000);
-
-    const teamIdsWithPlayers = new Set(
-      (playerRows || []).map((p) => p.team_id)
-    );
-
-    // 리그별 팀 조회 (teams + players 사이트맵 동시 생성)
-    for (const league of LEAGUES) {
-      const { data: teams } = await supabase
-        .from('football_teams')
-        .select('team_id, name, updated_at')
-        .eq('league_id', league.id)
-        .eq('is_active', true)
-        .order('team_id', { ascending: true });
-
-      // teams 사이트맵
-      sitemaps.push({ loc: `${baseUrl}/sitemaps/teams/${league.slug}.xml` });
-
-      // players 사이트맵 (선수 있는 팀만)
-      if (teams) {
-        for (const team of teams) {
-          if (!teamIdsWithPlayers.has(team.team_id)) continue;
-          sitemaps.push({
-            loc: `${baseUrl}/sitemaps/players/${league.slug}/${teamNameToSlug(team.name)}.xml`,
-          });
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Sitemap index: players/teams error', error);
-  }
-
-  // ─── 4. matches — 리그별 (존재 여부 체크 없이 모두 나열) ───────────
-  // 개별 라우트에서 데이터 없으면 404 반환하므로 인덱스에서는 체크 불필요
-  for (const league of ALL_MATCH_LEAGUES) {
-    sitemaps.push({ loc: `${baseUrl}/sitemaps/matches/${league.slug}.xml` });
-  }
-
-  return sitemapResponse(buildSitemapIndexXml(sitemaps), REVALIDATE.FREQUENT);
+  return sitemapResponse(buildSitemapIndexXml(sitemaps), 3600);
 }
