@@ -118,6 +118,7 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
   transfers: number;
   errors: number;
   durationMs: number;
+  debug?: { totalRecordsParsed: number; upsertErrors: string[] };
 }> {
   const startTime = Date.now();
   const fetchedAt = new Date().toISOString();
@@ -165,6 +166,8 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
     }
 
     // 4. 배치 upsert
+    const upsertErrors: string[] = [];
+
     for (let i = 0; i < allRecords.length; i += 1000) {
       const batch = allRecords.slice(i, i + 1000);
       const { error } = await supabase
@@ -174,16 +177,18 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
         });
 
       if (error) {
-        console.error(`[Transfer Cache] 리그 ${leagueId} upsert 오류:`, error);
+        upsertErrors.push(error.message);
         errors++;
       } else {
         transfers += batch.length;
       }
     }
 
-    console.log(`[Transfer Cache] 리그 ${leagueId} 완료: ${teams}팀, ${transfers}건`);
-
-    return { success: true, leagueId, teams, transfers, errors, durationMs: Date.now() - startTime };
+    return {
+      success: true, leagueId, teams, transfers, errors,
+      durationMs: Date.now() - startTime,
+      debug: { totalRecordsParsed: allRecords.length, upsertErrors },
+    };
   } catch (error) {
     console.error(`[Transfer Cache] 리그 ${leagueId} 실패:`, error);
     return { success: false, leagueId, teams, transfers, errors: errors + 1, durationMs: Date.now() - startTime };
