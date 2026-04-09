@@ -1141,62 +1141,19 @@ function TransferDemo({ images }: { images: GuideDemoImages }) {
   }, []);
 
   const transfers = [
-    { player: '엘링 홀란', playerId: 1100, fromName: '맨체스터 시티', fromId: 50, toName: '첼시', toId: 49, type: '€150M', date: '2026-03-15' },
-    { player: '모하메드 살라', playerId: 306, fromName: '리버풀', fromId: 40, toName: '맨체스터 시티', toId: 50, type: '자유 이적', date: '2026-03-10' },
-    { player: '부카요 사카', playerId: 1460, fromName: '아스널', fromId: 42, toName: '토트넘', toId: 47, type: '임대', date: '2026-03-08' },
+    { player: '데클란 라이스', playerId: 284324, fromName: '웨스트햄', fromId: 48, toName: '아스널', toId: 42, type: '€116.6M', date: '2023-07-15' },
+    { player: '카이 하베르츠', playerId: 1465, fromName: '첼시', fromId: 49, toName: '아스널', toId: 42, type: '€75M', date: '2023-07-14' },
+    { player: '유리엥 팀버', playerId: 2929, fromName: '아약스', fromId: 194, toName: '아스널', toId: 42, type: '€43.5M', date: '2023-07-14' },
   ];
 
   return (
     <div className="space-y-4">
-      <GuideBox title="이적 티커">
+      <GuideBox title="이적 목록">
         <p className="text-[13px] text-gray-700 dark:text-gray-300">
-          페이지 상단에 <strong className="text-gray-900 dark:text-gray-100">최신 이적 정보</strong>가 자동으로 흐릅니다.<br />
-          각 항목에는 <strong className="text-gray-900 dark:text-gray-100">선수 이름</strong>, <strong className="text-gray-900 dark:text-gray-100">이전 팀 로고 → 이동 팀 로고</strong>, <strong className="text-gray-900 dark:text-gray-100">이적 유형</strong>(이적료, 자유 이적, 임대 등)이 표시됩니다.
+          리그와 팀을 선택하면 해당 팀의 <strong className="text-gray-900 dark:text-gray-100">최근 이적 내역</strong>이 표시됩니다.<br />
+          각 항목에는 <strong className="text-gray-900 dark:text-gray-100">선수 이름</strong>, <strong className="text-gray-900 dark:text-gray-100">이전 팀 → 이동 팀</strong>, <strong className="text-gray-900 dark:text-gray-100">이적 유형</strong>(이적료, 자유 이적, 임대 등)이 표시됩니다.
         </p>
       </GuideBox>
-
-      {/* 이적 티커 (실제 UI 동일) */}
-      <style>{`
-        @keyframes guideTicker {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-      <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10 rounded-lg">
-        <div className="w-full px-4 flex items-center gap-2 py-2 min-h-[44px]">
-          <div className="flex-1 flex items-center overflow-hidden relative">
-            {/* 우측 페이드 */}
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#F5F5F5] dark:from-[#262626] to-transparent z-10 pointer-events-none" />
-
-            <div
-              className="flex items-center gap-3"
-              style={{ animation: 'guideTicker 15s linear infinite' }}
-            >
-              {[...transfers, ...transfers].map((t, i) => (
-                <div key={i} className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 shrink-0">
-                  <span className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors whitespace-nowrap cursor-pointer">{t.player}</span>
-                  {images.teamLogos[t.fromId] ? (
-                    <div className="w-[14px] h-[14px] flex-shrink-0">
-                      <Image src={images.teamLogos[t.fromId]} alt={t.fromName} width={14} height={14} className="object-contain w-[14px] h-[14px]" />
-                    </div>
-                  ) : (
-                    <div className="w-[14px] h-[14px] rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0" />
-                  )}
-                  <span className="text-gray-400 dark:text-gray-500">→</span>
-                  {images.teamLogos[t.toId] ? (
-                    <div className="w-[14px] h-[14px] flex-shrink-0">
-                      <Image src={images.teamLogos[t.toId]} alt={t.toName} width={14} height={14} className="object-contain w-[14px] h-[14px]" />
-                    </div>
-                  ) : (
-                    <div className="w-[14px] h-[14px] rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0" />
-                  )}
-                  <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">{t.type}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* 필터 (실제 UI 동일) */}
       <Container className="overflow-visible dark:border dark:border-white/10">
@@ -1228,12 +1185,20 @@ function TransferDemo({ images }: { images: GuideDemoImages }) {
               </motion.div>
             </div>
             {/* 팀 선택 */}
-            <div>
+            <div className="relative">
               <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">팀</label>
-              <button className="flex h-10 w-full items-center justify-between rounded-md px-3 py-2 text-[13px] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                <span className="truncate text-gray-900 dark:text-[#F0F0F0]">전체 팀</span>
+              <button className={`flex h-10 w-full items-center justify-between rounded-md px-3 py-2 text-[13px] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${hoverFilter ? 'bg-[#EAEAEA] dark:bg-[#333333]' : 'bg-[#F5F5F5] dark:bg-[#262626]'}`}>
+                <span className="truncate text-gray-900 dark:text-[#F0F0F0]">아스널</span>
                 <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </button>
+              <motion.div
+                animate={{ y: [0, -3, 0] }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-10"
+              >
+                <span className="text-lg">👆</span>
+                <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 whitespace-nowrap">클릭!</span>
+              </motion.div>
             </div>
             {/* 이적 유형 */}
             <div>
@@ -1247,10 +1212,14 @@ function TransferDemo({ images }: { images: GuideDemoImages }) {
 
           {/* 활성 필터 태그 */}
           <div className="mt-4 pt-4 border-t border-black/5 dark:border-white/10">
+            <span className="text-[13px] text-gray-700 dark:text-gray-300 mb-2 block md:hidden">활성 필터</span>
             <div className="flex items-center flex-wrap gap-2">
-              <span className="text-[13px] text-gray-700 dark:text-gray-300">활성 필터:</span>
+              <span className="text-[13px] text-gray-700 dark:text-gray-300 hidden md:inline">활성 필터:</span>
               <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
                 프리미어리그 <span className="ml-2 text-base text-gray-400 cursor-pointer">×</span>
+              </span>
+              <span className="inline-flex items-center px-3 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-[13px] rounded-full">
+                아스널 <span className="ml-2 text-base text-gray-400 cursor-pointer">×</span>
               </span>
             </div>
           </div>
@@ -3747,28 +3716,16 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
           <GuideBox title="사용 방법">
             <ol className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-decimal list-inside">
-              <li>상단 이적 티커에서 최신 이적 소식을 확인 (5대 리그 + K리그 + MLS)</li>
-              <li><strong className="text-gray-900 dark:text-gray-100">이적시장</strong> 페이지에서 리그, 팀, 이적 유형별로 필터링</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">리그를 선택</strong>하면 해당 리그의 팀 목록이 표시됩니다</li>
+              <li><strong className="text-gray-900 dark:text-gray-100">팀을 선택</strong>하면 해당 팀의 이적 내역이 표시됩니다</li>
+              <li>영입/방출 필터로 이적 유형을 구분할 수 있습니다</li>
               <li>선수를 클릭하면 <strong className="text-gray-900 dark:text-gray-100">선수 상세 페이지</strong>로 이동</li>
             </ol>
           </GuideBox>
 
           <GuideBox title="지원 리그">
-            <div className="text-[13px] text-gray-700 dark:text-gray-300 space-y-3">
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-lg px-3 py-2.5 mb-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-amber-500 text-sm">&#9733;</span>
-                  <p className="font-bold text-amber-800 dark:text-amber-300 text-[13px]">이적 정보는 1주일에 한 번 업데이트됩니다</p>
-                </div>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">자동 업데이트 (13개 리그)</p>
-                <p>프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">리그 선택 시 조회 (4개 리그)</p>
-                <p>덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십</p>
-              </div>
+            <div className="text-[13px] text-gray-700 dark:text-gray-300">
+              <p>프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑 · 덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십</p>
             </div>
           </GuideBox>
 

@@ -121,10 +121,10 @@ export default function TransfersPageContent({
           </ContainerHeader>
           <div className="text-center py-12 bg-white dark:bg-[#1D1D1D]">
             <div className="text-gray-700 dark:text-gray-300 text-lg mb-2">
-              이적 정보를 찾을 수 없습니다
+              {initialData.message || '이적 정보를 찾을 수 없습니다'}
             </div>
             <div className="text-gray-500 dark:text-gray-400 text-[13px]">
-              필터를 조정하여 다시 시도해보세요
+              리그와 팀을 선택하면 이적 정보를 확인할 수 있습니다
             </div>
           </div>
         </Container>

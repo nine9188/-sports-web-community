@@ -17,7 +17,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const board = (slug[0] || '').replace(/\.xml$/, '');
-  if (!board) return sitemapResponse(buildUrlsetXml([]), REVALIDATE.FREQUENT);
+  if (!board) return new Response('Not Found', { status: 404 });
 
   const baseUrl = siteConfig.url;
   const supabase = getSitemapSupabase();
@@ -60,7 +60,7 @@ export async function GET(
       .single();
 
     if (!boardData) {
-      return sitemapResponse(buildUrlsetXml([]), REVALIDATE.FREQUENT);
+      return new Response('Not Found', { status: 404 });
     }
 
     const posts = await fetchAll((from, to) =>
@@ -73,6 +73,10 @@ export async function GET(
         .range(from, to)
     );
 
+    if (posts.length === 0) {
+      return new Response('Not Found', { status: 404 });
+    }
+
     const urls = posts.map((p) => ({
       loc: `${baseUrl}/boards/${board}/${p.post_number}`,
       lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
@@ -81,6 +85,6 @@ export async function GET(
     return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.FREQUENT);
   } catch (error) {
     console.error(`Posts sitemap error (${board}):`, error);
-    return sitemapResponse(buildUrlsetXml([]), REVALIDATE.FREQUENT);
+    return new Response('Not Found', { status: 404 });
   }
 }

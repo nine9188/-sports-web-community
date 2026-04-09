@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // ── 타입 정의 ──
 
@@ -61,73 +61,13 @@ export interface TransfersFullDataResponse {
   filters: TransferFilters;
 }
 
-// ── Tier 1~3 캐시 대상 리그 ──
-
-const CACHED_LEAGUES = [
-  39, 140, 135, 78, 61,    // Tier 1: 5대 리그
-  292, 40, 88, 94,          // Tier 2
-  98, 253, 307, 71,         // Tier 3
-];
-
-// "전체 리그" 기본 조회 대상 (캐시된 Tier 1~3 전체)
-const DEFAULT_LEAGUES = CACHED_LEAGUES;
-
-// ── DB 레코드 → TransferMarketData 변환 ──
-
-interface TransferCacheRow {
-  player_id: number;
-  player_name: string;
-  player_photo: string;
-  player_age: number;
-  player_nationality: string;
-  league_id: number;
-  team_in_id: number;
-  team_in_name: string;
-  team_in_logo: string;
-  team_out_id: number;
-  team_out_name: string;
-  team_out_logo: string;
-  transfer_date: string;
-  transfer_type: string;
-}
-
-function rowToTransferMarketData(row: TransferCacheRow): TransferMarketData {
-  return {
-    player: {
-      id: row.player_id,
-      name: row.player_name,
-      photo: row.player_photo || '',
-      age: row.player_age || 0,
-      nationality: row.player_nationality || '',
-    },
-    update: '',
-    transfers: [{
-      date: row.transfer_date,
-      type: row.transfer_type || '',
-      teams: {
-        in: {
-          id: row.team_in_id,
-          name: row.team_in_name,
-          logo: row.team_in_logo || '',
-        },
-        out: {
-          id: row.team_out_id,
-          name: row.team_out_name,
-          logo: row.team_out_logo || '',
-        },
-      },
-    }],
-  };
-}
-
-// ── 메인 데이터 fetch 함수 (DB 기반) ──
+// ── 메인 데이터 fetch 함수 (API 직접 호출, DB 불필요) ──
 
 /**
  * 이적시장 페이지용 통합 데이터 fetch 함수
- * Supabase transfer_cache 테이블에서 직접 조회 (API 호출 없음)
- * - 서버 사이드 페이지네이션
- * - Tier 1~3: DB 캐시에서 즉시 조회
- * - Tier 4: DB 캐시에 없으면 빈 결과 (리그 선택 시 개별 안내)
+ * API-Sports에서 직접 조회 (Next.js 캐시 24시간)
+ * - 팀 선택 필수: API 1회 호출로 해당 팀의 모든 이적 데이터 조회
+ * - 리그만 선택: 팀을 먼저 선택하라는 안내 반환
  */
 export const fetchTransfersFullData = cache(async (
   filters: TransferFilters = {},
@@ -135,55 +75,82 @@ export const fetchTransfersFullData = cache(async (
   itemsPerPage: number = 20
 ): Promise<TransfersFullDataResponse> => {
   try {
-    const supabase = getSupabaseAdmin();
-
-    // 기본 쿼리 빌더
-    let query = supabase
-      .from('transfer_cache')
-      .select('*', { count: 'exact' });
-
-    // 필터 적용
-    if (filters.team) {
-      // 특정 팀 선택: 영입 또는 방출
-      if (filters.type === 'in') {
-        query = query.eq('team_in_id', filters.team);
-      } else if (filters.type === 'out') {
-        query = query.eq('team_out_id', filters.team);
-      } else {
-        query = query.or(`team_in_id.eq.${filters.team},team_out_id.eq.${filters.team}`);
-      }
-    } else if (filters.league) {
-      // 특정 리그 선택
-      query = query.eq('league_id', filters.league);
-    } else {
-      // 기본: 5대 리그만
-      query = query.in('league_id', DEFAULT_LEAGUES);
-    }
-
-    // 정렬 + 페이지네이션
-    const startIndex = (page - 1) * itemsPerPage;
-    query = query
-      .order('transfer_date', { ascending: false })
-      .range(startIndex, startIndex + itemsPerPage - 1);
-
-    const { data: rows, count, error } = await query;
-
-    if (error) {
-      console.error('이적 캐시 조회 오류:', error);
+    // 팀이 선택되지 않으면 빈 결과 (리그 선택 → 팀 선택 유도)
+    if (!filters.team) {
       return {
-        success: false,
-        message: `DB 조회 오류: ${error.message}`,
+        success: true,
+        message: filters.league ? '팀을 선택하면 이적 정보를 확인할 수 있습니다' : '리그와 팀을 선택하면 이적 정보를 확인할 수 있습니다',
         transfers: [],
         totalCount: 0,
-        currentPage: page,
+        currentPage: 1,
         totalPages: 0,
         filters,
       };
     }
 
-    const transfers = (rows || []).map(rowToTransferMarketData);
-    const totalCount = count || 0;
+    // API에서 해당 팀의 이적 데이터 가져오기 (Next.js 캐시 24시간)
+    const data = await fetchFromFootballApi('transfers', { team: filters.team });
+
+    if (!data.response || !Array.isArray(data.response) || data.response.length === 0) {
+      return {
+        success: true,
+        message: '이적 데이터가 없습니다',
+        transfers: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0,
+        filters,
+      };
+    }
+
+    // API 응답 → TransferMarketData 변환
+    const allTransfers: TransferMarketData[] = [];
+    const teamId = filters.team;
+
+    for (const item of data.response) {
+      if (!item.player?.id || !item.transfers) continue;
+
+      for (const t of item.transfers) {
+        if (!t.date || !t.teams?.in?.id || !t.teams?.out?.id) continue;
+        // 날짜 유효성 (2020~2030)
+        const year = new Date(t.date).getFullYear();
+        if (isNaN(year) || year < 2020 || year > 2030) continue;
+
+        // 영입/방출 필터
+        if (filters.type === 'in' && t.teams.in.id !== teamId) continue;
+        if (filters.type === 'out' && t.teams.out.id !== teamId) continue;
+        // 타입 미선택 시 해당 팀 관련 이적만
+        if (!filters.type && t.teams.in.id !== teamId && t.teams.out.id !== teamId) continue;
+
+        allTransfers.push({
+          player: {
+            id: item.player.id,
+            name: item.player.name || '',
+            photo: '',
+            age: 0,
+            nationality: '',
+          },
+          update: '',
+          transfers: [{
+            date: t.date,
+            type: t.type || '',
+            teams: {
+              in: { id: t.teams.in.id, name: t.teams.in.name || '', logo: t.teams.in.logo || '' },
+              out: { id: t.teams.out.id, name: t.teams.out.name || '', logo: t.teams.out.logo || '' },
+            },
+          }],
+        });
+      }
+    }
+
+    // 날짜 내림차순 정렬
+    allTransfers.sort((a, b) => new Date(b.transfers[0].date).getTime() - new Date(a.transfers[0].date).getTime());
+
+    // 페이지네이션
+    const totalCount = allTransfers.length;
     const totalPages = Math.ceil(totalCount / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const transfers = allTransfers.slice(startIndex, startIndex + itemsPerPage);
 
     return {
       success: true,
@@ -208,12 +175,11 @@ export const fetchTransfersFullData = cache(async (
   }
 });
 
-// ── 팀 상세 페이지용 (기존 API 직접 호출 유지) ──
+// ── 팀 상세 페이지용 (API 직접 호출) ──
 
 import {
   sortTransfersByDate,
 } from '../../utils/transferUtils';
-import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 interface ApiTransferResponse {
   team?: { id: number; name: string; logo: string };

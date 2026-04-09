@@ -1,5 +1,6 @@
 import { siteConfig } from '@/shared/config';
 import {
+  getSitemapSupabase,
   buildSitemapIndexXml,
   sitemapResponse,
 } from '../sitemaps/utils';
@@ -8,50 +9,6 @@ import {
 export const revalidate = 3600;
 
 const BASE = siteConfig.url;
-
-// ─── 하드코딩 데이터 (DB 쿼리 없음) ─────────────────────────────────
-
-const BOARD_SLUGS = [
-  'free', 'free-talk', 'humor', 'issue', 'information', 'tips', 'qna',
-  'news', 'foreign-news', 'domestic-news', 'notice', 'official', 'soccer',
-  'data-analysis', 'domestic-analysis',
-  'foreign-analysis', 'foreign-analysis-premier', 'foreign-analysis-laliga',
-  'foreign-analysis-bundesliga', 'foreign-analysis-serie-a', 'foreign-analysis-ligue1',
-  'premier', 'laliga', 'bundesliga', 'serie-a', 'LIGUE1',
-  'k-league', 'k-league-1', 'k-league-2',
-  'creative', 'creative-fanart', 'creative-gif', 'creative-video',
-  'review', 'review-general', 'review-purchase', 'review-stadium',
-  'hotdeal', 'hotdeal-appliance', 'hotdeal-apptech', 'hotdeal-beauty',
-  'hotdeal-coupon', 'hotdeal-etc', 'hotdeal-fashion', 'hotdeal-food',
-  'hotdeal-game', 'hotdeal-living', 'hotdeal-mobile', 'hotdeal-overseas',
-  'hotdeal-package', 'hotdeal-pc', 'hotdeal-sale', 'hotdeal-sports',
-  'market', 'market-ali', 'market-buy', 'market-click', 'market-deal',
-  'market-exchange', 'market-free', 'market-groupbuy', 'market-lottery',
-  'market-quiz', 'market-review', 'market-sell', 'market-share',
-  // 팀 게시판
-  'arsenal', 'aston-villa', 'bournemouth', 'brentford', 'brighton', 'burnley',
-  'chelsea', 'crystal-palace', 'everton', 'fulham', 'leeds-united', 'liverpool',
-  'manchester-city', 'manchester-united', 'newcastle', 'nottingham-forest',
-  'sunderland', 'tottenham', 'west-ham', 'wolves',
-  'alaves', 'athletic-club', 'atletico-madrid', 'barcelona', 'celta-vigo',
-  'elche', 'espanyol', 'getafe', 'girona', 'levante', 'mallorca', 'osasuna',
-  'oviedo', 'rayo-vallecano', 'real-betis', 'real-madrid', 'real-sociedad',
-  'sevilla', 'valencia', 'villarreal',
-  '1899-hoffenheim', '1-fc-heidenheim', '1-fc-koeln', 'bayer-leverkusen',
-  'bayern-muenchen', 'borussia-dortmund', 'borussia-moenchengladbach',
-  'eintracht-frankfurt', 'fc-augsburg', 'fc-st-pauli', 'fsv-mainz-05',
-  'hamburger-sv', 'rb-leipzig', 'sc-freiburg', 'union-berlin',
-  'vfb-stuttgart', 'vfl-wolfsburg', 'werder-bremen',
-  'ac-milan', 'as-roma', 'atalanta', 'bologna', 'cagliari', 'como',
-  'cremonese', 'fiorentina', 'genoa', 'inter', 'juventus', 'lazio',
-  'lecce', 'napoli', 'parma', 'pisa', 'sassuolo', 'torino', 'udinese', 'verona',
-  'angers', 'auxerre', 'le-havre', 'lens', 'lille', 'lorient', 'lyon',
-  'marseille', 'metz', 'monaco', 'nantes', 'nice', 'paris-fc',
-  'paris-saint-germain', 'rennes', 'stade-brestois-29', 'strasbourg', 'toulouse',
-  'bucheon-fc-1995', 'daejeon-citizen', 'fc-anyang', 'fc-seoul', 'gangwon-fc',
-  'gimcheon-sangmu-fc', 'gwangju-fc', 'incheon-united', 'jeju-united-fc',
-  'jeonbuk-motors', 'pohang-steelers', 'ulsan-hyundai-fc',
-];
 
 const MATCH_LEAGUE_SLUGS = [
   'epl', 'laliga', 'bundesliga', 'seriea', 'ligue1',
@@ -121,9 +78,28 @@ export async function GET() {
   // 1. static
   sitemaps.push({ loc: `${BASE}/sitemaps/static.xml` });
 
-  // 2. posts (게시판별 + recent)
-  for (const slug of BOARD_SLUGS) {
-    sitemaps.push({ loc: `${BASE}/sitemaps/posts/${slug}.xml` });
+  // 2. posts (글이 있는 게시판만 + recent)
+  try {
+    const supabase = getSitemapSupabase();
+    // 글이 1개 이상 있는 게시판 slug만 조회 (가벼운 쿼리)
+    const { data: boardsWithPosts } = await supabase
+      .from('posts')
+      .select('board:boards!inner(slug)')
+      .eq('is_deleted', false)
+      .limit(1000);
+
+    if (boardsWithPosts) {
+      const slugs = new Set<string>();
+      for (const p of boardsWithPosts) {
+        const slug = (p.board as { slug: string })?.slug;
+        if (slug) slugs.add(slug);
+      }
+      for (const slug of slugs) {
+        sitemaps.push({ loc: `${BASE}/sitemaps/posts/${slug}.xml` });
+      }
+    }
+  } catch (error) {
+    console.error('Sitemap index: posts query error', error);
   }
   sitemaps.push({ loc: `${BASE}/sitemaps/posts/recent.xml` });
 

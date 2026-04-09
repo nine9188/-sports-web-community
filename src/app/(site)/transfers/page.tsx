@@ -2,6 +2,7 @@ import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getTeamsByLeagueId } from '@/domains/livescore/constants/teams';
 import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
@@ -30,10 +31,21 @@ interface TransfersPageProps {
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
   const params = await searchParams;
 
-  // URL 파라미터를 필터 객체로 변환
+  // URL 파라미터를 필터 객체로 변환 (기본값: 프리미어리그 + 가나다순 첫 번째 팀)
+  const defaultLeague = 39;
+  const leagueId = params.league ? parseInt(params.league) : defaultLeague;
+
+  // 기본 팀: 해당 리그의 가나다순 첫 번째 팀
+  let defaultTeam: number | undefined;
+  if (!params.team && !params.league) {
+    const teams = getTeamsByLeagueId(leagueId);
+    const sorted = [...teams].sort((a, b) => (a.name_ko || a.name_en).localeCompare(b.name_ko || b.name_en, 'ko'));
+    defaultTeam = sorted[0]?.id;
+  }
+
   const filters = {
-    league: params.league ? parseInt(params.league) : undefined,
-    team: params.team ? parseInt(params.team) : undefined,
+    league: leagueId,
+    team: params.team ? parseInt(params.team) : defaultTeam,
     season: params.season ? parseInt(params.season) : undefined,
     type: params.type !== 'all' ? params.type : undefined
   };
@@ -74,21 +86,11 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
         {/* 설명 섹션 */}
         <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D] space-y-2">
           <p className="text-[13px] text-gray-700 dark:text-gray-300">
-            17개 리그 이적 소식과 선수 영입 정보를 확인하세요
+            리그와 팀을 선택하면 최신 이적 소식을 확인할 수 있습니다
           </p>
-          <div className="flex items-center gap-1.5 mt-1 mb-1">
-            <span className="text-amber-500 text-xs">&#9733;</span>
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">이적 정보는 1주일에 한 번 업데이트됩니다</span>
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <p>
-              <span className="font-medium text-gray-700 dark:text-gray-300">자동 업데이트 (13개 리그)</span>
-              {' '}프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑
-            </p>
-            <p>
-              <span className="font-medium text-gray-700 dark:text-gray-300">리그 선택 시 조회 (4개 리그)</span>
-              {' '}덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십
-            </p>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="font-medium text-gray-700 dark:text-gray-300">17개 리그 지원</span>
+            {' '}프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑 · 덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십
           </div>
         </div>
       </Container>
