@@ -113,16 +113,50 @@ export async function GET() {
     console.error('Sitemap index: teams error', error);
   }
 
-  // ─── 5. matches — live, upcoming, 리그별 ─────────────────────────
-  sitemaps.push({ loc: `${baseUrl}/sitemaps/matches/live.xml`, lastmod: now });
-  sitemaps.push({ loc: `${baseUrl}/sitemaps/matches/upcoming.xml`, lastmod: now });
-
+  // ─── 5. matches — live, upcoming, 리그별 (데이터가 있는 것만) ──────
   try {
+    // 오늘 라이브 경기 존재 여부
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { count: liveCount } = await supabase
+      .from('match_cache')
+      .select('id', { count: 'exact', head: true })
+      .eq('data_type', 'full')
+      .gte('updated_at', todayStart.toISOString());
+
+    if (liveCount && liveCount > 0) {
+      sitemaps.push({ loc: `${baseUrl}/sitemaps/matches/live.xml`, lastmod: now });
+    }
+
+    // 예정 경기 존재 여부
+    const { count: upcomingCount } = await supabase
+      .from('match_cache')
+      .select('id', { count: 'exact', head: true })
+      .eq('data_type', 'full')
+      .eq('match_status', 'NS');
+
+    if (upcomingCount && upcomingCount > 0) {
+      sitemaps.push({ loc: `${baseUrl}/sitemaps/matches/upcoming.xml`, lastmod: now });
+    }
+
+    // 리그별 (3개월 내 경기가 있는 리그만)
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
     for (const league of ALL_MATCH_LEAGUES) {
-      sitemaps.push({
-        loc: `${baseUrl}/sitemaps/matches/${league.slug}.xml`,
-        lastmod: now,
-      });
+      const { count: leagueCount } = await supabase
+        .from('match_cache')
+        .select('id', { count: 'exact', head: true })
+        .eq('data_type', 'full')
+        .filter('data->match->league->>id', 'eq', String(league.id))
+        .gte('updated_at', threeMonthsAgo.toISOString());
+
+      if (leagueCount && leagueCount > 0) {
+        sitemaps.push({
+          loc: `${baseUrl}/sitemaps/matches/${league.slug}.xml`,
+          lastmod: now,
+        });
+      }
     }
   } catch (error) {
     console.error('Sitemap index: matches error', error);

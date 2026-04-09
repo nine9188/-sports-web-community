@@ -41,6 +41,7 @@ export async function GET(
         lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
       }));
 
+      if (urls.length === 0) return new Response('Not Found', { status: 404 });
       return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.REALTIME);
     }
 
@@ -59,6 +60,7 @@ export async function GET(
         lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
       }));
 
+      if (urls.length === 0) return new Response('Not Found', { status: 404 });
       return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.FREQUENT);
     }
 
@@ -88,6 +90,7 @@ export async function GET(
       lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
     }));
 
+    if (urls.length === 0) return new Response('Not Found', { status: 404 });
     return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.STANDARD);
   } catch (error) {
     console.error(`Matches sitemap error (${league}):`, error);
