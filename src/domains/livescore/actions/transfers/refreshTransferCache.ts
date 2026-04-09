@@ -122,8 +122,7 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
 
     const teamIds = teamsData.response.map((t: { team: { id: number } }) => t.team.id);
 
-    // 2. 기존 캐시 삭제
-    await supabase.from('transfer_cache').delete().eq('league_id', leagueId);
+    // 2. 기존 캐시 유지, 새 데이터만 upsert (삭제하지 않음)
 
     // 3. 팀별 순차 처리 (2.2초 간격)
     const allRecords: TransferRecord[] = [];
@@ -145,7 +144,6 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
         .from('transfer_cache')
         .upsert(batch, {
           onConflict: 'player_id,transfer_date,team_in_id,team_out_id',
-          ignoreDuplicates: true,
         });
 
       if (error) {

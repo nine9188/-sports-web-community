@@ -122,10 +122,13 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
   // 정적 설정 사용 (빌드/프리렌더 단계에서 cookies() 사용 방지)
   const config = getSeoConfigStatic();
 
-  // 제목 조합
-  const fullTitle = params.titleOnly
-    ? params.title
-    : `${params.title} - ${config.siteName}`;
+  // 제목: 루트 레이아웃 템플릿(%s | 4590 Football)이 사이트명을 추가하므로
+  // 여기서는 페이지 제목만 반환
+  // titleOnly: 루트 템플릿도 건너뛰고 제목 그대로 사용 (홈페이지 등)
+  const fullTitle = params.title;
+  const titleMeta = params.titleOnly
+    ? { absolute: params.title }
+    : params.title;
 
   // 설명 (페이지 고유값 > 전역값)
   const description = params.description || config.siteDescription;
@@ -145,7 +148,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
   const imageType = getImageType(ogImage);
 
   const metadata: Metadata = {
-    title: fullTitle,
+    title: titleMeta,
     description,
     keywords,
     openGraph: {
