@@ -21,50 +21,12 @@ export async function GET(
   const supabase = getSitemapSupabase();
 
   try {
-    // live: 오늘 경기 (10분 캐시)
-    if (league === 'live') {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
-
-      const { data: matches } = await supabase
-        .from('match_cache')
-        .select('match_id, updated_at')
-        .eq('data_type', 'full')
-        .gte('updated_at', todayStart.toISOString())
-        .lte('updated_at', todayEnd.toISOString())
-        .order('updated_at', { ascending: false });
-
-      const urls = (matches || []).map((m) => ({
-        loc: `${baseUrl}/livescore/football/match/${m.match_id}`,
-        lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
-      }));
-
-      if (urls.length === 0) return new Response('Not Found', { status: 404 });
-      return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.REALTIME);
+    // live, upcoming은 match_cache에 데이터 없음 (종료 경기만 캐시)
+    if (league === 'live' || league === 'upcoming') {
+      return new Response('Not Found', { status: 404 });
     }
 
-    // upcoming: 향후 7일 경기 (1시간 캐시)
-    if (league === 'upcoming') {
-      const { data: matches } = await supabase
-        .from('match_cache')
-        .select('match_id, updated_at')
-        .eq('data_type', 'full')
-        .eq('match_status', 'NS')
-        .order('updated_at', { ascending: false })
-        .limit(500);
-
-      const urls = (matches || []).map((m) => ({
-        loc: `${baseUrl}/livescore/football/match/${m.match_id}`,
-        lastmod: m.updated_at ? new Date(m.updated_at).toISOString() : undefined,
-      }));
-
-      if (urls.length === 0) return new Response('Not Found', { status: 404 });
-      return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.FREQUENT);
-    }
-
-    // 리그별 과거 경기 (6시간 캐시)
+    // 리그별 종료 경기 (6시간 캐시)
     const leagueConfig = ALL_MATCH_LEAGUES.find((l) => l.slug === league);
     if (!leagueConfig) {
       return sitemapResponse(buildUrlsetXml([]), REVALIDATE.STANDARD);
