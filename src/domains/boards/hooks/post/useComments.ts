@@ -101,7 +101,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
   });
 
   // 댓글 데이터와 트리 구조
-  const comments = commentsData || [];
+  const comments = useMemo(() => commentsData || [], [commentsData]);
   const treeComments = useMemo(() => buildCommentTree(comments), [comments]);
   const commentCount = comments.length;
 

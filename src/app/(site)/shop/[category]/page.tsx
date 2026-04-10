@@ -8,6 +8,7 @@ import {
   getUserItems,
 } from "@/domains/shop/actions/actions";
 import CategoryFilter from "@/domains/shop/components/CategoryFilter";
+import type { ShopItem } from "@/domains/shop/types";
 import { Pagination } from "@/shared/components/ui";
 import {
   Container,
@@ -28,7 +29,7 @@ interface Props {
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category } = await params;
-  const sp = await (searchParams ?? Promise.resolve({}));
+  const sp = await (searchParams ?? Promise.resolve({})) as Record<string, string | undefined>;
   const categoryData = await getShopCategory(category);
 
   // 카테고리 없음 → noindex
@@ -146,11 +147,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </Container>
 
         <CategoryFilter
-          items={items}
+          items={items as ShopItem[]}
           userItems={userItems}
           userPoints={userPoints}
           userId={user?.id}
-          categories={currentCategory.subcategories || []}
+          categories={(currentCategory.subcategories || []).map(({ id, name, display_order }) => ({ id, name, display_order: display_order ?? undefined }))}
           initialActiveCategory={catParam ?? "all"}
         />
 

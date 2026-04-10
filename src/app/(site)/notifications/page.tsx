@@ -33,6 +33,7 @@ const notificationTypeLabels: Record<TypeFilter, string> = {
   welcome: "환영",
   hot_post: "인기 게시글",
   profile_update: "프로필 업데이트",
+  suspension: "계정 정지",
 };
 
 export default function NotificationsPage() {
@@ -44,7 +45,7 @@ export default function NotificationsPage() {
 
   // React Query로 알림 데이터 관리
   const { data, isLoading } = useNotifications(100);
-  const notifications = data?.notifications ?? [];
+  const notifications = useMemo(() => data?.notifications ?? [], [data?.notifications]);
   const unreadCount = data?.unreadCount ?? 0;
 
   // 캐시 업데이트 유틸리티

@@ -1,10 +1,8 @@
 import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { getPostPageData } from '@/domains/boards/actions';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
-import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';

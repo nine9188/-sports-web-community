@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Metadata } from 'next';
 import dynamicImport from 'next/dynamic';
 import { getPostEditData } from '@/domains/boards/actions';
+import type { DealInfo } from '@/domains/boards/types/hotdeal';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import Spinner from '@/shared/components/Spinner';
@@ -74,13 +75,11 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
         <PostEditForm
           postId={result.post.id}
           boardId={result.board.id}
-          _boardSlug={slug}
-          _postNumber={postNumber}
           initialTitle={result.post.title}
           initialContent={typeof result.post.content === 'string' ? result.post.content : JSON.stringify(result.post.content)}
           boardName={result.board.name}
           isCreateMode={false}
-          initialDealInfo={result.post.deal_info || null}
+          initialDealInfo={(result.post.deal_info as unknown as DealInfo) || null}
         />
       </div>
     );

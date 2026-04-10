@@ -52,7 +52,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
     );
   }
 
-  const { team, venue } = teamData;
+  const { team } = teamData;
 
   return (
     <div className={`h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] ${className}`}>

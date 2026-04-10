@@ -104,7 +104,13 @@ export default async function CreatePostPage({
           categoryId={result.board.id}
           allBoardsFlat={(result.allBoards || []).map(board => ({
             ...board,
-            slug: board.slug || board.id
+            slug: board.slug || board.id,
+            team_id: board.team_id ?? null,
+            league_id: board.league_id ?? null,
+            description: (board as unknown as Record<string, unknown>).description as string || '',
+            access_level: (board as unknown as Record<string, unknown>).access_level as string || 'public',
+            logo: (board as unknown as Record<string, unknown>).logo as string || null,
+            views: (board as unknown as Record<string, unknown>).views as number || 0,
           }))}
           isCreateMode={true}
         />

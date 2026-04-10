@@ -140,7 +140,7 @@ export async function getBoardPopularPosts(boardId: string) {
 
   // 포맷팅 함수
   const formatPost = (post: typeof allPosts[0]): PopularPost => {
-    const createdAt = new Date(post.created_at);
+    const createdAt = new Date(post.created_at || '');
     const formattedDate = `${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
 
     const iconId = post.profiles?.icon_id;
@@ -157,30 +157,30 @@ export async function getBoardPopularPosts(boardId: string) {
       comment_count: commentCounts[post.id] || 0,
       author_nickname: post.profiles?.nickname || '익명',
       author_id: post.profiles?.id,
-      author_level: post.profiles?.level,
+      author_level: post.profiles?.level ?? undefined,
       author_exp: post.profiles?.exp || 0,
       author_icon_id: iconId,
       author_icon_url: iconUrl,
       author_public_id: post.profiles?.public_id || null,
-      created_at: post.created_at,
+      created_at: post.created_at || '',
       formattedDate,
       team_id: post.boards?.team_id,
       league_id: post.boards?.league_id,
       content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
-      deal_info: post.deal_info || null
+      deal_info: (post.deal_info as unknown as DealInfo) || null
     };
   };
 
   // 이번주 게시글 필터 + HOT 점수 정렬
   const weekMaxHours = 7 * 24;
   const weekPostsScored = allPosts
-    .filter(post => new Date(post.created_at) >= weekStart)
+    .filter(post => new Date(post.created_at || '') >= weekStart)
     .map(post => ({
       post,
       hotScore: calculateHotScore(
         post.views || 0, post.likes || 0,
         commentCounts[post.id] || 0,
-        post.created_at, nowMs, weekMaxHours
+        post.created_at || '', nowMs, weekMaxHours
       )
     }))
     .sort((a, b) => b.hotScore - a.hotScore)
@@ -195,7 +195,7 @@ export async function getBoardPopularPosts(boardId: string) {
       hotScore: calculateHotScore(
         post.views || 0, post.likes || 0,
         commentCounts[post.id] || 0,
-        post.created_at, nowMs, monthMaxHours
+        post.created_at || '', nowMs, monthMaxHours
       )
     }))
     .sort((a, b) => b.hotScore - a.hotScore)

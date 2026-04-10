@@ -109,18 +109,19 @@ type ContentInput = string | TipTapDoc | RssPost | Record<string, unknown> | nul
 function processObjectContentUnsafe(content: TipTapDoc | RssPost | Record<string, unknown>): string {
   try {
     let htmlContent = '<div class="rss-content">';
+    const contentRecord = content as Record<string, unknown>;
 
     // RSS 게시글이면 헤더 추가
-    if (isRssPost(content)) {
-      htmlContent += renderRssHeader(content);
+    if (isRssPost(contentRecord)) {
+      htmlContent += renderRssHeader(contentRecord);
     }
 
     // TipTap 형식인 경우
     if ('type' in content && content.type === 'doc' && 'content' in content) {
       htmlContent += renderTipTapDoc(content as TipTapDoc);
-    } else if (isRssPost(content)) {
+    } else if (isRssPost(contentRecord)) {
       // RSS 콘텐츠 본문
-      htmlContent += renderRssContent(content);
+      htmlContent += renderRssContent(contentRecord);
     } else {
       // 다른 형태의 JSON - 읽기 가능한 형태로 출력
       htmlContent += `

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 
@@ -16,9 +17,9 @@ export default function PrivacyPage() {
     <div className="min-h-screen">
       {/* 왼쪽 상단 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <a href="/" className="inline-block">
+        <Link href="/" className="inline-block">
           <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-10 sm:h-14 w-auto dark:invert" />
-        </a>
+        </Link>
       </div>
 
       <div className="flex flex-col items-center px-4 pb-8">

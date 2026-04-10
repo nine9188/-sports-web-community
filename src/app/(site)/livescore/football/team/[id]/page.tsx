@@ -29,6 +29,7 @@ export async function generateMetadata({
     fetchSquad: false,
     fetchPlayerStats: false,
     fetchStandings: false,
+    fetchTransfers: false,
   });
 
   if (!teamData.success || !teamData.teamData?.team?.team) {
@@ -107,8 +108,8 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
     const team = initialData.teamData?.team?.team;
     const venue = initialData.teamData?.team?.venue;
     const teamMapping = team ? getTeamById(Number(id)) : null;
-    const leagueMapping = initialData.standings?.standings?.league
-      ? getLeagueById(initialData.standings.standings.league.id)
+    const leagueMapping = initialData.standings?.data?.[0]?.league
+      ? getLeagueById(initialData.standings.data[0].league.id)
       : null;
 
     // 코치 정보 추출
@@ -130,8 +131,8 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
       ...(leagueMapping ? {
         memberOf: {
           '@type': 'SportsOrganization',
-          name: leagueMapping.nameKo || initialData.standings?.standings?.league?.name,
-          url: `${siteConfig.url}/livescore/football/leagues/${initialData.standings?.standings?.league?.id}`,
+          name: leagueMapping.nameKo || initialData.standings?.data?.[0]?.league?.name,
+          url: `${siteConfig.url}/livescore/football/leagues/${initialData.standings?.data?.[0]?.league?.id}`,
         },
       } : {}),
       ...(coach?.name ? {
@@ -157,8 +158,8 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
 
     // BreadcrumbList JSON-LD
     const teamDisplayName = teamMapping?.name_ko || team?.name || '';
-    const leagueDisplayName = leagueMapping?.nameKo || initialData.standings?.standings?.league?.name || '';
-    const leagueId = initialData.standings?.standings?.league?.id;
+    const leagueDisplayName = leagueMapping?.nameKo || initialData.standings?.data?.[0]?.league?.name || '';
+    const leagueId = initialData.standings?.data?.[0]?.league?.id;
     const breadcrumbSchema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',

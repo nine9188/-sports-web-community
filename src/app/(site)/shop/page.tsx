@@ -6,6 +6,7 @@ import {
   getShopCategories,
 } from "@/domains/shop/actions/actions";
 import CategoryFilter from "@/domains/shop/components/CategoryFilter";
+import type { ShopItem } from "@/domains/shop/types";
 import TrackPageVisit from "@/domains/layout/components/TrackPageVisit";
 import { buildMetadata } from "@/shared/utils/metadataNew";
 
@@ -134,7 +135,7 @@ export default async function ShopPage({ searchParams }: Props) {
 
       {/* 상세형 상점: 탭 + 로그인 안내(하위) + 그리드 */}
       <CategoryFilter
-        items={items}
+        items={items as ShopItem[]}
         userItems={userItems}
         userPoints={userPoints}
         userId={user?.id}

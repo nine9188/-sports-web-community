@@ -64,10 +64,7 @@ export function usePredictionAutomationLogs() {
     queryKey: [...adminKeys.predictions(), 'logs'],
     queryFn: async () => {
       const result = await getPredictionAutomationLogs();
-      if (!result.success) {
-        throw new Error(result.error || '로그 조회에 실패했습니다.');
-      }
-      return result.logs || [];
+      return (result || []) as PredictionLog[];
     },
     staleTime: 1000 * 60 * 2, // 2분
   });
@@ -81,11 +78,12 @@ export function useGenerateAllPredictionsMutation() {
 
   return useMutation({
     mutationFn: async (date: string) => {
-      const result = await generateAllPredictions(date);
-      if (!result.success) {
-        throw new Error(result.error || '예측 생성에 실패했습니다.');
+      const results = await generateAllPredictions(date);
+      const errorResults = results.filter(r => r.status === 'error');
+      if (results.length > 0 && errorResults.length === results.length) {
+        throw new Error('모든 예측 생성에 실패했습니다.');
       }
-      return result;
+      return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.predictions() });
@@ -102,7 +100,6 @@ export function useGenerateLeaguePredictionMutation() {
   return useMutation({
     mutationFn: async ({
       leagueId,
-      leagueName,
       date,
       matchIds,
     }: {
@@ -111,9 +108,9 @@ export function useGenerateLeaguePredictionMutation() {
       date: string;
       matchIds?: number[];
     }) => {
-      const result = await generateSingleLeaguePrediction(leagueId, leagueName, date, matchIds);
-      if (!result.success) {
-        throw new Error(result.error || '예측 생성에 실패했습니다.');
+      const result = await generateSingleLeaguePrediction(date, leagueId, 'manual', matchIds);
+      if (result.status === 'error') {
+        throw new Error(result.message || '예측 생성에 실패했습니다.');
       }
       return result;
     },
@@ -130,10 +127,10 @@ export function useTogglePredictionAutomationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (enabled: boolean) => {
-      const result = await togglePredictionAutomation(enabled);
+    mutationFn: async ({ enabled, time = '00:00' }: { enabled: boolean; time?: string }) => {
+      const result = await togglePredictionAutomation(enabled, time);
       if (!result.success) {
-        throw new Error(result.error || '자동화 설정에 실패했습니다.');
+        throw new Error(result.message || '자동화 설정에 실패했습니다.');
       }
       return result;
     },
@@ -148,10 +145,10 @@ export function useTogglePredictionAutomationMutation() {
  */
 export function useTestPredictionMutation() {
   return useMutation({
-    mutationFn: async (matchId: number) => {
-      const result = await testPredictionGeneration(matchId);
+    mutationFn: async (targetDate: string) => {
+      const result = await testPredictionGeneration(targetDate);
       if (!result.success) {
-        throw new Error(result.error || '테스트 예측 생성에 실패했습니다.');
+        throw new Error(result.message || '테스트 예측 생성에 실패했습니다.');
       }
       return result;
     },
@@ -168,7 +165,7 @@ export function usePredictionPreview(matchId: number | null) {
       if (!matchId) return null;
       const result = await fetchPredictionPreview(matchId);
       if (!result.success) {
-        throw new Error(result.error || '미리보기 조회에 실패했습니다.');
+        throw new Error(result.error ?? '미리보기 조회에 실패했습니다.');
       }
       return result.data;
     },

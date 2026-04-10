@@ -48,8 +48,9 @@ export async function endDeal(params: EndDealParams) {
     }
 
     // deal_info 업데이트
+    const dealInfo = post.deal_info as unknown as Record<string, unknown>;
     const updatedDealInfo = {
-      ...post.deal_info,
+      ...dealInfo,
       is_ended: true,
       ended_at: new Date().toISOString(),
       ended_reason: reason,
@@ -70,7 +71,7 @@ export async function endDeal(params: EndDealParams) {
     await logUserAction('HOTDEAL_END', `핫딜 종료: ${reason}`, user.id, { postId, reason });
 
     // 캐시 갱신
-    const boardSlug = (post.board as any)?.slug;
+    const boardSlug = (post.board as unknown as { slug?: string })?.slug;
     if (boardSlug) {
       revalidatePath(`/boards/${boardSlug}`);
     }

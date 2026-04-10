@@ -4,8 +4,8 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 // 관리자 권한 확인
-async function checkAdmin() {
-  const supabase = await checkAdmin();
+async function checkAdmin(): ReturnType<typeof getSupabaseServer> {
+  const supabase = await getSupabaseServer();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) throw new Error('인증되지 않은 사용자입니다.');
 
@@ -26,7 +26,7 @@ export interface Board {
   description: string | null;
   access_level: string;
   parent_id: string | null;
-  views?: number;
+  views?: number | null;
   display_order: number;
   team_id?: number | null;
   view_type?: 'list' | 'image-table' | null;

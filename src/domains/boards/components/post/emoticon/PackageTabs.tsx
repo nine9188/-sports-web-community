@@ -34,7 +34,7 @@ export default function PackageTabs({
         <ChevronLeft className="w-4 h-4" />
       </button>
 
-      <div ref={tabContainerRef} className="flex-1 flex overflow-x-auto scrollbar-hide h-full">
+      <div ref={tabContainerRef as React.RefObject<HTMLDivElement>} className="flex-1 flex overflow-x-auto scrollbar-hide h-full">
         {packages.map((pkg) => (
           <button
             key={pkg.pack_id}

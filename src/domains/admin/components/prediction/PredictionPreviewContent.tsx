@@ -127,9 +127,9 @@ export function PredictionPreviewContent({ data }: PredictionPreviewContentProps
                   return (
                     <div className="bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg p-2 shadow-lg text-[13px]">
                       <p className="font-semibold mb-1 text-gray-900 dark:text-[#F0F0F0]">{label}</p>
-                      {payload.map((entry: any, index: number) => (
+                      {payload.map((entry, index) => (
                         <p key={index} className="text-gray-700 dark:text-gray-300">
-                          {entry.name}: <span className="font-bold">{entry.value}%</span>
+                          {String(entry.name ?? '')}: <span className="font-bold">{Number(entry.value ?? 0)}%</span>
                         </p>
                       ))}
                     </div>

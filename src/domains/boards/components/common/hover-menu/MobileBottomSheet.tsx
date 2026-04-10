@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
-import { ChildBoard, TopBoard } from './types';
+import { ChildBoard } from './types';
 
 interface MobileBottomSheetProps {
   hoveredBoard: string;

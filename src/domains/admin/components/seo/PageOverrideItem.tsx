@@ -2,7 +2,7 @@
 
 import { Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
-import type { PageSeoOverride, PredefinedPage } from './types';
+import type { PageSeoOverride } from './types';
 
 interface PageOverrideItemProps {
   path: string;

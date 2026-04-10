@@ -48,7 +48,9 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
     ]);
 
     const isLoggedIn = !!userResult.data?.user;
-    const { boardsMap, childBoardsMap, boardNameMap, allBoards } = cachedMaps;
+    const { boardsMap: rawBoardsMap, childBoardsMap: rawChildBoardsMap, allBoards } = cachedMaps;
+    const boardsMap = rawBoardsMap as unknown as BoardMap;
+    const childBoardsMap = rawChildBoardsMap as unknown as ChildBoardsMap;
 
     // 캐시된 데이터에서 slug로 게시판 찾기
     const boardData = allBoards.find(b => b.slug === slug);
@@ -65,7 +67,7 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
     const safeBoardData = {
       ...boardData,
       slug: boardData.slug || boardData.id
-    };
+    } as Board;
     const breadcrumbs = generateBoardBreadcrumbs(safeBoardData, boardsMap);
     
     // 현재 게시판의 레벨 결정 (최상위, 상위, 하위)

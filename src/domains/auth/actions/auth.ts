@@ -4,7 +4,7 @@ import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/serv
 import { logAuthEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
+import type { User, Session } from '@supabase/supabase-js'
 
 import { checkLoginAttempts, recordAttempt, clearAttempts } from './utils/login-attempts'
 import { recordDailyLogin } from '@/shared/actions/attendance-actions'
@@ -48,9 +48,9 @@ export async function signIn(
     // 3. 아이디로 이메일 및 인증 상태 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, email_confirmed, is_deleted')
+      .select('id, email, email_confirmed')
       .eq('username', username)
-      .single()
+      .single<{ id: string; email: string | null; email_confirmed: boolean | null; is_deleted?: boolean }>()
 
     if (profileError || !profile?.email) {
       await recordAttempt(username, 'invalid_username')
@@ -327,7 +327,7 @@ export async function getCurrentUser(): Promise<{
  */
 export async function refreshSession(
   refreshToken: string
-): Promise<{ success: boolean; session?: any; error?: string }> {
+): Promise<{ success: boolean; session?: Session | null; error?: string }> {
   try {
     const supabase = await getSupabaseAction()
 

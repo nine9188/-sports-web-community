@@ -122,7 +122,7 @@ export default async function PopularPostsPage({
         boardData={popularBoardData}
         breadcrumbs={[]}
         currentPage={currentPage}
-        posts={layoutPosts}
+        posts={layoutPosts as unknown as Parameters<typeof PopularPageClient>[0]['posts']}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
         pagination={{

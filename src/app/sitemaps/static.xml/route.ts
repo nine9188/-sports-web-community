@@ -50,7 +50,7 @@ export async function GET() {
     // 게시판 목록 페이지 URL (게시글 사이트맵과 별개로, 게시판 "리스트" 페이지)
     const { data: boards } = await supabase
       .from('boards')
-      .select('slug, created_at')
+      .select('slug')
       .not('slug', 'is', null);
 
     if (boards) {
@@ -58,7 +58,7 @@ export async function GET() {
         if (b.slug) {
           urls.push({
             loc: `${baseUrl}/boards/${b.slug}`,
-            lastmod: b.created_at ? new Date(b.created_at).toISOString() : now,
+            lastmod: now,
           });
         }
       }

@@ -10,7 +10,7 @@ import {
   NativeSelect,
   Button
 } from '@/shared/components/ui';
-import { getTeamsByLeagueId, getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getTeamsByLeagueId } from '@/domains/livescore/constants/teams';
 
 const LEAGUE_OPTIONS = [
   { value: '', label: '리그를 선택하세요' },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
+import type { User } from '@supabase/supabase-js'
 
 /**
  * 네이버 OAuth 콜백 처리
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     // 네이버 ID로 기존 사용자 찾기
     const { data: { users: allUsers } } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
     const existingUser = allUsers?.find(
-      (u: any) => u.app_metadata?.naver_id === naverId
+      (u: User) => u.app_metadata?.naver_id === naverId
     )
 
     let userEmail: string

@@ -41,7 +41,7 @@ export async function GET(
       const urls = posts
         .filter((p) => p.board && typeof p.board === 'object' && 'slug' in p.board)
         .map((p) => ({
-          loc: `${baseUrl}/boards/${(p.board as { slug: string }).slug}/${p.post_number}`,
+          loc: `${baseUrl}/boards/${(p.board as unknown as { slug: string }).slug}/${p.post_number}`,
           lastmod: p.updated_at
             ? new Date(p.updated_at).toISOString()
             : p.created_at

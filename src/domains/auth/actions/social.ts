@@ -23,7 +23,7 @@ import { logAuthEvent } from '@/shared/actions/log-actions'
  */
 export async function signInWithKakao(
   redirectTo: string
-): Promise<{ data?: any; url?: string; error?: string }> {
+): Promise<{ data?: { provider: string; url: string }; url?: string; error?: string }> {
   try {
     const supabase = await getSupabaseAction()
 
@@ -82,7 +82,7 @@ export async function signInWithKakao(
  */
 export async function signInWithGoogle(
   redirectTo: string
-): Promise<{ data?: any; url?: string; error?: string }> {
+): Promise<{ data?: { provider: string; url: string }; url?: string; error?: string }> {
   try {
     const supabase = await getSupabaseAction()
 
@@ -117,7 +117,7 @@ export async function signInWithGoogle(
  */
 export async function signInWithDiscord(
   redirectTo: string
-): Promise<{ data?: any; url?: string; error?: string }> {
+): Promise<{ data?: { provider: string; url: string }; url?: string; error?: string }> {
   try {
     const supabase = await getSupabaseAction()
 
@@ -146,7 +146,7 @@ export async function signInWithDiscord(
  */
 export async function signInWithApple(
   redirectTo: string
-): Promise<{ data?: any; url?: string; error?: string }> {
+): Promise<{ data?: { provider: string; url: string }; url?: string; error?: string }> {
   try {
     const supabase = await getSupabaseAction()
 

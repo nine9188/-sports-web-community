@@ -146,7 +146,7 @@ export default function VideoForm({
           console.error('버킷 조회 오류:', bucketError);
         } else {
           console.log('사용 가능한 버킷들:', buckets);
-          const postVideosBucket = buckets.find(bucket => bucket.name === 'post-videos');
+          const postVideosBucket = buckets.find((bucket: { name: string }) => bucket.name === 'post-videos');
           
           if (!postVideosBucket) {
             throw new Error('post-videos 스토리지 버킷이 존재하지 않습니다. 관리자에게 문의해주세요.');

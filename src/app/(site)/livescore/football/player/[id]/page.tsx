@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
-import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
+import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamById } from '@/domains/livescore/constants/teams';

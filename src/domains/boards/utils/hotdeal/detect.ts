@@ -69,5 +69,5 @@ export function removeStoreTag(title: string): string {
  * isHotdealBoard('free') // false
  */
 export function isHotdealBoard(boardSlug: string): boolean {
-  return HOTDEAL_BOARD_SLUGS.includes(boardSlug as any);
+  return (HOTDEAL_BOARD_SLUGS as readonly string[]).includes(boardSlug);
 }

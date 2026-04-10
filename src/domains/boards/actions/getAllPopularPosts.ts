@@ -176,11 +176,11 @@ export async function getAllPopularPosts({
         post.views || 0,
         post.likes || 0,
         commentCounts[post.id] || 0,
-        post.created_at,
+        post.created_at || '',
         nowMs,
         maxHours
       )
-    }));
+    })).filter(({ post }) => post.board_id !== null);
 
     scoredPosts.sort((a, b) => b.hotScore - a.hotScore);
 
@@ -265,7 +265,7 @@ export async function getAllPopularPosts({
       return {
         id: post.id,
         title: post.title,
-        board_id: post.board_id,
+        board_id: post.board_id!,
         board_slug: post.boards?.slug || '',
         board_name: post.boards?.name || '알 수 없음',
         post_number: post.post_number,
@@ -279,8 +279,8 @@ export async function getAllPopularPosts({
         author_icon_id: iconId,
         author_icon_url: iconUrl,
         author_public_id: post.profiles?.public_id || null,
-        created_at: post.created_at,
-        formattedDate: formatDate(post.created_at),
+        created_at: post.created_at || '',
+        formattedDate: formatDate(post.created_at || ''),
         team_id: post.boards?.team_id,
         league_id: post.boards?.league_id,
         team_logo: teamLogo,

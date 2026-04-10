@@ -2,6 +2,12 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 
+// emoticon_packs, emoticon_pack_summary, user_emoticon_settings 테이블은
+// Supabase 생성 타입에 아직 포함되지 않음 → 타입 우회 헬퍼
+type SupabaseClient = Awaited<ReturnType<typeof getSupabaseServer>>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fromTable = (client: SupabaseClient, table: string): any => (client as any).from(table)
+
 // ── Supabase 전체 조회 헬퍼 (1000행 제한 우회) ──
 const PAGE_SIZE = 1000
 async function fetchAll<T>(
@@ -77,19 +83,18 @@ export async function getEmoticonPacks(): Promise<EmoticonPackInfo[]> {
   const supabase = await getSupabaseServer()
 
   // 뷰에서 팩 요약 정보 조회 (GROUP BY로 개수 포함, limit 문제 없음)
-  const { data, error } = await supabase
-    .from('emoticon_pack_summary')
+  const { data, error } = await fromTable(supabase, 'emoticon_pack_summary')
     .select('pack_id, pack_name, pack_thumbnail, pack_creator, pack_description, shop_item_id, emoticon_count, created_at')
 
   if (error) throw new Error('이모티콘 팩 조회 실패')
 
   // 유료 팩의 가격 + 구매 수 조회
   const shopItemIds = (data || [])
-    .filter(p => p.shop_item_id !== null)
-    .map(p => p.shop_item_id as number)
+    .filter((p: { shop_item_id: number | null }) => p.shop_item_id !== null)
+    .map((p: { shop_item_id: number | null }) => p.shop_item_id as number)
 
   let priceMap = new Map<number, number>()
-  let purchaseCountMap = new Map<number, number>()
+  const purchaseCountMap = new Map<number, number>()
 
   if (shopItemIds.length > 0) {
     const { data: items } = await supabase
@@ -115,7 +120,7 @@ export async function getEmoticonPacks(): Promise<EmoticonPackInfo[]> {
     }
   }
 
-  return (data || []).map(row => ({
+  return (data || []).map((row: Record<string, unknown>) => ({
     pack_id: row.pack_id,
     pack_name: row.pack_name,
     pack_thumbnail: row.pack_thumbnail,
@@ -123,8 +128,8 @@ export async function getEmoticonPacks(): Promise<EmoticonPackInfo[]> {
     pack_description: row.pack_description,
     shop_item_id: row.shop_item_id,
     emoticon_count: row.emoticon_count,
-    price: row.shop_item_id ? (priceMap.get(row.shop_item_id) ?? null) : null,
-    purchase_count: row.shop_item_id ? (purchaseCountMap.get(row.shop_item_id) ?? 0) : 0,
+    price: row.shop_item_id ? (priceMap.get(row.shop_item_id as number) ?? null) : null,
+    purchase_count: row.shop_item_id ? (purchaseCountMap.get(row.shop_item_id as number) ?? 0) : 0,
     created_at: row.created_at,
   }))
 }
@@ -137,8 +142,7 @@ export async function getEmoticonPacks(): Promise<EmoticonPackInfo[]> {
 export async function getEmoticonsByPackId(packId: string): Promise<EmoticonFromDB[]> {
   const supabase = await getSupabaseServer()
 
-  const { data, error } = await supabase
-    .from('emoticon_packs')
+  const { data, error } = await fromTable(supabase, 'emoticon_packs')
     .select('id, pack_id, pack_name, pack_thumbnail, code, name, url, shop_item_id, display_order')
     .eq('pack_id', packId)
     .eq('is_active', true)
@@ -146,7 +150,7 @@ export async function getEmoticonsByPackId(packId: string): Promise<EmoticonFrom
     .limit(1000)
 
   if (error) throw new Error('이모티콘 조회 실패')
-  return (data || []) as EmoticonFromDB[]
+  return (data || []) as unknown as EmoticonFromDB[]
 }
 
 /**
@@ -156,8 +160,7 @@ export async function getPackDetail(packId: string): Promise<PackDetailData | nu
   const supabase = await getSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data, error } = await supabase
-    .from('emoticon_packs')
+  const { data, error } = await fromTable(supabase, 'emoticon_packs')
     .select('id, pack_id, pack_name, pack_thumbnail, pack_creator, pack_description, code, name, url, shop_item_id, display_order')
     .eq('pack_id', packId)
     .eq('is_active', true)
@@ -201,7 +204,7 @@ export async function getPackDetail(packId: string): Promise<PackDetailData | nu
     shop_item_id: first.shop_item_id,
     price,
     emoticon_count: data.length,
-    emoticons: data as EmoticonFromDB[],
+    emoticons: data as unknown as EmoticonFromDB[],
     isOwned,
     isFree,
   }
@@ -217,14 +220,13 @@ export async function getUserOwnedEmoticonPacks(): Promise<number[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data: paidPacks } = await supabase
-    .from('emoticon_packs')
+  const { data: paidPacks } = await fromTable(supabase, 'emoticon_packs')
     .select('shop_item_id')
     .not('shop_item_id', 'is', null)
     .eq('is_active', true)
     .limit(1000)
 
-  const shopItemIds = Array.from(new Set((paidPacks || []).map(p => p.shop_item_id).filter(Boolean))) as number[]
+  const shopItemIds = Array.from(new Set((paidPacks || []).map((p: { shop_item_id: number | null }) => p.shop_item_id).filter(Boolean))) as number[]
   if (shopItemIds.length === 0) return []
 
   const { data: userItems } = await supabase
@@ -276,9 +278,8 @@ export async function getPickerData(): Promise<PickerPackage[]> {
   const { data: { user } } = await supabase.auth.getUser()
 
   // 모든 활성 이모티콘 조회 (1000행 제한 우회)
-  const data = await fetchAll((from, to) =>
-    supabase
-      .from('emoticon_packs')
+  const data = await fetchAll<EmoticonFromDB>((from, to) =>
+    fromTable(supabase, 'emoticon_packs')
       .select('id, pack_id, pack_name, pack_thumbnail, code, name, url, shop_item_id, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true })
@@ -337,8 +338,7 @@ export async function getPickerData(): Promise<PickerPackage[]> {
   // 유저 순서 적용
   let packOrder: string[] = []
   if (user) {
-    const { data: settings } = await supabase
-      .from('user_emoticon_settings')
+    const { data: settings } = await fromTable(supabase, 'user_emoticon_settings')
       .select('pack_order')
       .eq('user_id', user.id)
       .maybeSingle()
@@ -373,9 +373,8 @@ export async function getAllEmoticonCodes(): Promise<{ code: string; url: string
   const supabase = await getSupabaseServer()
 
   try {
-    const data = await fetchAll((from, to) =>
-      supabase
-        .from('emoticon_packs')
+    const data = await fetchAll<{ code: string; url: string; name: string }>((from, to) =>
+      fromTable(supabase, 'emoticon_packs')
         .select('code, url, name')
         .eq('is_active', true)
         .order('code', { ascending: true })
@@ -397,8 +396,7 @@ export async function getUserPackOrder(): Promise<string[]> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data } = await supabase
-    .from('user_emoticon_settings')
+  const { data } = await fromTable(supabase, 'user_emoticon_settings')
     .select('pack_order')
     .eq('user_id', user.id)
     .maybeSingle()
@@ -417,8 +415,7 @@ export async function saveEmoticonPackOrder(packOrder: string[]): Promise<void> 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('로그인이 필요합니다')
 
-  const { error } = await supabase
-    .from('user_emoticon_settings')
+  const { error } = await fromTable(supabase, 'user_emoticon_settings')
     .upsert(
       { user_id: user.id, pack_order: packOrder, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }

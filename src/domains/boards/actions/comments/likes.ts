@@ -53,6 +53,7 @@ async function toggleCommentReaction(
 
       // 원자적 감소
       const column = reactionType === 'like' ? 'likes' : 'dislikes';
+      // @ts-expect-error RPC function not in generated types
       await supabase.rpc('decrement_comment_count', {
         row_id: commentId,
         column_name: column,
@@ -78,6 +79,7 @@ async function toggleCommentReaction(
         if (!deleteError) {
           // 반대 리액션 원자적 감소
           const oppositeColumn = oppositeType === 'like' ? 'likes' : 'dislikes';
+          // @ts-expect-error RPC function not in generated types
           await supabase.rpc('decrement_comment_count', {
             row_id: commentId,
             column_name: oppositeColumn,
@@ -96,6 +98,7 @@ async function toggleCommentReaction(
 
       // 원자적 증가
       const column = reactionType === 'like' ? 'likes' : 'dislikes';
+      // @ts-expect-error RPC function not in generated types
       await supabase.rpc('increment_comment_count', {
         row_id: commentId,
         column_name: column,

@@ -1,4 +1,4 @@
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerHeader } from '@/shared/components/ui';
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';

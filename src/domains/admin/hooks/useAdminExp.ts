@@ -6,10 +6,10 @@ import { adminKeys } from '@/shared/constants/queryKeys';
 
 interface ExpHistoryItem {
   id: string;
-  userId: string;
+  userId: string | null;
   exp: number;
   reason: string;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 interface UserInfo {

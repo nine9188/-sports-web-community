@@ -91,7 +91,8 @@ export async function GET() {
     if (boardsWithPosts) {
       const slugs = new Set<string>();
       for (const p of boardsWithPosts) {
-        const slug = (p.board as { slug: string })?.slug;
+        const board = p.board as unknown as { slug: string } | null;
+        const slug = board?.slug;
         if (slug) slugs.add(slug);
       }
       for (const slug of slugs) {

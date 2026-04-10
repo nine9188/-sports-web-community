@@ -95,6 +95,7 @@ async function checkLoginBlock(username: string): Promise<LoginBlockInfo> {
 /**
  * 로그인 시도 기록
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function recordAttempt(username: string, reason: 'invalid_username' | 'invalid_password'): Promise<void> {
   try {
     const supabase = await getSupabaseServer()

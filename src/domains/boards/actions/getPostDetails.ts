@@ -5,7 +5,7 @@ import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
 import { processContentToHtml } from '../utils/post/processContentToHtml';
-import { BoardMap, ChildBoardsMap, BoardData } from '../types/board';
+import { Board, BoardMap, ChildBoardsMap, BoardData } from '../types/board';
 import { getComments } from './comments/index';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
@@ -111,7 +111,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       const safeBoard = {
         ...board,
         slug: board.slug || board.id,
-        display_order: board.display_order || 0
+        display_order: board.display_order || 0,
+        view_type: board.view_type as Board['view_type']
       };
       boardsMap[board.id] = safeBoard;
       boardNameMap[board.id] = board.name;
@@ -235,9 +236,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
 
     // 4590 표준: Storage URL로 팀/리그 로고 조회 (다크모드 포함)
     const [teamLogoUrlMap, leagueLogoUrlMap, leagueLogoDarkUrlMap] = await Promise.all([
-      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({}),
-      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({}),
-      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({})  // 다크모드
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({} as Record<number, string>)  // 다크모드
     ]);
 
     // 게시글 사용자 액션 처리
@@ -320,11 +321,12 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         ...p,
         is_hidden: p.is_hidden ?? undefined,
         is_deleted: p.is_deleted ?? undefined,
+        is_notice: p.is_notice ?? undefined,
         profiles: p.profiles ? {
           ...p.profiles,
           level: p.profiles.level || undefined
         } : undefined
-      })),
+      })) as import('../types/post').Post[],
       commentCounts,
       boardsData,
       boardNameMap,
@@ -335,12 +337,13 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     // 13. 브레드크럼 생성
     const safeBoardForBreadcrumb = {
       ...board,
-      slug: board.slug || board.id
-    };
+      slug: board.slug || board.id,
+      view_type: board.view_type as Board['view_type']
+    } as Board;
     const breadcrumbs = createBreadcrumbs(safeBoardForBreadcrumb, post.title, postNumber, boardsMap);
 
     // 14. 콘텐츠 HTML 변환 (서버 사이드 - 깜빡임 방지)
-    const processedHtml = processContentToHtml(post.content);
+    const processedHtml = processContentToHtml(post.content as unknown as Parameters<typeof processContentToHtml>[0]);
 
     // 15. 조회수 증가 (fire-and-forget - 응답 대기 안함)
     supabase.rpc('increment_view_count', { post_id: post.id }).then(() => {});

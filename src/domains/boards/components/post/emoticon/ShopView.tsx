@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries';
-import { Button, Container, ContainerContent } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui';
 import { DESKTOP_CONTENT_HEIGHT } from './constants';
 
 const SHOP_COLS_DESKTOP = 5;
@@ -216,7 +216,7 @@ export default function ShopView({ isMobile, onBack, onPackClick }: ShopViewProp
         >
           {isSearching && searchResults.length === 0 ? (
             <div className="flex items-center justify-center py-8">
-              <p className="text-xs text-gray-400 dark:text-gray-500">'{query}' 검색 결과가 없습니다</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">&apos;{query}&apos; 검색 결과가 없습니다</p>
             </div>
           ) : (
             <div className={`grid ${isMobile ? 'grid-cols-3 gap-1.5' : 'grid-cols-5 gap-2'}`}>

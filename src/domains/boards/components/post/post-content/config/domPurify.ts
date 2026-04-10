@@ -24,7 +24,7 @@ const ALLOWED_CSS_PROPERTIES = new Set([
 ]);
 
 // DOMPurify 설정 - 서버 설정과 동일하게 유지
-export const DOMPURIFY_CONFIG: DOMPurify.Config = {
+export const DOMPURIFY_CONFIG: Parameters<typeof DOMPurify.sanitize>[1] = {
   ALLOWED_TAGS: [
     // 기본 텍스트 태그
     'p', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -142,7 +142,7 @@ export function sanitizeHTML(html: string): string {
     }
   });
 
-  const result = DOMPurify.sanitize(html, DOMPURIFY_CONFIG);
+  const result = DOMPurify.sanitize(html, { ...DOMPURIFY_CONFIG, RETURN_TRUSTED_TYPE: false }) as string;
 
   // 훅 제거 (다른 호출에 영향 방지)
   DOMPurify.removeHook('uponSanitizeAttribute');

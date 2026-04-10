@@ -79,7 +79,7 @@ export default function SignupPage() {
   const [referralChecked, setReferralChecked] = useState(false);
   const [referralMessage, setReferralMessage] = useState('');
   const [referralValid, setReferralValid] = useState(false);
-  const [referrerNickname, setReferrerNickname] = useState('');
+  const [, setReferrerNickname] = useState('');
 
   // 약관 동의 상태
   const [agreeTerms, setAgreeTerms] = useState(false);

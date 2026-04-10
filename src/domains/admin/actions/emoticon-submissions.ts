@@ -2,7 +2,15 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { EmoticonSubmissionWithUser, SubmissionStatus } from '@/domains/shop/types/emoticon-submission'
+import type { EmoticonSubmission, EmoticonSubmissionWithUser, SubmissionStatus } from '@/domains/shop/types/emoticon-submission'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// emoticon_submissions / emoticon_packs 테이블은 생성된 Supabase 타입에 없으므로
+// 타입 안전하게 접근하기 위한 헬퍼
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function untypedFrom(supabase: SupabaseClient, table: string): any {
+  return (supabase as SupabaseClient<Record<string, never>>).from(table as never)
+}
 
 async function checkAdmin() {
   const supabase = await getSupabaseServer()
@@ -25,8 +33,7 @@ export async function getSubmissions(
 ): Promise<EmoticonSubmissionWithUser[]> {
   const { supabase } = await checkAdmin()
 
-  let query = supabase
-    .from('emoticon_submissions')
+  let query = untypedFrom(supabase, 'emoticon_submissions')
     .select('*')
     .order('created_at', { ascending: false })
 
@@ -35,10 +42,11 @@ export async function getSubmissions(
   }
 
   const { data } = await query
-  if (!data || data.length === 0) return []
+  const rows = (data ?? []) as EmoticonSubmission[]
+  if (rows.length === 0) return []
 
   // 유저 닉네임 별도 조회
-  const userIds = [...new Set(data.map(d => d.user_id))]
+  const userIds = [...new Set(rows.map((d) => d.user_id))]
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, nickname')
@@ -46,7 +54,7 @@ export async function getSubmissions(
 
   const profileMap = new Map(profiles?.map(p => [p.id, p]) ?? [])
 
-  return data.map(d => ({
+  return rows.map((d) => ({
     ...d,
     profiles: profileMap.get(d.user_id) ? { nickname: profileMap.get(d.user_id)!.nickname, avatar_url: null } : null,
   })) as EmoticonSubmissionWithUser[]
@@ -58,22 +66,22 @@ export async function getSubmissions(
 export async function getSubmissionDetail(id: number) {
   const { supabase } = await checkAdmin()
 
-  const { data } = await supabase
-    .from('emoticon_submissions')
+  const { data } = await untypedFrom(supabase, 'emoticon_submissions')
     .select('*')
     .eq('id', id)
     .single()
 
   if (!data) return null
+  const submission = data as EmoticonSubmission
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('nickname')
-    .eq('id', data.user_id)
+    .eq('id', submission.user_id)
     .single()
 
   return {
-    ...data,
+    ...submission,
     profiles: profile ? { nickname: profile.nickname, avatar_url: null } : null,
   } as EmoticonSubmissionWithUser
 }
@@ -87,13 +95,13 @@ export async function approveSubmission(
 ): Promise<{ success: boolean; error?: string }> {
   const { user, supabase } = await checkAdmin()
 
-  const { data: submission } = await supabase
-    .from('emoticon_submissions')
+  const { data: rawSubmission } = await untypedFrom(supabase, 'emoticon_submissions')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (!submission) return { success: false, error: '신청서를 찾을 수 없습니다.' }
+  if (!rawSubmission) return { success: false, error: '신청서를 찾을 수 없습니다.' }
+  const submission = rawSubmission as EmoticonSubmission
   if (submission.status !== 'pending') return { success: false, error: '검토 대기 상태인 신청만 승인할 수 있습니다.' }
 
   const price = finalPrice ?? submission.requested_price
@@ -120,7 +128,7 @@ export async function approveSubmission(
   }
 
   // 2. emoticon_packs INSERT
-  const emoticonPaths = submission.emoticon_paths as string[]
+  const emoticonPaths = submission.emoticon_paths
   const packRows = emoticonPaths.map((url: string, i: number) => ({
     shop_item_id: shopItemId,
     pack_id: packId,
@@ -135,8 +143,7 @@ export async function approveSubmission(
     is_active: true,
   }))
 
-  const { error: packError } = await supabase
-    .from('emoticon_packs')
+  const { error: packError } = await untypedFrom(supabase, 'emoticon_packs')
     .insert(packRows)
 
   if (packError) return { success: false, error: `이모티콘 팩 생성 실패: ${packError.message}` }
@@ -149,15 +156,13 @@ export async function approveSubmission(
     .single()
 
   if (profile?.nickname) {
-    await supabase
-      .from('emoticon_packs')
+    await untypedFrom(supabase, 'emoticon_packs')
       .update({ pack_creator: profile.nickname })
       .eq('pack_id', packId)
   }
 
   // 3. 신청서 업데이트
-  const { error: updateError } = await supabase
-    .from('emoticon_submissions')
+  const { error: updateError } = await untypedFrom(supabase, 'emoticon_submissions')
     .update({
       status: 'approved',
       approved_pack_id: packId,
@@ -184,8 +189,7 @@ export async function rejectSubmission(
 
   if (!reason.trim()) return { success: false, error: '거절 사유를 입력해주세요.' }
 
-  const { error } = await supabase
-    .from('emoticon_submissions')
+  const { error } = await untypedFrom(supabase, 'emoticon_submissions')
     .update({
       status: 'rejected',
       reject_reason: reason.trim(),
@@ -211,24 +215,22 @@ export async function suspendSubmission(
 
   if (!reason.trim()) return { success: false, error: '중지 사유를 입력해주세요.' }
 
-  const { data: submission } = await supabase
-    .from('emoticon_submissions')
+  const { data: rawSubmission } = await untypedFrom(supabase, 'emoticon_submissions')
     .select('approved_pack_id')
     .eq('id', id)
     .eq('status', 'approved')
     .single()
 
-  if (!submission) return { success: false, error: '승인된 신청서를 찾을 수 없습니다.' }
+  if (!rawSubmission) return { success: false, error: '승인된 신청서를 찾을 수 없습니다.' }
+  const submission = rawSubmission as Pick<EmoticonSubmission, 'approved_pack_id'>
 
   if (submission.approved_pack_id) {
-    await supabase
-      .from('emoticon_packs')
+    await untypedFrom(supabase, 'emoticon_packs')
       .update({ is_active: false })
       .eq('pack_id', submission.approved_pack_id)
   }
 
-  const { error } = await supabase
-    .from('emoticon_submissions')
+  const { error } = await untypedFrom(supabase, 'emoticon_submissions')
     .update({
       status: 'suspended',
       suspend_reason: reason.trim(),

@@ -122,7 +122,7 @@ export async function signUp(
       `회원가입 성공: ${email}`,
       data.user.id,
       true,
-      { email, username: metadata?.username }
+      { email, username: (metadata?.username as string) ?? null }
     )
 
     // 6. 환영 알림 발송 (프로필 생성 후에만)

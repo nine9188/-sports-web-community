@@ -12,7 +12,7 @@ async function convertToWebP(file: File): Promise<File> {
   // 이미 WebP이거나 GIF(애니메이션)면 변환 스킵
   if (file.type === 'image/webp' || file.type === 'image/gif') return file;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new window.Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');

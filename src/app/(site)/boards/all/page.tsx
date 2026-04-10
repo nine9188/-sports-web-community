@@ -118,7 +118,7 @@ export default async function AllPostsPage({
         slug="all"
         rootBoardId="all"
         rootBoardSlug="all"
-        posts={layoutPosts}
+        posts={layoutPosts as unknown as Parameters<typeof BoardDetailLayout>[0]['posts']}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
         notices={globalNotices}

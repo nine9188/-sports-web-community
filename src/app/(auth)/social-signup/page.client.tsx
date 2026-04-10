@@ -7,7 +7,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase'
 import { validateReferralCode } from '@/shared/actions/referral-actions'
 import { checkSocialProfile, completeSocialSignup, checkNicknameAvailability } from '@/domains/auth/actions'
 import { toast } from 'react-toastify'
-import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift, X, PartyPopper, Phone } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, Calendar as CalendarIcon, Gift, PartyPopper, Phone } from 'lucide-react'
 import Spinner from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/ui'
 import Calendar from '@/shared/components/Calendar'
@@ -16,7 +16,7 @@ import BrandingPanel from '../components/BrandingPanel'
 export default function SocialSignupPage() {
   const router = useRouter()
   const { user: authUser, isLoading } = useAuth()
-  const [directUser, setDirectUser] = useState<any>(null)
+  const [directUser, setDirectUser] = useState<{ app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown>; email?: string; id?: string } | null>(null)
   const user = authUser || directUser
   const [loading, setLoading] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
@@ -44,7 +44,7 @@ export default function SocialSignupPage() {
   const [referralChecked, setReferralChecked] = useState(false)
   const [referralValid, setReferralValid] = useState(false)
   const [referralMessage, setReferralMessage] = useState('')
-  const [referrerNickname, setReferrerNickname] = useState('')
+  const [, setReferrerNickname] = useState('')
 
   // 프로바이더 이름
   const providerName = user?.app_metadata?.provider === 'naver' ? '네이버'
@@ -205,10 +205,10 @@ export default function SocialSignupPage() {
       const result = await validateReferralCode(referralCode.trim())
       setReferralChecked(true)
       setReferralValid(result.valid)
-      setReferrerNickname(result.nickname || '')
+      setReferrerNickname(result.referrerNickname || '')
       setReferralMessage(
         result.valid
-          ? `올바른 추천코드입니다. (${result.nickname})`
+          ? `올바른 추천코드입니다. (${result.referrerNickname})`
           : result.error || '유효하지 않은 추천 코드입니다.'
       )
     } catch {

@@ -168,7 +168,7 @@ async function MatchContentLoader({
     if (cachedExtra['matchPlayerStats']) {
       const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
       if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
-        cachedPlayerStats = cached as AllPlayerStatsResponse;
+        cachedPlayerStats = cached as unknown as AllPlayerStatsResponse;
       }
     }
 
@@ -193,12 +193,12 @@ async function MatchContentLoader({
         }),
     getPlayersKoreanNames(playerIds),
     isFinished && homeTeamId && awayTeamId && leagueId
-      ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.fixture?.date).catch(() => null)
+      ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.time?.date).catch(() => null)
       : Promise.resolve(null),
   ]);
 
   const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-  const powerResult = powerDataResult as { success?: boolean; data?: unknown };
+  const powerResult = powerDataResult as { success?: boolean; data?: HeadToHeadTestData };
   const powerData = powerResult.success ? powerResult.data : undefined;
 
   // 종료 경기: 전력 데이터 캐시 저장 (DB 캐시 미스였을 때만)

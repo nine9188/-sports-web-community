@@ -3,6 +3,7 @@
 import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
 import { authGuard } from '@/shared/guards/auth.guard'
 import { logAuthEvent } from '@/shared/actions/log-actions'
+import type { User } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -23,7 +24,7 @@ import { revalidatePath } from 'next/cache'
 export async function updateUserData(
   userId: string,
   metadata: Record<string, unknown>
-): Promise<{ success: boolean; user?: any; error?: string }> {
+): Promise<{ success: boolean; user?: User; error?: string }> {
   try {
     // 인증 체크 (관리자 또는 본인만 가능)
     const { user: currentUser, profile } = await authGuard()
@@ -110,7 +111,7 @@ export async function updateSocialUserProfile(
 
     // 입력 검증 (빈 값 필터링)
     const filteredData = Object.fromEntries(
-      Object.entries(profileData).filter(([_, value]) => value !== undefined && value !== '')
+      Object.entries(profileData).filter(([, value]) => value !== undefined && value !== '')
     )
 
     if (Object.keys(filteredData).length === 0) {

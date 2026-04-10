@@ -117,7 +117,7 @@ export function useEditorHandlers({
       console.error('이미지 URL 추가 오류:', error);
       toast.error('이미지를 추가하는데 실패했습니다.');
     }
-  }, [editor]);
+  }, [editor, setShowImageModal]);
 
   // 유튜브 추가
   const handleAddYoutube = useCallback(async (url: string, caption?: string) => {
@@ -167,7 +167,7 @@ export function useEditorHandlers({
     }
 
     setShowYoutubeModal(false);
-  }, [editor, extensionsLoaded]);
+  }, [editor, extensionsLoaded, setShowYoutubeModal]);
 
   // 비디오 추가
   const handleAddVideo = useCallback(async (videoUrl: string, caption: string) => {
@@ -210,7 +210,7 @@ export function useEditorHandlers({
     }
 
     setShowVideoModal(false);
-  }, [editor, extensionsLoaded]);
+  }, [editor, extensionsLoaded, setShowVideoModal]);
 
   // 경기 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
   const handleAddMatch = useCallback(async (matchId: string, matchData: MatchData) => {
@@ -236,7 +236,7 @@ export function useEditorHandlers({
       console.error('경기 추가 중 오류:', error);
       toast.error('경기 추가 중 오류가 발생했습니다.');
     }
-  }, [editor]);
+  }, [editor, setShowMatchModal]);
 
   // 링크 추가
   const handleAddLink = useCallback((url: string, text?: string) => {
@@ -284,7 +284,7 @@ export function useEditorHandlers({
       console.error('소셜 임베드 추가 중 오류:', error);
       toast.error('소셜 미디어 임베드를 추가하는데 실패했습니다.');
     }
-  }, [editor, extensionsLoaded]);
+  }, [editor, extensionsLoaded, setShowSocialModal]);
 
   // 팀 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
   const handleAddTeam = useCallback(async (team: TeamMapping, league: LeagueInfo) => {
@@ -323,7 +323,7 @@ export function useEditorHandlers({
       console.error('팀 카드 추가 중 오류:', error);
       toast.error('팀 카드를 추가하는데 실패했습니다.');
     }
-  }, [editor, extensionsLoaded]);
+  }, [editor, extensionsLoaded, setShowEntityModal]);
 
   // 선수 카드 추가 (4590 표준: 서버에서 Storage URL 확정)
   const handleAddPlayer = useCallback(async (player: Player, team: TeamMapping, koreanName?: string) => {
@@ -374,7 +374,7 @@ export function useEditorHandlers({
       console.error('선수 카드 추가 중 오류:', error);
       toast.error('선수 카드를 추가하는데 실패했습니다.');
     }
-  }, [editor, extensionsLoaded]);
+  }, [editor, extensionsLoaded, setShowEntityModal]);
 
   return {
     showImageModal,

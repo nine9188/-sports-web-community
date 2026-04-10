@@ -49,7 +49,7 @@ export function HotdealEndButton({ postId }: HotdealEndButtonProps) {
     try {
       const result = await endDeal({
         postId,
-        reason: selectedReason as any,
+        reason: selectedReason as '품절' | '마감' | '가격변동' | '링크오류' | '기타',
       });
 
       if (result.success) {
@@ -86,7 +86,7 @@ export function HotdealEndButton({ postId }: HotdealEndButtonProps) {
 
         <DialogBody>
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-4">
-            종료 사유를 선택해주세요. 종료 후에는 게시글 목록에서 "종료" 배지가 표시됩니다.
+            종료 사유를 선택해주세요. 종료 후에는 게시글 목록에서 &ldquo;종료&rdquo; 배지가 표시됩니다.
           </p>
 
           {/* 종료 사유 선택 */}
