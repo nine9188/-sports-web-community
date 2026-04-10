@@ -53,11 +53,6 @@ export async function GET(
       lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
     }));
 
-    // 선수가 없으면 빈 urlset 대신 404 반환 (Google이 XML 태그 누락 에러를 보고하지 않도록)
-    if (urls.length === 0) {
-      return new Response('Not Found', { status: 404 });
-    }
-
     return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.STANDARD);
   } catch (error) {
     console.error(`Players sitemap error (${league}/${team}):`, error);

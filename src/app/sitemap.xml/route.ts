@@ -78,25 +78,19 @@ export async function GET() {
   // 1. static
   sitemaps.push({ loc: `${BASE}/sitemaps/static.xml` });
 
-  // 2. posts (글이 있는 게시판만 + recent)
+  // 2. posts (모든 게시판 slug 조회 → 빈 게시판도 빈 XML 반환)
   try {
     const supabase = getSitemapSupabase();
-    // 글이 1개 이상 있는 게시판 slug만 조회 (가벼운 쿼리)
-    const { data: boardsWithPosts } = await supabase
-      .from('posts')
-      .select('board:boards!inner(slug)')
-      .eq('is_deleted', false)
-      .limit(1000);
+    const { data: boards } = await supabase
+      .from('boards')
+      .select('slug')
+      .not('slug', 'is', null);
 
-    if (boardsWithPosts) {
-      const slugs = new Set<string>();
-      for (const p of boardsWithPosts) {
-        const board = p.board as unknown as { slug: string } | null;
-        const slug = board?.slug;
-        if (slug) slugs.add(slug);
-      }
-      for (const slug of slugs) {
-        sitemaps.push({ loc: `${BASE}/sitemaps/posts/${slug}.xml` });
+    if (boards) {
+      for (const b of boards) {
+        if (b.slug) {
+          sitemaps.push({ loc: `${BASE}/sitemaps/posts/${b.slug}.xml` });
+        }
       }
     }
   } catch (error) {

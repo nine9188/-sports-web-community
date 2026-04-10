@@ -73,10 +73,6 @@ export async function GET(
         .range(from, to)
     );
 
-    if (posts.length === 0) {
-      return new Response('Not Found', { status: 404 });
-    }
-
     const urls = posts.map((p) => ({
       loc: `${baseUrl}/boards/${board}/${p.post_number}`,
       lastmod: p.updated_at ? new Date(p.updated_at).toISOString() : undefined,
@@ -85,6 +81,6 @@ export async function GET(
     return sitemapResponse(buildUrlsetXml(urls), REVALIDATE.FREQUENT);
   } catch (error) {
     console.error(`Posts sitemap error (${board}):`, error);
-    return new Response('Not Found', { status: 404 });
+    return sitemapResponse(buildUrlsetXml([]), REVALIDATE.FREQUENT);
   }
 }
