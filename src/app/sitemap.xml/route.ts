@@ -1,6 +1,5 @@
 import { siteConfig } from '@/shared/config';
 import {
-  getSitemapSupabase,
   buildSitemapIndexXml,
   sitemapResponse,
 } from '../sitemaps/utils';
@@ -9,6 +8,13 @@ import {
 export const revalidate = 3600;
 
 const BASE = siteConfig.url;
+
+const POST_BOARD_SLUGS = [
+  'foreign-news', 'domestic-news', 'foreign-analysis',
+  'foreign-analysis-bundesliga', 'foreign-analysis-serie-a',
+  'foreign-analysis-laliga', 'foreign-analysis-premier',
+  'foreign-analysis-ligue1', 'k-league-1', 'notice',
+];
 
 const MATCH_LEAGUE_SLUGS = [
   'epl', 'laliga', 'bundesliga', 'seriea', 'ligue1',
@@ -78,23 +84,9 @@ export async function GET() {
   // 1. static
   sitemaps.push({ loc: `${BASE}/sitemaps/static.xml` });
 
-  // 2. posts (모든 게시판 slug 조회 → 빈 게시판도 빈 XML 반환)
-  try {
-    const supabase = getSitemapSupabase();
-    const { data: boards } = await supabase
-      .from('boards')
-      .select('slug')
-      .not('slug', 'is', null);
-
-    if (boards) {
-      for (const b of boards) {
-        if (b.slug) {
-          sitemaps.push({ loc: `${BASE}/sitemaps/posts/${b.slug}.xml` });
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Sitemap index: posts query error', error);
+  // 2. posts (게시판 slug 하드코딩 — DB 의존 제거)
+  for (const slug of POST_BOARD_SLUGS) {
+    sitemaps.push({ loc: `${BASE}/sitemaps/posts/${slug}.xml` });
   }
   sitemaps.push({ loc: `${BASE}/sitemaps/posts/recent.xml` });
 

@@ -17,7 +17,7 @@ export const siteConfig = {
   twitterHandle: '@4590football',
 
   // 로고 및 이미지
-  logo: '/logo/4590football-logo.svg',
+  logo: '/logo/4590football-logo-test.png',
   defaultOgImage: `${siteUrl}/og-image.png`,
 
   // URL 빌더
