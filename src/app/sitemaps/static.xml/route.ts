@@ -11,14 +11,26 @@ export async function GET() {
   // 라이브스코어/이적은 매일 갱신
   const today = new Date().toISOString().split('T')[0] + 'T00:00:00Z';
 
+  // 어제/내일 날짜 계산 (KST)
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const yesterday = new Date(kst);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const tomorrow = new Date(kst);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  const yesterdayDate = yesterday.toISOString().split('T')[0];
+  const tomorrowDate = tomorrow.toISOString().split('T')[0];
+
   const urls: { loc: string; lastmod?: string }[] = [
     // 메인
     { loc: baseUrl, lastmod: now },
     { loc: `${baseUrl}/boards/all`, lastmod: now },
     { loc: `${baseUrl}/boards/popular`, lastmod: now },
 
-    // 라이브스코어
-    { loc: `${baseUrl}/livescore/football`, lastmod: today },
+    // 라이브스코어 (오늘/어제/내일/실시간)
+    { loc: `${baseUrl}/livescore/football`, lastmod: now },
+    { loc: `${baseUrl}/livescore/football?date=${yesterdayDate}`, lastmod: now },
+    { loc: `${baseUrl}/livescore/football?date=${tomorrowDate}`, lastmod: now },
+    { loc: `${baseUrl}/livescore/football?filter=live`, lastmod: now },
     { loc: `${baseUrl}/livescore/football/leagues`, lastmod: today },
     { loc: `${baseUrl}/transfers`, lastmod: today },
 

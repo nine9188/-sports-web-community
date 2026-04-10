@@ -93,14 +93,29 @@ export async function generateMetadata({
   const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
   const score = isNotStarted ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
 
+  // 경기 날짜 포맷 (예: "2026년 4월 10일")
+  const matchDate = match.time?.date ? new Date(match.time.date) : null;
+  const dateStr = matchDate
+    ? `${matchDate.getFullYear()}년 ${matchDate.getMonth() + 1}월 ${matchDate.getDate()}일`
+    : '';
+
   const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
-  const description = `${leagueName} ${homeTeam} vs ${awayTeam} 경기 라인업, 통계, 하이라이트를 확인하세요. 축구 커뮤니티 4590 Football.`;
+  const description = dateStr
+    ? `${dateStr} ${leagueName} ${homeTeam} ${score} ${awayTeam} 경기결과, 라인업, 통계, 하이라이트. 축구 커뮤니티 4590 Football.`
+    : `${leagueName} ${homeTeam} ${score} ${awayTeam} 경기결과, 라인업, 통계, 하이라이트. 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
     title,
     description,
     path: `/livescore/football/match/${id}`,
-    keywords: [`${homeTeam} ${awayTeam}`, `${homeTeam} 라인업`, `${awayTeam} 라인업`, `${leagueName} 경기결과`, '실시간 스코어', '축구 커뮤니티', '4590', '4590football'],
+    keywords: [
+      `${homeTeam} ${awayTeam}`,
+      `${homeTeam} ${score} ${awayTeam}`,
+      `${homeTeam} 라인업`, `${awayTeam} 라인업`,
+      `${leagueName} 경기결과`, `${leagueName} 스코어`,
+      ...(dateStr ? [`${dateStr} 축구`, `${dateStr} ${leagueName}`] : []),
+      '축구 경기결과', '실시간 스코어',
+    ],
   });
 }
 

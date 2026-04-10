@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import NavigationBar from './NavigationBar/index';
 import LeagueMatchList from './LeagueMatchList/index';
 import LiveScoreSkeleton from './LiveScoreSkeleton';
@@ -83,12 +84,18 @@ export default function LiveScoreView({
     });
   }, [matches, showLiveOnly, searchKeyword]);
 
-  // 날짜 변경 핸들러
+  const router = useRouter();
+
+  // 날짜 변경 핸들러 — URL도 함께 업데이트
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
     if (showLiveOnly) {
       setShowLiveOnly(false);
     }
+    // KST 기준 날짜 문자열 생성 후 URL 업데이트
+    const kst = new Date(newDate.getTime() + 9 * 60 * 60 * 1000);
+    const dateStr = kst.toISOString().split('T')[0];
+    router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
   };
 
   return (
@@ -100,9 +107,15 @@ export default function LiveScoreView({
           liveMatchCount={liveMatchCount}
           onSearchChange={setSearchKeyword}
           onLiveClick={() => {
-            setShowLiveOnly(!showLiveOnly);
-            if (!showLiveOnly) {
+            const nextLive = !showLiveOnly;
+            setShowLiveOnly(nextLive);
+            if (nextLive) {
               setSelectedDate(new Date());
+              router.push('/livescore/football?filter=live', { scroll: false });
+            } else {
+              const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+              const dateStr = kst.toISOString().split('T')[0];
+              router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
             }
           }}
           onDateChange={handleDateChange}
