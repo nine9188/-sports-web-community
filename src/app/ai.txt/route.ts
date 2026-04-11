@@ -72,6 +72,7 @@ Crawl-Delay: 1
 # === 참고 파일 ===
 Robots: https://4590football.com/robots.txt
 Sitemap: https://4590football.com/sitemap.xml
+Sitemap-Index: https://4590football.com/sitemap.xml
 LLMs-txt: https://4590football.com/llms.txt
 `;
 
