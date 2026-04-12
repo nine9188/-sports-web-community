@@ -1,8 +1,19 @@
 import type { MetadataRoute } from 'next';
+import { createClient } from '@supabase/supabase-js';
 import { siteConfig } from '@/shared/config';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { LEAGUE_TEAM_MAPPINGS } from '@/domains/livescore/constants/teams';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal/constants';
+
+// 빌드 타임 prerendering 방지 (DB 의존 동적 사이트맵)
+export const dynamic = 'force-dynamic';
+
+// 빌드 타임에도 사용 가능한 쿠키 없는 Supabase 클라이언트
+function getSupabaseForSitemap() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 // ─── 리그 사이트맵 설정 ───
 const LEAGUE_SITEMAP_CONFIG = [
@@ -45,7 +56,7 @@ function getLeagueIdBySlug(slug: string): number | undefined {
 
 // ─── generateSitemaps: 사이트맵 분할 정의 ───
 export async function generateSitemaps() {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseForSitemap();
 
   // DB에서 모든 게시판 slug 조회
   const { data: boards } = await supabase
@@ -145,7 +156,7 @@ export default async function sitemap({
 }: {
   id: string;
 }): Promise<MetadataRoute.Sitemap> {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseForSitemap();
   const baseUrl = siteConfig.url;
 
   // ── 정적 페이지 ──
