@@ -2,28 +2,16 @@ import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/shared/config';
 
 export default function robots(): MetadataRoute.Robots {
+  const u = siteConfig.url;
   return {
     rules: [
       {
         userAgent: '*',
         allow: ['/', '/livescore/'],
         disallow: [
-          '/signin',
-          '/signup',
-          '/social-signup',
-          '/auth',
-          '/help',
-          '/settings',
-          '/notifications',
-          '/admin',
-          '/api/',
-          '/boards/*/create',
-          '/boards/*/edit',
-          '/test',
-          '/ui',
-          '/*?from=*',
-          '/*?sort=*',
-          '/.well-known/',
+          '/signin','/signup','/social-signup','/auth','/help','/settings',
+          '/notifications','/admin','/api/','/boards/*/create','/boards/*/edit',
+          '/test','/ui','/*?from=*','/*?sort=*','/.well-known/',
         ],
       },
       { userAgent: 'Amazonbot', disallow: '/' },
@@ -31,13 +19,13 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'Yeti', allow: '/' },
     ],
     sitemap: [
-      `${siteConfig.url}/sitemap-main.xml`,
-      `${siteConfig.url}/sitemap-boards.xml`,
-      `${siteConfig.url}/sitemap-posts.xml`,
-      `${siteConfig.url}/sitemap-teams.xml`,
-      `${siteConfig.url}/sitemap-players.xml`,
-      `${siteConfig.url}/sitemap-matches.xml`,
-      `${siteConfig.url}/sitemap-leagues.xml`,
+      `${u}/sitemap-main.xml`,
+      `${u}/sitemap-boards.xml`,
+      `${u}/sitemap-posts.xml`,
+      `${u}/sitemap-teams.xml`,
+      `${u}/sitemap-players.xml`,
+      `${u}/sitemap-matches.xml`,
+      `${u}/sitemap-leagues.xml`,
     ],
     host: siteConfig.url,
   };
