@@ -226,6 +226,6 @@ export const config = {
      * - 정적 파일들 (svg, png, jpg, jpeg, gif, webp)
      * - api routes (API 라우트는 별도 처리)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|sitemap\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 } 
