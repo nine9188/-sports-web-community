@@ -134,17 +134,17 @@ export async function GET(
       const category = id.replace('boards-', '');
       const supabase = await getSupabase();
       const config = BOARD_CATEGORIES[category];
-      if (!config) return sitemapResponse([]);
+      if (!config) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const { data: parents } = await supabase
         .from('boards').select('id, slug').in('slug', config.parentSlugs);
-      if (!parents?.length) return sitemapResponse([]);
+      if (!parents?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const parentIds = parents.map(p => p.id);
       const { data: boards } = await supabase
         .from('boards').select('slug').in('parent_id', parentIds).not('slug', 'is', null);
 
-      const allSlugs = [...parents.map(p => p.slug), ...(boards || []).map(b => b.slug)].filter(Boolean);
+      const allSlugs = [...new Set([...parents.map(p => p.slug), ...(boards || []).map(b => b.slug)].filter(Boolean))];
       return sitemapResponse(allSlugs.map(slug => ({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'daily', priority: 0.5 })));
     }
 
@@ -153,7 +153,7 @@ export async function GET(
       const category = id.replace('posts-', '');
       const supabase = await getSupabase();
       const boardIds = await getBoardIdsByCategory(category);
-      if (!boardIds.length) return sitemapResponse([]);
+      if (!boardIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const { data: posts } = await supabase
         .from('posts')
@@ -164,7 +164,7 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(5000);
 
-      if (!posts?.length) return sitemapResponse([]);
+      if (!posts?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const entries = posts.map(post => {
         const boardSlug = (post.boards as unknown as { slug: string })?.slug;
@@ -194,13 +194,13 @@ export async function GET(
     if (id.startsWith('players-')) {
       const leagueSlug = id.replace('players-', '');
       const leagueId = PLAYER_LEAGUES[leagueSlug];
-      if (!leagueId) return sitemapResponse([]);
+      if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const supabase = await getSupabase();
       const { data: teams } = await supabase
         .from('football_teams').select('team_id')
         .eq('league_id', leagueId).eq('is_active', true);
-      if (!teams?.length) return sitemapResponse([]);
+      if (!teams?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const { data: players } = await supabase
         .from('football_players').select('player_id, updated_at')
@@ -225,9 +225,9 @@ export async function GET(
       })));
     }
 
-    return sitemapResponse([]);
+    return sitemapResponse([{ loc: `${BASE_URL}/` }]);
   } catch (error) {
     console.error(`Sitemap ${id} 생성 오류:`, error);
-    return sitemapResponse([]);
+    return sitemapResponse([{ loc: `${BASE_URL}/` }]);
   }
 }
