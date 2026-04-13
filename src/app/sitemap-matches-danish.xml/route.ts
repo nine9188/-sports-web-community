@@ -7,16 +7,14 @@ export async function GET() {
   return safeSitemap(async () => {
     const baseUrl = siteConfig.url;
 
-    const { data: teams } = await supabase
-      .from('football_teams')
-      .select('team_id, updated_at')
-      .eq('is_active', true);
+    const { data: matches } = await supabase
+      .rpc('get_sitemap_matches', { target_league_id: 119 });
 
     return sitemapResponse(
-      (teams || []).map((t) => ({
-        url: `${baseUrl}/livescore/football/team/${t.team_id}`,
-        lastModified: toIso(t.updated_at),
-        changeFrequency: 'weekly',
+      (matches || []).map((m: { match_id: number; updated_at: string | null }) => ({
+        url: `${baseUrl}/livescore/football/match/${m.match_id}`,
+        lastModified: toIso(m.updated_at),
+        changeFrequency: 'daily',
         priority: 0.7,
       }))
     );

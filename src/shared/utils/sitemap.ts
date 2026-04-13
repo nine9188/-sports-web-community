@@ -16,7 +16,12 @@ interface SitemapEntry {
 }
 
 function escapeXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 export function toIso(dateStr: string | null | undefined): string | undefined {
@@ -43,7 +48,15 @@ export function sitemapResponse(entries: SitemapEntry[]): Response {
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
     },
   });
+}
+
+// try-catch 래퍼: DB 에러 시 빈 sitemap 반환 (500 방지)
+export async function safeSitemap(fn: () => Promise<Response>): Promise<Response> {
+  try {
+    return await fn();
+  } catch {
+    return sitemapResponse([]);
+  }
 }
