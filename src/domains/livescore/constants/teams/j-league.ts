@@ -165,8 +165,31 @@ export const J_LEAGUE_TEAMS: TeamMapping[] = [
         country_ko: '일본',
         country_en: 'Japan',
         code: 'ALB'
+      },
+      {
+        id: 305,
+        name_ko: '미토 홀리혹',
+        name_en: 'Mito Hollyhock',
+        country_ko: '일본',
+        country_en: 'Japan',
+        code: 'MIT'
+      },
+      {
+        id: 301,
+        name_ko: 'JEF 유나이티드 지바',
+        name_en: 'JEF United Chiba',
+        country_ko: '일본',
+        country_en: 'Japan',
+        code: 'JEF'
+      },
+      {
+        id: 285,
+        name_ko: 'V-파렌 나가사키',
+        name_en: 'V-varen Nagasaki',
+        country_ko: '일본',
+        country_en: 'Japan',
+        code: 'VVN'
       }
-      
 ];
 
 // 팀 ID로 J리그 팀 정보 가져오기

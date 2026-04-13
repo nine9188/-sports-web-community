@@ -257,7 +257,7 @@ const CALENDAR_SEASON_LEAGUE_IDS = new Set([
   MAJOR_LEAGUE_IDS.MLS,           // 253 - MLS (2월~12월)
   MAJOR_LEAGUE_IDS.BRASILEIRAO,   // 71 - 브라질레이로 (4월~12월)
   MAJOR_LEAGUE_IDS.CSL,           // 169 - 중국 슈퍼리그 (3월~11월)
-  MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE, // 307 - 사우디 프로리그 (8월~5월이지만 API상 캘린더 시즌)
+  // 사우디 프로리그(307)는 8월~5월 시즌으로 유럽식과 동일하게 처리 (API 시즌 = 시작연도)
 ]);
 
 /**

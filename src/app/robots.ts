@@ -19,5 +19,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'Yeti', allow: '/' },
     ],
     host: siteConfig.url,
+    sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }

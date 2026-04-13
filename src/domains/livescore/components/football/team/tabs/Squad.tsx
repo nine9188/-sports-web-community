@@ -193,7 +193,7 @@ export default function Squad({
                           className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
                           onClick={() => { if (isPlayer) router.push(`/livescore/football/player/${member.id}`); }}
                         >
-                          <td className="px-2 sm:px-4 md:px-6 py-2 whitespace-nowrap">
+                          <td className="px-2 sm:px-4 md:px-6 py-1.5 whitespace-nowrap">
                             {isPlayer ? (
                               <Link href={`/livescore/football/player/${member.id}`} className="block">
                                 <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
@@ -220,38 +220,52 @@ export default function Squad({
                               </div>
                             )}
                           </td>
-                          <td className="px-2 sm:px-4 md:px-6 py-2 text-xs font-medium text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap">
+                          <td className="px-2 sm:px-4 md:px-6 py-1.5 text-xs font-medium text-center text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap">
                             {isPlayer ? (member as Player).number : '-'}
                           </td>
-                          <td className="px-2 sm:px-4 md:px-6 py-2">
+                          <td className="px-2 sm:px-4 md:px-6 py-1.5">
                             {isPlayer ? (
-                              <Link href={`/livescore/football/player/${member.id}`} className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal block">
-                                {playerKoreanNames[member.id] || member.name}
+                              <Link href={`/livescore/football/player/${member.id}`} className="block max-w-[115px] md:max-w-none">
+                                <span className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate md:whitespace-normal block">
+                                  {playerKoreanNames[member.id] || member.name}
+                                </span>
+                                {playerKoreanNames[member.id] && (
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate md:whitespace-normal block leading-tight">
+                                    {member.name}
+                                  </span>
+                                )}
                               </Link>
                             ) : (
-                              <div className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] max-w-[115px] md:max-w-none truncate md:whitespace-normal">
-                                {playerKoreanNames[member.id] || member.name}
+                              <div className="max-w-[115px] md:max-w-none">
+                                <span className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate md:whitespace-normal block">
+                                  {playerKoreanNames[member.id] || member.name}
+                                </span>
+                                {playerKoreanNames[member.id] && (
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate md:whitespace-normal block leading-tight">
+                                    {member.name}
+                                  </span>
+                                )}
                               </div>
                             )}
                           </td>
-                          <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                          <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                             {member.age}세
                           </td>
                           {isPlayer && (
                             <>
-                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                              <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                                 {playerStats?.appearances || 0}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                              <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                                 {playerStats?.goals || 0}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                              <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                                 {playerStats?.assists || 0}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                              <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                                 {playerStats?.yellowCards || 0}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-6 py-2 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
+                              <td className="px-1 sm:px-2 md:px-6 py-1.5 text-xs text-center whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
                                 {playerStats?.redCards || 0}
                               </td>
                             </>
