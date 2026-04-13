@@ -5,6 +5,7 @@ import { Database } from '@/shared/types/supabase'
 // Supabase 세션 조회를 스킵할 봇 목록
 const BOT_USER_AGENTS = [
   'Amazonbot',
+  'Amzn-SearchBot',
   'Googlebot',
   'Bingbot',
   'YandexBot',
@@ -40,6 +41,7 @@ const BOT_USER_AGENTS = [
 // robots.txt에서 Disallow: / 로 차단한 봇 → 403 반환
 const BLOCKED_BOTS = [
   'Amazonbot',
+  'Amzn-SearchBot',
   'GPTBot',
   'ChatGPT-User',
   'CCBot',
