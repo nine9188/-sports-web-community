@@ -27,7 +27,9 @@ export interface ProfileData {
 // 게시판 내비게이션 초기 데이터 타입
 export interface BoardNavigationData {
   rootBoards: HierarchicalBoard[];
-  totalPostCount?: number;
+  // 전체글 개수 표시 슬롯. Suspense로 감싼 서버 컴포넌트를 주입하면
+  // 레이아웃 blocking 없이 스트리밍으로 갱신됨.
+  totalPostCountSlot?: ReactNode;
 }
 
 // 리그 데이터 타입

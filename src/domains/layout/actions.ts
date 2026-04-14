@@ -1,72 +1,54 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
+import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { Board } from './types/board';
-
-interface GetBoardsOptions {
-  includeTotalPostCount?: boolean;
-}
 
 interface GetBoardsResult {
   boardData: Board[];
-  totalPostCount?: number;
 }
 
 /**
- * 헤더/사이드바 네비게이션용 게시판 데이터를 서버에서 미리 로드
- * 캐싱을 적용하여 성능 최적화
+ * 헤더/사이드바 네비게이션용 게시판 계층 구조 조회
  *
- * NOTE: isAdmin은 getFullUserData()에서 이미 조회하므로 여기서는 제거 (중복 DB 쿼리 방지)
+ * getCachedAllBoards()를 재사용하여 DB 왕복을 제거했습니다.
+ * - 캐시 히트: 메모리 조회 (< 1ms)
+ * - 캐시 미스: DB 1회 + 이후 7일간 캐시
+ * - 게시판 추가/수정 시 revalidateTag('boards')로 자동 무효화
+ *
+ * NOTE: 전체 글 개수(totalPostCount)는 별도 서버 컴포넌트에서
+ *       Suspense 스트리밍으로 분리되었습니다. (getTotalPostCount.ts)
  */
-export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): Promise<GetBoardsResult> => {
+export const getBoardsForNavigation = cache(async (): Promise<GetBoardsResult> => {
   try {
-    const supabase = await getSupabaseServer();
+    const boards = await getCachedAllBoards();
 
-    // 게시판 데이터와 전체 글 개수를 병렬로 가져오기
-    const boardsPromise = supabase
-      .from('boards')
-      .select('id, name, parent_id, display_order, slug, team_id, league_id')
-      .order('display_order', { ascending: true })
-      .order('name');
-
-    const postsCountPromise = options?.includeTotalPostCount
-      ? supabase.from('posts').select('*', { count: 'exact', head: true })
-          .eq('is_deleted', false)
-          .eq('is_hidden', false)
-      : Promise.resolve({ count: undefined });
-
-    const [boardsResult, postsCountResult] = await Promise.all([boardsPromise, postsCountPromise]);
-
-    const { data: boards, error } = boardsResult;
-    const totalPostCount = postsCountResult.count ?? undefined;
-    
-    if (error) {
-      // 빌드 단계 로그 오염 방지
-      const errorMessage = error.message || String(error);
-      if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
-        console.error('게시판 데이터 조회 오류:', error);
-      }
+    if (!boards || boards.length === 0) {
       return { boardData: [] };
     }
 
     // 계층 구조로 변환
     const boardMap = new Map<string, Board>();
     const rootBoards: Board[] = [];
-    
-    // 1단계: 모든 게시판을 맵에 저장
+
+    // 1단계: 모든 게시판을 맵에 저장 (네비게이션용 필드만 pick)
     boards.forEach(board => {
       boardMap.set(board.id, {
-        ...board,
+        id: board.id,
+        name: board.name,
+        slug: board.slug,
+        parent_id: board.parent_id,
         display_order: board.display_order || 0,
-        children: []
+        team_id: board.team_id,
+        league_id: board.league_id,
+        children: [],
       });
     });
-    
+
     // 2단계: 부모-자식 관계 설정
     boards.forEach(board => {
       const boardWithChildren = boardMap.get(board.id)!;
-      
+
       if (board.parent_id) {
         const parent = boardMap.get(board.parent_id);
         if (parent && parent.children) {
@@ -76,27 +58,25 @@ export const getBoardsForNavigation = cache(async (options?: GetBoardsOptions): 
         rootBoards.push(boardWithChildren);
       }
     });
-    
+
     // 3단계: 각 레벨에서 정렬
-    const sortBoards = (boards: Board[]) => {
-      boards.sort((a, b) => a.display_order - b.display_order);
-      boards.forEach(board => {
+    const sortBoards = (list: Board[]) => {
+      list.sort((a, b) => a.display_order - b.display_order);
+      list.forEach(board => {
         if (board.children && board.children.length > 0) {
           sortBoards(board.children);
         }
       });
     };
-    
-    sortBoards(rootBoards);
-    
-    return { boardData: rootBoards, totalPostCount };
 
+    sortBoards(rootBoards);
+
+    return { boardData: rootBoards };
   } catch (error) {
-    // 빌드 단계 로그 오염 방지
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
       console.error('게시판 데이터 로드 오류:', error);
     }
     return { boardData: [] };
   }
-}); 
+});

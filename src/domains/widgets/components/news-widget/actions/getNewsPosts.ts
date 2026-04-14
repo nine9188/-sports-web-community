@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { NewsItem } from '../types';
 import { extractImageFromContent, validateImageUrl } from '../utils';
+import { getCachedBoardBySlug } from '@/domains/boards/actions/getCachedBoards';
 
 /** 게시판당 가져올 게시글 수 */
 const POSTS_LIMIT = 15;
@@ -12,19 +13,14 @@ const POSTS_LIMIT = 15;
  */
 export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
   try {
-    const supabase = await getSupabaseServer();
-
-    // 1. 게시판 정보 조회
-    const { data: boardData, error: boardError } = await supabase
-      .from('boards')
-      .select('id, name')
-      .eq('slug', boardSlug)
-      .single();
-
-    if (boardError || !boardData) {
-      console.error(`게시판 조회 오류 (slug: ${boardSlug}):`, boardError);
+    // 1. 게시판 정보 조회 (캐시 7일)
+    const boardData = await getCachedBoardBySlug(boardSlug);
+    if (!boardData) {
+      console.error(`게시판 조회 오류 (slug: ${boardSlug}): not found`);
       return [];
     }
+
+    const supabase = await getSupabaseServer();
 
     // 2. 게시글 조회
     const { data: posts, error: postsError } = await supabase
@@ -70,7 +66,10 @@ export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
 
     return newsItems;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error); if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) { console.error('뉴스 게시글 가져오기 오류:', error); }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
+      console.error('뉴스 게시글 가져오기 오류:', error);
+    }
     return [];
   }
 }

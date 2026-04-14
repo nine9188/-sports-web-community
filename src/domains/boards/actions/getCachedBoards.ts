@@ -1,55 +1,64 @@
 'use server';
 
-import { cache } from 'react';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 /**
  * 캐시된 모든 게시판 데이터 조회
  *
- * 같은 요청 내에서 여러 번 호출되어도 1번만 DB 쿼리 실행
- * - getBoardPageData()
- * - getHoverMenuData()
- * - getBoardPopularPosts()
- * - getAllChildBoardIds()
- * 등에서 공유하여 사용
+ * Next.js unstable_cache 기반 서버 레벨 캐싱 (7일)
+ * - 모든 요청이 캐시 공유 → DB 호출 최소화
+ * - 게시판 추가/수정 시 revalidateTag('boards')로 즉시 무효화
+ * - revalidate: 7일 안전장치 (tag 호출 누락 시 자동 갱신)
+ *
+ * 사용처: 사이드바, 호버메뉴, 게시판 페이지, 게시글 페이지 등
  */
-export const getCachedAllBoards = cache(async () => {
-  const supabase = await getSupabaseServer();
+const _getCachedAllBoardsImpl = unstable_cache(
+  async () => {
+    // unstable_cache 내부에서는 cookies()를 사용하지 않는 Admin 클라이언트 사용
+    const supabase = getSupabaseAdmin();
 
-  const { data, error } = await supabase
-    .from('boards')
-    .select('id, name, slug, parent_id, display_order, team_id, league_id, description, access_level, logo, views, view_type')
-    .order('display_order', { ascending: true })
-    .order('name');
+    const { data, error } = await supabase
+      .from('boards')
+      .select('id, name, slug, parent_id, display_order, team_id, league_id, description, access_level, logo, views, view_type')
+      .order('display_order', { ascending: true })
+      .order('name');
 
-  if (error) {
-    console.error('getCachedAllBoards error:', error);
-    return [];
-  }
+    if (error) {
+      console.error('getCachedAllBoards error:', error);
+      return [];
+    }
 
-  return data || [];
-});
+    return data || [];
+  },
+  ['all-boards'],
+  { revalidate: 604800, tags: ['boards'] } // 7일
+);
+
+export async function getCachedAllBoards() {
+  return _getCachedAllBoardsImpl();
+}
 
 /**
  * 캐시된 게시판 데이터에서 slug로 찾기
  */
-export const getCachedBoardBySlug = cache(async (slug: string) => {
+export async function getCachedBoardBySlug(slug: string) {
   const allBoards = await getCachedAllBoards();
   return allBoards.find(board => board.slug === slug) || null;
-});
+}
 
 /**
  * 캐시된 게시판 데이터에서 ID로 찾기
  */
-export const getCachedBoardById = cache(async (id: string) => {
+export async function getCachedBoardById(id: string) {
   const allBoards = await getCachedAllBoards();
   return allBoards.find(board => board.id === id) || null;
-});
+}
 
 /**
  * 캐시된 게시판 데이터에서 slug 또는 ID로 찾기
  */
-export const getCachedBoardBySlugOrId = cache(async (slugOrId: string) => {
+export async function getCachedBoardBySlugOrId(slugOrId: string) {
   const allBoards = await getCachedAllBoards();
 
   // slug가 숫자로만 구성된 경우 ID로 처리
@@ -58,15 +67,12 @@ export const getCachedBoardBySlugOrId = cache(async (slugOrId: string) => {
   }
 
   return allBoards.find(board => board.slug === slugOrId) || null;
-});
+}
 
 /**
  * 게시판의 모든 하위 게시판 ID를 재귀적으로 가져오기 (캐시된 데이터 사용)
- *
- * 기존: 재귀적으로 DB 조회 → N번 쿼리
- * 개선: 캐시된 데이터에서 계산 → 0번 쿼리 (getCachedAllBoards 제외)
  */
-export const getCachedChildBoardIds = cache(async (boardId: string): Promise<string[]> => {
+export async function getCachedChildBoardIds(boardId: string): Promise<string[]> {
   const allBoards = await getCachedAllBoards();
 
   const findChildren = (parentId: string): string[] => {
@@ -78,12 +84,12 @@ export const getCachedChildBoardIds = cache(async (boardId: string): Promise<str
   };
 
   return findChildren(boardId);
-});
+}
 
 /**
  * 게시판 계층 구조 맵 생성 (캐시)
  */
-export const getCachedBoardMaps = cache(async () => {
+export async function getCachedBoardMaps() {
   const allBoards = await getCachedAllBoards();
 
   const boardsMap: Record<string, typeof allBoards[0]> = {};
@@ -109,4 +115,4 @@ export const getCachedBoardMaps = cache(async () => {
   });
 
   return { boardsMap, childBoardsMap, boardNameMap, allBoards };
-});
+}

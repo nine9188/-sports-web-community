@@ -8,6 +8,9 @@ import { processContentToHtml } from '../utils/post/processContentToHtml';
 import { Board, BoardMap, ChildBoardsMap, BoardData } from '../types/board';
 import { getComments } from './comments/index';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
+import { getCachedAllBoards, getCachedBoardBySlug } from './getCachedBoards';
+import { getCachedTeamsByIds, getCachedLeaguesByIds } from './getCachedTeamsLeagues';
+import { getCachedShopItemIconUrl } from './getCachedShopItems';
 
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
@@ -25,14 +28,10 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const { data: { user } } = await supabase.auth.getUser();
     const isLoggedIn = !!user;
     
-    // 1. 게시판 정보 가져오기
-    const { data: board, error: boardError } = await supabase
-      .from('boards')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-      
-    if (boardError || !board) {
+    // 1. 게시판 정보 가져오기 (캐시 활용 - 7일)
+    const board = await getCachedBoardBySlug(slug);
+
+    if (!board) {
       return {
         success: false,
         notFoundType: 'BOARD' as const,
@@ -41,26 +40,24 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     }
     
     // 2. 병렬로 데이터 가져오기 - 성능 최적화
+    // boardStructure는 unstable_cache 기반 getCachedAllBoards() 사용 (7일 캐시)
     const [
       postResult,
-      boardStructureResult,
+      cachedBoardStructure,
       prevPostResult,
       nextPostResult
     ] = await Promise.all([
-      // 게시글 상세 정보
+      // 게시글 상세 정보 — 필요한 컬럼만 명시 (admin 전용 hidden_until/hidden_reason 등 제외)
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
+        .select('id, title, content, user_id, views, likes, dislikes, tags, created_at, updated_at, board_id, post_number, source_url, meta, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, is_hidden, is_deleted, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
         .eq('board_id', board.id)
         .eq('post_number', postNum)
         .single(),
-      
-      // 게시판 구조 데이터
-      supabase
-        .from('boards')
-        .select('*')
-        .order('display_order'),
-      
+
+      // 게시판 구조 데이터 (캐시)
+      getCachedAllBoards(),
+
       // 이전 게시글
       supabase
         .from('posts')
@@ -70,7 +67,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .order('post_number', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      
+
       // 다음 게시글
       supabase
         .from('posts')
@@ -91,7 +88,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       };
     }
 
-    const { data: boardStructure } = boardStructureResult;
+    const boardStructure = cachedBoardStructure;
     const { data: prevPostData } = prevPostResult;
     const { data: nextPostData } = nextPostResult;
     
@@ -187,10 +184,17 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       leaguesResult,
       iconResult
     ] = await Promise.all([
-      // 게시글 목록
+      // 게시글 목록 — view_type에 따라 content 포함 여부 결정 (egress 절감)
+      // image-table: 썸네일 이미지 추출 위해 content 필요
+      // list (기본): content 불필요 → 20배 egress 절감
       supabase
         .from('posts')
-        .select('*, profiles(id, nickname, icon_id, level, exp, public_id)', { count: 'exact' })
+        .select(
+          board.view_type === 'image-table'
+            ? '*, profiles(id, nickname, icon_id, level, exp, public_id)'
+            : 'id, title, post_number, views, likes, dislikes, created_at, updated_at, user_id, board_id, is_notice, is_must_read, notice_type, notice_boards, notice_order, notice_created_at, is_hidden, is_deleted, show_in_widget, meta, deal_info, profiles(id, nickname, icon_id, level, exp, public_id)',
+          { count: 'exact' }
+        )
         .in('board_id', boardFilter)
         .eq('is_hidden', false)
         .eq('is_deleted', false)
@@ -214,20 +218,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .eq('user_id', user.id)
         .maybeSingle() : Promise.resolve({ data: null }),
 
-      // 팀 정보 (병렬화) - 4590 표준: logo 제외, 별도 조회
-      teamIds.length > 0
-        ? supabase.from('teams').select('id, name').in('id', teamIds)
-        : Promise.resolve({ data: [] as { id: number; name: string }[] }),
+      // 팀 정보 (캐시 7일) - 4590 표준: logo 제외, 별도 조회
+      getCachedTeamsByIds(teamIds).then(data => ({ data })),
 
-      // 리그 정보 (병렬화) - 4590 표준: logo 제외, 별도 조회
-      leagueIds.length > 0
-        ? supabase.from('leagues').select('id, name').in('id', leagueIds)
-        : Promise.resolve({ data: [] as { id: number; name: string }[] }),
+      // 리그 정보 (캐시 7일) - 4590 표준: logo 제외, 별도 조회
+      getCachedLeaguesByIds(leagueIds).then(data => ({ data })),
 
-      // 작성자 아이콘 (병렬화)
-      iconId
-        ? supabase.from('shop_items').select('image_url').eq('id', iconId).single()
-        : Promise.resolve({ data: null })
+      // 작성자 아이콘 (캐시 7일)
+      getCachedShopItemIconUrl(iconId).then(url => ({ data: url ? { image_url: url } : null }))
     ]);
     
     const { data: postsData, count } = postsResult;

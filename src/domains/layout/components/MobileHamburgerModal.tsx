@@ -15,7 +15,7 @@ interface MobileHamburgerModalProps {
   isOpen: boolean;
   onClose: () => void;
   isAdmin?: boolean;
-  totalPostCount?: number;
+  totalPostCountSlot?: React.ReactNode;
 }
 
 const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
@@ -23,7 +23,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
   isOpen,
   onClose,
   isAdmin = false,
-  totalPostCount
+  totalPostCountSlot
 }: MobileHamburgerModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -153,7 +153,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           ) : (
             <div className="pb-4">
               <ClientBoardNavigation
-                initialData={{ rootBoards: boards, totalPostCount }}
+                initialData={{ rootBoards: boards, totalPostCountSlot }}
                 onNavigate={onClose}
                 showAdminLink={isAdmin}
                 compact={false}

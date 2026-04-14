@@ -4,6 +4,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { revalidateTag } from 'next/cache';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
 
@@ -128,6 +129,11 @@ export async function updatePost(
     }
     
     const boardSlug = (postData.boards as { slug: string } | null)?.slug;
+
+    // 메타데이터 캐시 무효화 (generateMetadata용 per-post 캐시)
+    if (postData.board_id && postData.post_number) {
+      revalidateTag(`post-${postData.board_id}-${postData.post_number}`);
+    }
 
     // 후처리 작업 (병렬 실행 - 응답 차단하지 않음)
     Promise.all([

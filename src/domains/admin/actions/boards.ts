@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // 관리자 권한 확인
 async function checkAdmin(): ReturnType<typeof getSupabaseServer> {
@@ -101,6 +101,7 @@ export async function createBoard(formData: BoardFormData) {
     }
 
     revalidatePath('/admin/boards');
+    revalidateTag('boards');
     return { success: true };
   } catch (error) {
     console.error('게시판 추가 오류:', error);
@@ -130,6 +131,7 @@ export async function updateBoard(id: string, formData: BoardFormData) {
     }
 
     revalidatePath('/admin/boards');
+    revalidateTag('boards');
     return { success: true };
   } catch (error) {
     console.error('게시판 수정 오류:', error);
@@ -156,6 +158,7 @@ export async function deleteBoard(id: string) {
     }
 
     revalidatePath('/admin/boards');
+    revalidateTag('boards');
     return { success: true };
   } catch (error) {
     console.error('게시판 삭제 오류:', error);
@@ -186,6 +189,7 @@ export async function swapBoardOrder(boardId: string, targetId: string, boardOrd
     }
 
     revalidatePath('/admin/boards');
+    revalidateTag('boards');
     return { success: true };
   } catch (error) {
     console.error('순서 변경 오류:', error);

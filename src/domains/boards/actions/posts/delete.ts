@@ -2,6 +2,7 @@
 
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
+import { revalidateTag } from 'next/cache';
 import { PostActionResponse } from './utils';
 
 /**
@@ -31,7 +32,7 @@ export async function deletePost(
     // 게시글이 존재하는지 확인 & 작성자 일치 확인
     const { data: existingPost, error: existingPostError } = await supabase
       .from('posts')
-      .select('user_id, board_id, boards(slug)')
+      .select('user_id, board_id, post_number, boards(slug)')
       .eq('id', postId)
       .single();
       
@@ -101,6 +102,11 @@ export async function deletePost(
       .from('posts')
       .delete()
       .eq('id', postId);
+
+    // 메타데이터 캐시 무효화
+    if (existingPost.board_id && existingPost.post_number) {
+      revalidateTag(`post-${existingPost.board_id}-${existingPost.post_number}`);
+    }
     
     if (deleteError) {
       return {

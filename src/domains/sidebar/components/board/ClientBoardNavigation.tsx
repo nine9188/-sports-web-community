@@ -226,15 +226,8 @@ export default function ClientBoardNavigation({
   };
 
   const isAllPostsActive = pathname === '/boards/all';
-  const showTotalCount = typeof initialData.totalPostCount === 'number';
-
-  // 숫자 포맷팅 (1000 이상이면 K 단위로)
-  const formatCount = (count: number) => {
-    if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}K`;
-    }
-    return count.toLocaleString();
-  };
+  // 서버에서 Suspense로 스트리밍되는 전체글 개수 슬롯
+  const totalPostCountSlot = initialData.totalPostCountSlot;
 
   const itemPy = compact ? 'py-2' : 'py-3';
   const itemText = compact ? 'text-[13px]' : 'text-[14px]';
@@ -255,9 +248,9 @@ export default function ClientBoardNavigation({
           <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span>전체글</span>
         </div>
-        {showTotalCount && (
+        {totalPostCountSlot && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {formatCount(initialData.totalPostCount || 0)}
+            {totalPostCountSlot}
           </span>
         )}
       </Link>

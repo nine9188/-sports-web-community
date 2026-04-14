@@ -1,7 +1,7 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { cache } from 'react';
+import { getCachedAllBoards } from './getCachedBoards';
 
 export interface HoverMenuBoard {
   id: string;
@@ -17,20 +17,16 @@ export interface HoverMenuData {
 
 /**
  * HoverMenu용 게시판 데이터 조회
- * 기존 page.tsx의 200-253줄 로직을 분리
+ * - getCachedAllBoards(7일 캐시) 재사용
+ * - React cache()는 동일 요청 내 중복 방지용
  */
 export const getHoverMenuData = cache(async (rootBoardId: string): Promise<HoverMenuData> => {
-  const supabase = await getSupabaseServer();
-
-  const { data: boardsData } = await supabase
-    .from('boards')
-    .select('id, name, display_order, slug, parent_id')
-    .order('display_order', { ascending: true });
+  const boardsData = await getCachedAllBoards();
 
   const topBoards: HoverMenuBoard[] = [];
   const childBoardsMap: Record<string, HoverMenuBoard[]> = {};
 
-  if (!boardsData) {
+  if (!boardsData || boardsData.length === 0) {
     return { topBoards, childBoardsMap };
   }
 

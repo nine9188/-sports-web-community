@@ -24,7 +24,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData,
   headerBoards,
   headerIsAdmin,
-  headerTotalPostCount,
+  headerTotalPostCountSlot,
   fullUserData,
   isOpen,
   onClose,
@@ -40,7 +40,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   headerUserData?: HeaderUserData | null,
   headerBoards?: Board[],
   headerIsAdmin?: boolean,
-  headerTotalPostCount?: number,
+  headerTotalPostCountSlot?: React.ReactNode,
   fullUserData?: FullUserDataWithSession | null,
   isOpen: boolean,
   onClose: () => void,
@@ -62,7 +62,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
         initialUserData={headerUserData}
         boards={headerBoards || []}
         isAdmin={headerIsAdmin}
-        totalPostCount={headerTotalPostCount}
+        totalPostCountSlot={headerTotalPostCountSlot}
       />
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
         {!isMobilePhone && (

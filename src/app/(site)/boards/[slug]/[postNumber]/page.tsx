@@ -2,9 +2,10 @@ import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPostPageData } from '@/domains/boards/actions';
+import { getCachedBoardBySlug } from '@/domains/boards/actions/getCachedBoards';
+import { getCachedPostMeta } from '@/domains/boards/actions/getCachedPostMeta';
 import PostDetailLayout from '@/domains/boards/components/layout/PostDetailLayout';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -132,27 +133,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string; postNumber: string }>
 }): Promise<Metadata> {
   const { slug, postNumber } = await params;
-  const supabase = await getSupabaseServer();
 
-  // 1. 게시판 정보 조회
-  const { data: board } = await supabase
-    .from('boards')
-    .select('id, name')
-    .eq('slug', slug)
-    .single();
-
+  // 1. 게시판 정보 조회 (7일 캐시 재사용)
+  const board = await getCachedBoardBySlug(slug);
   if (!board) {
     notFound();
   }
 
-  // 2. 게시글 정보 조회
-  const { data: post } = await supabase
-    .from('posts')
-    .select('title, content, created_at, updated_at')
-    .eq('board_id', board.id)
-    .eq('post_number', Number(postNumber))
-    .single();
-
+  // 2. 게시글 정보 조회 (per-post 캐시 1시간, description 추출용 content 포함)
+  const post = await getCachedPostMeta(board.id, Number(postNumber));
   if (!post) {
     notFound();
   }

@@ -5,6 +5,8 @@ import type { Json } from '@/shared/types/supabase';
 import type { Post, PostsResponse } from '../getPosts';
 import type { DealInfo } from '../../types/hotdeal';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
+import { getCachedAllBoards } from '../getCachedBoards';
+import { getCachedShopItemIconMap } from '../getCachedShopItems';
 
 /**
  * 안전한 fallback 게시물 데이터 생성
@@ -49,31 +51,30 @@ export function createEmptyResponse(page: number, limit: number): PostsResponse 
 }
 
 /**
- * 게시판 정보 조회
+ * 게시판 정보 조회 (캐시 7일)
  */
 export async function fetchBoardsInfo(
   supabase: SupabaseClient,
   boardIds: string[]
 ): Promise<Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>> {
+  void supabase; // 캐시 사용, supabase 직접 호출 안 함
   if (boardIds.length === 0) return {};
 
-  const { data: boards, error } = await supabase
-    .from('boards')
-    .select('id, name, team_id, league_id, slug, logo')
-    .in('id', boardIds);
+  const allBoards = await getCachedAllBoards();
+  const idSet = new Set(boardIds);
 
-  if (error || !boards) return {};
-
-  return boards.reduce((acc, board) => {
-    acc[board.id] = {
-      name: board.name,
-      team_id: board.team_id,
-      league_id: board.league_id,
-      slug: board.slug || board.id,
-      logo: board.logo || null
-    };
-    return acc;
-  }, {} as Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>);
+  return allBoards
+    .filter(b => idSet.has(b.id))
+    .reduce((acc, board) => {
+      acc[board.id] = {
+        name: board.name,
+        team_id: board.team_id,
+        league_id: board.league_id,
+        slug: board.slug || board.id,
+        logo: board.logo || null
+      };
+      return acc;
+    }, {} as Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>);
 }
 
 /**
@@ -161,24 +162,18 @@ export async function fetchUserProfiles(
         }
       });
 
-      // 커스텀 아이콘 조회
+      // 커스텀 아이콘 조회 (캐시 7일)
       const iconIds = profilesData
         .map(profile => profile.icon_id)
         .filter(Boolean) as number[];
 
       if (iconIds.length > 0) {
-        const { data: iconsData } = await supabase
-          .from('shop_items')
-          .select('id, image_url')
-          .in('id', iconIds);
-
-        if (iconsData) {
-          iconsData.forEach(icon => {
-            if (icon.id && icon.image_url) {
-              iconMap[icon.id] = icon.image_url;
-            }
-          });
-        }
+        const cachedIconMap = await getCachedShopItemIconMap();
+        iconIds.forEach(id => {
+          if (cachedIconMap[id]) {
+            iconMap[id] = cachedIconMap[id];
+          }
+        });
       }
     }
   } catch (error) {

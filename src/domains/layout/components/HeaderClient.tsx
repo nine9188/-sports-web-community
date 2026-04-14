@@ -29,7 +29,7 @@ type HeaderClientProps = {
   boards: Board[];
   isAdmin?: boolean;
   renderMode?: 'full' | 'logo-and-mobile' | 'navigation';
-  totalPostCount?: number;
+  totalPostCountSlot?: React.ReactNode;
 };
 
 // 검색 모달 컴포넌트
@@ -132,7 +132,7 @@ export default function HeaderClient({
   initialUserData,
   boards,
   isAdmin = false,
-  totalPostCount,
+  totalPostCountSlot,
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
@@ -378,7 +378,7 @@ export default function HeaderClient({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         isAdmin={isAdmin}
-        totalPostCount={totalPostCount}
+        totalPostCountSlot={totalPostCountSlot}
       />
 
       {/* 라이브스코어 모달 */}

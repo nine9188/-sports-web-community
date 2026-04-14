@@ -1,5 +1,5 @@
 import ClientHoverMenu from '@/domains/boards/components/common/ClientHoverMenu';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 
 interface ServerHoverMenuProps {
   currentBoardId: string;
@@ -22,18 +22,11 @@ export default async function ServerHoverMenu({
   rootBoardId,
   rootBoardSlug,
 }: ServerHoverMenuProps) {
-  // 서버 컴포넌트에서 직접 데이터 가져오기
-  const supabase = await getSupabaseServer();
-  
-  // 모든 게시판 데이터 가져오기
-  const { data: boardsData, error } = await supabase
-    .from('boards')
-    .select('*')
-    .order('display_order', { ascending: true });
-    
-  if (error || !boardsData) {
-    console.error('게시판 데이터 로딩 오류:', error);
-    // 오류 발생 시에도 UI가 깨지지 않도록 빈 데이터로 렌더링
+  // 캐시된 게시판 데이터 (7일)
+  const boardsData = await getCachedAllBoards();
+
+  if (!boardsData || boardsData.length === 0) {
+    // 빈 데이터로 렌더링
     return (
       <ClientHoverMenu
         currentBoardId={currentBoardId}

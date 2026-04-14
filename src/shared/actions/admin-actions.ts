@@ -2,6 +2,7 @@
 
 import { getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { calculateLevelFromExp } from '@/shared/utils/level-icons'
+import { revalidateTag } from 'next/cache'
 
 // 관리자 권한 확인 함수
 async function checkAdminPermission() {
@@ -480,6 +481,8 @@ export async function createShopItem(item: ShopItemInput) {
       throw new Error(`아이콘 등록 실패: ${error.message}`)
     }
 
+    revalidateTag('shop-items')
+
     return {
       success: true,
       item: data
@@ -510,6 +513,8 @@ export async function updateShopItem(itemId: number, updates: Partial<ShopItemIn
       throw new Error(`아이콘 수정 실패: ${error.message}`)
     }
 
+    revalidateTag('shop-items')
+
     return {
       success: true,
       item: data
@@ -537,6 +542,8 @@ export async function deleteShopItem(itemId: number) {
       console.error('아이콘 삭제 실패:', error)
       throw new Error(`아이콘 삭제 실패: ${error.message}`)
     }
+
+    revalidateTag('shop-items')
 
     return {
       success: true

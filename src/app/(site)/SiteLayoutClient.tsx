@@ -15,7 +15,7 @@ interface SiteLayoutClientProps {
   boardNavigation: React.ReactNode;
   rightSidebar: React.ReactNode;
   headerBoards?: Board[];
-  headerTotalPostCount?: number;
+  headerTotalPostCountSlot?: React.ReactNode;
   isMobilePhone?: boolean;
 }
 
@@ -24,7 +24,7 @@ export default function SiteLayoutClient({
   boardNavigation,
   rightSidebar,
   headerBoards,
-  headerTotalPostCount,
+  headerTotalPostCountSlot,
   isMobilePhone,
 }: SiteLayoutClientProps) {
   // idle 이후에만 유저 데이터 fetch (TBT 최적화: 초기 렌더 차단 방지)
@@ -148,7 +148,7 @@ export default function SiteLayoutClient({
       headerUserData={headerUserData}
       headerBoards={headerBoards}
       headerIsAdmin={isAdmin}
-      headerTotalPostCount={headerTotalPostCount}
+      headerTotalPostCountSlot={headerTotalPostCountSlot}
       fullUserData={fullUserData ?? null}
       isOpen={deferredIsOpen}
       onClose={closeSidebar}
