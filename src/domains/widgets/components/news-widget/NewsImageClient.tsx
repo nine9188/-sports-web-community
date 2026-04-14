@@ -87,7 +87,7 @@ export default function NewsImageClient({
         src={finalImageUrl}
         alt={alt}
         fill
-        unoptimized={false}
+        unoptimized={finalImageUrl.includes('cdn.4590football.com/proxy')}
         className={useFallback
           ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"
