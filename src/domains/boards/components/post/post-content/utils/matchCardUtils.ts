@@ -1,5 +1,5 @@
 import { normalizeMatchCardData, generateMatchCardHtml, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 /**
  * HTML로 저장된 빈 매치카드 div를 실제 콘텐츠로 채우기

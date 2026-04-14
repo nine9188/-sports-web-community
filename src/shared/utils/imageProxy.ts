@@ -7,6 +7,7 @@
 import { siteConfig } from '@/shared/config';
 
 const SUPABASE_STORAGE_DOMAIN = 'vnjjfhsuzoxcljqqwwvx.supabase.co';
+const CDN_DOMAIN = 'cdn.4590football.com';
 const API_SPORTS_DOMAIN = 'media.api-sports.io';
 
 /**
@@ -20,6 +21,7 @@ function isExternalImage(url: string): boolean {
     // 내부 도메인 (프록시 불필요)
     if (
       hostname.includes(SUPABASE_STORAGE_DOMAIN) ||
+      hostname.includes(CDN_DOMAIN) ||
       hostname.includes(API_SPORTS_DOMAIN) ||
       url.startsWith('/') // 상대 경로
     ) {
@@ -46,8 +48,8 @@ export function getProxiedImageUrl(url: string | null | undefined): string | nul
     return url;
   }
 
-  // 프록시 URL로 변환
-  return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  // Cloudflare CDN 프록시 URL로 변환
+  return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
 }
 
 /**

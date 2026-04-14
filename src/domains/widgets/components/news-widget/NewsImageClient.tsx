@@ -7,13 +7,13 @@ import { siteConfig } from '@/shared/config';
 const IMAGE_TIMEOUT_MS = 5000;
 const FALLBACK_LOGO = siteConfig.logo;
 
-/** 외부 이미지 URL을 proxy-image API 경유 URL로 변환 */
+/** 외부 이미지 URL을 Cloudflare CDN 프록시 경유 URL로 변환 */
 function toProxyUrl(url: string): string {
   // 로컬 경로나 이미 프록시된 URL은 그대로
-  if (url.startsWith('/') || url.includes('/api/proxy-image')) return url;
-  // Supabase Storage URL은 remotePatterns에 등록되어 있으므로 그대로
-  if (url.includes('supabase.co')) return url;
-  return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+  if (url.startsWith('/') || url.includes('cdn.4590football.com')) return url;
+  // CDN 또는 Supabase Storage URL은 그대로
+  if (url.includes('supabase.co') || url.includes('cdn.4590football.com')) return url;
+  return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
 }
 
 type ImageLoadingState = 'idle' | 'loading' | 'loaded' | 'error' | 'timeout';

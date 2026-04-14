@@ -2320,7 +2320,7 @@ function EmoticonPickerDemo() {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex-shrink-0">
-                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="레벨 아이콘" width={20} height={20} className="w-full h-full object-contain" />
+                  <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="레벨 아이콘" width={20} height={20} className="w-full h-full object-contain" />
                 </div>
                 <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
               </div>
@@ -2445,7 +2445,7 @@ function ChatbotDemo() {
               </motion.div>
               <div className="flex items-center space-x-1 h-10 px-3 cursor-pointer">
                 <div className="w-5 h-5 rounded-full overflow-hidden">
-                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                  <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
                 </div>
                 <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
                 <svg className="h-3 w-3 text-gray-900 dark:text-[#F0F0F0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -2461,7 +2461,7 @@ function ChatbotDemo() {
           <div className="px-4 py-3 border-b border-black/5 dark:border-white/10">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full overflow-hidden">
-                <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
               </div>
               <span className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">Lv.5</span>
@@ -2705,7 +2705,7 @@ function NotificationDemo() {
                 </div>
                 <div className="flex items-center space-x-1 h-10 px-3">
                   <div className="w-5 h-5 rounded-full overflow-hidden">
-                    <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                    <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
                   </div>
                   <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
                 </div>
@@ -2758,7 +2758,7 @@ function NotificationDemo() {
                 </div>
                 <div className="w-10 h-10 flex items-center justify-center rounded-md">
                   <div className="w-5 h-5 rounded-full overflow-hidden">
-                    <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                    <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <div className="w-10 h-10 flex items-center justify-center rounded-md">
@@ -2837,7 +2837,7 @@ function SearchDemo({ images }: { images: GuideDemoImages }) {
               </div>
               <div className="flex items-center space-x-1 h-10 px-3">
                 <div className="w-5 h-5 rounded-full overflow-hidden">
-                  <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                  <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
                 </div>
                 <span className="text-[13px] text-gray-900 dark:text-[#F0F0F0]">축구팬123</span>
               </div>
@@ -2900,7 +2900,7 @@ function SearchDemo({ images }: { images: GuideDemoImages }) {
             </div>
             <div className="w-10 h-10 flex items-center justify-center rounded-md">
               <div className="w-5 h-5 rounded-full overflow-hidden">
-                <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
+                <Image src="https://cdn.4590football.com/profile-icons/level-icons/level-2.png" alt="프로필" width={20} height={20} className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="w-10 h-10 flex items-center justify-center rounded-md">
@@ -3119,7 +3119,7 @@ function ProfileIconDemo({ images }: { images: GuideDemoImages }) {
   }, []);
 
   // 레벨 5 기본 아이콘 URL (level 5-8 → level-2.png)
-  const levelIconUrl = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/level-2.png';
+  const levelIconUrl = 'https://cdn.4590football.com/profile-icons/level-icons/level-2.png';
 
   // 첼시만 고정 (상점에서 첼시를 구매한 시나리오)
   const ownedIcons = [{ id: 49, name: '첼시' }];

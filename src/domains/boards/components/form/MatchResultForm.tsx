@@ -18,7 +18,7 @@ import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings'
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 // 경기 데이터를 위한 인터페이스
 interface League {

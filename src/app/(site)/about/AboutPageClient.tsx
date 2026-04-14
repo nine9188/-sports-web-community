@@ -816,14 +816,14 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                     <div className="league-header">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div className="league-logo-box">
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/40.webp" alt="리버풀" width={24} height={24} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                          <Image src="https://cdn.4590football.com/teams/md/40.webp" alt="리버풀" width={24} height={24} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                         </div>
                         <span className="league-name">리버풀</span>
                       </div>
                     </div>
                     <div className="player-main">
                       <div className="player-photo">
-                        <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/players/md/306.webp" alt="살라" width={48} height={48} />
+                        <Image src="https://cdn.4590football.com/players/md/306.webp" alt="살라" width={48} height={48} />
                       </div>
                       <span className="player-name">모하메드 살라</span>
                     </div>
@@ -839,8 +839,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                     <div className="league-header">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div className="league-logo-box">
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/md/39.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="dark:hidden" />
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/leagues/md/39-1.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="hidden dark:block" />
+                          <Image src="https://cdn.4590football.com/leagues/md/39.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="dark:hidden" />
+                          <Image src="https://cdn.4590football.com/leagues/md/39-1.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="hidden dark:block" />
                         </div>
                         <span className="league-name">프리미어리그</span>
                       </div>
@@ -848,7 +848,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                     <div className="match-main">
                       <div className="team-info">
                         <div className="team-logo-box">
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/47.webp" alt="토트넘" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+                          <Image src="https://cdn.4590football.com/teams/md/47.webp" alt="토트넘" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                         </div>
                         <span className="team-name">토트넘</span>
                       </div>
@@ -862,7 +862,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
                       </div>
                       <div className="team-info">
                         <div className="team-logo-box">
-                          <Image src="https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/teams/md/33.webp" alt="맨유" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+                          <Image src="https://cdn.4590football.com/teams/md/33.webp" alt="맨유" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                         </div>
                         <span className="team-name">맨유</span>
                       </div>

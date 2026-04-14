@@ -7,7 +7,7 @@ import type { PlayerCardProps } from '@/shared/types/playerCard';
 // 4590 표준: placeholder 및 Storage URL
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
   const { name, koreanName, team, photo } = playerData;

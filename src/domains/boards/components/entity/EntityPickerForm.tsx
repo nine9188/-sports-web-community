@@ -21,7 +21,7 @@ import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 // 주요 리그
 const LEAGUES = [

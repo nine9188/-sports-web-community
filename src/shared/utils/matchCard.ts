@@ -36,7 +36,7 @@ export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
  * Supabase Storage URL
  */
 const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cdn.4590football.com';
 
 /**
  * 이미지 URL 생성 (라이트/다크 모드 지원)

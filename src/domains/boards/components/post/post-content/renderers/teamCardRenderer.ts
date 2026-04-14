@@ -1,7 +1,7 @@
 import type { TeamCardData } from '@/shared/types/teamCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
 
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 /**
  * 팀 카드 데이터 정규화

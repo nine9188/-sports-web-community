@@ -8,7 +8,7 @@
  */
 
 // 레벨 아이콘 경로 (Supabase 스토리지 URL)
-export const LEVEL_ICON_BASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public/profile-icons/level-icons/';
+export const LEVEL_ICON_BASE_URL = 'https://cdn.4590football.com/profile-icons/level-icons/';
 
 // 레벨별 필요 경험치 테이블 (49레벨 시스템)
 export const LEVEL_EXP_REQUIREMENTS = [

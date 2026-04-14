@@ -9,7 +9,7 @@ import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const SUPABASE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+const SUPABASE_URL = 'https://cdn.4590football.com';
 
 export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps) {
   // 4590 표준: 다크모드 감지
