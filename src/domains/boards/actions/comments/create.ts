@@ -8,6 +8,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
 import { createCommentNotification, createReplyNotification } from '@/domains/notifications/actions';
+import { checkHotPostEntry } from '@/domains/notifications/actions/checkHotPostEntry';
 
 /**
  * 댓글 작성 (대댓글 지원)
@@ -180,6 +181,8 @@ export async function createComment({
           });
         }
       }
+      // HOT 게시글 진입 체크 (비동기, fire-and-forget)
+      checkHotPostEntry(postId).catch(() => {});
     } catch (notificationError) {
       console.error('알림 생성 오류:', notificationError);
       // 알림 생성 실패해도 댓글 작성은 성공으로 처리

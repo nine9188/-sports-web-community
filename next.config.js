@@ -41,6 +41,12 @@ const nextConfig = {
         hostname: 'vnjjfhsuzoxcljqqwwvx.supabase.co',
         pathname: '/**',
       },
+      // Cloudflare Storage CDN (Supabase 프록시)
+      {
+        protocol: 'https',
+        hostname: 'cdn.4590football.com',
+        pathname: '/**',
+      },
       // YouTube 썸네일
       {
         protocol: 'https',

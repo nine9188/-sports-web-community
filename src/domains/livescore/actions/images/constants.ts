@@ -5,8 +5,12 @@
  * 서버 액션에서 import해서 사용
  */
 
-// Supabase Storage 기본 URL
-export const SUPABASE_STORAGE_URL = 'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public';
+// Storage CDN URL (Cloudflare Worker 프록시 or Supabase 직접)
+// NOTE: NEXT_PUBLIC_ 환경변수는 빌드 타임에 인라인되므로 반드시 빌드 전에 설정 필요
+export const SUPABASE_STORAGE_URL =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_STORAGE_CDN_URL)
+    ? process.env.NEXT_PUBLIC_STORAGE_CDN_URL
+    : 'https://cdn.4590football.com';
 
 // API-Sports 기본 URL (원본 다운로드용)
 export const API_SPORTS_BASE_URL = 'https://media.api-sports.io/football';

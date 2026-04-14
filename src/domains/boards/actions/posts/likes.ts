@@ -6,6 +6,7 @@ import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { LikeActionResponse } from './utils';
 import { createPostLikeNotification } from '@/domains/notifications/actions';
+import { checkHotPostEntry } from '@/domains/notifications/actions/checkHotPostEntry';
 
 type LikeType = 'like' | 'dislike';
 
@@ -160,6 +161,9 @@ async function togglePostReaction(
         if (currentPost.user_id && currentPost.user_id !== userId) {
           await handleLikeNotification(supabase, postId, userId, currentPost.user_id);
         }
+
+        // HOT 게시글 진입 체크 (비동기, fire-and-forget)
+        checkHotPostEntry(postId).catch(() => {});
       }
     }
 
