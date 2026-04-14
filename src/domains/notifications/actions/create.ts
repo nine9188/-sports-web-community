@@ -59,7 +59,8 @@ export async function createCommentNotification({
   postTitle,
   postNumber,
   boardSlug,
-  commentContent
+  commentContent,
+  commentNumber
 }: {
   postOwnerId: string;
   actorId: string;
@@ -69,19 +70,22 @@ export async function createCommentNotification({
   postNumber: number;
   boardSlug: string;
   commentContent: string;
+  commentNumber?: number;
 }): Promise<NotificationActionResponse> {
+  const hash = commentNumber ? `#comment-${commentNumber}` : '';
   return createNotification({
     userId: postOwnerId,
     actorId,
     type: 'comment',
     title: `${actorNickname}님이 댓글을 남겼습니다`,
     message: commentContent.length > 50 ? commentContent.substring(0, 50) + '...' : commentContent,
-    link: `/boards/${boardSlug}/${postNumber}`,
+    link: `/boards/${boardSlug}/${postNumber}${hash}`,
     metadata: {
       post_id: postId,
       post_title: postTitle,
       post_number: postNumber,
-      board_slug: boardSlug
+      board_slug: boardSlug,
+      comment_number: commentNumber
     }
   });
 }
@@ -96,7 +100,8 @@ export async function createReplyNotification({
   postId,
   postNumber,
   boardSlug,
-  commentContent
+  commentContent,
+  commentNumber
 }: {
   parentCommentOwnerId: string;
   actorId: string;
@@ -105,18 +110,21 @@ export async function createReplyNotification({
   postNumber: number;
   boardSlug: string;
   commentContent: string;
+  commentNumber?: number;
 }): Promise<NotificationActionResponse> {
+  const hash = commentNumber ? `#comment-${commentNumber}` : '';
   return createNotification({
     userId: parentCommentOwnerId,
     actorId,
     type: 'reply',
     title: `${actorNickname}님이 답글을 남겼습니다`,
     message: commentContent.length > 50 ? commentContent.substring(0, 50) + '...' : commentContent,
-    link: `/boards/${boardSlug}/${postNumber}`,
+    link: `/boards/${boardSlug}/${postNumber}${hash}`,
     metadata: {
       post_id: postId,
       post_number: postNumber,
-      board_slug: boardSlug
+      board_slug: boardSlug,
+      comment_number: commentNumber
     }
   });
 }
@@ -165,6 +173,7 @@ export async function createCommentLikeNotification({
   actorId,
   actorNickname,
   commentId,
+  commentNumber,
   commentContent,
   postNumber,
   boardSlug
@@ -173,19 +182,22 @@ export async function createCommentLikeNotification({
   actorId: string;
   actorNickname: string;
   commentId: string;
+  commentNumber?: number;
   commentContent: string;
   postNumber: number;
   boardSlug: string;
 }): Promise<NotificationActionResponse> {
+  const hash = commentNumber ? `#comment-${commentNumber}` : '';
   return createNotification({
     userId: commentOwnerId,
     actorId,
     type: 'comment_like',
     title: `${actorNickname}님이 댓글을 좋아합니다`,
     message: commentContent.length > 50 ? commentContent.substring(0, 50) + '...' : commentContent,
-    link: `/boards/${boardSlug}/${postNumber}`,
+    link: `/boards/${boardSlug}/${postNumber}${hash}`,
     metadata: {
       comment_id: commentId,
+      comment_number: commentNumber,
       comment_content: commentContent,
       post_number: postNumber,
       board_slug: boardSlug

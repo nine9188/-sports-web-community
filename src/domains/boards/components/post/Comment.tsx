@@ -58,6 +58,9 @@ interface CommentProps {
   isLiking?: boolean;
   isPostOwner?: boolean;
   isReply?: boolean;
+  isHighlighted?: boolean;
+  highlightedCommentId?: string | null;
+  commentPermalink?: string;
 }
 
 export default function Comment({
@@ -70,13 +73,18 @@ export default function Comment({
   onDislike,
   isLiking: parentIsLiking = false,
   isPostOwner = false,
-  isReply = false
+  isReply = false,
+  isHighlighted = false,
+  highlightedCommentId,
+  commentPermalink
 }: CommentProps) {
   const { emoticonMap, emoticonRegex } = useEmoticonMap();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [showEditEmoticonPicker, setShowEditEmoticonPicker] = useState(false);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [showCopied, setShowCopied] = useState(false);
 
   const isCommentOwner = currentUserId === comment.user_id;
   const isHidden = comment.is_hidden === true;
@@ -85,6 +93,15 @@ export default function Comment({
   useEffect(() => {
     setEditContent(comment.content);
   }, [comment.content]);
+
+  const handleCopyLink = useCallback(() => {
+    if (!commentPermalink) return;
+    const fullUrl = `${window.location.origin}${commentPermalink}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    });
+  }, [commentPermalink]);
 
   const handleEdit = () => setIsEditing(true);
   const handleCancel = () => {
@@ -148,8 +165,8 @@ export default function Comment({
   return (
     <>
       <div
-        id={`comment-${comment.id}`}
-        className={`border-b border-black/5 dark:border-white/10 py-3 px-4 ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''}`}
+        id={`comment-${comment.comment_number ?? comment.id}`}
+        className={`border-b border-black/5 dark:border-white/10 py-3 px-4 transition-colors duration-1000 ${isReply ? 'pl-12 bg-[#F5F5F5]/50 dark:bg-[#1A1A1A]' : ''} ${isHighlighted ? 'animate-comment-highlight' : ''}`}
       >
         <div className="flex space-x-2">
           {isReply && (
@@ -237,6 +254,21 @@ export default function Comment({
               </div>
 
               <div className="flex items-center space-x-3">
+                {commentPermalink && (
+                  <button
+                    onClick={handleCopyLink}
+                    className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative"
+                    aria-label="댓글 링크 복사"
+                  >
+                    {showCopied ? (
+                      <span className="text-green-500 dark:text-green-400 text-xs">복사됨!</span>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    )}
+                  </button>
+                )}
                 {!isCommentOwner && currentUserId && (
                   <ReportButton targetType="comment" targetId={comment.id} variant="ghost" size="sm" showText={false} className="text-xs p-1" />
                 )}
@@ -267,6 +299,9 @@ export default function Comment({
               isLiking={parentIsLiking}
               isPostOwner={isPostOwner}
               isReply={true}
+              isHighlighted={highlightedCommentId === String(childComment.comment_number ?? childComment.id)}
+              highlightedCommentId={highlightedCommentId}
+              commentPermalink={commentPermalink?.replace(/#comment-.*$/, `#comment-${childComment.comment_number ?? childComment.id}`)}
             />
           ))}
         </>

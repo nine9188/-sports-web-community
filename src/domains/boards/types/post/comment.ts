@@ -8,6 +8,7 @@ export interface CommentType {
   created_at: string | null;
   updated_at?: string | null;
   parent_id?: string | null;
+  comment_number?: number;
   likes?: number;
   dislikes?: number;
   is_hidden?: boolean | null;

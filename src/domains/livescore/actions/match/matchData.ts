@@ -71,10 +71,45 @@ export async function fetchMatchFullData(
       if (!isCacheComplete) {
       } else {
 
+      // 캐시 복원: 제거된 파생 데이터 재계산
+      if (cachedResponse.match?.teams) {
+        cachedResponse.homeTeam = {
+          id: cachedResponse.match.teams.home.id,
+          name: cachedResponse.match.teams.home.name,
+          logo: cachedResponse.match.teams.home.logo,
+        };
+        cachedResponse.awayTeam = {
+          id: cachedResponse.match.teams.away.id,
+          name: cachedResponse.match.teams.away.name,
+          logo: cachedResponse.match.teams.away.logo,
+        };
+      }
+
+      // 이미지 URL 재계산 (캐시에서 제거된 경우)
+      if (!cachedResponse.teamLogoUrls && cachedResponse.match?.teams) {
+        const teamIds = [cachedResponse.match.teams.home.id, cachedResponse.match.teams.away.id];
+        cachedResponse.teamLogoUrls = await getTeamLogoUrls(teamIds);
+      }
+      if (!cachedResponse.leagueLogoUrl && cachedResponse.match?.league?.id) {
+        const leagueId = cachedResponse.match.league.id;
+        const [lightUrl, darkUrl] = await Promise.all([
+          getLeagueLogoUrl(leagueId),
+          getLeagueLogoUrl(leagueId, true),
+        ]);
+        cachedResponse.leagueLogoUrl = lightUrl;
+        cachedResponse.leagueLogoDarkUrl = darkUrl;
+      }
+
+      // venue 복원: 경량 캐시에서 matchData 재구성
+      const cachedVenue = (cachedResponse as any).venue;
+      if (cachedVenue && !cachedResponse.matchData) {
+        cachedResponse.matchData = { fixture: { venue: cachedVenue } } as Record<string, unknown>;
+      }
+
       // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴
       if (options.fetchStandings && cachedResponse.match?.league?.id) {
-        const season = (cachedResponse.matchData as Record<string, unknown>)?.league
-          ? ((cachedResponse.matchData as Record<string, { season?: number }>).league?.season)
+        const season = cachedResponse.match.league.id
+          ? undefined  // standings API가 자동으로 현재 시즌 반환
           : undefined;
 
         const standings = await fetchCachedLeagueStandings(
@@ -378,8 +413,20 @@ export async function fetchMatchFullData(
 
     const finishedCodes = ['FT', 'AET', 'PEN'];
     if (finishedCodes.includes(response.match?.status?.code ?? '') && hasCompleteData) {
+      // 캐시 경량화: 파생 가능한 데이터 제거
       const cacheData = { ...response };
-      delete cacheData.standings;
+      delete cacheData.standings;       // 실시간 데이터
+      delete cacheData.teamLogoUrls;    // ID로 재계산 가능
+      delete cacheData.leagueLogoUrl;   // ID로 재계산 가능
+      delete cacheData.leagueLogoDarkUrl;
+      delete cacheData.homeTeam;        // match.teams에 이미 있음
+      delete cacheData.awayTeam;        // match.teams에 이미 있음
+      // matchData → venue 정보만 추출하여 경량 저장
+      const rawFixture = (response.matchData as Record<string, any>)?.fixture;
+      if (rawFixture?.venue) {
+        (cacheData as any).venue = { name: rawFixture.venue.name, city: rawFixture.venue.city };
+      }
+      delete cacheData.matchData;       // 가장 큰 절감 (43KB → 0)
       setMatchCache(numericMatchId, 'full', cacheData).catch(() => {});
     }
 

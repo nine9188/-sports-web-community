@@ -1,0 +1,222 @@
+import { Suspense } from 'react';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
+import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
+import { buildMetadata } from '@/shared/utils/metadataNew';
+import { siteConfig } from '@/shared/config';
+import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+import type { PlayerTabType } from '@/domains/livescore/hooks';
+import { slugify } from '@/domains/livescore/utils/slugs';
+import { PlayerPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
+
+/**
+ * ============================================
+ * 선수 페이지 (서버 컴포넌트)
+ * ============================================
+ *
+ * 클라이언트 사이드 탭 전환 패턴을 사용합니다.
+ */
+
+// 선수 메타데이터 생성
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string; slug: string }>
+}): Promise<Metadata> {
+  const { id } = await params;
+
+  // 선수 데이터 조회 (최소한의 옵션으로)
+  const playerData = await fetchPlayerFullData(id, {
+    fetchSeasons: false,
+    fetchStats: false,
+    fetchFixtures: false,
+    fetchTrophies: false,
+    fetchTransfers: false,
+    fetchInjuries: false,
+    fetchRankings: false,
+  });
+
+  if (!playerData.success || !playerData.playerData?.info) {
+    return buildMetadata({
+      title: '선수 정보를 찾을 수 없습니다',
+      description: '요청하신 선수 정보가 존재하지 않습니다.',
+      path: `/livescore/football/player/${id}`,
+      noindex: true,
+    });
+  }
+
+  const player = playerData.playerData.info;
+  const statistics = playerData.playerData.statistics;
+
+  // 한글 매핑 (서버 액션으로 DB 조회)
+  const playerName = await getPlayerKoreanName(player.id) || player.name;
+  const teamId = statistics?.[0]?.team?.id;
+  const teamMapping = teamId ? getTeamById(teamId) : null;
+  const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
+  const position = statistics?.[0]?.games?.position || '';
+
+  const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
+
+  return buildMetadata({
+    title: `${playerName} - 통계·기록·프로필`,
+    description,
+    path: `/livescore/football/player/${id}/${slugify(player.name)}`,
+    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
+  });
+}
+
+// 유효한 탭 목록
+const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
+
+/** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: string }) {
+  try {
+    // 유효한 탭인지 확인
+    const initialTab = VALID_TABS.includes(tab as PlayerTabType)
+      ? (tab as PlayerTabType)
+      : 'stats';
+
+    // 모든 탭 데이터를 서버에서 미리 로드
+    const initialData = await fetchPlayerFullData(playerId, {
+      fetchSeasons: true,
+      fetchStats: true,
+      fetchFixtures: true,
+      fetchTrophies: true,
+      fetchTransfers: true,
+      fetchInjuries: true,
+      fetchRankings: true
+    });
+
+    // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)
+    if (!initialData.success) {
+      console.error(`[PlayerPage] 데이터 로드 실패 - playerId: ${playerId}, message: ${initialData.message}`);
+      return (
+        <div className="min-h-[400px] flex flex-col items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              선수 정보를 불러올 수 없습니다
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {initialData.message || '잠시 후 다시 시도해주세요.'}
+            </p>
+            <a
+              href="/livescore/football"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              라이브스코어로 돌아가기
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // 선수 한글명 조회 (DB)
+    const playerNumericId = parseInt(playerId, 10);
+    const playerKoreanName = !isNaN(playerNumericId) ? await getPlayerKoreanName(playerNumericId) : null;
+
+    // Rankings 데이터에서 선수 ID 추출 및 한글명 일괄 조회
+    const rankingsPlayerIds: Set<number> = new Set();
+    const rankings = initialData.rankings;
+    if (rankings) {
+      const rankingLists = [
+        rankings.topScorers,
+        rankings.topAssists,
+        rankings.mostGamesScored,
+        rankings.leastPlayTime,
+        rankings.topRedCards,
+        rankings.topYellowCards,
+      ];
+      rankingLists.forEach(list => {
+        list?.forEach((p: { player?: { id?: number } }) => {
+          if (p.player?.id) rankingsPlayerIds.add(p.player.id);
+        });
+      });
+    }
+    const rankingsKoreanNames = rankingsPlayerIds.size > 0
+      ? await getPlayersKoreanNames(Array.from(rankingsPlayerIds))
+      : {};
+
+    // Person JSON-LD 생성
+    const playerInfo = initialData.playerData?.info;
+    const playerStats = initialData.playerData?.statistics;
+    const currentTeam = playerStats?.[0]?.team;
+    const personSchema = playerInfo ? {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: playerKoreanName || playerInfo.name,
+      ...(playerInfo.nationality ? { nationality: { '@type': 'Country', name: playerInfo.nationality } } : {}),
+      ...(playerInfo.birth?.date ? { birthDate: playerInfo.birth.date } : {}),
+      ...(playerInfo.height ? { height: playerInfo.height } : {}),
+      ...(playerInfo.weight ? { weight: playerInfo.weight } : {}),
+      jobTitle: '축구 선수',
+      ...(currentTeam ? {
+        memberOf: {
+          '@type': 'SportsTeam',
+          name: currentTeam.name,
+        },
+      } : {}),
+    } : null;
+
+    // BreadcrumbList JSON-LD
+    const playerDisplayName = playerKoreanName || playerInfo?.name || '';
+    const currentTeamMapping = currentTeam?.id ? getTeamById(currentTeam.id) : null;
+    const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
+        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
+        ...(currentTeam?.id && teamDisplayName ? [{
+          '@type': 'ListItem', position: 3, name: teamDisplayName, item: `${siteConfig.url}/livescore/football/team/${currentTeam.id}`,
+        }] : []),
+        { '@type': 'ListItem', position: currentTeam?.id && teamDisplayName ? 4 : 3, name: playerDisplayName, item: `${siteConfig.url}/livescore/football/player/${playerId}` },
+      ],
+    };
+
+    // 클라이언트 컴포넌트에 데이터 전달
+    return (
+      <>
+        {personSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+          />
+        )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+        <PlayerPageClient
+          playerId={playerId}
+          initialTab={initialTab}
+          initialData={initialData}
+          playerKoreanName={playerKoreanName}
+          rankingsKoreanNames={rankingsKoreanNames}
+        />
+      </>
+    );
+  } catch (error) {
+    console.error('플레이어 페이지 로딩 오류:', error);
+    return notFound();
+  }
+}
+
+export default async function PlayerPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string; slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { id: playerId } = await params;
+  const { tab = 'stats' } = await searchParams;
+
+  return (
+    <Suspense fallback={<PlayerPageSkeleton />}>
+      <PlayerPageContent playerId={playerId} tab={tab} />
+    </Suspense>
+  );
+}

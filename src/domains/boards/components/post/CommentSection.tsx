@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import { useComments } from "@/domains/boards/hooks/post/useComments";
@@ -10,6 +10,7 @@ import { Container, ContainerHeader, ContainerTitle } from "@/shared/components/
 import { useClickOutsideOrEscape } from '@/shared/hooks/useClickOutside';
 import EmoticonPicker from './EmoticonPicker';
 import { likePost, getUserPostAction } from '@/domains/boards/actions/posts/likes';
+import { usePathname } from 'next/navigation';
 
 interface CommentSectionProps {
   postId: string;
@@ -27,11 +28,13 @@ export default function CommentSection({
   initialComments
 }: CommentSectionProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [content, setContent] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyToNickname, setReplyToNickname] = useState<string | null>(null);
   const [showEmoticonPicker, setShowEmoticonPicker] = useState(false);
+  const [highlightedNumber, setHighlightedNumber] = useState<string | null>(null);
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
   const emoticonContainerRef = useRef<HTMLDivElement>(null);
   const submitTypeRef = useRef<'normal' | 'withLike'>('normal');
@@ -54,6 +57,60 @@ export default function CommentSection({
     dislikeComment,
     isLiking
   } = useComments({ postId, initialComments });
+
+  // URL 해시 감지 → 댓글 스크롤 + 하이라이트
+  const hasScrolledRef = useRef(false);
+
+  // comment_number가 로드됐는지 확인 (첫 댓글에 comment_number가 있으면 로드 완료)
+  const numbersReady = treeComments.length > 0 && treeComments[0].comment_number != null;
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#comment-') || hasScrolledRef.current) return;
+    if (isLoading || treeComments.length === 0 || !numbersReady) return;
+
+    const commentNumber = hash.replace('#comment-', '');
+
+    const scrollToElement = () => {
+      const element = document.getElementById(`comment-${commentNumber}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightedNumber(commentNumber);
+        hasScrolledRef.current = true;
+        setTimeout(() => setHighlightedNumber(null), 2000);
+        // 이미지 로드 등 레이아웃 변경 후 한 번 더 보정
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 800);
+      }
+    };
+
+    // 페이지 이미지 로드 완료 대기 후 스크롤
+    if (document.readyState === 'complete') {
+      requestAnimationFrame(scrollToElement);
+    } else {
+      window.addEventListener('load', scrollToElement, { once: true });
+    }
+  }, [isLoading, treeComments, numbersReady]);
+
+  // hashchange 이벤트 대응 (같은 페이지 내 해시 변경)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (!hash || !hash.startsWith('#comment-')) return;
+
+      const commentNumber = hash.replace('#comment-', '');
+      const element = document.getElementById(`comment-${commentNumber}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightedNumber(commentNumber);
+        setTimeout(() => setHighlightedNumber(null), 2000);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // 답글 시작 핸들러
   const handleReply = useCallback((parentId: string) => {
@@ -165,6 +222,9 @@ export default function CommentSection({
           onDislike={dislikeComment}
           isLiking={isLiking}
           isPostOwner={currentUserId === postOwnerId}
+          isHighlighted={highlightedNumber === String(comment.comment_number ?? comment.id)}
+          highlightedCommentId={highlightedNumber}
+          commentPermalink={`${pathname}#comment-${comment.comment_number ?? comment.id}`}
         />
       ))
     ) : (
@@ -172,7 +232,7 @@ export default function CommentSection({
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
-  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, isLiking, isLoading]);
+  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, isLiking, isLoading, highlightedNumber, pathname]);
 
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4 !overflow-visible">

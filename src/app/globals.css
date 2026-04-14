@@ -83,6 +83,25 @@
   }
 }
 
+/* 댓글 하이라이트 애니메이션 */
+@keyframes comment-highlight {
+  0% { background-color: #FEF9C3; }
+  100% { background-color: transparent; }
+}
+
+.dark .animate-comment-highlight {
+  animation: comment-highlight-dark 2s ease-out forwards;
+}
+
+@keyframes comment-highlight-dark {
+  0% { background-color: rgba(253, 224, 71, 0.15); }
+  100% { background-color: transparent; }
+}
+
+.animate-comment-highlight {
+  animation: comment-highlight 2s ease-out forwards;
+}
+
 /* 애니메이션 */
 @keyframes slide-up {
   from { transform: translateY(100%); }

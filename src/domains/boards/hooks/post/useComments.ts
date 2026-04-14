@@ -100,8 +100,36 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
     initialDataUpdatedAt: initialComments ? Date.now() : undefined,
   });
 
+  // comment_number 보강 (Supabase 타입 미반영 시 클라이언트에서 직접 조회)
+  const { data: commentNumbers } = useQuery({
+    queryKey: [...commentKeys.list(postId), 'numbers'],
+    queryFn: async () => {
+      if (!supabase) return {};
+      const { data } = await supabase
+        .from('comments')
+        .select('id, comment_number')
+        .eq('post_id', postId);
+      const map: Record<string, number> = {};
+      if (data) {
+        (data as unknown as { id: string; comment_number: number }[]).forEach(row => {
+          map[row.id] = row.comment_number;
+        });
+      }
+      return map;
+    },
+    enabled: enabled && !!postId && !!supabase,
+    staleTime: 1000 * 60 * 5,
+  });
+
   // 댓글 데이터와 트리 구조
-  const comments = useMemo(() => commentsData || [], [commentsData]);
+  const comments = useMemo(() => {
+    const raw = commentsData || [];
+    if (!commentNumbers || Object.keys(commentNumbers).length === 0) return raw;
+    return raw.map(c => ({
+      ...c,
+      comment_number: c.comment_number ?? commentNumbers[c.id]
+    }));
+  }, [commentsData, commentNumbers]);
   const treeComments = useMemo(() => buildCommentTree(comments), [comments]);
   const commentCount = comments.length;
 

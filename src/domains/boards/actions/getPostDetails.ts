@@ -264,6 +264,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         created_at: comment.created_at,
         updated_at: comment.updated_at,
         parent_id: comment.parent_id,
+        comment_number: comment.comment_number,
         likes: comment.likes || 0,
         dislikes: comment.dislikes || 0,
         userAction: serializedUserAction,

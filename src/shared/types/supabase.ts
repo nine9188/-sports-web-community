@@ -297,6 +297,7 @@ export type Database = {
       }
       comments: {
         Row: {
+          comment_number: number
           content: string
           created_at: string | null
           dislikes: number
@@ -312,6 +313,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          comment_number?: number
           content: string
           created_at?: string | null
           dislikes?: number
@@ -327,6 +329,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          comment_number?: number
           content?: string
           created_at?: string | null
           dislikes?: number

@@ -84,6 +84,29 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not Found', { status: 404 })
   }
 
+  // SEO slug 리다이렉트: /team/33 → /team/33/slug (slug 없는 기존 URL 호환)
+  const teamMatch = pathname.match(/^\/livescore\/football\/team\/(\d+)$/)
+  if (teamMatch) {
+    const teamId = teamMatch[1]
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      const res = await fetch(`${supabaseUrl}/rest/v1/football_teams?team_id=eq.${teamId}&select=slug&limit=1`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      })
+      const data = await res.json()
+      const slug = data?.[0]?.slug || 'team'
+      const url = request.nextUrl.clone()
+      url.pathname = `/livescore/football/team/${teamId}/${slug}`
+      return NextResponse.redirect(url, 301)
+    } catch {
+      // DB 조회 실패 시 fallback
+      const url = request.nextUrl.clone()
+      url.pathname = `/livescore/football/team/${teamId}/team`
+      return NextResponse.redirect(url, 301)
+    }
+  }
+
   // SEO 봇 → 404 차단 없이 통과, x-is-bot 헤더만 설정
   // 각 페이지/컴포넌트에서 x-is-bot 헤더를 확인하여 API-Sports 호출 스킵
   if (isBot) {

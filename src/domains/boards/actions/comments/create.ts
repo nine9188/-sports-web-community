@@ -133,6 +133,10 @@ export async function createComment({
     
     // 7. 알림 생성 (비동기로 처리)
     try {
+      // comment_number 별도 조회 (Supabase 생성 타입에 미포함 대비)
+      const { data: cnRow } = await supabase.rpc('get_single_comment_number', { p_comment_id: data.id }) as { data: { comment_number: number }[] | null; error: unknown };
+      const commentNumber = cnRow?.[0]?.comment_number;
+
       // 게시글 정보 조회 (알림용)
       const { data: postData } = await supabase
         .from('posts')
@@ -158,7 +162,8 @@ export async function createComment({
             postId,
             postNumber: postData.post_number,
             boardSlug,
-            commentContent: content
+            commentContent: content,
+            commentNumber
           });
         } else {
           // 일반 댓글인 경우: 게시글 작성자에게 알림
@@ -170,7 +175,8 @@ export async function createComment({
             postTitle: postData.title,
             postNumber: postData.post_number,
             boardSlug,
-            commentContent: content
+            commentContent: content,
+            commentNumber
           });
         }
       }

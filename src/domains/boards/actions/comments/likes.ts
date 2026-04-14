@@ -153,6 +153,10 @@ async function handleCommentLikeNotification(
 
     if (!commentData?.user_id || commentData.user_id === userId) return;
 
+    // comment_number 별도 조회 (Supabase 생성 타입 미포함 대비)
+    const { data: cnRow } = await supabase.rpc('get_single_comment_number', { p_comment_id: commentId }) as { data: { comment_number: number }[] | null; error: unknown };
+    const commentNumber = cnRow?.[0]?.comment_number;
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('nickname')
@@ -167,6 +171,7 @@ async function handleCommentLikeNotification(
         actorId: userId,
         actorNickname: profile.nickname || '알 수 없음',
         commentId,
+        commentNumber,
         commentContent: commentData.content,
         postNumber: post.post_number,
         boardSlug: post.board.slug

@@ -27,7 +27,7 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    
+
     if (error) {
       console.error('댓글 로딩 오류:', error);
       return {
@@ -35,7 +35,7 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
         error: error.message
       };
     }
-    
+
     // 댓글 데이터를 CommentType으로 캐스팅하고 상태 판단
     const comments = (data || []).map(comment => {
       const commentData = {
@@ -46,6 +46,7 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
         created_at: comment.created_at,
         updated_at: comment.updated_at,
         parent_id: comment.parent_id || null,
+        comment_number: comment.comment_number,
         likes: comment.likes || 0,
         dislikes: comment.dislikes || 0,
         profiles: comment.profiles,

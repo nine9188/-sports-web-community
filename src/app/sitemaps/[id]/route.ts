@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { siteConfig } from '@/shared/config';
 import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
+import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 
 // ISR: 1시간
 export const revalidate = 3600;
@@ -124,7 +125,7 @@ export async function GET(
         entries.push({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'hourly', priority: 0.6 });
       }
       for (const leagueId of Object.values(MAJOR_LEAGUE_IDS)) {
-        entries.push({ loc: `${BASE_URL}/livescore/football/leagues/${leagueId}`, changefreq: 'daily', priority: 0.7 });
+        entries.push({ loc: `${BASE_URL}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}`, changefreq: 'daily', priority: 0.7 });
       }
       return sitemapResponse(entries);
     }
@@ -179,12 +180,12 @@ export async function GET(
     if (id === 'teams') {
       const supabase = await getSupabase();
       const { data: teams } = await supabase
-        .from('football_teams').select('team_id, updated_at')
+        .from('football_teams').select('team_id, slug, updated_at')
         .in('league_id', Object.values(PLAYER_LEAGUES))
         .eq('is_active', true);
 
       return sitemapResponse((teams || []).map(t => ({
-        loc: `${BASE_URL}/livescore/football/team/${t.team_id}`,
+        loc: `${BASE_URL}/livescore/football/team/${t.team_id}/${t.slug || 'team'}`,
         lastmod: t.updated_at || undefined,
         changefreq: 'weekly', priority: 0.6,
       })));
@@ -203,12 +204,12 @@ export async function GET(
       if (!teams?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const { data: players } = await supabase
-        .from('football_players').select('player_id, updated_at')
+        .from('football_players').select('player_id, slug, updated_at')
         .in('team_id', teams.map(t => t.team_id))
         .eq('is_active', true);
 
       return sitemapResponse((players || []).map(p => ({
-        loc: `${BASE_URL}/livescore/football/player/${p.player_id}`,
+        loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
         lastmod: p.updated_at || undefined,
         changefreq: 'monthly', priority: 0.4,
       })));
