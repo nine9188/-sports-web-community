@@ -98,6 +98,8 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
       'LIGUE1': 'foreign-analysis-ligue1',
       'bundesliga': 'foreign-analysis-bundesliga',
       'serie-a': 'foreign-analysis-serie-a',
+      'k-league-1': 'domestic-analysis-k-league-1',
+      'k-league-2': 'domestic-analysis-k-league-2',
     };
 
     if (boardData.slug && LEAGUE_SLUG_TO_ANALYSIS_SLUG[boardData.slug]) {
@@ -110,8 +112,15 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
 
     // 해외축구(top) 조회 시 분석 게시판 글도 포함
     if (boardData.slug === 'soccer' || boardData.id === 'b08d3648-a5cc-4ab6-b1f0-c4609c89ac26') {
-      // 리그별 분석 게시판
-      for (const analysisSlug of Object.values(LEAGUE_SLUG_TO_ANALYSIS_SLUG)) {
+      // 리그별 분석 게시판 (해외만)
+      const foreignLeagueAnalysisSlugs = [
+        'foreign-analysis-premier',
+        'foreign-analysis-laliga',
+        'foreign-analysis-ligue1',
+        'foreign-analysis-bundesliga',
+        'foreign-analysis-serie-a',
+      ];
+      for (const analysisSlug of foreignLeagueAnalysisSlugs) {
         const analysisBoard = Object.values(boardsMap).find(b => b.slug === analysisSlug);
         if (analysisBoard && !filteredBoardIds.includes(analysisBoard.id)) {
           filteredBoardIds.push(analysisBoard.id);
@@ -121,6 +130,25 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
       const foreignAnalysisBoard = Object.values(boardsMap).find(b => b.slug === 'foreign-analysis');
       if (foreignAnalysisBoard && !filteredBoardIds.includes(foreignAnalysisBoard.id)) {
         filteredBoardIds.push(foreignAnalysisBoard.id);
+      }
+    }
+
+    // 국내축구(top) 조회 시 국내 분석 게시판 글도 포함
+    if (boardData.slug === 'k-league') {
+      const domesticLeagueAnalysisSlugs = [
+        'domestic-analysis-k-league-1',
+        'domestic-analysis-k-league-2',
+      ];
+      for (const analysisSlug of domesticLeagueAnalysisSlugs) {
+        const analysisBoard = Object.values(boardsMap).find(b => b.slug === analysisSlug);
+        if (analysisBoard && !filteredBoardIds.includes(analysisBoard.id)) {
+          filteredBoardIds.push(analysisBoard.id);
+        }
+      }
+      // 국내축구 분석 게시판 (매핑 없는 리그 분석글 포함)
+      const domesticAnalysisBoard = Object.values(boardsMap).find(b => b.slug === 'domestic-analysis');
+      if (domesticAnalysisBoard && !filteredBoardIds.includes(domesticAnalysisBoard.id)) {
+        filteredBoardIds.push(domesticAnalysisBoard.id);
       }
     }
 

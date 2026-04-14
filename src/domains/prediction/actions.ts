@@ -387,6 +387,8 @@ const LEAGUE_ANALYSIS_BOARD_MAPPING: Record<number, string> = {
   61: 'foreign-analysis-ligue1',
   78: 'foreign-analysis-bundesliga',
   135: 'foreign-analysis-serie-a',
+  292: 'domestic-analysis-k-league-1',  // K리그 1
+  293: 'domestic-analysis-k-league-2',  // K리그 2
 }
 
 // 국내 축구 리그 ID (한국)
