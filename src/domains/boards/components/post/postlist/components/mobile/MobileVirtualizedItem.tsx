@@ -105,6 +105,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
               sizes="112px"
               className="object-cover"
               loading="lazy"
+              unoptimized={thumbnailUrl.includes('/proxy?url=')}
             />
           </div>
         </div>

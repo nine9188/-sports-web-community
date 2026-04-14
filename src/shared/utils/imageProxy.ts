@@ -75,17 +75,11 @@ export function getImageProps(url: string | null | undefined) {
     };
   }
 
-  // 외부 이미지 (프록시 사용)
-  if (isExternalImage(url || '')) {
-    return {
-      src: proxiedUrl,
-      unoptimized: false, // 프록시 거치면 최적화 가능
-    };
-  }
+  // CDN 프록시 URL은 이미 최적화된 상태이므로 unoptimized
+  const isCdnProxy = proxiedUrl.includes('/proxy?url=');
 
-  // 내부 이미지
   return {
     src: proxiedUrl,
-    unoptimized: false,
+    unoptimized: isCdnProxy,
   };
 }

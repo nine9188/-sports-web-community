@@ -79,6 +79,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 sizes="80px"
                 className="object-cover"
                 loading="lazy"
+                unoptimized={thumbnailUrl.includes('/proxy?url=')}
               />
             ) : (
               <Image

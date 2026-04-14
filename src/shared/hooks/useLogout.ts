@@ -36,6 +36,9 @@ export function useLogout(options: UseLogoutOptions = {}) {
       // 아이콘 상태 초기화
       updateUserIconState('', '');
 
+      // 닉네임 캐시 쿠키 제거
+      document.cookie = 'has_nickname=; path=/; max-age=0';
+
       // 콜백 실행
       onLogoutComplete?.();
 

@@ -155,6 +155,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
               sizes="64px"
               className="object-cover"
               loading="lazy"
+              unoptimized={thumbnailUrl.includes('/proxy?url=')}
             />
           </div>
         </div>

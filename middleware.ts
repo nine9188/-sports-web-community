@@ -196,14 +196,26 @@ export async function middleware(request: NextRequest) {
 
     // 2. 닉네임 미설정 사용자 강제 소셜 회원가입 리다이렉트
     if (user && !authExceptionPaths.some(path => pathname.startsWith(path)) && !pathname.startsWith('/auth')) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('id', user.id)
-        .single()
+      const hasNickname = request.cookies.get('has_nickname')?.value
 
-      if (!profile || !profile.nickname || profile.nickname.trim() === '') {
-        return NextResponse.redirect(new URL('/social-signup', request.url))
+      if (hasNickname !== '1') {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile || !profile.nickname || profile.nickname.trim() === '') {
+          return NextResponse.redirect(new URL('/social-signup', request.url))
+        }
+
+        // 닉네임 확인 완료 → 쿠키에 캐싱 (24시간)
+        response.cookies.set('has_nickname', '1', {
+          path: '/',
+          maxAge: 60 * 60 * 24,
+          httpOnly: true,
+          sameSite: 'lax',
+        })
       }
     }
 

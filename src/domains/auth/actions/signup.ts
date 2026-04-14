@@ -2,7 +2,7 @@
 
 import { getSupabaseServer, getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { logAuthEvent } from '@/shared/actions/log-actions'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { validateEmail, validatePassword, validateUsername, validateNickname } from './utils/validation'
 import type { SignUpResponse, AvailabilityCheckResponse } from '../types'
 import { createWelcomeNotification } from '@/domains/notifications/actions/create'
@@ -539,14 +539,23 @@ export async function completeSocialSignup({
       return { success: false, error: '회원가입 중 오류가 발생했습니다.' }
     }
 
-    // 5. 환영 알림 발송
+    // 5. 닉네임 캐시 쿠키 설정
+    const cookieStore = await cookies();
+    cookieStore.set('has_nickname', '1', {
+      path: '/',
+      maxAge: 60 * 60 * 24,
+      httpOnly: true,
+      sameSite: 'lax',
+    });
+
+    // 6. 환영 알림 발송
     try {
       await createWelcomeNotification({ userId: user.id })
     } catch (e) {
       console.error('환영 알림 발송 실패:', e)
     }
 
-    // 6. 추천 코드 처리
+    // 7. 추천 코드 처리
     if (referralCode?.trim()) {
       try {
         const referralResult = await processReferral(user.id, referralCode.trim())

@@ -12,7 +12,7 @@ function toProxyUrl(url: string): string {
   // 로컬 경로나 이미 프록시된 URL은 그대로
   if (url.startsWith('/') || url.includes('cdn.4590football.com')) return url;
   // CDN 또는 Supabase Storage URL은 그대로
-  if (url.includes('supabase.co') || url.includes('cdn.4590football.com')) return url;
+  if (url.includes('supabase.co')) return url;
   return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
 }
 
@@ -87,7 +87,7 @@ export default function NewsImageClient({
         src={finalImageUrl}
         alt={alt}
         fill
-        unoptimized={finalImageUrl.includes('cdn.4590football.com/proxy')}
+        unoptimized={finalImageUrl.includes('/proxy?url=')}
         className={useFallback
           ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"

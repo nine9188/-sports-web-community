@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { ProfileUpdateData } from '../types';
 import { createProfileUpdateNotification } from '@/domains/notifications/actions/create';
 
@@ -89,6 +90,10 @@ export async function updateProfile(
 
     // 닉네임 변경 알림
     if (oldProfile && oldProfile.nickname !== data.nickname) {
+      // 닉네임 캐시 쿠키 리셋 (미들웨어에서 다시 확인하도록)
+      const cookieStore = await cookies();
+      cookieStore.delete('has_nickname');
+
       await createProfileUpdateNotification({
         userId,
         changeType: 'nickname',

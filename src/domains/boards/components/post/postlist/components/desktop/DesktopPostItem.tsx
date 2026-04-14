@@ -95,6 +95,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
                 sizes="96px"
                 className="object-cover"
                 loading="lazy"
+                unoptimized={thumbnailUrl.includes('/proxy?url=')}
               />
             ) : (
               <Image
