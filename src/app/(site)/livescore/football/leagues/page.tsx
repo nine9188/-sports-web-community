@@ -1,7 +1,7 @@
 // ISR: 1시간마다 재생성 (리그 목록/로고는 거의 변하지 않음)
 export const revalidate = 3600;
 
-import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
+import { getLeaguesByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
@@ -17,65 +17,24 @@ export async function generateMetadata() {
   });
 }
 
-// 리그 카테고리별 분류
-const LEAGUE_CATEGORIES = {
-  '유럽 주요 리그': [
-    MAJOR_LEAGUE_IDS.PREMIER_LEAGUE,
-    MAJOR_LEAGUE_IDS.LA_LIGA,
-    MAJOR_LEAGUE_IDS.BUNDESLIGA,
-    MAJOR_LEAGUE_IDS.SERIE_A,
-    MAJOR_LEAGUE_IDS.LIGUE_1,
-  ],
-  '유럽 컵 대회': [
-    MAJOR_LEAGUE_IDS.CHAMPIONS_LEAGUE,
-    MAJOR_LEAGUE_IDS.EUROPA_LEAGUE,
-    MAJOR_LEAGUE_IDS.CONFERENCE_LEAGUE,
-  ],
-  '유럽 기타 리그': [
-    MAJOR_LEAGUE_IDS.CHAMPIONSHIP,
-    MAJOR_LEAGUE_IDS.SCOTTISH_PREMIERSHIP,
-    MAJOR_LEAGUE_IDS.EREDIVISIE,
-    MAJOR_LEAGUE_IDS.PRIMEIRA_LIGA,
-    MAJOR_LEAGUE_IDS.DANISH_SUPERLIGA,
-  ],
-  '아시아': [
-    MAJOR_LEAGUE_IDS.K_LEAGUE_1,
-    MAJOR_LEAGUE_IDS.J1_LEAGUE,
-    MAJOR_LEAGUE_IDS.CSL,
-    MAJOR_LEAGUE_IDS.AFC_CHAMPIONS,
-    MAJOR_LEAGUE_IDS.SAUDI_PRO_LEAGUE,
-  ],
-  '아메리카': [
-    MAJOR_LEAGUE_IDS.MLS,
-    MAJOR_LEAGUE_IDS.BRASILEIRAO,
-    MAJOR_LEAGUE_IDS.LIGA_MX,
-  ],
-  '국내 컵 대회': [
-    MAJOR_LEAGUE_IDS.FA_CUP,
-    MAJOR_LEAGUE_IDS.EFL_CUP,
-    MAJOR_LEAGUE_IDS.COPA_DEL_REY,
-    MAJOR_LEAGUE_IDS.COPPA_ITALIA,
-    MAJOR_LEAGUE_IDS.COUPE_DE_FRANCE,
-    MAJOR_LEAGUE_IDS.DFB_POKAL,
-  ],
-  '국제 대회': [
-    MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_EUROPE,
-    MAJOR_LEAGUE_IDS.WORLD_CUP_QUALIFIERS_ASIA,
-    MAJOR_LEAGUE_IDS.INTERNATIONAL_FRIENDLY,
-    MAJOR_LEAGUE_IDS.NATIONS_LEAGUE,
-    MAJOR_LEAGUE_IDS.EURO,
-    MAJOR_LEAGUE_IDS.COPA_AMERICA,
-    MAJOR_LEAGUE_IDS.CLUB_WORLD_CUP,
-    MAJOR_LEAGUE_IDS.UEFA_SUPER_CUP,
-  ],
+// 리그 카테고리별 분류 (ID는 API-Football 리그 ID — 메타데이터는 leagues 테이블에서 조회)
+const LEAGUE_CATEGORIES: Record<string, number[]> = {
+  '유럽 주요 리그': [39, 140, 78, 135, 61],
+  '유럽 컵 대회': [2, 3, 848],
+  '유럽 기타 리그': [40, 179, 88, 94, 119],
+  '아시아': [292, 293, 98, 169, 17, 307],
+  '아메리카': [253, 71, 262],
+  '국내 컵 대회': [45, 48, 143, 137, 66, 81],
+  '국제 대회': [32, 30, 10, 5, 9, 13, 15, 531],
 };
 
 export default async function LeaguesPage() {
   // 4590 표준: 서버에서 모든 리그 로고 URL 배치 조회
   const allLeagueIds = Object.values(LEAGUE_CATEGORIES).flat();
-  const [leagueLogos, leagueLogosDark] = await Promise.all([
+  const [leagueLogos, leagueLogosDark, leagueInfoMap] = await Promise.all([
     getLeagueLogoUrls(allLeagueIds),
     getLeagueLogoUrls(allLeagueIds, true),  // 다크모드
+    getLeaguesByIds(allLeagueIds),
   ]);
 
   return (
@@ -107,7 +66,7 @@ export default async function LeaguesPage() {
                     <LeagueCard
                       key={leagueId}
                       leagueId={leagueId}
-                      name={LEAGUE_NAMES_MAP[leagueId]}
+                      name={leagueInfoMap[leagueId]?.name_ko || ''}
                       leagueLogoUrl={leagueLogos[leagueId] || undefined}
                       leagueLogoDarkUrl={leagueLogosDark[leagueId] || undefined}
                     />

@@ -9,8 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -65,6 +64,7 @@ export default function PlayerFixtures({
   leagueLogoDarkUrls = {}
 }: PlayerFixturesProps) {
   const router = useRouter();
+  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
 
   // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false);

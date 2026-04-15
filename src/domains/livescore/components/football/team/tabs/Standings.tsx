@@ -6,7 +6,7 @@ import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 
 // 4590 표준: placeholder 상수
@@ -62,6 +62,7 @@ function Standings({
   leagueLogoDarkUrls = {}
 }: StandingsProps) {
   const router = useRouter();
+  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);

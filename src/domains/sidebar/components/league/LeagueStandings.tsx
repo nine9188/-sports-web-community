@@ -13,20 +13,19 @@ import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } fro
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingsData, League } from '../../types';
 import { useLeagueStandings } from '../../hooks/useLeagueQueries';
-import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
-// API ID와 화면 표시용 리그 정보 매핑
+// API-Football 리그 ID
 const LEAGUES: League[] = [
-  { id: 'premier', name: 'EPL', fullName: '프리미어 리그', apiId: MAJOR_LEAGUE_IDS.PREMIER_LEAGUE },
-  { id: 'laliga', name: '라리가', fullName: '라리가', apiId: MAJOR_LEAGUE_IDS.LA_LIGA },
-  { id: 'bundesliga', name: '분데스', fullName: '분데스리가', apiId: MAJOR_LEAGUE_IDS.BUNDESLIGA },
-  { id: 'serieA', name: '세리에A', fullName: '세리에 A', apiId: MAJOR_LEAGUE_IDS.SERIE_A },
-  { id: 'ligue1', name: '리그앙', fullName: '리그 1', apiId: MAJOR_LEAGUE_IDS.LIGUE_1 },
+  { id: 'premier', name: 'EPL', fullName: '프리미어 리그', apiId: 39 },
+  { id: 'laliga', name: '라리가', fullName: '라리가', apiId: 140 },
+  { id: 'bundesliga', name: '분데스', fullName: '분데스리가', apiId: 78 },
+  { id: 'serieA', name: '세리에A', fullName: '세리에 A', apiId: 135 },
+  { id: 'ligue1', name: '리그앙', fullName: '리그 1', apiId: 61 },
 ];
 
 // 팀 이름 짧게 표시 (최대 8자)
@@ -35,10 +34,13 @@ const shortenTeamName = (name: string) => {
   return name.substring(0, 8);
 };
 
-// 팀 ID로 한글 이름 가져오기
-const getKoreanTeamName = (teamId: number, name: string) => {
-  const teamInfo = getTeamById(teamId);
-  return teamInfo?.name_ko || shortenTeamName(name);
+// 팀 ID로 한글 이름 가져오기 (Context 기반 — 컴포넌트 내부에서 useKoreanTeamName()으로 사용)
+const useKoreanTeamName = () => {
+  const { getTeamById } = useTeamLeague();
+  return (teamId: number, name: string) => {
+    const teamInfo = getTeamById(teamId);
+    return teamInfo?.name_ko || shortenTeamName(name);
+  };
 };
 
 interface LeagueStandingsProps {
@@ -63,6 +65,7 @@ export default function LeagueStandings({
   leagueLogoUrlsDark = {},
   teamLogoUrls: initialTeamLogoUrls = {},
 }: LeagueStandingsProps) {
+  const getKoreanTeamName = useKoreanTeamName();
   // UI 상태 관리
   const [activeLeague, setActiveLeague] = useState(initialLeague);
   const [isMobile, setIsMobile] = useState(false);

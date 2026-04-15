@@ -9,7 +9,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useClickOutside } from '@/shared/hooks/useClickOutside'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
-import { type TeamMapping } from '@/domains/livescore/constants/teams'
+import { type TeamMapping } from '@/domains/boards/hooks/useEntityQueries'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
 import { ChevronLeft, Users, User } from 'lucide-react'
 import { Button, TabList, type TabItem } from '@/shared/components/ui'

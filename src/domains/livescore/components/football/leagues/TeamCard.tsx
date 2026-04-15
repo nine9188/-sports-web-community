@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -15,6 +15,7 @@ interface TeamCardProps {
 }
 
 export default function TeamCard({ team, teamLogoUrl }: TeamCardProps) {
+  const { getTeamById } = useTeamLeague();
   // 한국어 팀명 매핑
   const teamInfo = getTeamById(team.id);
   const displayName = teamInfo?.name_ko || team.name;

@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
-import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from './constants/standings';
 import Spinner from '@/shared/components/Spinner';
+import CupRoundsView from '@/domains/livescore/components/football/leagues/CupRoundsView';
+import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -27,6 +28,8 @@ interface StandingsProps {
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
   leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
+  // 컵 대회인 경우 라운드별 경기 데이터 (있으면 CupRoundsView 우선 렌더)
+  cupRoundsData?: CupRound[];
 }
 
 // 4590 표준: 팀 로고 컴포넌트 - 메모이제이션
@@ -57,7 +60,19 @@ const tableStyles = {
   formBadgeLoss: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
 };
 
-const Standings = memo(({ matchData: propsMatchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: StandingsProps) => {
+const Standings = memo(({ matchId, matchData: propsMatchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData }: StandingsProps) => {
+  const { getTeamDisplayName, getLeagueName } = useTeamLeague();
+  // 컵 대회면 순위표 대신 라운드별 경기 뷰 표시 (현재 경기 기준 ±1 펼침)
+  if (cupRoundsData && cupRoundsData.length > 0) {
+    const numericMatchId = parseInt(matchId, 10);
+    return (
+      <CupRoundsView
+        rounds={cupRoundsData}
+        currentMatchId={Number.isFinite(numericMatchId) ? numericMatchId : undefined}
+      />
+    );
+  }
+
   const router = useRouter();
 
   // 다크모드 감지

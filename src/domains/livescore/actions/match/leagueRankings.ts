@@ -4,7 +4,7 @@ import { cache } from 'react';
 import { PlayerRanking } from '@/domains/livescore/types/player';
 import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 interface ApiRankingItem {
@@ -54,7 +54,7 @@ async function fetchLeagueRankings(leagueId: number): Promise<LeagueRankingsData
   try {
     if (!leagueId) return empty;
 
-    const currentSeason = getCurrentSeasonForLeague(leagueId);
+    const currentSeason = await getCurrentSeasonForLeague(leagueId);
 
     // 득점/도움 순위 병렬 fetch
     const [scorersRes, assistsRes] = await Promise.all([

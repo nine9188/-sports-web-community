@@ -9,7 +9,7 @@
 import { useTransition } from 'react'
 import Image from 'next/image'
 import { ShopItem } from '../types'
-import { getTeamDisplayName, searchTeamsByName } from '@teams'
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { Button } from '@/shared/components/ui'
 
@@ -25,6 +25,7 @@ interface ItemCardProps {
 }
 
 export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: ItemCardProps) {
+  const { getTeamDisplayName, searchTeamsByName } = useTeamLeague()
   const [isPending, startTransition] = useTransition()
 
   // 4590 표준: teamLogoUrl이 있으면 사용, 없으면 item.image_url 또는 placeholder 사용

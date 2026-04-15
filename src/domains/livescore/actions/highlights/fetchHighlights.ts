@@ -5,7 +5,7 @@ import {
   LEAGUE_TO_KOREAN_CHANNEL,
   OFFICIAL_TEAM_CHANNELS,
 } from '@/domains/livescore/constants/youtube-channels';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamById, getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import type { HighlightMatchResult } from '@/domains/livescore/types/highlight';
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -68,10 +68,10 @@ const TEAM_NAME_ALIASES: Record<number, string[]> = {
 /**
  * 팀의 검색용 이름 반환 (가장 짧은 한글 별칭 우선)
  */
-function getSearchName(teamId: number): string {
+async function getSearchName(teamId: number): Promise<string> {
   const aliases = TEAM_NAME_ALIASES[teamId];
   if (aliases?.length) return aliases[0];
-  const team = getTeamById(teamId);
+  const team = await getTeamById(teamId);
   return team?.name_ko || team?.name_en || '';
 }
 
@@ -140,13 +140,14 @@ interface YouTubeSearchItem {
 /**
  * 검색 결과에서 하이라이트 영상 필터링
  */
-function findHighlightInResults(
+async function findHighlightInResults(
   items: YouTubeSearchItem[],
   homeTeamId: number,
   awayTeamId: number
-): YouTubeSearchItem | null {
-  const homeTeam = getTeamById(homeTeamId);
-  const awayTeam = getTeamById(awayTeamId);
+): Promise<YouTubeSearchItem | null> {
+  const teamMap = await getTeamsByIds([homeTeamId, awayTeamId]);
+  const homeTeam = teamMap[homeTeamId];
+  const awayTeam = teamMap[awayTeamId];
   if (!homeTeam || !awayTeam) return null;
 
   const homeNames = [
@@ -220,8 +221,8 @@ export async function findHighlightForMatch(
   leagueId: number,
   matchDate?: string
 ): Promise<HighlightMatchResult | null> {
-  const homeName = getSearchName(homeTeamId);
-  const awayName = getSearchName(awayTeamId);
+  const homeName = await getSearchName(homeTeamId);
+  const awayName = await getSearchName(awayTeamId);
 
   if (!homeName || !awayName) return null;
 
@@ -236,7 +237,7 @@ export async function findHighlightForMatch(
     const items = await searchYouTube(channel.channelId, query, 5, after, before);
 
     if (items) {
-      const match = findHighlightInResults(items, homeTeamId, awayTeamId);
+      const match = await findHighlightInResults(items, homeTeamId, awayTeamId);
       if (match) {
         return {
           videoId: match.id.videoId,
@@ -254,14 +255,15 @@ export async function findHighlightForMatch(
   const homeTeamChannelId = OFFICIAL_TEAM_CHANNELS[homeTeamId];
 
   if (homeTeamChannelId) {
-    const homeTeam = getTeamById(homeTeamId);
-    const awayTeam = getTeamById(awayTeamId);
+    const teamMap = await getTeamsByIds([homeTeamId, awayTeamId]);
+    const homeTeam = teamMap[homeTeamId];
+    const awayTeam = teamMap[awayTeamId];
     const engQuery = `${homeTeam?.name_en || ''} ${awayTeam?.name_en || ''} highlights`;
 
     const items = await searchYouTube(homeTeamChannelId, engQuery, 5, after, before);
 
     if (items) {
-      const match = findHighlightInResults(items, homeTeamId, awayTeamId);
+      const match = await findHighlightInResults(items, homeTeamId, awayTeamId);
       if (match) {
         return {
           videoId: match.id.videoId,

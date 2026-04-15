@@ -1,7 +1,7 @@
 'use server';
 
 import { unstable_cache } from 'next/cache';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 /**
  * 전체 게시글 개수 조회 (Suspense 스트리밍 전용)
@@ -17,7 +17,10 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 const _getTotalPostCountImpl = unstable_cache(
   async (): Promise<number> => {
     try {
-      const supabase = await getSupabaseServer();
+      // unstable_cache 안에서는 cookies()가 비어있어 익명 클라이언트가 되어
+      // RLS에 따라 count가 0으로 나올 수 있음.
+      // 전체글 개수는 공개 정보이므로 서비스 롤로 RLS를 우회해 집계.
+      const supabase = getSupabaseAdmin();
       const { count, error } = await supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
@@ -31,10 +34,7 @@ const _getTotalPostCountImpl = unstable_cache(
 
       return count ?? 0;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {
-        console.error('getTotalPostCount exception:', error);
-      }
+      console.error('getTotalPostCount exception:', error);
       return 0;
     }
   },

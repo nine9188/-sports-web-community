@@ -10,7 +10,7 @@ const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchEvent } from '@/domains/livescore/types/match';
-import { getLeagueName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container } from '@/shared/components/ui';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { PlayerKoreanNames } from './MatchPageClient';
@@ -85,6 +85,7 @@ interface MatchHeaderProps {
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
 const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = {}, leagueLogoUrl, leagueLogoDarkUrl }: MatchHeaderProps) => {
+  const { getLeagueName } = useTeamLeague();
   // initialData에서 데이터 추출
   const matchData = initialData.matchData;
   const eventsData = initialData.events;

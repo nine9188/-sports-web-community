@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
-import { getMajorLeagueIds, LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings'
-import { getTeamById } from '@teams'
+import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData'
+import { getTeamsByIds, getLeagueName } from '@/domains/livescore/actions/teamLeagueData'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
@@ -142,14 +142,15 @@ interface PredictionApiData {
 }
 
 // 팀 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
-function getTeamNameKo(teamId: number, fallbackName: string): string {
-  const team = getTeamById(teamId)
-  return team?.name_ko || fallbackName
+async function getTeamNameKo(teamId: number, fallbackName: string): Promise<string> {
+  const teamMap = await getTeamsByIds([teamId])
+  return teamMap[teamId]?.name_ko || fallbackName
 }
 
 // 리그 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
-function getLeagueNameKo(leagueId: number, fallbackName: string): string {
-  return LEAGUE_NAMES_MAP[leagueId] || fallbackName
+async function getLeagueNameKo(leagueId: number, fallbackName: string): Promise<string> {
+  const name = await getLeagueName(leagueId)
+  return name === '알 수 없는 리그' ? fallbackName : name
 }
 
 // API 라우트용 Supabase 클라이언트 생성
@@ -200,14 +201,14 @@ export async function fetchPredictionPreview(fixtureId: number): Promise<{
 }
 
 // Predictions 데이터를 게시글 형식으로 변환 (상세 버전)
-function formatPredictionContent(
+async function formatPredictionContent(
   prediction: PredictionApiData
-): string {
+): Promise<string> {
   const { predictions, comparison, teams, h2h } = prediction
   const homeTeam = teams.home
   const awayTeam = teams.away
-  const homeNameKo = getTeamNameKo(homeTeam.id, homeTeam.name)
-  const awayNameKo = getTeamNameKo(awayTeam.id, awayTeam.name)
+  const homeNameKo = await getTeamNameKo(homeTeam.id, homeTeam.name)
+  const awayNameKo = await getTeamNameKo(awayTeam.id, awayTeam.name)
 
   // 승률 예측
   const percentSection = `📊 승률 예측
@@ -234,7 +235,7 @@ function formatPredictionContent(
   // 예상 승자
   let winnerSection = ''
   if (predictions.winner?.name) {
-    const winnerNameKo = predictions.winner.id ? getTeamNameKo(predictions.winner.id, predictions.winner.name) : predictions.winner.name
+    const winnerNameKo = predictions.winner.id ? await getTeamNameKo(predictions.winner.id, predictions.winner.name) : predictions.winner.name
     winnerSection = `\n\n🏆 예상 승자: ${winnerNameKo}`
     if (predictions.winner.comment) {
       winnerSection += ` (${predictions.winner.comment})`
@@ -477,7 +478,7 @@ export async function getUpcomingMatches(date: string): Promise<{
     }
 
     // 메이저 리그 ID 목록 가져오기
-    const majorLeagueIds = getMajorLeagueIds()
+    const majorLeagueIds = await getMajorLeagueIds()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allMatches: UpcomingMatch[] = response.response.map((fixture: any) => ({
       id: fixture.fixture.id,
@@ -542,9 +543,9 @@ async function generateMatchPredictionPost(
   teamLogoMap: Record<number, string>,
   leagueLogoUrl: string
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
-  const homeNameKo = getTeamNameKo(match.teams.home.id, match.teams.home.name)
-  const awayNameKo = getTeamNameKo(match.teams.away.id, match.teams.away.name)
-  const leagueNameKo = getLeagueNameKo(league.id, league.name)
+  const homeNameKo = await getTeamNameKo(match.teams.home.id, match.teams.home.name)
+  const awayNameKo = await getTeamNameKo(match.teams.away.id, match.teams.away.name)
+  const leagueNameKo = await getLeagueNameKo(league.id, league.name)
 
   // 1. Predictions API 데이터 먼저 가져오기 (차트 + AI 텍스트 동일 데이터 소스)
   let predictionData: PredictionApiData | null = null

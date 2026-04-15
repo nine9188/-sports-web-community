@@ -3,9 +3,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi';
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad';
-import { getTeamById, type TeamMapping } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueLogoUrls, getTeamLogoUrls, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
+
+// 기존 TeamMapping 타입 호환 (legacy callers may still import this name)
+export interface TeamMapping {
+  id: number;
+  name_ko: string;
+  name_en: string;
+  country_ko?: string | null;
+  country_en?: string | null;
+  code?: string | null;
+  logo?: string;
+}
 
 // Query Keys
 export const entityKeys = {
@@ -68,6 +79,7 @@ export function useLeagueLogos(leagueIds: number[]) {
  * - 4590 표준: 팀 로고 Storage URL 포함
  */
 export function useLeagueTeams(leagueId: number | null) {
+  const { getTeamById } = useTeamLeague();
   const query = useQuery({
     queryKey: entityKeys.leagueTeams(leagueId ?? 0),
     queryFn: async (): Promise<LeagueTeamsResult> => {
@@ -85,7 +97,7 @@ export function useLeagueTeams(leagueId: number | null) {
           country_ko: localTeam?.country_ko,
           country_en: localTeam?.country_en,
           code: localTeam?.code,
-          logo: apiTeam.logo
+          logo: apiTeam.logo,
         };
       });
 

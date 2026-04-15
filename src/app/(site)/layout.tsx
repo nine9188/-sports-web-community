@@ -5,6 +5,8 @@ import { RightSidebar } from '@/domains/sidebar/components';
 import { getBoardsForNavigation } from '@/domains/layout/actions';
 import TotalPostCountValue from '@/domains/layout/components/TotalPostCountValue';
 import SiteLayoutClient from './SiteLayoutClient';
+import { TeamLeagueProvider } from '@/shared/context/TeamLeagueContext';
+import { getAllTeams, getAllLeagues } from '@/domains/livescore/actions/teamLeagueData';
 
 /**
  * Suspense fallback: 우측 사이드바 (CLS 방지용 빈 영역)
@@ -50,7 +52,11 @@ export default async function SiteLayout({
   const isBot = headersList.get('x-is-bot') === '1';
 
   // 캐시 히트 시 < 1ms — 블로킹 비용 거의 없음
-  const headerBoardsData = await getBoardsForNavigation();
+  const [headerBoardsData, teams, leagues] = await Promise.all([
+    getBoardsForNavigation(),
+    getAllTeams(),
+    getAllLeagues(),
+  ]);
 
   // 헤더/모바일 메뉴/사이드바에서 공유하는 count 스트리밍 슬롯
   const totalPostCountSlot = <TotalPostCountStreamingSlot />;
@@ -64,7 +70,7 @@ export default async function SiteLayout({
   );
 
   return (
-    <>
+    <TeamLeagueProvider teams={teams} leagues={leagues}>
       <SiteLayoutClient
         boardNavigation={boardNav}
         rightSidebar={
@@ -82,6 +88,6 @@ export default async function SiteLayout({
       >
         {children}
       </SiteLayoutClient>
-    </>
+    </TeamLeagueProvider>
   );
 }

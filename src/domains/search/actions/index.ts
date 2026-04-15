@@ -6,7 +6,7 @@ import { searchComments } from './searchComments'
 import { searchTeams, getPopularTeams, getTeamCountByLeague } from './searchTeams'
 import { createSearchLog } from './searchLogs'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
-import { searchTeamsByName } from '@/domains/livescore/constants/teams'
+import { searchTeamsByName } from '@/domains/livescore/actions/teamLeagueData'
 import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
 
 /**
@@ -257,7 +257,7 @@ async function getTeamsCount(query: string): Promise<number> {
     const searchTerm = query.trim().toLowerCase()
 
     // 한국어 매핑에서 검색하여 해당하는 팀 ID들 찾기 (searchTeams와 동일한 로직)
-    const mappedTeams = searchTeamsByName(query)
+    const mappedTeams = await searchTeamsByName(query)
     const mappedTeamIds = mappedTeams.map(team => team.id)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,5 @@
 import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { getLeaguesByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';
 import { Container } from '@/shared/components/ui';
 import LeagueToggleClient from './LeagueToggleClient';
@@ -24,11 +24,11 @@ function getKickoffTime(dateString?: string): string | undefined {
 }
 
 // 경기 데이터를 Match 타입으로 변환
-function convertToMatch(
+async function convertToMatch(
   match: FootballMatchData,
   dateLabel: 'yesterday' | 'today' | 'tomorrow'
-): WidgetMatch {
-  const names = resolveMatchNames(match);
+): Promise<WidgetMatch> {
+  const names = await resolveMatchNames(match);
 
   return {
     id: String(match.id),
@@ -54,28 +54,31 @@ function convertToMatch(
 }
 
 // 리그별로 경기를 그룹화하는 함수
-function groupMatchesByLeague(
+async function groupMatchesByLeague(
   matches: FootballMatchData[],
   dateLabel: 'yesterday' | 'today' | 'tomorrow' = 'today'
-): WidgetLeague[] {
+): Promise<WidgetLeague[]> {
   const leagueMap = new Map<number, { matches: WidgetMatch[]; firstMatch: FootballMatchData }>();
 
-  matches.forEach(match => {
-    if (!match.league?.id) return;
+  for (const match of matches) {
+    if (!match.league?.id) continue;
     const leagueId = match.league.id;
 
     if (!leagueMap.has(leagueId)) {
       leagueMap.set(leagueId, { matches: [], firstMatch: match });
     }
-    leagueMap.get(leagueId)!.matches.push(convertToMatch(match, dateLabel));
-  });
+    leagueMap.get(leagueId)!.matches.push(await convertToMatch(match, dateLabel));
+  }
+
+  const leagueIds = Array.from(leagueMap.keys());
+  const leagueInfoMap = leagueIds.length > 0 ? await getLeaguesByIds(leagueIds) : {};
 
   return Array.from(leagueMap.entries()).map(([leagueId, { matches: leagueMatches, firstMatch }]) => {
-    const leagueInfo = getLeagueById(leagueId);
+    const leagueInfo = leagueInfoMap[leagueId];
 
     return {
       id: String(leagueId),
-      name: leagueInfo?.nameKo || firstMatch.league?.name || '리그',
+      name: leagueInfo?.name_ko || firstMatch.league?.name || '리그',
       icon: '⚽',
       logo: firstMatch.league?.logo,
       logoDark: firstMatch.league?.logoDark,
@@ -98,6 +101,7 @@ const BIG_MATCH_LEAGUES = [
   531, // UEFA 슈퍼컵
   45,  // FA컵
   292, // K리그1
+  293, // K리그2
   10,  // 국가대표 친선경기
 ];
 
@@ -114,6 +118,7 @@ const LEAGUE_PRIORITY: Record<number, number> = {
   848: 6,  // 컨퍼런스리그
   531: 7,  // UEFA 슈퍼컵
   292: 8,  // K리그1
+  293: 8.5, // K리그2
   10: 9,   // 국가대표 친선경기
 };
 
@@ -121,13 +126,13 @@ const LEAGUE_PRIORITY: Record<number, number> = {
  * TodayMatchesResult → 위젯용 League[] 변환
  * bigMatch 리그만 필터링 + 오늘 경기를 리그별로 그룹화
  */
-export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeague[] {
+export async function transformToWidgetLeagues(result: TodayMatchesResult): Promise<WidgetLeague[]> {
   if (!result.success || !result.data) return [];
 
   const todayMatches = (result.data.today?.matches || [])
     .filter(m => BIG_MATCH_LEAGUES.includes(m.league?.id || 0));
 
-  const leagues = groupMatchesByLeague(todayMatches, 'today');
+  const leagues = await groupMatchesByLeague(todayMatches, 'today');
 
   // 우선순위 정렬
   leagues.sort((a, b) => {
@@ -224,7 +229,7 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
  */
 export async function LiveScoreWidgetStreaming() {
   const todayData = await fetchTodayMatches();
-  const leagues = transformToWidgetLeagues(todayData);
+  const leagues = await transformToWidgetLeagues(todayData);
 
   return (
     <>

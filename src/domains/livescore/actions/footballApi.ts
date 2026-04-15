@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from '../constants/league-mappings';
+import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from './teamLeagueData';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
@@ -344,7 +344,7 @@ async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
 
     if (!data.response) return [];
 
-    const majorLeagueIds = getMajorLeagueIds();
+    const majorLeagueIds = await getMajorLeagueIds();
     const filteredApiMatches = data.response.filter(
       (match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0)
     );
@@ -729,7 +729,7 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
     const seasonYear = parseInt(season);
 
     // 캘린더 시즌 리그 (K리그, MLS, J리그, 브라질레이로 등)
-    if (isCalendarSeasonLeague(leagueId)) {
+    if (await isCalendarSeasonLeague(leagueId)) {
       // 현재 연도 시즌은 진행 중, 이전 연도 시즌은 완료
       return seasonYear < currentYear;
     }
@@ -749,7 +749,7 @@ async function isSeasonCompleted(leagueId: string, season: string = '2024'): Pro
 export async function fetchLeagueTeams(leagueId: string): Promise<LeagueTeam[]> {
   try {
     // 리그별 현재 시즌 동적 계산 (캘린더 시즌 리그 vs 유럽식 시즌 리그)
-    const season = String(getCurrentSeasonForLeague(leagueId));
+    const season = String(await getCurrentSeasonForLeague(leagueId));
 
     // 시즌 완료 여부 확인
     const seasonCompleted = await isSeasonCompleted(leagueId, season);

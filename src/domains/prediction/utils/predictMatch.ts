@@ -50,7 +50,7 @@ async function getTeamMainLeague(teamId: number, season: number): Promise<number
     // 1순위: 국내 메이저 리그
     const domesticLeague = leagues.find((l: any) => 
       l.league.type === 'League' && 
-      [39, 140, 78, 135, 61, 94, 88, 292, 98, 307].includes(l.league.id) // 주요 리그 ID들
+      [39, 140, 78, 135, 61, 94, 88, 292, 293, 98, 307].includes(l.league.id) // 주요 리그 ID들
     )
     
     if (domesticLeague) {

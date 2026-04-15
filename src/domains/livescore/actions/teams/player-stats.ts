@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // 선수 통계 인터페이스
@@ -75,7 +75,7 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
     }
 
     // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
-    let currentSeason = getCurrentSeasonForLeague(leagueId ? Number(leagueId) : 39);
+    let currentSeason = await getCurrentSeasonForLeague(leagueId ? Number(leagueId) : 39);
     const previousSeason = currentSeason - 1;
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
@@ -108,11 +108,11 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
 
           if (mainLeague) {
             leagueId = String(mainLeague.league.id);
-            currentSeason = getCurrentSeasonForLeague(mainLeague.league.id);
+            currentSeason = await getCurrentSeasonForLeague(mainLeague.league.id);
             break;
           } else if (leagues.length > 0) {
             leagueId = String(leagues[0].league.id);
-            currentSeason = getCurrentSeasonForLeague(leagues[0].league.id);
+            currentSeason = await getCurrentSeasonForLeague(leagues[0].league.id);
             break;
           }
         } catch {

@@ -25,6 +25,7 @@ export const LEAGUE_IDS = {
   
   // 아시아 리그
   K_LEAGUE_1: 292,         // K리그1
+  K_LEAGUE_2: 293,         // K리그2
   J_LEAGUE_1: 98,          // J1리그
   CHINESE_SUPER_LEAGUE: 169, // 중국 슈퍼리그
   SAUDI_PRO_LEAGUE: 307,   // 사우디 프로리그
@@ -336,7 +337,7 @@ export const STANDINGS_LEGENDS: Record<string, CompetitionLegend> = {
 
   // 🇰🇷 K리그1
   kLeague1: {
-    conditions: ['k league', 'k-league', 'korea'],
+    conditions: ['k league 1', 'k-league-1', 'korea'],
     items: [
       {
         condition: 'champions league',
@@ -352,6 +353,23 @@ export const STANDINGS_LEGENDS: Record<string, CompetitionLegend> = {
         condition: 'relegation',
         color: 'bg-red-500',
         label: '강등 (12위)'
+      }
+    ]
+  },
+
+  // 🇰🇷 K리그2
+  kLeague2: {
+    conditions: ['k league 2', 'k-league-2'],
+    items: [
+      {
+        condition: 'promotion',
+        color: 'bg-green-600',
+        label: 'K리그1 자동 승격 (1위)'
+      },
+      {
+        condition: 'promotion play-off',
+        color: 'bg-green-400',
+        label: '승격 플레이오프 (2~5위)'
       }
     ]
   },

@@ -4,25 +4,28 @@ import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 /**
- * 게시판용 teams 테이블 (football_teams와 별개)
- * - 128개, 144KB
+ * 게시판용 팀 데이터 (football_teams 사용 — name_ko 우선, 없으면 name)
  * - 7일 캐시
  */
 const _getCachedAllTeamsImpl = unstable_cache(
   async () => {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
-      .from('teams')
-      .select('id, name');
+      .from('football_teams')
+      .select('team_id, name, name_ko')
+      .not('name_ko', 'is', null);
 
     if (error) {
       console.error('getCachedAllTeams error:', error);
       return [];
     }
-    return data || [];
+    return (data || []).map((row: { team_id: number; name: string | null; name_ko: string | null }) => ({
+      id: row.team_id,
+      name: row.name_ko ?? row.name ?? '',
+    }));
   },
-  ['all-teams'],
-  { revalidate: 604800, tags: ['teams'] }
+  ['all-teams-football'],
+  { revalidate: 604800, tags: ['football-teams', 'teams'] }
 );
 
 export async function getCachedAllTeams() {
@@ -30,8 +33,8 @@ export async function getCachedAllTeams() {
 }
 
 /**
- * 게시판용 leagues 테이블 (football_leagues와 별개)
- * - 9개, 32KB
+ * 게시판용 leagues 테이블
+ * - 36개, 한글명 포함
  * - 7일 캐시
  */
 const _getCachedAllLeaguesImpl = unstable_cache(
@@ -39,13 +42,16 @@ const _getCachedAllLeaguesImpl = unstable_cache(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('leagues')
-      .select('id, name');
+      .select('id, name, name_ko');
 
     if (error) {
       console.error('getCachedAllLeagues error:', error);
       return [];
     }
-    return data || [];
+    return (data || []).map((row: { id: number; name: string | null; name_ko: string | null }) => ({
+      id: row.id,
+      name: row.name_ko ?? row.name ?? '',
+    }));
   },
   ['all-leagues'],
   { revalidate: 604800, tags: ['leagues'] }

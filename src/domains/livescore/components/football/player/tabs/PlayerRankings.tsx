@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, TabList } from '@/shared/components/ui';
 import { EmptyState } from '@/domains/livescore/components/common';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
 // 4590 표준: placeholder URLs
@@ -31,6 +31,7 @@ export default function PlayerRankings({
   teamLogoUrls = {},
 }: PlayerRankingsProps) {
   const router = useRouter();
+  const { getTeamById } = useTeamLeague();
 
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;

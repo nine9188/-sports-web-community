@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from '@/domains/livescore/components/football/match/tabs/constants/standings';
 
 // 4590 표준: placeholder 상수
@@ -135,6 +135,7 @@ const getLegendForLeague = (leagueId: number) => {
 
 const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: LeagueStandingsTableProps) => {
   const router = useRouter();
+  const { getTeamDisplayName } = useTeamLeague();
 
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);

@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -70,6 +70,7 @@ export function MatchInfoSection({
   teamLogoUrls?: Record<number, string>;
 }) {
   const pathname = usePathname();
+  const { getTeamById } = useTeamLeague();
   const [matchData, setMatchData] = useState<MatchDataType | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
 

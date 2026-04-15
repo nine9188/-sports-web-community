@@ -2,17 +2,16 @@
 
 import { cache } from 'react';
 import { StandingsData } from '../types';
-import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
-// 리그 ID 매핑
+// 사이드바에서 표시하는 5대 리그 ID 매핑 (API-Football ID)
 const LEAGUE_IDS: Record<string, number> = {
-  premier: MAJOR_LEAGUE_IDS.PREMIER_LEAGUE,    // 프리미어 리그
-  laliga: MAJOR_LEAGUE_IDS.LA_LIGA,            // 라리가
-  bundesliga: MAJOR_LEAGUE_IDS.BUNDESLIGA,      // 분데스리가
-  serieA: MAJOR_LEAGUE_IDS.SERIE_A,            // 세리에 A
-  ligue1: MAJOR_LEAGUE_IDS.LIGUE_1             // 리그 1
+  premier: 39,
+  laliga: 140,
+  bundesliga: 78,
+  serieA: 135,
+  ligue1: 61,
 };
 
 /**

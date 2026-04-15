@@ -1,7 +1,7 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
-import { getTeamById } from '@/domains/livescore/constants/teams'
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData'
 
 export interface PlayerSearchResult {
   id: string
@@ -99,10 +99,14 @@ export async function searchPlayers(options: PlayerSearchOptions): Promise<{
       throw new Error('선수 검색 중 오류가 발생했습니다')
     }
 
+    // 팀 한국어 이름 일괄 조회
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const teamIds = Array.from(new Set((players || []).map((p: any) => p.team_id).filter(Boolean))) as number[]
+    const teamMap = await getTeamsByIds(teamIds)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playersWithKorean = (players || []).map((player: any) => {
-      // 팀 한국어 이름 매핑
-      const teamMapping = getTeamById(player.team_id)
+      const teamMapping = teamMap[player.team_id]
 
       return {
         ...player,
@@ -191,9 +195,14 @@ export async function getPopularPlayers(limit: number = 12): Promise<PlayerSearc
       return []
     }
 
+    // 팀 한국어 이름 일괄 조회
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const teamIds2 = Array.from(new Set((players || []).map((p: any) => p.team_id).filter(Boolean))) as number[]
+    const teamMap2 = await getTeamsByIds(teamIds2)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (players || []).map((player: any) => {
-      const teamMapping = getTeamById(player.team_id)
+      const teamMapping = teamMap2[player.team_id]
 
       return {
         ...player,

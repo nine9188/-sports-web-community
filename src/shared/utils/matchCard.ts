@@ -8,8 +8,6 @@
  */
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
 
 /**
  * 다크모드 전용 이미지가 있는 리그 ID 목록
@@ -265,17 +263,12 @@ export function generateMatchCardHtml(
   const homeScore = goals.home !== null ? goals.home : '-';
   const awayScore = goals.away !== null ? goals.away : '-';
 
-  // 한글 팀명 매핑
-  const homeTeamId = typeof homeTeam.id === 'string' ? parseInt(homeTeam.id, 10) : homeTeam.id;
-  const awayTeamId = typeof awayTeam.id === 'string' ? parseInt(awayTeam.id, 10) : awayTeam.id;
-  const homeTeamMapping = homeTeamId ? getTeamById(homeTeamId) : undefined;
-  const awayTeamMapping = awayTeamId ? getTeamById(awayTeamId) : undefined;
-  const homeTeamName = homeTeamMapping?.name_ko || homeTeam.name;
-  const awayTeamName = awayTeamMapping?.name_ko || awayTeam.name;
-
-  // 한글 리그명 매핑
-  const leagueId = typeof league.id === 'string' ? parseInt(league.id, 10) : league.id;
-  const leagueName = (leagueId && LEAGUE_NAMES_MAP[leagueId]) || league.name;
+  // 한글명: matchData에 이미 포함된 값 우선 (작성 시점에 createMatchCardData 등에서 한글명 채워줌)
+  // - 매치 카드 생성/저장 흐름에서 home.name, away.name, league.name 자체에 한글명을 넣어 둠
+  // - 본 함수는 단일 소스(DB) 조회 의존성 제거를 위해 추가 lookup을 하지 않음
+  const homeTeamName = homeTeam.name;
+  const awayTeamName = awayTeam.name;
+  const leagueName = league.name;
 
   // 이미지 URL 생성
   const leagueImages = getImageUrls(league.logo, league.id, 'leagues');

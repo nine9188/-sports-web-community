@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getLeagueById } from '../../constants/league-mappings';
+import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 순위 데이터 응답 타입 정의
@@ -43,7 +43,7 @@ export interface StandingsDataResponse {
   error?: string;
 }
 
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 /**
  * 특정 리그의 순위 데이터를 가져오는 서버 액션
@@ -54,7 +54,7 @@ import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-
 export async function fetchLeagueStandings(leagueId: number, season?: number): Promise<StandingsDataResponse> {
   try {
     // 시즌이 제공되지 않으면 리그별 현재 시즌 계산
-    const targetSeason = season || getCurrentSeasonForLeague(leagueId);
+    const targetSeason = season || await getCurrentSeasonForLeague(leagueId);
 
     if (!leagueId) {
       throw new Error('리그 ID가 필요합니다');
@@ -72,9 +72,9 @@ export async function fetchLeagueStandings(leagueId: number, season?: number): P
     
     // 한국어 리그 이름 추가
     if (data.response[0]?.league?.id) {
-      const leagueInfo = getLeagueById(data.response[0].league.id);
+      const leagueInfo = await getLeagueById(data.response[0].league.id);
       if (leagueInfo) {
-        data.response[0].league.name_ko = leagueInfo.nameKo;
+        data.response[0].league.name_ko = leagueInfo.name_ko;
       }
     }
     

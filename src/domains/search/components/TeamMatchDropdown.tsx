@@ -4,8 +4,7 @@ import { useState, useCallback } from 'react'
 import type { TeamSearchResult } from '../types'
 // 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
 import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
-import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
-import { getTeamById } from '@/domains/livescore/constants/teams'
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
@@ -215,6 +214,7 @@ export default TeamMatchDropdownButton
 
 // 개별 매치 아이템 컴포넌트
 function MatchItem({ match, teamId, teamLogoUrls = {} }: { match: Match; teamId: number; teamLogoUrls?: Record<number, string> }) {
+  const { getLeagueName, getTeamById } = useTeamLeague()
   const isHome = match.teams.home.id === teamId
   const opponent = isHome ? match.teams.away : match.teams.home
   const teamScore = isHome ? match.goals.home : match.goals.away

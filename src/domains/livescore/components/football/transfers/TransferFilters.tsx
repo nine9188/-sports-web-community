@@ -10,7 +10,7 @@ import {
   NativeSelect,
   Button
 } from '@/shared/components/ui';
-import { getTeamsByLeagueId } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 const LEAGUE_OPTIONS = [
   { value: '', label: '리그를 선택하세요' },
@@ -51,6 +51,7 @@ interface TransferFiltersProps {
 export default function TransferFilters({ currentFilters }: TransferFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getTeamsByLeagueId } = useTeamLeague();
   const [isOpen, setIsOpen] = useState(true);
 
   // 모바일에서는 접힌 상태로 시작, 데스크탑에서는 펼친 상태로 시작

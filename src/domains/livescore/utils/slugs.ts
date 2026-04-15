@@ -58,6 +58,7 @@ export const LEAGUE_SLUGS: Record<number, string> = {
   81: 'dfb-pokal',
   // 아시아
   292: 'k-league-1',
+  293: 'k-league-2',
   98: 'j1-league',
   169: 'chinese-super-league',
   17: 'afc-champions-league',

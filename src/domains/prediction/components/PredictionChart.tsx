@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
-import { getTeamById } from '@teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 시간대별 통계 타입
 interface MinuteStats {
@@ -133,9 +133,10 @@ function normalizeValue(value: number | undefined, maxExpected: number): number 
 }
 
 // 팀 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
-function getTeamNameKo(teamId: number, fallbackName: string): string {
-  const team = getTeamById(teamId);
-  return team?.name_ko || fallbackName;
+// Context 기반 lookup — useTeamLeague에서 가져온 lookup 함수를 클로저로 받음
+function useTeamNameKo(): (teamId: number, fallbackName: string) => string {
+  const { getTeamById } = useTeamLeague();
+  return (teamId: number, fallbackName: string) => getTeamById(teamId)?.name_ko || fallbackName;
 }
 
 // W/D/L 배지 컴포넌트
@@ -244,6 +245,7 @@ function GoalsByMinuteCompact({ scoredMinute, concededMinute }: { scoredMinute?:
 
 // 팀 상세 카드 컴포넌트 (간소화)
 function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label: string; predictedGoals?: string }) {
+  const getTeamNameKo = useTeamNameKo();
   const league = team.league;
   const teamNameKo = getTeamNameKo(team.id, team.name);
 
@@ -487,6 +489,7 @@ export default function PredictionChart({
   showH2H = true,
   compact = false,
 }: PredictionChartProps) {
+  const getTeamNameKo = useTeamNameKo();
   const { predictions, comparison, teams, h2h } = data;
 
   // 팀 이름 한국어

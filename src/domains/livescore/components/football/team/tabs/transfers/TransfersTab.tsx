@@ -13,7 +13,7 @@ import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../../TeamPageClient';
 
 const ITEMS_PER_PAGE = 20;
@@ -56,13 +56,13 @@ function formatType(type: string): string {
   return type.trim();
 }
 
-/** 팀 한글명 (매핑 없으면 원본 반환) */
-function teamName(id: number, fallback: string): string {
-  const display = getTeamDisplayName(id);
-  return display.startsWith('팀 ') ? fallback : display;
-}
-
 export default function TransfersTab({ transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
+  const { getTeamDisplayName } = useTeamLeague();
+  /** 팀 한글명 (매핑 없으면 원본 반환) */
+  const teamName = (id: number, fallback: string): string => {
+    const display = getTeamDisplayName(id);
+    return display.startsWith('팀 ') ? fallback : display;
+  };
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;

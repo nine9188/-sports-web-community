@@ -5,7 +5,7 @@ import Image from 'next/image';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { ContainerHeader, ContainerContent } from '@/shared/components/ui';
 
 // 4590 표준: placeholder 상수
@@ -20,6 +20,7 @@ interface LeagueHeaderProps {
 }
 
 export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark, boardSlug }: LeagueHeaderProps) {
+  const { getLeagueById, formatSeasonLabel } = useTeamLeague();
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
 
@@ -39,7 +40,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
   }, []);
   // 한국어 리그명 매핑
   const leagueInfo = getLeagueById(league.id);
-  const displayName = leagueInfo?.nameKo || league.name;
+  const displayName = leagueInfo?.name_ko || league.name;
 
   return (
     <>
@@ -102,7 +103,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
               <div className="flex items-center text-xs text-gray-700 dark:text-gray-300">
                 <span className="font-medium">{league.country}</span>
                 <span className="mx-1">•</span>
-                <span className="font-medium">{league.season} 시즌</span>
+                <span className="font-medium">{formatSeasonLabel(league.season, league.id)}</span>
                 {league.type && (
                   <>
                     <span className="mx-1">•</span>

@@ -12,8 +12,7 @@ import Link from 'next/link';
 import { Trophy, Users } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
-import { getLeagueKoreanName, getLeagueName } from '@/domains/livescore/constants/league-mappings';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -92,6 +91,7 @@ const MatchItem = React.memo(function MatchItem({
   homeTeamLogoUrl,
   awayTeamLogoUrl,
 }: MatchItemProps) {
+  const { getLeagueName, getLeagueKoreanName, getTeamById } = useTeamLeague();
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
   const isFinished = ['FT', 'AET', 'PEN'].includes(match.status?.code || '');
 

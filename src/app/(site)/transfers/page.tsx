@@ -2,7 +2,7 @@ import { Container, ContainerHeader } from '@/shared/components/ui';
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { getTeamsByLeagueId } from '@/domains/livescore/constants/teams';
+import { getTeamsByLeagueId } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
@@ -38,7 +38,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
   // 기본 팀: 해당 리그의 가나다순 첫 번째 팀
   let defaultTeam: number | undefined;
   if (!params.team && !params.league) {
-    const teams = getTeamsByLeagueId(leagueId);
+    const teams = await getTeamsByLeagueId(leagueId);
     const sorted = [...teams].sort((a, b) => (a.name_ko || a.name_en).localeCompare(b.name_ko || b.name_en, 'ko'));
     defaultTeam = sorted[0]?.id;
   }

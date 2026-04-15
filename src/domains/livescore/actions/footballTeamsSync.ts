@@ -1,7 +1,8 @@
 'use server'
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
-import { getLeagueName, getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings'
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData'
+import { getLeagueName } from '@/domains/livescore/actions/teamLeagueData'
 import { CUP_LEAGUE_IDS, LEAGUE_IDS } from '@/domains/search/constants/leagues'
 
 const API_BASE_URL = 'https://v3.football.api-sports.io'
@@ -81,7 +82,7 @@ type SupabaseClient = Awaited<ReturnType<typeof createAdminClient>>
 // 실제 API에서 리그 데이터 가져오기 (리그별 현재 시즌)
 async function fetchRawLeagueData(leagueId: number) {
   try {
-    const season = String(getCurrentSeasonForLeague(leagueId))
+    const season = String(await getCurrentSeasonForLeague(leagueId))
 
     const [teamsResponse, standingsResponse] = await Promise.all([
       fetch(`${API_BASE_URL}/teams?league=${leagueId}&season=${season}`, {
@@ -116,7 +117,7 @@ async function fetchRawLeagueData(leagueId: number) {
   } catch (error) {
     return {
       leagueId,
-      season: String(getCurrentSeasonForLeague(leagueId)),
+      season: String(await getCurrentSeasonForLeague(leagueId)),
       error: error instanceof Error ? error.message : '알 수 없는 오류',
       teams: [],
       standings: []
@@ -132,7 +133,7 @@ async function saveTeamToDatabase(
   season: string,
   standing?: ApiStanding
 ) {
-  const leagueName = getLeagueName(leagueId)
+  const leagueName = await getLeagueName(leagueId)
   
   const teamData = {
     team_id: team.team.id,
@@ -227,7 +228,7 @@ export async function syncAllFootballTeamsFromApi(): Promise<{
         // 각 팀 저장
         for (const team of rawData.teams) {
           const standing = standingsMap.get(team.team.id)
-          await saveTeamToDatabase(supabase, team, leagueId, rawData.season || String(getCurrentSeasonForLeague(leagueId)), standing)
+          await saveTeamToDatabase(supabase, team, leagueId, rawData.season || String(await getCurrentSeasonForLeague(leagueId)), standing)
         }
 
         totalTeams += rawData.teams.length

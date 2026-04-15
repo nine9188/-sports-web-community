@@ -13,7 +13,7 @@ import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/typ
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import Spinner from '@/shared/components/Spinner';
 
 /**
@@ -127,6 +127,8 @@ interface TabContentProps {
   homeBoardSlug?: string | null;
   awayBoardSlug?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
+  // 컵 대회면 순위 탭에서 사용할 라운드별 경기 목록
+  cupRoundsData?: import('@/domains/livescore/actions/match/cupFixtures').CupRound[];
 }
 
 /**
@@ -135,7 +137,8 @@ interface TabContentProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, homeBoardSlug, awayBoardSlug, playerKoreanNames = {} }: TabContentProps) {
+export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, homeBoardSlug, awayBoardSlug, playerKoreanNames = {}, cupRoundsData }: TabContentProps) {
+  const { getTeamById } = useTeamLeague();
   // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData, teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl } = initialData;
 
@@ -207,7 +210,18 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
         ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={matchPlayerStats} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />
         : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
 
-    case 'standings':
+    case 'standings': {
+      // 컵 대회면 순위표 대신 라운드별 경기 뷰 렌더
+      if (cupRoundsData && cupRoundsData.length > 0) {
+        return (
+          <Standings
+            matchData={{ standings: null, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }}
+            matchId={matchId}
+            cupRoundsData={cupRoundsData}
+          />
+        );
+      }
+
       // 리그 로고 URL을 Record 형식으로 변환 (standings에서 리그 ID로 조회)
       const leagueId = standings?.standings?.league?.id;
       const leagueLogoUrls = leagueId && leagueLogoUrl ? { [leagueId]: leagueLogoUrl } : {};
@@ -215,6 +229,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
       return standings
         ? <Standings matchData={{ standings, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} teamLogoUrls={teamLogoUrls} leagueLogoUrls={leagueLogoUrls} leagueLogoDarkUrls={leagueLogoDarkUrls} />
         : <EmptyState title="순위 없음" message="이 리그의 순위 정보를 찾을 수 없습니다." />;
+    }
 
     case 'power':
       return initialPowerData && homeTeam && awayTeam

@@ -7,8 +7,7 @@ import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { InjuryData } from '@/domains/livescore/types/player';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -24,6 +23,7 @@ export default function PlayerInjuries({
   injuriesData = [],
   teamLogoUrls = {}
 }: PlayerInjuriesProps) {
+  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
   const getTeamLogo = (teamId: number) => teamLogoUrls[teamId] || TEAM_PLACEHOLDER;
 

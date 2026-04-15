@@ -1,16 +1,9 @@
 import { fetchStandingsData } from '../../actions/football';
 import LeagueStandings from './LeagueStandings';
 import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
-import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
 
-// 5대 리그 API IDs
-const LEAGUE_API_IDS = [
-  MAJOR_LEAGUE_IDS.PREMIER_LEAGUE,  // 39
-  MAJOR_LEAGUE_IDS.LA_LIGA,         // 140
-  MAJOR_LEAGUE_IDS.BUNDESLIGA,      // 78
-  MAJOR_LEAGUE_IDS.SERIE_A,         // 135
-  MAJOR_LEAGUE_IDS.LIGUE_1,         // 61
-];
+// 5대 리그 API-Football IDs
+const LEAGUE_API_IDS = [39, 140, 78, 135, 61];
 
 interface ServerLeagueStandingsProps {
   initialLeague?: string;

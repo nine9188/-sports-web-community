@@ -100,10 +100,28 @@ export async function fetchMatchFullData(
         cachedResponse.leagueLogoDarkUrl = darkUrl;
       }
 
-      // venue 복원: 경량 캐시에서 matchData 재구성
+      // matchData 재구성: 저장 시 통째로 제거됐으므로, transformed `match`에서 복원
+      // MatchHeader가 matchData.fixture/league/teams/goals를 사용하므로 모두 채워야 함
       const cachedVenue = (cachedResponse as any).venue;
-      if (cachedVenue && !cachedResponse.matchData) {
-        cachedResponse.matchData = { fixture: { venue: cachedVenue } } as Record<string, unknown>;
+      if (!cachedResponse.matchData && cachedResponse.match) {
+        const m = cachedResponse.match;
+        cachedResponse.matchData = {
+          fixture: {
+            id: m.id,
+            date: m.time?.date,
+            timestamp: m.time?.timestamp,
+            timezone: m.time?.timezone,
+            status: {
+              short: m.status?.code,
+              long: m.status?.name,
+              elapsed: m.status?.elapsed,
+            },
+            ...(cachedVenue ? { venue: cachedVenue } : {}),
+          },
+          league: m.league,
+          teams: m.teams,
+          goals: m.goals,
+        } as unknown as Record<string, unknown>;
       }
 
       // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴

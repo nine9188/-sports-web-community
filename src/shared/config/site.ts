@@ -7,6 +7,17 @@
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
 
+// 테스트 로고 후보 — 아래 인덱스를 바꿔서 하나씩 확인
+// 0: 163522 / 1: 163530 / 2: 163536 / 3: 163547
+export const logoOptions = [
+  '/test/스크린샷_2026-04-15_163522-removebg-preview.png',
+  '/test/스크린샷_2026-04-15_163530-removebg-preview.png',
+  '/test/스크린샷_2026-04-15_163536-removebg-preview.png',
+  '/test/스크린샷_2026-04-15_163547-removebg-preview.png',
+] as const;
+
+const logoVariant = 1;
+
 export const siteConfig = {
   // 기본 설정
   url: siteUrl,
@@ -17,7 +28,8 @@ export const siteConfig = {
   twitterHandle: '@4590football',
 
   // 로고 및 이미지
-  logo: '/logo/4590football-logo-test.png',
+  logo: logoOptions[logoVariant],
+  logoOptions,
   defaultOgImage: `${siteUrl}/og-image.png`,
 
   // URL 빌더

@@ -4,7 +4,7 @@ import { refreshLeagueTransferCache } from '@/domains/livescore/actions/transfer
 // Tier 1~3 리그 목록
 const CACHED_LEAGUES = [
   39, 140, 135, 78, 61,     // Tier 1: 5대 리그
-  292, 40, 88, 94,           // Tier 2: K리그, 챔피언십, 에레디비시, 포르투갈리가
+  292, 293, 40, 88, 94,      // Tier 2: K리그1, K리그2, 챔피언십, 에레디비시, 포르투갈리가
   98, 253, 307, 71,          // Tier 3: J리그, MLS, 사우디, 브라질레이랑
 ];
 

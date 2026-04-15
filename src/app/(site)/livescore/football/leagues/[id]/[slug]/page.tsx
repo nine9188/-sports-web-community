@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standingsData';
-import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection } from '@/domains/livescore/components/football/leagues';
+import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection, CupRoundsView } from '@/domains/livescore/components/football/leagues';
+import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
@@ -41,16 +42,25 @@ export async function generateMetadata({ params }: LeaguePageProps) {
 async function LeaguePageContent({ id }: { id: string }) {
   const leagueId = parseInt(id, 10);
 
-  // 리그 정보, 순위 데이터, 득점/도움 순위를 병렬로 가져오기
-  const [league, standingsResponse, rankings] = await Promise.all([
-    fetchLeagueDetails(id),
-    fetchLeagueStandings(leagueId),
-    fetchCachedLeagueRankings(leagueId),
-  ]);
-
+  // 1단계: 리그 정보 먼저 조회 (타입에 따라 다른 데이터 병렬 fetch 결정)
+  const league = await fetchLeagueDetails(id);
   if (!league) {
     notFound();
   }
+
+  const isCup = league.type === 'Cup';
+
+  // 2단계: 리그(일반)는 standings+rankings, 컵은 라운드별 경기+rankings 병렬
+  // 컵 대회는 API가 standings를 원천적으로 지원하지 않음 (coverage.standings: false)
+  const [standingsResponse, rankings, cupRoundsResponse] = await Promise.all([
+    isCup
+      ? Promise.resolve({ success: false as const, data: null as null })
+      : fetchLeagueStandings(leagueId),
+    fetchCachedLeagueRankings(leagueId),
+    isCup
+      ? fetchCupFixturesByRound(leagueId, league.season)
+      : Promise.resolve({ success: true as const, rounds: [] }),
+  ]);
 
   // 4590 표준: 리그 로고 + 다크모드 로고 + 게시판 slug 조회
   const [leagueLogoUrl, leagueLogoUrlDark, boardSlug] = await Promise.all([
@@ -137,7 +147,9 @@ async function LeaguePageContent({ id }: { id: string }) {
         />
         <div className="px-4 py-2.5 bg-white dark:bg-[#1D1D1D]">
           <p className="text-sm text-gray-900 dark:text-gray-100">
-            순위표에서 팀을 클릭하면 팀 상세 정보를, 팀 페이지에서 선수를 클릭하면 선수 상세 정보를 확인할 수 있습니다.
+            {isCup
+              ? '경기를 클릭하면 상세 정보를, 선수를 클릭하면 선수 상세 정보를 확인할 수 있습니다.'
+              : '순위표에서 팀을 클릭하면 팀 상세 정보를, 팀 페이지에서 선수를 클릭하면 선수 상세 정보를 확인할 수 있습니다.'}
           </p>
         </div>
       </div>
@@ -147,11 +159,15 @@ async function LeaguePageContent({ id }: { id: string }) {
       </div>
 
       <div className="mt-4">
-        <LeagueStandingsTable
-          standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
-          leagueId={leagueId}
-          teamLogoUrls={teamLogoUrls}
-        />
+        {isCup ? (
+          <CupRoundsView rounds={cupRoundsResponse.rounds} />
+        ) : (
+          <LeagueStandingsTable
+            standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
+            leagueId={leagueId}
+            teamLogoUrls={teamLogoUrls}
+          />
+        )}
       </div>
 
       <div className="mt-4">

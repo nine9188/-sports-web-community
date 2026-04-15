@@ -7,7 +7,7 @@ import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TransferData } from '@/domains/livescore/types/player';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -45,6 +45,7 @@ export default function PlayerTransfers({
   transfersData = [],
   teamLogoUrls = {}
 }: PlayerTransfersProps) {
+  const { getTeamById } = useTeamLeague();
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   // 이적료 포맷팅 함수

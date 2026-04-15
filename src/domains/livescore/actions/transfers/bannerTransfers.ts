@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images/getTeamLogoUrl';
 import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images/getPlayerPhotoUrl';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { formatTransferType, getTransferTypeColor } from '@/domains/livescore/types/transfers';
 
 // 배너용 이적 데이터 타입
@@ -58,16 +58,17 @@ export const fetchBannerTransfers = cache(async (
     }
 
     // 이미지 & 한국어명 배치 조회
-    const [playerPhotos, teamLogos, koreanNames] = await Promise.all([
+    const [playerPhotos, teamLogos, koreanNames, teamMap] = await Promise.all([
       getPlayerPhotoUrls(playerIds, 'sm'),
       getTeamLogoUrls([...teamIds], 'sm'),
       getPlayersKoreanNames(playerIds),
+      getTeamsByIds([...teamIds]),
     ]);
 
     // BannerTransferItem으로 변환
     return rows.map((r) => {
-      const teamIn = getTeamById(r.team_in_id);
-      const teamOut = getTeamById(r.team_out_id);
+      const teamIn = teamMap[r.team_in_id];
+      const teamOut = teamMap[r.team_out_id];
 
       return {
         playerId: r.player_id,

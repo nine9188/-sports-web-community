@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 통계 항목 타입 정의
@@ -53,10 +53,15 @@ export async function fetchMatchStats(matchId: string): Promise<StatsResponse> {
       };
     }
     
-    // 팀 정보 보강 (한국어/영어 이름 추가)
+    // 팀 정보 보강 (한국어/영어 이름 추가) — 일괄 조회
+    const teamIds = Array.from(
+      new Set(data.response.map((t: TeamStats) => t.team?.id).filter((id): id is number => typeof id === 'number'))
+    );
+    const teamMap = await getTeamsByIds(teamIds);
+
     const enhancedResponse = data.response.map((teamStats: TeamStats) => {
       if (teamStats.team && teamStats.team.id) {
-        const teamMapping = getTeamById(teamStats.team.id);
+        const teamMapping = teamMap[teamStats.team.id];
         if (teamMapping) {
           return {
             ...teamStats,

@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
-import { getTeamById } from '@teams';
-import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -14,6 +13,7 @@ const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 const SUPABASE_URL = 'https://cdn.4590football.com';
 
 const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = false }) => {
+  const { getTeamById, getLeagueName } = useTeamLeague();
   // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
@@ -49,7 +49,8 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
 
   // 리그 한국어 이름 매핑
   const leagueId = typeof league.id === 'string' ? parseInt(league.id, 10) : league.id;
-  const leagueName = (leagueId && LEAGUE_NAMES_MAP[leagueId]) || league.name;
+  const leagueKoName = leagueId ? getLeagueName(leagueId) : '';
+  const leagueName = (leagueKoName && leagueKoName !== '알 수 없는 리그') ? leagueKoName : league.name;
 
   // 통합 유틸리티 사용
   const statusInfo = getStatusInfo(status);

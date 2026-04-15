@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 // Tier 1~3 리그 (cron으로 주 1회 갱신)
 const CACHED_LEAGUES = [
@@ -130,7 +130,7 @@ export async function refreshLeagueTransferCache(leagueId: number): Promise<{
 
   try {
     // 1. 팀 목록 (캐시 무시)
-    const season = getCurrentSeasonForLeague(leagueId);
+    const season = await getCurrentSeasonForLeague(leagueId);
     const apiKey = process.env.FOOTBALL_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
     const teamsRes = await fetch(
       `https://v3.football.api-sports.io/teams?league=${leagueId}&season=${season}`,

@@ -5,8 +5,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
 import { usePlayerInfo } from '@/domains/livescore/hooks';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import type { PlayerStatistic, PlayerData } from '@/domains/livescore/types/player';
 
 // 4590 표준: Placeholder 상수
@@ -43,6 +42,7 @@ const PlayerHeader = memo(function PlayerHeader({
   playerPhotoUrl = PLAYER_PLACEHOLDER,
   teamLogoUrl = TEAM_PLACEHOLDER
 }: PlayerHeaderProps) {
+  const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
   // React Query 훅으로 선수 데이터 가져오기
   const { data: playerData, isLoading, error } = usePlayerInfo(playerId);
 

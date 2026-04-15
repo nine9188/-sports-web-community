@@ -5,8 +5,7 @@ import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/foot
 import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { TeamPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { slugify } from '@/domains/livescore/utils/slugs';
@@ -109,10 +108,12 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
     // SportsTeam JSON-LD 생성
     const team = initialData.teamData?.team?.team;
     const venue = initialData.teamData?.team?.venue;
-    const teamMapping = team ? getTeamById(Number(id)) : null;
-    const leagueMapping = initialData.standings?.data?.[0]?.league
-      ? getLeagueById(initialData.standings.data[0].league.id)
-      : null;
+    const [teamMapping, leagueMapping] = await Promise.all([
+      team ? getTeamById(Number(id)) : Promise.resolve(null),
+      initialData.standings?.data?.[0]?.league
+        ? getLeagueById(initialData.standings.data[0].league.id)
+        : Promise.resolve(null),
+    ]);
 
     // 코치 정보 추출
     const coach = initialData.squad?.data?.find(
@@ -133,7 +134,7 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
       ...(leagueMapping ? {
         memberOf: {
           '@type': 'SportsOrganization',
-          name: leagueMapping.nameKo || initialData.standings?.data?.[0]?.league?.name,
+          name: leagueMapping.name_ko || initialData.standings?.data?.[0]?.league?.name,
           url: `${siteConfig.url}/livescore/football/leagues/${initialData.standings?.data?.[0]?.league?.id}`,
         },
       } : {}),
@@ -160,7 +161,7 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
 
     // BreadcrumbList JSON-LD
     const teamDisplayName = teamMapping?.name_ko || team?.name || '';
-    const leagueDisplayName = leagueMapping?.nameKo || initialData.standings?.data?.[0]?.league?.name || '';
+    const leagueDisplayName = leagueMapping?.name_ko || initialData.standings?.data?.[0]?.league?.name || '';
     const leagueId = initialData.standings?.data?.[0]?.league?.id;
     const breadcrumbSchema = {
       '@context': 'https://schema.org',

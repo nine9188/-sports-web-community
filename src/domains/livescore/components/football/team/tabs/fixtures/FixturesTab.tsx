@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
@@ -34,6 +34,7 @@ interface FixturesTabProps {
 export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: FixturesTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);

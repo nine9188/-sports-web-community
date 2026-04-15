@@ -7,7 +7,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { StandingDisplay } from '@/domains/livescore/types/standings';
 import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStandings } from '../utils/standingUtils';
 import FormDisplay from './FormDisplay';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 
 // 4590 표준: placeholder URL
@@ -38,6 +38,7 @@ export default function StandingsPreview({
   leagueLogoDarkUrls = {}
 }: StandingsPreviewProps) {
   const router = useRouter();
+  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);

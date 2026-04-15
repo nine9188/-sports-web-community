@@ -28,7 +28,7 @@ const getLeaguePriority = (leagueId?: number): number => {
   if (secondTierLeagues.includes(leagueId)) return 3;
 
   // 아시아 리그
-  const asianLeagues = [292, 98, 307]; // K리그1, J1리그, 사우디
+  const asianLeagues = [292, 293, 98, 307]; // K리그1, K리그2, J1리그, 사우디
   if (asianLeagues.includes(leagueId)) return 4;
 
   // 아메리카 리그

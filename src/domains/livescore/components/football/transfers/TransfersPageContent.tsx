@@ -6,7 +6,7 @@ import { TransfersFullDataResponse, TransferFilters } from '@/domains/livescore/
 import { formatTransferType } from '@/domains/livescore/types/transfers';
 import { Container, ContainerHeader, ContainerTitle, Pagination } from '@/shared/components/ui';
 import { TransferFilters as TransferFiltersComponent } from '@/domains/livescore/components/football/transfers';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 
 // 4590 표준: Placeholder URL
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -74,7 +74,7 @@ interface TransfersPageContentProps {
   currentFilters: TransferFilters;
 }
 
-export default function TransfersPageContent({
+export default async function TransfersPageContent({
   initialData,
   playerKoreanNames,
   playerPhotoUrls,
@@ -82,6 +82,14 @@ export default function TransfersPageContent({
   currentFilters
 }: TransfersPageContentProps) {
   const { transfers, totalCount, currentPage, totalPages, success } = initialData;
+
+  // 팀 한글명 일괄 조회 (DB)
+  const allTeamIds = Array.from(new Set(transfers.flatMap(t => [
+    t.transfers[0]?.teams?.in?.id,
+    t.transfers[0]?.teams?.out?.id,
+  ]).filter((id): id is number => typeof id === 'number')));
+  const teamMap = allTeamIds.length > 0 ? await getTeamsByIds(allTeamIds) : {};
+  const getTeamDisplayName = (id: number): string => teamMap[id]?.name_ko || `팀 ${id}`;
 
   if (!success) {
     return (

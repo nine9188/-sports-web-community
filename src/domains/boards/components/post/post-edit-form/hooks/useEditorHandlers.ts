@@ -8,7 +8,7 @@ import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 import { createPlayerCardData } from '@/domains/boards/actions/createPlayerCardData';
 import { createTeamCardData } from '@/domains/boards/actions/createTeamCardData';
 import { createMatchCardData } from '@/domains/boards/actions/createMatchCardData';
-import type { TeamMapping } from '@/domains/livescore/constants/teams';
+import type { TeamMapping } from '@/domains/boards/hooks/useEntityQueries';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
 
 // 리그 정보 인터페이스

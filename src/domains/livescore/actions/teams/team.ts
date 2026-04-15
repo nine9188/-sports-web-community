@@ -1,9 +1,9 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
 // 팀 정보 인터페이스
@@ -181,7 +181,7 @@ async function fetchTeamData(teamId: string): Promise<TeamResponse> {
     }
 
     // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
-    let currentSeason = getCurrentSeasonForLeague(leagueId);
+    let currentSeason = await getCurrentSeasonForLeague(leagueId);
     let dbLeagueFound = leagueId !== 39;
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
@@ -214,11 +214,11 @@ async function fetchTeamData(teamId: string): Promise<TeamResponse> {
 
           if (mainLeague) {
             leagueId = mainLeague.league.id;
-            currentSeason = getCurrentSeasonForLeague(leagueId);
+            currentSeason = await getCurrentSeasonForLeague(leagueId);
             break;
           } else if (leagues.length > 0) {
             leagueId = leagues[0].league.id;
-            currentSeason = getCurrentSeasonForLeague(leagueId);
+            currentSeason = await getCurrentSeasonForLeague(leagueId);
             break;
           }
         } catch {
@@ -238,7 +238,7 @@ async function fetchTeamData(teamId: string): Promise<TeamResponse> {
     }
     
     // 팀 매핑 정보 적용
-    const teamMapping = getTeamById(Number(teamId));
+    const teamMapping = await getTeamById(Number(teamId));
     if (teamMapping && teamInfo.team) {
       teamInfo.team.name = teamMapping.name_ko || teamInfo.team.name;
     }

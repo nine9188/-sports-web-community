@@ -6,9 +6,9 @@ const PLACEHOLDER_TEAM = '/images/placeholder-team.svg';
 const PLACEHOLDER_LEAGUE = '/images/placeholder-league.svg';
 
 /** MatchData (서버) → Match (클라이언트 UI) 변환. 한국어 팀명/리그명 매핑 포함. */
-export function transformMatches(matchesData: MatchData[]): Match[] {
-  return matchesData.map((match) => {
-    const names = resolveMatchNames(match);
+export async function transformMatches(matchesData: MatchData[]): Promise<Match[]> {
+  return Promise.all(matchesData.map(async (match) => {
+    const names = await resolveMatchNames(match);
 
     return {
       id: match.id,
@@ -44,5 +44,5 @@ export function transformMatches(matchesData: MatchData[]): Match[] {
         },
       },
     };
-  });
+  }));
 }

@@ -1,9 +1,9 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById, getLeagueIdByTeamId } from '@/domains/livescore/constants/teams';
+import { getTeamsByIds, getLeagueIdByTeamId } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
-import { getCurrentSeasonForLeague } from '@/domains/livescore/constants/league-mappings';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 // API 응답에 나타나는 리그 정보 인터페이스
 interface LeagueInfo {
@@ -92,8 +92,8 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
 
     // 팀 소속 리그 기반 시즌 계산 (캘린더 시즌 vs 유럽식 시즌)
     const teamIdNum = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
-    const leagueId = getLeagueIdByTeamId(teamIdNum);
-    const season = getCurrentSeasonForLeague(leagueId ?? 0);
+    const leagueId = await getLeagueIdByTeamId(teamIdNum);
+    const season = await getCurrentSeasonForLeague(leagueId ?? 0);
 
     // 팀의 리그 정보를 가져옵니다
     const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season });
@@ -122,11 +122,19 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
 
       // 유효한 순위 데이터가 있는 경우만 반환
       if (standingsData.response?.[0]?.league?.standings) {
-        // 팀 이름을 한국어로 변환
+        // 팀 이름을 한국어로 변환 - 일괄 조회
+        const teamIds = new Set<number>();
+        standingsData.response[0].league.standings.forEach((g: StandingItem[]) => {
+          if (Array.isArray(g)) g.forEach((it: StandingItem) => {
+            if (it.team?.id) teamIds.add(it.team.id);
+          });
+        });
+        const teamMap = await getTeamsByIds([...teamIds]);
+
         standingsData.response[0].league.standings.forEach((standingGroup: StandingItem[]) => {
           if (Array.isArray(standingGroup)) {
             standingGroup.forEach((item: StandingItem) => {
-              const teamMapping = getTeamById(item.team.id);
+              const teamMapping = teamMap[item.team.id];
               if (teamMapping) {
                 item.team.name = teamMapping.name_ko || item.team.name;
               }

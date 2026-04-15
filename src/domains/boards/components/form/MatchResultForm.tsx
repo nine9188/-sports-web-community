@@ -12,8 +12,7 @@ import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
 import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { LEAGUE_NAMES_MAP } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -73,6 +72,7 @@ interface MatchResultFormProps {
 }
 
 export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchResultFormProps) {
+  const { getTeamById, getLeagueName } = useTeamLeague();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [calendar, setCalendar] = useState(false);
@@ -129,7 +129,8 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
 
     const query = searchQuery.toLowerCase();
     const leagueId = typeof match.league.id === 'number' ? match.league.id : Number(match.league.id);
-    const leagueKoreanName = LEAGUE_NAMES_MAP[leagueId] || '';
+    const leagueKoreanNameRaw = getLeagueName(leagueId);
+    const leagueKoreanName = leagueKoreanNameRaw === '알 수 없는 리그' ? '' : leagueKoreanNameRaw;
     const homeTeamId = typeof match.teams.home.id === 'number' ? match.teams.home.id : Number(match.teams.home.id);
     const awayTeamId = typeof match.teams.away.id === 'number' ? match.teams.away.id : Number(match.teams.away.id);
     const homeKoreanName = getTeamById(homeTeamId)?.name_ko || '';
@@ -240,7 +241,11 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                       />
                     </div>
                     <h3 className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0]">
-                      {LEAGUE_NAMES_MAP[typeof group.league.id === 'number' ? group.league.id : Number(group.league.id)] || group.league.name}
+                      {(() => {
+                        const gid = typeof group.league.id === 'number' ? group.league.id : Number(group.league.id);
+                        const nm = getLeagueName(gid);
+                        return nm === '알 수 없는 리그' ? group.league.name : nm;
+                      })()}
                     </h3>
                   </div>
                   

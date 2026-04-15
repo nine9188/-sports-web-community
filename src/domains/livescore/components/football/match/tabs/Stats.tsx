@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
@@ -186,6 +186,7 @@ const SortIcon = ({ field, currentField, direction }: { field: string; currentFi
 };
 
 const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, playerKoreanNames = {}, teamLogoUrls = {} }: StatsProps) => {
+  const { getTeamById } = useTeamLeague();
   // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
   const stats = propsMatchData?.stats || [];
   const homeTeam = propsMatchData?.homeTeam;

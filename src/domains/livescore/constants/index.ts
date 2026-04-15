@@ -1,15 +1,5 @@
 // Constants 모듈 재내보내기
-export * from './league-mappings';
+// 리그/팀 데이터 + 시즌 로직은 DB로 단일화됨 → @/domains/livescore/actions/teamLeagueData (서버) 또는 useTeamLeague (클라)
 export * from './event-mappings';
 export * from './match-status';
 export * from './youtube-channels';
-
-// 기본 내보내기를 위한 객체 제공
-import { MAJOR_LEAGUE_IDS, LEAGUE_NAMES_MAP } from './league-mappings';
-
-const leagueMapping = {
-  MAJOR_LEAGUE_IDS,
-  LEAGUE_NAMES_MAP
-};
-
-export default leagueMapping; 

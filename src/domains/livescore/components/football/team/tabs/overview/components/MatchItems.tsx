@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -61,6 +61,7 @@ const DISPLAY_LIMIT = 5;
 
 export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: MatchItemsProps) {
   const router = useRouter();
+  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);

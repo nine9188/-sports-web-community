@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { siteConfig } from '@/shared/config';
-import { MAJOR_LEAGUE_IDS } from '@/domains/livescore/constants/league-mappings';
+import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 
 // ISR: 1시간
@@ -11,7 +11,7 @@ const BASE_URL = siteConfig.url;
 // 선수 사이트맵 대상 리그
 const PLAYER_LEAGUES: Record<string, number> = {
   epl: 39, laliga: 140, bundesliga: 78, 'serie-a': 135, ligue1: 61,
-  eredivisie: 88, primeira: 94, danish: 119, kleague: 292, jleague: 98,
+  eredivisie: 88, primeira: 94, danish: 119, kleague: 292, kleague2: 293, jleague: 98,
   saudi: 307, mls: 253,
 };
 
@@ -124,7 +124,7 @@ export async function GET(
       for (const slug of HOTDEAL_SLUGS) {
         entries.push({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'hourly', priority: 0.6 });
       }
-      for (const leagueId of Object.values(MAJOR_LEAGUE_IDS)) {
+      for (const leagueId of await getMajorLeagueIds()) {
         entries.push({ loc: `${BASE_URL}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}`, changefreq: 'daily', priority: 0.7 });
       }
       return sitemapResponse(entries);

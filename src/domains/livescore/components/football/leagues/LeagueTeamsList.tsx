@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
-import { MLS_TEAMS, MLSConference } from '@/domains/livescore/constants/teams/mls';
 import { ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -19,8 +18,10 @@ interface LeagueTeamsListProps {
 }
 
 export default function LeagueTeamsList({ teams, isLoading = false, leagueId, teamLogoUrls = {} }: LeagueTeamsListProps) {
+  const { getTeamById } = useTeamLeague();
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  // MLS 컨퍼런스 정보는 DB(football_teams.conference)에서 직접 조회
   if (isLoading) {
     return (
       <ContainerContent className="p-0">
@@ -51,17 +52,16 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
     );
   }
 
-  // MLS 컨퍼런스 분리 로직 (리그 ID: 253)
+  // MLS 컨퍼런스 분리 로직 (리그 ID: 253) — DB의 football_teams.conference 사용
   const isMLS = String(leagueId) === '253';
-  const mlsConferenceById = new Map<number, MLSConference>(MLS_TEAMS.map(t => [t.id, t.conference]));
   const westTeams: LeagueTeam[] = [];
   const eastTeams: LeagueTeam[] = [];
 
   if (isMLS) {
     teams.forEach((t) => {
-      const conf = mlsConferenceById.get(t.id);
-      if (conf === MLSConference.WEST) westTeams.push(t);
-      else if (conf === MLSConference.EAST) eastTeams.push(t);
+      const conf = getTeamById(t.id)?.conference;
+      if (conf === 'WEST') westTeams.push(t);
+      else if (conf === 'EAST') eastTeams.push(t);
     });
 
     const byRankThenName = (a: LeagueTeam, b: LeagueTeam) => {

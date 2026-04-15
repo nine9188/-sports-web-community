@@ -5,7 +5,7 @@ import PlayerPageClient from '@/domains/livescore/components/football/player/Pla
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { slugify } from '@/domains/livescore/utils/slugs';
@@ -53,7 +53,7 @@ export async function generateMetadata({
   // 한글 매핑 (서버 액션으로 DB 조회)
   const playerName = await getPlayerKoreanName(player.id) || player.name;
   const teamId = statistics?.[0]?.team?.id;
-  const teamMapping = teamId ? getTeamById(teamId) : null;
+  const teamMapping = teamId ? await getTeamById(teamId) : null;
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
   const position = statistics?.[0]?.games?.position || '';
 
@@ -161,7 +161,7 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
 
     // BreadcrumbList JSON-LD
     const playerDisplayName = playerKoreanName || playerInfo?.name || '';
-    const currentTeamMapping = currentTeam?.id ? getTeamById(currentTeam.id) : null;
+    const currentTeamMapping = currentTeam?.id ? await getTeamById(currentTeam.id) : null;
     const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
     const breadcrumbSchema = {
       '@context': 'https://schema.org',

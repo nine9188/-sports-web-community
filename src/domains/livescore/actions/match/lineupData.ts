@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerPhotoUrls, getCoachPhotoUrls } from '../images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
@@ -100,15 +100,16 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     const playerIds = allPlayers.map((item: any) => item.player.id).filter(Boolean);
     const coachIds = [homeTeamData.coach?.id, awayTeamData.coach?.id].filter(Boolean);
 
-    // 2. 배치로 Storage URL 조회 (4590 표준)
-    const [playerPhotos, coachPhotos] = await Promise.all([
+    // 2. 배치로 Storage URL 조회 (4590 표준) + 팀 한글명 일괄 조회
+    const [playerPhotos, coachPhotos, teamMap] = await Promise.all([
       getPlayerPhotoUrls(playerIds),
       getCoachPhotoUrls(coachIds),
+      getTeamsByIds([homeTeamData.team.id, awayTeamData.team.id].filter(Boolean)),
     ]);
 
     // 3. 팀 라인업 변환 (Storage URL 사용)
     const enhanceTeamLineup = (teamData: any, captainId: number | null): TeamLineup => {
-      const teamMapping = getTeamById(teamData.team.id);
+      const teamMapping = teamMap[teamData.team.id];
 
       const enhancePlayer = (item: any) => ({
         player: {

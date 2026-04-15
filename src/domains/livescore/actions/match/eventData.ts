@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { MatchEvent } from '../../types/match';
-import { getTeamById } from '../../constants/teams';
+import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 이벤트 데이터 응답 타입 정의
@@ -50,11 +50,16 @@ export async function fetchMatchEvents(matchId: string): Promise<EventDataRespon
     // API 요청
     const data = await fetchFromFootballApi('fixtures/events', { fixture: matchId });
     let events = Array.isArray(data.response) ? data.response : [];
-    
-    // 팀 데이터 매핑 추가
+
+    // 팀 데이터 일괄 조회 후 매핑
+    const teamIds = Array.from(
+      new Set(events.map((e: ApiEvent) => e.team?.id).filter((id): id is number => typeof id === 'number'))
+    );
+    const teamMap = await getTeamsByIds(teamIds);
+
     events = events.map((event: ApiEvent) => {
       if (event.team && event.team.id) {
-        const teamMapping = getTeamById(event.team.id);
+        const teamMapping = teamMap[event.team.id];
         if (teamMapping) {
           return {
             ...event,

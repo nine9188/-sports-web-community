@@ -1,8 +1,7 @@
 'use server'
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
-import { getLeagueName } from '@/domains/livescore/constants/league-mappings'
-import { getTeamById, searchTeamsByName } from '@/domains/livescore/constants/teams'
+import { getLeagueName, getTeamsByIds, searchTeamsByName } from '@/domains/livescore/actions/teamLeagueData'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import type { TeamSearchResult } from '../types'
 import { ALLOWED_LEAGUE_IDS } from '../constants/leagues'
@@ -33,7 +32,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
     const searchTerm = query.trim().toLowerCase()
     
     // 1. 한국어 매핑에서 검색하여 해당하는 팀 ID들 찾기
-    const mappedTeams = searchTeamsByName(query)
+    const mappedTeams = await searchTeamsByName(query)
     const mappedTeamIds = mappedTeams.map(team => team.id)
     
     // 검색 쿼리 구성
@@ -119,30 +118,30 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
 
     // 4590 표준: 팀 로고 Storage URL 배치 조회
     const teamIds = (teams || []).map((t: { team_id: number }) => t.team_id).filter(Boolean)
-    const teamLogoStorageUrls = teamIds.length > 0 ? await getTeamLogoUrls(teamIds) : {}
+    const leagueIds = Array.from(new Set((teams || []).map((t: { league_id: number }) => t.league_id).filter(Boolean))) as number[]
+    const [teamLogoStorageUrls, teamMap, leagueNames] = await Promise.all([
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({} as Record<number, string>),
+      teamIds.length > 0 ? getTeamsByIds(teamIds) : Promise.resolve({} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>),
+      Promise.all(leagueIds.map(async (id) => [id, await getLeagueName(id)] as const)).then(entries => Object.fromEntries(entries) as Record<number, string>),
+    ])
 
     return {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       teams: (teams || []).map((team: any) => {
-        // 한국어 매핑 정보 추가
-        const mappedTeam = getTeamById(team.team_id)
+        const mappedTeam = teamMap[team.team_id]
 
         return {
           ...team,
           // 4590 표준: Storage URL로 대체
           logo_url: teamLogoStorageUrls[team.team_id] || null,
-          league_name_ko: getLeagueName(team.league_id),
-          // 한국어 팀명이 있으면 display_name을 한국어로 대체
+          league_name_ko: leagueNames[team.league_id] || '',
           display_name: mappedTeam?.name_ko || team.display_name,
-          // 한국어 매핑 정보 추가
           name_ko: mappedTeam?.name_ko,
           name_en: mappedTeam?.name_en || team.name,
           country_ko: mappedTeam?.country_ko,
-          // 한국어 매핑에서 찾은 팀인지 표시 (정렬 우선순위용)
           is_korean_mapped: !!mappedTeam
         }
       })
-      // 한국어 매핑된 팀을 우선 정렬
       .sort((a: TeamSearchResult, b: TeamSearchResult) => {
         if (a.is_korean_mapped && !b.is_korean_mapped) return -1
         if (!a.is_korean_mapped && b.is_korean_mapped) return 1
@@ -224,14 +223,23 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
       return await getFallbackTeams(limit)
     }
 
-    // 한국어 리그명 및 팀명 추가
+    // 한국어 리그명 및 팀명 일괄 조회
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const popularTeamIds = (teams || []).map((t: any) => t.team_id).filter(Boolean) as number[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const popularLeagueIds = Array.from(new Set((teams || []).map((t: any) => t.league_id).filter(Boolean))) as number[]
+    const [popularTeamMap, popularLeagueNames] = await Promise.all([
+      popularTeamIds.length > 0 ? getTeamsByIds(popularTeamIds) : Promise.resolve({} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>),
+      Promise.all(popularLeagueIds.map(async (id) => [id, await getLeagueName(id)] as const)).then(entries => Object.fromEntries(entries) as Record<number, string>),
+    ])
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const teamsWithKoreanMapping = (teams || []).map((team: any) => {
-      const mappedTeam = getTeamById(team.team_id)
-      
+      const mappedTeam = popularTeamMap[team.team_id]
+
       return {
         ...team,
-        league_name_ko: getLeagueName(team.league_id),
+        league_name_ko: popularLeagueNames[team.league_id] || '',
         display_name: mappedTeam?.name_ko || team.display_name,
         name_ko: mappedTeam?.name_ko,
         name_en: mappedTeam?.name_en || team.name,
@@ -288,12 +296,17 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fbTeamIds = (teams || []).map((t: any) => t.team_id).filter(Boolean) as number[]
+    const fbTeamMap = fbTeamIds.length > 0 ? await getTeamsByIds(fbTeamIds) : {} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>
+    const fbLeagueName = await getLeagueName(39)
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (teams || []).map((team: any) => {
-      const mappedTeam = getTeamById(team.team_id)
-      
+      const mappedTeam = fbTeamMap[team.team_id]
+
       return {
         ...team,
-        league_name_ko: getLeagueName(team.league_id),
+        league_name_ko: fbLeagueName,
         display_name: mappedTeam?.name_ko || team.display_name,
         name_ko: mappedTeam?.name_ko,
         name_en: mappedTeam?.name_en || team.name

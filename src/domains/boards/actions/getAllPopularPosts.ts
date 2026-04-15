@@ -203,14 +203,14 @@ export async function getAllPopularPosts({
 
     if (teamIds.length > 0) {
       const { data: teamsData } = await supabase
-        .from('teams')
-        .select('id, logo')
-        .in('id', teamIds);
+        .from('football_teams')
+        .select('team_id, logo_url')
+        .in('team_id', teamIds);
 
       if (teamsData) {
-        teamsData.forEach(team => {
-          if (team.id && team.logo) {
-            teamLogoMap[team.id] = team.logo;
+        teamsData.forEach((team: { team_id: number; logo_url: string | null }) => {
+          if (team.team_id && team.logo_url) {
+            teamLogoMap[team.team_id] = team.logo_url;
           }
         });
       }

@@ -6,7 +6,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { MatchEvent } from '@/domains/livescore/types/match';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-import { getTeamById, TeamMapping } from '@/domains/livescore/constants/teams';
+import { useTeamLeague, type TeamData } from '@/shared/context/TeamLeagueContext';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
 import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
@@ -65,10 +65,11 @@ interface EventsProps {
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
 function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {} }: EventsProps) {
+  const { getTeamById } = useTeamLeague();
   const [events, setEvents] = useState<MatchEvent[]>(propsEvents || []);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
-  const [teamCache, setTeamCache] = useState<Record<number, TeamMapping>>({});
+  const [teamCache, setTeamCache] = useState<Record<number, TeamData>>({});
 
   // 이벤트 텍스트 내 선수 이름에 링크를 적용하는 헬퍼 함수
   const renderEventTextWithPlayerLinks = (event: MatchEvent) => {

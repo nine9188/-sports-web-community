@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerRanking } from '@/domains/livescore/types/player';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -34,6 +34,7 @@ const PlayerRow = memo(({
   teamLogoUrl?: string;
   koreanName?: string | null;
 }) => {
+  const { getTeamDisplayName } = useTeamLeague();
   const stat = ranking.statistics[0];
   const value = type === 'goals' ? stat.goals?.total || 0 : stat.goals?.assists || 0;
   const teamName = getTeamDisplayName(stat.team?.id || 0) || stat.team?.name || '';

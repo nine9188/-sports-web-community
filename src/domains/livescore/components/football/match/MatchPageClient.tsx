@@ -58,6 +58,8 @@ interface MatchPageClientProps {
   sidebarData?: SidebarData | null;
   playerKoreanNames?: PlayerKoreanNames;
   highlightData?: MatchHighlight | null;
+  // 컵 대회 라운드별 경기 (순위 탭용)
+  cupRoundsData?: import('@/domains/livescore/actions/match/cupFixtures').CupRound[];
 }
 
 export default function MatchPageClient({
@@ -69,6 +71,7 @@ export default function MatchPageClient({
   sidebarData,
   playerKoreanNames = {},
   highlightData,
+  cupRoundsData,
 }: MatchPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<MatchTabType>(initialTab);
@@ -170,6 +173,7 @@ export default function MatchPageClient({
           homeBoardSlug={sidebarData?.homeBoardSlug}
           awayBoardSlug={sidebarData?.awayBoardSlug}
           playerKoreanNames={playerKoreanNames}
+          cupRoundsData={cupRoundsData}
         />
       </div>
 

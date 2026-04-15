@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 // 4590 표준: placeholder URL
@@ -45,6 +45,7 @@ interface StatsCardsProps {
 }
 
 export default function StatsCards({ stats, onTabChange, leagueLogoUrl, leagueLogoDarkUrl }: StatsCardsProps) {
+  const { getLeagueKoreanName } = useTeamLeague();
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
 

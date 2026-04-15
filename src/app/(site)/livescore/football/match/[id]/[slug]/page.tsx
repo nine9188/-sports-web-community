@@ -12,8 +12,8 @@ import { notFound } from 'next/navigation';
 import { getMatchSlug } from '@/domains/livescore/utils/slugs';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { getTeamsByIds, getLeagueById, isCupLeague, getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
 import type { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
@@ -84,12 +84,15 @@ export async function generateMetadata({
   const { match } = matchData;
 
   // 매핑 파일에서 한글 이름 조회
-  const homeTeamMapping = getTeamById(match.teams.home.id);
-  const awayTeamMapping = getTeamById(match.teams.away.id);
-  const leagueMapping = getLeagueById(match.league.id);
+  const [teamMap, leagueMapping] = await Promise.all([
+    getTeamsByIds([match.teams.home.id, match.teams.away.id]),
+    getLeagueById(match.league.id),
+  ]);
+  const homeTeamMapping = teamMap[match.teams.home.id];
+  const awayTeamMapping = teamMap[match.teams.away.id];
   const homeTeam = homeTeamMapping?.name_ko || match.teams.home.name;
   const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
-  const leagueName = leagueMapping?.nameKo || match.league.name;
+  const leagueName = leagueMapping?.name_ko || match.league.name;
 
   // 스코어 표시 (경기 시작 전이면 'vs', 아니면 실제 스코어)
   const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
@@ -209,8 +212,14 @@ async function MatchContentLoader({
     }
   }
 
+  // 컵 대회 여부 판정 (순위 탭에서 라운드별 경기 뷰 사용)
+  const [leagueIsCup, cupSeason] = await Promise.all([
+    isCupLeague(leagueId),
+    leagueId ? getCurrentSeasonForLeague(leagueId) : Promise.resolve(undefined),
+  ]);
+
   // 나머지 전부 병렬 호출
-  const [sidebarDataResult, powerDataResult, playerStatsResult, playerKoreanNames, highlightData] = await Promise.all([
+  const [sidebarDataResult, powerDataResult, playerStatsResult, playerKoreanNames, highlightData, cupRoundsResult] = await Promise.all([
     getCachedSidebarData(matchId),
     cachedPower
       ? Promise.resolve({ success: true, data: cachedPower })
@@ -227,6 +236,9 @@ async function MatchContentLoader({
     isFinished && homeTeamId && awayTeamId && leagueId
       ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.time?.date).catch(() => null)
       : Promise.resolve(null),
+    leagueIsCup && leagueId
+      ? fetchCupFixturesByRound(leagueId, cupSeason).catch(() => ({ success: false as const, rounds: [] }))
+      : Promise.resolve({ success: true as const, rounds: [] }),
   ]);
 
   const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
@@ -250,6 +262,7 @@ async function MatchContentLoader({
       allPlayerStats={playerStatsResult}
       sidebarData={sidebarData}
       highlightData={highlightData}
+      cupRoundsData={cupRoundsResult.rounds}
     />
   );
 }
@@ -281,12 +294,18 @@ async function MatchPageContent({ matchId, tab }: { matchId: string; tab?: strin
     const venueCity = rawFixture?.venue?.city;
     const statusCode = match?.status?.code ?? '';
 
-    const homeTeamMapping = match ? getTeamById(match.teams.home.id) : null;
-    const awayTeamMapping = match ? getTeamById(match.teams.away.id) : null;
-    const leagueMapping = match ? getLeagueById(match.league.id) : null;
+    const [jsonLdTeamMap, jsonLdLeagueMapping] = match
+      ? await Promise.all([
+          getTeamsByIds([match.teams.home.id, match.teams.away.id]),
+          getLeagueById(match.league.id),
+        ])
+      : [{} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>, null];
+    const homeTeamMapping = match ? jsonLdTeamMap[match.teams.home.id] : null;
+    const awayTeamMapping = match ? jsonLdTeamMap[match.teams.away.id] : null;
+    const leagueMapping = jsonLdLeagueMapping;
     const homeTeamName = homeTeamMapping?.name_ko || match?.teams.home.name || '';
     const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
-    const leagueName = leagueMapping?.nameKo || match?.league.name || '';
+    const leagueName = leagueMapping?.name_ko || match?.league.name || '';
 
     const eventStatus = ['CANC', 'ABD'].includes(statusCode)
         ? 'https://schema.org/EventCancelled'

@@ -1,8 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getTeamById } from '@/domains/livescore/constants/teams';
-import { getLeagueById } from '@/domains/livescore/constants/league-mappings';
+import { getTeamsByIds, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 선수 타입 정의
@@ -143,37 +142,45 @@ export async function fetchMatchData(matchId: string): Promise<MatchResponse> {
     
     // 경기 데이터에 팀, 리그 매핑 정보 추가
     const matchData = data.response[0] as MatchData;
-    
-    // 리그 매핑 적용
-    if (matchData.league?.id) {
-      const leagueMapping = getLeagueById(matchData.league.id);
-      if (leagueMapping) {
-        matchData.league.name_ko = leagueMapping.nameKo;
+
+    // 필요한 팀 ID 모두 수집 후 일괄 조회
+    const neededTeamIds = new Set<number>();
+    if (matchData.teams?.home?.id) neededTeamIds.add(matchData.teams.home.id);
+    if (matchData.teams?.away?.id) neededTeamIds.add(matchData.teams.away.id);
+    if (matchData.lineups) {
+      for (const lu of matchData.lineups) {
+        if (lu.team?.id) neededTeamIds.add(lu.team.id);
       }
     }
-    
-    // 홈팀 매핑 적용
+
+    const [teamMap, leagueMapping] = await Promise.all([
+      neededTeamIds.size > 0 ? getTeamsByIds([...neededTeamIds]) : Promise.resolve({} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>),
+      matchData.league?.id ? getLeagueById(matchData.league.id) : Promise.resolve(null),
+    ]);
+
+    if (matchData.league?.id && leagueMapping) {
+      matchData.league.name_ko = leagueMapping.name_ko;
+    }
+
     if (matchData.teams?.home?.id) {
-      const homeTeamMapping = getTeamById(matchData.teams.home.id);
+      const homeTeamMapping = teamMap[matchData.teams.home.id];
       if (homeTeamMapping) {
         matchData.teams.home.name_ko = homeTeamMapping.name_ko;
         matchData.teams.home.name_en = homeTeamMapping.name_en;
       }
     }
-    
-    // 원정팀 매핑 적용
+
     if (matchData.teams?.away?.id) {
-      const awayTeamMapping = getTeamById(matchData.teams.away.id);
+      const awayTeamMapping = teamMap[matchData.teams.away.id];
       if (awayTeamMapping) {
         matchData.teams.away.name_ko = awayTeamMapping.name_ko;
         matchData.teams.away.name_en = awayTeamMapping.name_en;
       }
     }
-    
-    // 라인업이 있는 경우 팀 매핑 적용
+
     if (matchData.lineups && matchData.lineups.length > 0) {
       matchData.lineups = matchData.lineups.map(lineup => {
-        const teamMapping = getTeamById(lineup.team.id);
+        const teamMapping = teamMap[lineup.team.id];
         if (teamMapping) {
           return {
             ...lineup,

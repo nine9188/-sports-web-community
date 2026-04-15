@@ -8,7 +8,7 @@ import { MatchEvent } from '@/domains/livescore/types/match';
 import { TeamLineup } from '@/domains/livescore/types/lineup';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getTeamById } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
@@ -62,6 +62,7 @@ interface LineupsProps {
 }
 
 export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {} }: LineupsProps) {
+  const { getTeamById } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const [isModalOpen, setIsModalOpen] = useState(false);

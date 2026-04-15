@@ -9,7 +9,7 @@ import RecentTransfers from './components/RecentTransfers';
 import MatchItems from './components/MatchItems';
 import { Match } from './components/MatchItems';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
@@ -117,6 +117,7 @@ export default function Overview({
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {}
 }: OverviewProps) {
+  const { getLeagueKoreanName } = useTeamLeague();
   // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
   const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
     if (onTabChange) {

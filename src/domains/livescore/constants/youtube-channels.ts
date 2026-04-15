@@ -12,7 +12,7 @@ export const KOREAN_CHANNELS = {
     channelId: 'UCnBht7BrOx-A328KFXgysqQ',
     uploadsPlaylistId: 'UUnBht7BrOx-A328KFXgysqQ',
     name: '쿠팡플레이 스포츠',
-    leagueIds: [39, 140, 78, 61, 292] as const,
+    leagueIds: [39, 140, 78, 61, 292, 293] as const,
   },
   SPOTV: {
     channelId: 'UCtm_QoN2SIxwCE-59shX7Qg',
@@ -32,6 +32,7 @@ export const LEAGUE_TO_KOREAN_CHANNEL: Record<number, KoreanChannelKey> = {
   78: 'COUPANG_PLAY', // 분데스리가
   61: 'COUPANG_PLAY', // 리그앙
   292: 'COUPANG_PLAY', // K리그1
+  293: 'COUPANG_PLAY', // K리그2
   135: 'SPOTV', // 세리에A
   2: 'SPOTV', // UCL
   3: 'SPOTV', // UEL
@@ -45,6 +46,7 @@ export const LEAGUE_TITLE_KEYWORDS: Record<number, string[]> = {
   78: ['분데스리가'],
   61: ['리그 1', '리그1'],
   292: ['K리그1', 'K리그'],
+  293: ['K리그2'],
   135: ['세리에A', '세리에 A'],
   2: ['UCL', '챔피언스리그'],
   3: ['UEL', '유로파'],
@@ -53,7 +55,7 @@ export const LEAGUE_TITLE_KEYWORDS: Record<number, string[]> = {
 // ── 하이라이트 지원 리그 ID 목록 ──
 
 export const HIGHLIGHT_SUPPORTED_LEAGUE_IDS = [
-  39, 140, 78, 61, 292, 135, 2, 3,
+  39, 140, 78, 61, 292, 293, 135, 2, 3,
 ] as const;
 
 // ── 팀 공식 YouTube 채널 (2순위 fallback, 홈팀만 검색) ──

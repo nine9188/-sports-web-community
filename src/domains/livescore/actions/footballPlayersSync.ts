@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 const API_BASE_URL = 'https://v3.football.api-sports.io'
 const API_KEY = process.env.FOOTBALL_API_KEY!
 
-// 동기화 대상 리그 (선수 데이터를 관리할 12개 리그)
+// 동기화 대상 리그 (선수 데이터를 관리할 13개 리그)
 const SYNC_LEAGUE_IDS = [
   // 유럽 Top 5
   39,  // 프리미어리그
@@ -19,6 +19,7 @@ const SYNC_LEAGUE_IDS = [
   119, // 덴마크 수페르리가
   // 아시아
   292, // K리그1
+  293, // K리그2
   98,  // J1 리그
   307, // 사우디 프로리그
   // 아메리카

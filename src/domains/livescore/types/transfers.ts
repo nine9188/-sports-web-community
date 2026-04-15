@@ -214,6 +214,7 @@ export const MAJOR_LEAGUES: League[] = [
   { id: 61, name: '리그1', logo: '', country: '프랑스' },
   // Tier 2
   { id: 292, name: 'K리그1', logo: '', country: '한국' },
+  { id: 293, name: 'K리그2', logo: '', country: '한국' },
   { id: 40, name: '챔피언십', logo: '', country: '영국' },
   { id: 88, name: '에레디비시', logo: '', country: '네덜란드' },
   { id: 94, name: '프리메이라리가', logo: '', country: '포르투갈' },

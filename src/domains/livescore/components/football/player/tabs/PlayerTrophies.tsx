@@ -5,7 +5,7 @@ import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TrophyData } from '@/domains/livescore/types/player';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -23,6 +23,7 @@ export default function PlayerTrophies({
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {}
 }: PlayerTrophiesProps) {
+  const { getLeagueKoreanName } = useTeamLeague();
   // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false);
 

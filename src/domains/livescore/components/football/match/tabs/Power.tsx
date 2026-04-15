@@ -6,9 +6,8 @@ import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
-import { getTeamDisplayName } from '@/domains/livescore/constants/teams';
+import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../MatchPageClient';
-import { getLeagueKoreanName } from '@/domains/livescore/constants/league-mappings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 // 4590 표준: placeholder URLs
@@ -55,6 +54,7 @@ interface PowerProps {
 }
 
 export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
+  const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
   // 4590 표준: teamLogoUrls에서 URL 조회 헬퍼
   const getTeamLogo = (teamId: number) => data.teamLogoUrls?.[teamId] || TEAM_PLACEHOLDER;
 
