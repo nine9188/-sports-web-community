@@ -51,11 +51,10 @@ export async function getPostEditData(slug: string, postNumber: string) {
       };
     }
     
-    // 게시글 정보 가져오기 — content는 posts_content에서 JOIN (egress 절감)
-    // posts 테이블에서는 content 제외. posts_content.content를 post.content에 평탄화.
+    // 게시글 메타 정보 (content는 아래에서 별도 조회)
     const { data: postRaw, error: postError } = await supabase
       .from('posts')
-      .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name), posts_content(content)')
+      .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name)')
       .eq('board_id', board.id)
       .eq('post_number', parseInt(postNumber, 10))
       .single();
@@ -75,14 +74,16 @@ export async function getPostEditData(slug: string, postNumber: string) {
       };
     }
 
-    // posts_content JOIN 결과를 post.content로 평탄화 (하위 호환)
-    const postsContentJoined = (postRaw as unknown as { posts_content: { content: unknown } | { content: unknown }[] | null }).posts_content;
-    const joinedContent = Array.isArray(postsContentJoined)
-      ? postsContentJoined[0]?.content
-      : postsContentJoined?.content;
+    // posts_content 별도 쿼리 (PostgREST 관계 추론 회피)
+    const { data: contentRow } = await supabase
+      .from('posts_content')
+      .select('content')
+      .eq('post_id', postRaw.id)
+      .maybeSingle();
+
     const post = {
       ...postRaw,
-      content: joinedContent ?? null,
+      content: contentRow?.content ?? null,
     };
 
     // 성공적으로 데이터를 가져온 경우

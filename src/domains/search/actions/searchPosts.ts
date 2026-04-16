@@ -59,7 +59,7 @@ export async function searchPosts({
       totalCount = count || 0
     }
 
-    // content는 posts_content JOIN으로 (egress 절감)
+    // posts 메타만 조회 (content는 별도로 가져올 수도 있지만 검색 결과는 summary로 충분)
     let searchQuery = supabase
       .from('posts')
       .select(`
@@ -79,8 +79,7 @@ export async function searchPosts({
         boards!posts_board_id_fkey(
           name,
           slug
-        ),
-        posts_content(content)
+        )
       `)
       .eq('is_published', true)
       .not('is_hidden', 'eq', true)
@@ -115,24 +114,17 @@ export async function searchPosts({
       return { posts: [], totalCount }
     }
 
+    // snippet은 summary 우선 사용 (검색 결과 리스트 뷰라 content 전체 불필요)
+    // cards는 빈 배열 (상세 페이지에서만 필요)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const posts = data.map((post: any) => {
-      // posts_content JOIN에서 content 평탄화
-      const joined = Array.isArray(post.posts_content)
-        ? post.posts_content[0]?.content
-        : post.posts_content?.content;
-      const content = joined ?? null;
-
-      return {
-        ...post,
-        content, // 하위 호환
-        author_name: post.profiles?.nickname || '익명',
-        board_name: post.boards?.name || '게시판',
-        // snippet: summary 우선, 없으면 content에서 추출
-        snippet: post.summary || extractContentSnippet(content, query),
-        cards: extractCardPreviews(content)
-      };
-    })
+    const posts = data.map((post: any) => ({
+      ...post,
+      content: '', // 하위 호환용 빈 값
+      author_name: post.profiles?.nickname || '익명',
+      board_name: post.boards?.name || '게시판',
+      snippet: post.summary || '',
+      cards: [] as ReturnType<typeof extractCardPreviews>,
+    }))
 
     return { posts, totalCount }
 
