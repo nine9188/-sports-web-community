@@ -37,17 +37,21 @@ async function fetchLogosForPosts(
   return { teamLogoMap, leagueLogoMap, leagueLogoDarkMap };
 }
 
-// RPC 결과 타입 (Supabase 타입에 미포함)
+// RPC 결과 타입 (pgroonga FTS 기반)
 interface SearchPostResult {
   id: string;
   title: string;
-  content: unknown;
+  snippet: string; // pgroonga_highlight_html로 하이라이트된 text
   created_at: string;
   views: number;
   likes: number;
   post_number: number;
   board_id: string;
   user_id: string;
+  is_hidden: boolean;
+  is_deleted: boolean;
+  is_notice: boolean;
+  thumbnail_url: string | null;
 }
 
 // Supabase 클라이언트 타입 단언용
@@ -148,13 +152,12 @@ export async function searchBoardPosts({
     // 검색 결과의 post_id 목록
     const postIds = typedSearchResults.map((p) => p.id);
 
-    // 프로필과 게시판 정보 조회
+    // 프로필과 게시판 정보만 조회 (content는 RPC snippet 사용, thumbnail_url은 posts 컬럼)
     const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         id,
         title,
-        content,
         created_at,
         views,
         likes,
@@ -164,6 +167,7 @@ export async function searchBoardPosts({
         is_hidden,
         is_deleted,
         is_notice,
+        thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
           nickname,
@@ -238,6 +242,12 @@ export async function searchBoardPosts({
 
     const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
+    // RPC snippet 매핑 (post_id → pgroonga 하이라이트 snippet)
+    const snippetMap: Record<string, string> = {};
+    typedSearchResults.forEach((r) => {
+      snippetMap[r.id] = r.snippet || '';
+    });
+
     // 포맷팅
     const formattedPosts: Post[] = posts.map((post: any) => {
       const profile = post.profiles;
@@ -269,7 +279,9 @@ export async function searchBoardPosts({
         views: post.views || 0,
         likes: post.likes || 0,
         comment_count: commentCountMap[post.id] || 0,
-        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+        // content 자리에 pgroonga snippet (하위 호환 - Post.content: string)
+        content: snippetMap[post.id] || '',
+        thumbnail_url: post.thumbnail_url ?? null,
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
         team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,
@@ -353,13 +365,12 @@ async function searchByComment({
       return emptyResponse;
     }
 
-    // 3. 게시글 조회
+    // 3. 게시글 조회 (content 대신 thumbnail_url 사용, egress 절감)
     const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         id,
         title,
-        content,
         created_at,
         views,
         likes,
@@ -369,6 +380,7 @@ async function searchByComment({
         is_hidden,
         is_deleted,
         is_notice,
+        thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
           nickname,
@@ -444,7 +456,7 @@ async function searchByComment({
 
     const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
-    // 6. 포맷팅
+    // 6. 포맷팅 (댓글 검색은 post 본문 snippet 불필요, content 빈값)
     const formattedPosts: Post[] = posts.map((post: any) => {
       const profile = post.profiles;
       const board = post.boards;
@@ -475,7 +487,8 @@ async function searchByComment({
         views: post.views || 0,
         likes: post.likes || 0,
         comment_count: commentCountMap[post.id] || 0,
-        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+        content: '',
+        thumbnail_url: post.thumbnail_url ?? null,
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
         team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,
@@ -557,13 +570,12 @@ async function searchByNickname({
       return emptyResponse;
     }
 
-    // 3. 게시글 조회
+    // 3. 게시글 조회 (content 대신 thumbnail_url 사용, egress 절감)
     const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         id,
         title,
-        content,
         created_at,
         views,
         likes,
@@ -573,6 +585,7 @@ async function searchByNickname({
         is_hidden,
         is_deleted,
         is_notice,
+        thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
           nickname,
@@ -679,7 +692,8 @@ async function searchByNickname({
         views: post.views || 0,
         likes: post.likes || 0,
         comment_count: commentCountMap[post.id] || 0,
-        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+        content: '',
+        thumbnail_url: post.thumbnail_url ?? null,
         team_id: board?.team_id || null,
         league_id: board?.league_id || null,
         team_logo: board?.team_id ? teamLogoMap[board.team_id] || null : null,

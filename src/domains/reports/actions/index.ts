@@ -378,14 +378,30 @@ async function handlePostAction(supabase: Awaited<ReturnType<typeof createClient
       // 게시글 삭제 처리 - 실제 삭제 대신 is_deleted 플래그 설정
       const { error } = await supabase
         .from('posts')
-        .update({ 
+        .update({
           is_deleted: true,
           title: '[신고에 의해 삭제됨]',
           content: '신고에 의해 삭제되었습니다.'
         })
         .eq('id', postId);
-      
+
       if (error) throw error;
+
+      // posts_content 도 동기화 업데이트 (트리거 미사용, 앱 책임)
+      const supabaseAny = supabase as unknown as {
+        from: (table: string) => {
+          update: (data: unknown) => { eq: (col: string, val: string) => Promise<unknown> };
+        };
+      };
+      await supabaseAny
+        .from('posts_content')
+        .update({
+          content: '신고에 의해 삭제되었습니다.',
+          content_text: '신고에 의해 삭제되었습니다.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('post_id', postId);
+
       return { success: true, message: '게시글이 삭제되었습니다.' };
     } else if (action === 'hide') {
       // 게시글 숨김 처리 - 7일 후 자동 복구

@@ -112,14 +112,40 @@ export async function updatePost(
       .from('posts')
       .update(updateData as Record<string, unknown>)
       .eq('id', postId);
-    
+
     if (updateError) {
       return {
         success: false,
         error: `게시글 수정 실패: ${updateError.message}`
       };
     }
-    
+
+    // posts_content 도 UPSERT (이중 저장, 롤백 안전망)
+    try {
+      const parsedContent = typeof content === 'string' && content.startsWith('{')
+        ? JSON.parse(content)
+        : content;
+      const contentText = extractSummary(content, 10000);
+      const supabaseAny = supabase as unknown as {
+        from: (table: string) => {
+          upsert: (data: unknown, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+      const { error: contentError } = await supabaseAny
+        .from('posts_content')
+        .upsert({
+          post_id: postId,
+          content: parsedContent,
+          content_text: contentText,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'post_id' });
+      if (contentError) {
+        console.error('[posts_content UPSERT 실패]', contentError.message, 'post_id:', postId);
+      }
+    } catch (contentErr) {
+      console.error('[posts_content UPSERT 예외]', contentErr);
+    }
+
     // 수정된 게시글 정보 가져오기
     const { data: postData, error: postDataError } = await supabase
       .from('posts')

@@ -5,12 +5,13 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 /**
  * 게시글 메타데이터 fetch (캐시 미스 시 실행)
+ * content 대신 summary 컬럼 사용 (description용, egress 절감)
  */
 async function fetchPostMeta(boardId: string, postNumber: number) {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
     .from('posts')
-    .select('title, content, created_at, updated_at')
+    .select('title, summary, thumbnail_url, created_at, updated_at')
     .eq('board_id', boardId)
     .eq('post_number', postNumber)
     .single();

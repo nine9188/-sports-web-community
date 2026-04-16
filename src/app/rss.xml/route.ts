@@ -28,13 +28,14 @@ export async function GET() {
     const siteDescription = seoSettings?.default_description || siteConfig.description;
 
     // 최근 게시글 100개 가져오기 (삭제되지 않은 게시글만)
+    // content 대신 summary 컬럼 사용 (RSS description 용도, egress 절감)
     const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         id,
         post_number,
         title,
-        content,
+        summary,
         created_at,
         updated_at,
         board:boards!inner(slug, name)
@@ -56,14 +57,11 @@ export async function GET() {
         const postUrl = `${baseUrl}/boards/${board.slug}/${post.post_number}`;
         const pubDate = new Date(post.created_at || new Date()).toUTCString();
 
-        // content에서 HTML 제거 및 요약 생성 (최대 300자)
-        const contentStr = typeof post.content === 'string'
-          ? post.content
-          : JSON.stringify(post.content || '');
-        const plainContent = stripHtml(contentStr);
-        const description = plainContent.length > 300
-          ? plainContent.substring(0, 300) + '...'
-          : plainContent;
+        // summary 컬럼 사용 (300자 제한)
+        const summary = post.summary || '';
+        const description = summary.length > 300
+          ? summary.substring(0, 300) + '...'
+          : summary;
 
         return `
     <item>

@@ -88,10 +88,15 @@ async function createPostInternal(params: {
       }
     }
 
-    // 게시글 데이터 준비
+    // content JSON 파싱 (posts_content에도 저장하기 위해 변수로 추출)
+    const parsedContent = typeof content === 'string' && content.startsWith('{')
+      ? JSON.parse(content)
+      : content;
+
+    // 게시글 데이터 준비 (posts.content도 유지 - 이중 저장으로 롤백 안전망)
     const insertData: Record<string, unknown> = {
       title: title.trim(),
-      content: typeof content === 'string' && content.startsWith('{') ? JSON.parse(content) : content,
+      content: parsedContent,
       user_id: userId,
       board_id: boardId,
       thumbnail_url: extractFirstImageUrl(content),
@@ -129,6 +134,29 @@ async function createPostInternal(params: {
 
     if (!data) {
       return { success: false, error: '게시글 생성은 되었으나 데이터를 받아오지 못했습니다.' };
+    }
+
+    // posts_content에 본문 저장 (상세/검색 조회용)
+    // 트리거 없이 앱에서 직접 이중 저장
+    try {
+      const contentText = extractSummary(content, 10000); // plain text 전체
+      const supabaseAny = supabase as unknown as {
+        from: (table: string) => {
+          insert: (data: unknown) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+      const { error: contentError } = await supabaseAny
+        .from('posts_content')
+        .insert({
+          post_id: data.id,
+          content: parsedContent,
+          content_text: contentText,
+        });
+      if (contentError) {
+        console.error('[posts_content INSERT 실패]', contentError.message, 'post_id:', data.id);
+      }
+    } catch (contentErr) {
+      console.error('[posts_content INSERT 예외]', contentErr);
     }
 
     // 카드 링크 저장 (실패해도 게시글 생성은 성공)

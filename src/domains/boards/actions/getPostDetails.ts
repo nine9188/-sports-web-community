@@ -47,10 +47,11 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       prevPostResult,
       nextPostResult
     ] = await Promise.all([
-      // 게시글 상세 정보 — 필요한 컬럼만 명시 (admin 전용 hidden_until/hidden_reason 등 제외)
+      // 게시글 상세 정보 — posts_content 테이블에서 content JOIN으로 가져오기 (egress 절감)
+      // posts 테이블에서는 content 제외. posts_content.content를 아래에서 post.content에 재할당.
       supabase
         .from('posts')
-        .select('id, title, content, user_id, views, likes, dislikes, tags, created_at, updated_at, board_id, post_number, source_url, meta, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, is_hidden, is_deleted, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
+        .select('id, title, user_id, views, likes, dislikes, tags, created_at, updated_at, board_id, post_number, source_url, meta, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, is_hidden, is_deleted, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name), posts_content(content)')
         .eq('board_id', board.id)
         .eq('post_number', postNum)
         .single(),
@@ -79,14 +80,25 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .maybeSingle()
     ]);
     
-    const { data: post, error: postError } = postResult;
-    if (postError || !post) {
+    const { data: postRaw, error: postError } = postResult;
+    if (postError || !postRaw) {
       return {
         success: false,
         notFoundType: 'POST' as const,
         error: '게시글을 찾을 수 없습니다.'
       };
     }
+
+    // posts_content JOIN 결과를 post.content로 평탄화 (하위 호환)
+    // posts_content 레코드가 없으면(이론상 불가) 빈 객체 fallback
+    const postsContentJoined = (postRaw as unknown as { posts_content: { content: unknown } | { content: unknown }[] | null }).posts_content;
+    const joinedContent = Array.isArray(postsContentJoined)
+      ? postsContentJoined[0]?.content
+      : postsContentJoined?.content;
+    const post = {
+      ...postRaw,
+      content: joinedContent ?? null,
+    } as typeof postRaw & { content: unknown };
 
     const boardStructure = cachedBoardStructure;
     const { data: prevPostData } = prevPostResult;
@@ -420,35 +432,44 @@ export async function incrementViewCount(postId: string): Promise<void> {
 export async function getPost(postId: string) {
   try {
     const supabase = await getSupabaseServer()
-    
-    // 게시글 조회 및 조회수 증가
+
+    // 게시글 조회 — content는 posts_content에서 JOIN
     const { data, error } = await supabase
       .from('posts')
       .select(`
-        id, 
-        title, 
-        content, 
-        created_at, 
+        id,
+        title,
+        created_at,
         updated_at,
-        user_id, 
+        user_id,
         board_id,
-        view_count, 
+        view_count,
         like_count,
         profiles(id, username, avatar_url, full_name),
-        boards(id, name, slug)
+        boards(id, name, slug),
+        posts_content(content)
       `)
       .eq('id', postId)
       .single()
-    
+
     if (error) {
       console.error('게시글 조회 오류:', error)
       throw new Error('게시글 조회 실패')
     }
-    
+
     // 조회수 증가 (별도 쿼리)
     await supabase.rpc('increment_view_count', { post_id: postId })
-    
-    return data
+
+    // posts_content.content를 평탄화
+    const postsContentJoined = (data as unknown as { posts_content: { content: unknown } | { content: unknown }[] | null }).posts_content;
+    const joinedContent = Array.isArray(postsContentJoined)
+      ? postsContentJoined[0]?.content
+      : postsContentJoined?.content;
+
+    return {
+      ...data,
+      content: joinedContent ?? null,
+    }
   } catch (error) {
     console.error('게시글 조회 오류:', error)
     return null

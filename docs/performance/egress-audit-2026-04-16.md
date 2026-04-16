@@ -796,9 +796,44 @@ LIMIT 100;
 - [ ] `ensureAssetCached.ts:194` — upsert 쿨다운 강화
 - [ ] `posts/search.ts` — ilike → FTS
 
-### Priority 4 (장기)
-- [ ] `posts` ↔ `posts_content` 분리 마이그레이션
-- [ ] `hot_posts_7d` MV + pg_cron
+### Priority 4 (장기) — 완료
+- [x] `posts` ↔ `posts_content` 분리 마이그레이션 (Phase 1~4 완료, Phase 5 `posts.content DROP` 보류)
+- [x] `hot_posts_7d` MV + pg_cron
+- [x] pgroonga 한글 FTS
+- [x] 남은 content 참조 파일 정리 (relatedPosts, notices, getCachedPostMeta, rss.xml, reports, searchPosts)
+
+### Phase 별 진행 기록 (2026-04-16)
+
+**Phase 1** — 인프라
+- [x] pgroonga 확장 활성화
+- [x] posts_content 테이블 생성 (PK+FK ON DELETE CASCADE)
+- [x] extract_plain_text 함수
+- [x] 기존 데이터 복사 (1,694 → 1,697건, 100%)
+- [x] pgroonga 인덱스 (content_text)
+- [x] RLS 정책 + grants
+
+**Phase 2** — 트리거 (추후 제거됨)
+- [x] 양방향 동기화 트리거 (Phase 4-D에서 DROP)
+
+**Phase 3** — 읽기 경로 이전
+- [x] getPostDetails.ts — posts_content JOIN
+- [x] getPostForm.ts — posts_content JOIN
+- [x] RPC 함수 (count_search_posts, search_posts_by_content) pgroonga FTS 재작성
+- [x] search.ts — snippet 기반
+
+**Phase 4** — 쓰기 경로 이전 + 트리거 제거
+- [x] posts/create.ts — posts_content INSERT 추가
+- [x] posts/update.ts — posts_content UPSERT 추가
+- [x] rss-news-bot v8 — posts_content INSERT 추가
+- [x] 트리거 + sync 함수 DROP
+
+**Phase 5** — 보류 (3개월 모니터링 후 판단)
+- [ ] posts.content 컬럼 DROP
+
+### 트리거 철학
+- 프로젝트 방침: **트리거 사용 안 함**
+- 모든 쓰기는 **앱 코드가 명시적으로 책임**
+- `posts.content` 이중 저장 유지로 롤백 안전망 확보
 
 ### 모니터링 도구
 - [ ] Supabase Dashboard → Settings → Usage 매일 확인

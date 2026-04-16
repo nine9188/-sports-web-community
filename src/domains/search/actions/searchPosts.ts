@@ -59,12 +59,14 @@ export async function searchPosts({
       totalCount = count || 0
     }
 
+    // content는 posts_content JOIN으로 (egress 절감)
     let searchQuery = supabase
       .from('posts')
       .select(`
         id,
         title,
-        content,
+        summary,
+        thumbnail_url,
         created_at,
         views,
         likes,
@@ -77,7 +79,8 @@ export async function searchPosts({
         boards!posts_board_id_fkey(
           name,
           slug
-        )
+        ),
+        posts_content(content)
       `)
       .eq('is_published', true)
       .not('is_hidden', 'eq', true)
@@ -113,13 +116,23 @@ export async function searchPosts({
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const posts = data.map((post: any) => ({
-      ...post,
-      author_name: post.profiles?.nickname || '익명',
-      board_name: post.boards?.name || '게시판',
-      snippet: extractContentSnippet(post.content, query),
-      cards: extractCardPreviews(post.content)
-    }))
+    const posts = data.map((post: any) => {
+      // posts_content JOIN에서 content 평탄화
+      const joined = Array.isArray(post.posts_content)
+        ? post.posts_content[0]?.content
+        : post.posts_content?.content;
+      const content = joined ?? null;
+
+      return {
+        ...post,
+        content, // 하위 호환
+        author_name: post.profiles?.nickname || '익명',
+        board_name: post.boards?.name || '게시판',
+        // snippet: summary 우선, 없으면 content에서 추출
+        snippet: post.summary || extractContentSnippet(content, query),
+        cards: extractCardPreviews(content)
+      };
+    })
 
     return { posts, totalCount }
 

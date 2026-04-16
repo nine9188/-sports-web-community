@@ -25,7 +25,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       .select(`
         id,
         title,
-        content,
+        thumbnail_url,
         user_id,
         created_at,
         updated_at,
@@ -222,7 +222,8 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       return {
         id: notice.id,
         title: displayTitle,
-        content: notice.content,
+        content: '',
+        thumbnail_url: notice.thumbnail_url ?? null,
         user_id: userId || '',
         created_at: notice.created_at || null,
         board_id: notice.board_id || null,

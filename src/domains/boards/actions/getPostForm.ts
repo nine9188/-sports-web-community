@@ -51,29 +51,40 @@ export async function getPostEditData(slug: string, postNumber: string) {
       };
     }
     
-    // 게시글 정보 가져오기
-    const { data: post, error: postError } = await supabase
+    // 게시글 정보 가져오기 — content는 posts_content에서 JOIN (egress 절감)
+    // posts 테이블에서는 content 제외. posts_content.content를 post.content에 평탄화.
+    const { data: postRaw, error: postError } = await supabase
       .from('posts')
-      .select('*, profiles(nickname), board:board_id(name), deal_info')
+      .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name), posts_content(content)')
       .eq('board_id', board.id)
       .eq('post_number', parseInt(postNumber, 10))
       .single();
-      
-    if (postError || !post) {
+
+    if (postError || !postRaw) {
       return {
         success: false,
         error: '게시글을 찾을 수 없습니다.'
       };
     }
-    
+
     // 작성자 확인
-    if (post.user_id !== userId) {
+    if (postRaw.user_id !== userId) {
       return {
         success: false,
         redirectToPost: true
       };
     }
-    
+
+    // posts_content JOIN 결과를 post.content로 평탄화 (하위 호환)
+    const postsContentJoined = (postRaw as unknown as { posts_content: { content: unknown } | { content: unknown }[] | null }).posts_content;
+    const joinedContent = Array.isArray(postsContentJoined)
+      ? postsContentJoined[0]?.content
+      : postsContentJoined?.content;
+    const post = {
+      ...postRaw,
+      content: joinedContent ?? null,
+    };
+
     // 성공적으로 데이터를 가져온 경우
     return {
       success: true,

@@ -11,7 +11,7 @@ export interface RelatedPost {
   created_at: string;
   view_count: number;
   comment_count: number;
-  content: string;
+  thumbnail_url: string | null;
   board_slug: string;
   board_name: string;
   board_team_id: number | null;
@@ -69,6 +69,7 @@ export const getRelatedPosts = cache(async (
     // 카드 링크 기반 조회 + 팀 게시판 게시글 조회를 병렬 실행
     const [cardResult, boardResult] = await Promise.all([
       // 1) 카드 링크 기반 (매치/팀/선수 카드가 삽입된 게시글)
+      // content 대신 thumbnail_url만 가져와 egress 절감 (관련 게시글 리스트용)
       supabase
         .from('post_card_links')
         .select(`
@@ -78,7 +79,7 @@ export const getRelatedPosts = cache(async (
           posts!inner (
             id,
             title,
-            content,
+            thumbnail_url,
             post_number,
             created_at,
             views,
@@ -101,7 +102,7 @@ export const getRelatedPosts = cache(async (
             .select(`
               id,
               title,
-              content,
+              thumbnail_url,
               post_number,
               created_at,
               views,
@@ -130,7 +131,7 @@ export const getRelatedPosts = cache(async (
         const post = row.posts as unknown as {
           id: string;
           title: string;
-          content: string;
+          thumbnail_url: string | null;
           post_number: number;
           created_at: string;
           views: number;
@@ -141,7 +142,6 @@ export const getRelatedPosts = cache(async (
         if (!post?.id) continue;
 
         const priority = matchId && row.match_id === matchId && row.card_type === 'match' ? 0 : 1;
-        const contentStr = typeof post.content === 'object' ? JSON.stringify(post.content) : String(post.content || '');
 
         const cardTeamId = row.team_id ? Number(row.team_id) : null;
         const existing = postMap.get(post.id);
@@ -150,7 +150,7 @@ export const getRelatedPosts = cache(async (
           postMap.set(post.id, {
             id: post.id,
             title: post.title,
-            content: contentStr,
+            thumbnail_url: post.thumbnail_url ?? null,
             post_number: post.post_number,
             created_at: post.created_at,
             view_count: post.views || 0,
@@ -177,7 +177,7 @@ export const getRelatedPosts = cache(async (
         const p = post as unknown as {
           id: string;
           title: string;
-          content: string;
+          thumbnail_url: string | null;
           post_number: number;
           created_at: string;
           views: number;
@@ -188,14 +188,13 @@ export const getRelatedPosts = cache(async (
         if (!p?.id) continue;
 
         const priority = 2;
-        const contentStr = typeof p.content === 'object' ? JSON.stringify(p.content) : String(p.content || '');
 
         const existing = postMap.get(p.id);
         if (!existing || priority < existing.priority) {
           postMap.set(p.id, {
             id: p.id,
             title: p.title,
-            content: contentStr,
+            thumbnail_url: p.thumbnail_url ?? null,
             post_number: p.post_number,
             created_at: p.created_at,
             view_count: p.views || 0,

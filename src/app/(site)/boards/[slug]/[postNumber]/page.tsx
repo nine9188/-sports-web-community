@@ -140,13 +140,13 @@ export async function generateMetadata({
     notFound();
   }
 
-  // 2. 게시글 정보 조회 (per-post 캐시 1시간, description 추출용 content 포함)
+  // 2. 게시글 정보 조회 (per-post 캐시 1시간, summary 컬럼으로 description)
   const post = await getCachedPostMeta(board.id, Number(postNumber));
   if (!post) {
     notFound();
   }
 
-  const description = extractDescription(post.content) || `${board.name} 게시판의 게시글입니다. 축구 커뮤니티 4590 Football.`;
+  const description = post.summary || `${board.name} 게시판의 게시글입니다. 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
     title: `${post.title} - ${board.name}`,
