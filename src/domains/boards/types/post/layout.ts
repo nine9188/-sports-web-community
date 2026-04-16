@@ -26,6 +26,7 @@ export interface LayoutPost {
   author_exp?: number;
   comment_count: number;
   content?: string;
+  thumbnail_url?: string | null;
   team_id?: number | null;
   team_name?: string | null;
   team_logo?: string | null;
@@ -62,6 +63,7 @@ export interface ApiPost {
   author_exp?: number;
   comment_count?: number;
   content?: string;
+  thumbnail_url?: string | null;
   team_id?: string | number | null;
   team_name?: string | null;
   team_logo?: string | null;

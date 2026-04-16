@@ -6,10 +6,10 @@ import Image from 'next/image';
 import type { TeamCardProps } from '@/shared/types/teamCard';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 
-// 4590 표준: placeholder 및 Storage URL
+// 4590 표준: placeholder 및 CDN URL (CDN은 /leagues/md/... 직접 경로)
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const SUPABASE_URL = 'https://cdn.4590football.com';
+const CDN_URL = 'https://cdn.4590football.com';
 
 export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps) {
   // 4590 표준: 다크모드 감지
@@ -28,19 +28,19 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
   const numericTeamId = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
   const leagueId = typeof league?.id === 'string' ? parseInt(league.id, 10) : league?.id;
 
-  // 4590 표준: Storage URL 사용 (다크모드 지원)
+  // 4590 표준: CDN URL 직접 경로 (다크모드 지원)
   const getLeagueLogo = () => {
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
+      return `${CDN_URL}/leagues/md/${leagueId}-1.webp`;
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
+    return `${CDN_URL}/leagues/md/${leagueId}.webp`;
   };
 
   const getTeamLogo = () => {
     if (!numericTeamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${numericTeamId}.webp`;
+    return `${CDN_URL}/teams/md/${numericTeamId}.webp`;
   };
 
   const leagueLogo = getLeagueLogo();

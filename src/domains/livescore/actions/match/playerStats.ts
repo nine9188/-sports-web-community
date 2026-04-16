@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getMatchCache, setMatchCache } from './matchCache';
+import { getMatchCache } from './matchCache';
 import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '../images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import type {
@@ -80,16 +80,8 @@ async function fetchAllPlayerStatsInternal(
       };
     }
 
-    // ============================================
-    // 종료된 경기: DB 캐시 저장
-    // ============================================
+    // 결과 반환 (DB 캐시 저장은 page.tsx에서 leagueId와 함께 처리)
     const result = await extractAllDataFromResponse(data.response);
-
-    if (isFinished) {
-      // 새 형식(AllPlayerStatsResponse)으로 저장
-      setMatchCache(numericMatchId, 'matchPlayerStats', result).catch(() => {});
-    }
-
     return result;
   } catch (error) {
     return {

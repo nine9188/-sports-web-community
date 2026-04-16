@@ -106,21 +106,15 @@ export function AuthProvider({
       try {
         setIsLoading(true);
 
-        // 세션 확인
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        // getUser()로 JWT 검증 (getSession().user는 신뢰 불가 - Supabase 공식 경고 해소)
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
 
         if (mounted) {
-          if (currentSession) {
-            // 사용자 정보 검증
-            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-
-            if (!userError && currentUser) {
-              setUser(currentUser);
-              setSession(currentSession);
-            } else {
-              setUser(null);
-              setSession(null);
-            }
+          if (!userError && currentUser) {
+            setUser(currentUser);
+            // session은 참고용으로만 보관 (user 검증은 위에서 끝남)
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            setSession(currentSession);
           } else {
             setUser(null);
             setSession(null);

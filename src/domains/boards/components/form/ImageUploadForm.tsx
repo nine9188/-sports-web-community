@@ -179,9 +179,8 @@ export default function ImageUploadForm({
           throw new Error('파일 URL을 가져올 수 없습니다.');
         }
 
-        // 부모 컴포넌트에 이미지 URL 전달
+        // 부모 컴포넌트에 이미지 URL 전달 (성공 토스트는 상위 훅에서 처리)
         onImageUrlAdd(urlData.publicUrl, imageCaption || selectedFile.name);
-        toast.success('이미지가 업로드되었습니다.');
       } catch (err: unknown) {
         console.error('이미지 업로드 오류:', err);
         const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';

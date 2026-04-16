@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { siteConfig } from '@/shared/config';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
-import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { getLeagueSlug, getMatchSlug } from '@/domains/livescore/utils/slugs';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
 
 // ISR: 1시간
 export const revalidate = 3600;
@@ -36,6 +37,39 @@ const _getCachedActivePlayersByTeam = (teamIds: number[]) => unstable_cache(
   ['sitemap-active-players', teamIds.sort().join(',')],
   { revalidate: 3600, tags: ['sitemap-players'] }
 )();
+
+// 매치 사이트맵: 최근 7일 + 앞으로 7일 (총 14일 rolling window)
+// getMajorLeagueIds()로 필터된 매치만 포함 (footballApi에서 이미 필터링됨)
+const _getCachedRecentMatches = unstable_cache(
+  async () => {
+    const results: Array<{ id: number; homeName: string; awayName: string; date: string }> = [];
+    const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+
+    for (let offset = -7; offset <= 6; offset++) {
+      const d = new Date(nowKst);
+      d.setUTCDate(d.getUTCDate() + offset);
+      const dateStr = d.toISOString().split('T')[0];
+
+      try {
+        const matches = await fetchMatchesByDate(dateStr);
+        for (const m of matches) {
+          if (!m.id || !m.teams?.home?.name || !m.teams?.away?.name) continue;
+          results.push({
+            id: m.id,
+            homeName: m.teams.home.name,
+            awayName: m.teams.away.name,
+            date: m.time?.date || dateStr,
+          });
+        }
+      } catch {
+        // skip failed date
+      }
+    }
+    return results;
+  },
+  ['sitemap-recent-matches'],
+  { revalidate: 21600, tags: ['sitemap-matches'] }  // 6시간
+);
 
 const _getCachedActiveShopCategories = unstable_cache(
   async () => {
@@ -260,6 +294,16 @@ export async function GET(
         loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
         lastmod: p.updated_at || undefined,
         changefreq: 'monthly', priority: 0.4,
+      })));
+    }
+
+    // 매치 (최근 7일 + 앞으로 7일, unstable_cache 6시간)
+    if (id === 'matches') {
+      const matches = await _getCachedRecentMatches();
+      return sitemapResponse(matches.map(m => ({
+        loc: `${BASE_URL}/livescore/football/match/${m.id}/${getMatchSlug(m.homeName, m.awayName)}`,
+        lastmod: m.date || undefined,
+        changefreq: 'daily', priority: 0.5,
       })));
     }
 

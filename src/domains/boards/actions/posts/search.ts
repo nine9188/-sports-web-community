@@ -37,11 +37,11 @@ async function fetchLogosForPosts(
   return { teamLogoMap, leagueLogoMap, leagueLogoDarkMap };
 }
 
-// RPC 결과 타입 (pgroonga FTS 기반)
+// RPC 결과 타입 (ILIKE 기반, snippet은 plain text)
 interface SearchPostResult {
   id: string;
   title: string;
-  snippet: string; // pgroonga_highlight_html로 하이라이트된 text
+  snippet: string; // 검색어 주변 plain text 발췌
   created_at: string;
   views: number;
   likes: number;
@@ -242,7 +242,7 @@ export async function searchBoardPosts({
 
     const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
-    // RPC snippet 매핑 (post_id → pgroonga 하이라이트 snippet)
+    // RPC snippet 매핑 (post_id → plain text 발췌)
     const snippetMap: Record<string, string> = {};
     typedSearchResults.forEach((r) => {
       snippetMap[r.id] = r.snippet || '';
@@ -279,7 +279,7 @@ export async function searchBoardPosts({
         views: post.views || 0,
         likes: post.likes || 0,
         comment_count: commentCountMap[post.id] || 0,
-        // content 자리에 pgroonga snippet (하위 호환 - Post.content: string)
+        // content 자리에 plain text snippet (하위 호환 - Post.content: string)
         content: snippetMap[post.id] || '',
         thumbnail_url: post.thumbnail_url ?? null,
         team_id: board?.team_id || null,

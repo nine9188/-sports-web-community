@@ -196,15 +196,12 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       leaguesResult,
       iconResult
     ] = await Promise.all([
-      // 게시글 목록 — view_type에 따라 content 포함 여부 결정 (egress 절감)
-      // image-table: 썸네일 이미지 추출 위해 content 필요
-      // list (기본): content 불필요 → 20배 egress 절감
+      // 게시글 목록 — 모든 view_type에서 thumbnail_url + summary 사용
+      // posts.content 컬럼 제거 후 thumbnail_url/summary로 egress 절감
       supabase
         .from('posts')
         .select(
-          board.view_type === 'image-table'
-            ? '*, profiles(id, nickname, icon_id, level, exp, public_id)'
-            : 'id, title, post_number, views, likes, dislikes, created_at, updated_at, user_id, board_id, is_notice, is_must_read, notice_type, notice_boards, notice_order, notice_created_at, is_hidden, is_deleted, show_in_widget, meta, deal_info, profiles(id, nickname, icon_id, level, exp, public_id)',
+          'id, title, post_number, views, likes, dislikes, created_at, updated_at, user_id, board_id, is_notice, is_must_read, notice_type, notice_boards, notice_order, notice_created_at, is_hidden, is_deleted, show_in_widget, meta, deal_info, thumbnail_url, summary, profiles(id, nickname, icon_id, level, exp, public_id)',
           { count: 'exact' }
         )
         .in('board_id', boardFilter)

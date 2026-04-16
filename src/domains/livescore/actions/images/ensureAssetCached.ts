@@ -2,6 +2,7 @@
 
 import sharp from 'sharp';
 import { unstable_cache, revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
   AssetType,
@@ -21,30 +22,61 @@ import {
 } from './constants';
 
 /**
- * 타입별 ready 상태 asset_cache entity_id 목록을 캐싱 (24시간)
+ * 타입별 ready 상태 entity_id 목록을 Cloudflare Worker/KV에서 조회 (24시간 Next.js 레이어 캐시)
  *
- * 하루 85만 회의 asset_cache SELECT를 타입당 1회/24h로 감소.
- * - Set 크기: 타입당 ~30KB (전체 ~155KB)
- * - 새 이미지 업로드 시 cacheAsset이 revalidateTag('asset-cache') 호출 → 즉시 무효화
- * - error/pending 상태는 Set에 없음 → 기존 DB 로직으로 fallback
+ * 기존: Supabase asset_cache 테이블 SELECT (하루 85만 회 egress)
+ * 현재: Worker /asset/ready/:type → KV에서 즉시 반환
+ * - DB egress 0
+ * - 타입당 Worker 호출 1회/24h (unstable_cache)
+ * - 새 이미지 캐싱 성공 시 markAssetReadyInKV()로 즉시 KV에 반영
  */
+function getAssetWorkerUrl(): string {
+  const url = process.env.MATCH_CACHE_URL;
+  if (!url) throw new Error('MATCH_CACHE_URL env var not set');
+  return url.replace(/\/$/, '');
+}
+
+function getAssetWriteSecret(): string {
+  const s = process.env.MATCH_CACHE_WRITE_SECRET;
+  if (!s) throw new Error('MATCH_CACHE_WRITE_SECRET env var not set');
+  return s;
+}
+
 const _getReadyAssetIdSetImpl = (type: AssetType) => unstable_cache(
   async (): Promise<number[]> => {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase
-      .from('asset_cache')
-      .select('entity_id')
-      .eq('type', type)
-      .eq('status', 'ready');
-    return (data || []).map(r => r.entity_id as number);
+    try {
+      const res = await fetch(`${getAssetWorkerUrl()}/asset/ready/${type}`, {
+        method: 'GET',
+        next: { revalidate: 86400, tags: [`asset-cache-${type}`] },
+      });
+      if (!res.ok) return [];
+      const body = await res.json() as { ids: number[] };
+      return body.ids || [];
+    } catch {
+      return [];
+    }
   },
-  ['asset-cache-ready', type],
+  ['asset-cache-ready-kv', type],
   { revalidate: 86400, tags: ['asset-cache', `asset-cache-${type}`] }
 )();
 
 async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
   const ids = await _getReadyAssetIdSetImpl(type);
   return new Set(ids);
+}
+
+/**
+ * 새로 ready된 에셋을 KV에 기록 (DB 업데이트 후 호출)
+ */
+async function markAssetReadyInKV(type: AssetType, entityId: number): Promise<void> {
+  try {
+    await fetch(`${getAssetWorkerUrl()}/asset/${type}/${entityId}`, {
+      method: 'POST',
+      headers: { 'X-Write-Secret': getAssetWriteSecret() },
+    });
+  } catch {
+    // KV 쓰기 실패는 치명적이지 않음 (다음 backfill에서 동기화)
+  }
 }
 
 interface AssetCacheRow {
@@ -255,8 +287,12 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    // 5. readySet 캐시 무효화 (새로 ready된 ID 즉시 반영)
-    revalidateTag(`asset-cache-${type}`);
+    // 5. KV에 ready 기록 + Next.js 캐시 무효화
+    // Next.js 16: render 중 revalidateTag 호출 불가 → after()로 응답 후 실행
+    after(async () => {
+      await markAssetReadyInKV(type, entityId);
+      revalidateTag(`asset-cache-${type}`);
+    });
 
     return getStoragePublicUrl(type, entityId, size);
 

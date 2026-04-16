@@ -31,10 +31,11 @@ export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
 ] as const;
 
 /**
- * Supabase Storage URL
+ * CDN URL (Cloudflare 프록시 or Supabase 직접)
+ * NEXT_PUBLIC_SUPABASE_URL은 Supabase 프로젝트 도메인이라 사용 금지 (이미지 경로 불일치)
  */
 const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cdn.4590football.com';
+  process.env.NEXT_PUBLIC_STORAGE_CDN_URL || 'https://cdn.4590football.com';
 
 /**
  * 이미지 URL 생성 (라이트/다크 모드 지원)
@@ -52,12 +53,12 @@ export function getImageUrls(
   // 1. ID가 있으면 Supabase Storage URL 생성
   if (id) {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const lightUrl = `${SUPABASE_URL}/storage/v1/object/public/${type}/md/${numericId}.webp`;
+    const lightUrl = `${SUPABASE_URL}/${type}/md/${numericId}.webp`;
 
     // 리그이고 다크모드 이미지가 있는 경우만 -1 추가
     const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
     const darkUrl = hasDarkImage
-      ? `${SUPABASE_URL}/storage/v1/object/public/${type}/md/${numericId}-1.webp`
+      ? `${SUPABASE_URL}/${type}/md/${numericId}-1.webp`
       : lightUrl;
 
     return { light: lightUrl, dark: darkUrl };

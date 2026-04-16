@@ -97,10 +97,10 @@ function updateLeagueImage(img: HTMLImageElement, isDark: boolean): void {
 
     if (leagueIdMatch) {
       const leagueId = parseInt(leagueIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
+      lightSrc = `${SUPABASE_URL}/leagues/md/${leagueId}.webp`;
 
       if (DARK_MODE_LEAGUE_IDS.includes(leagueId)) {
-        darkSrc = `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
+        darkSrc = `${SUPABASE_URL}/leagues/md/${leagueId}-1.webp`;
       } else {
         darkSrc = lightSrc;
       }
@@ -126,7 +126,7 @@ function updateTeamImage(img: HTMLImageElement, isDark: boolean): void {
 
     if (teamIdMatch) {
       const teamId = parseInt(teamIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
+      lightSrc = `${SUPABASE_URL}/teams/md/${teamId}.webp`;
       darkSrc = lightSrc; // 팀 로고는 다크모드 이미지 없음
 
       img.setAttribute('data-light-src', lightSrc);

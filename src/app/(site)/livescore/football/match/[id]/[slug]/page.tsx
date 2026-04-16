@@ -229,7 +229,7 @@ async function MatchContentLoader({
     cachedPlayerStats
       ? Promise.resolve(cachedPlayerStats)
       : fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
-          if (isFinished) setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode).catch(() => {});
+          if (isFinished) setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode, leagueId).catch(() => {});
           return r;
         }),
     getPlayersKoreanNames(playerIds),
@@ -249,7 +249,7 @@ async function MatchContentLoader({
   // 캐시 경량화: 이미지 URL은 저장하지 않음 (읽기 시 재계산)
   if (isFinished && !cachedPower && powerResult.success && powerResult.data) {
     const { playerPhotoUrls, teamLogoUrls, leagueLogoUrls, ...powerCacheData } = powerResult.data;
-    setMatchCache(numericMatchId, 'power', powerCacheData, statusCode).catch(() => {});
+    setMatchCache(numericMatchId, 'power', powerCacheData, statusCode, leagueId).catch(() => {});
   }
 
   return (

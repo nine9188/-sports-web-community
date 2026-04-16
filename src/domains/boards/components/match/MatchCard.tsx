@@ -10,7 +10,8 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const SUPABASE_URL = 'https://cdn.4590football.com';
+// CDN은 /leagues/md/{id}.webp 직접 경로 (Supabase storage prefix 불필요)
+const CDN_URL = 'https://cdn.4590football.com';
 
 const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = false }) => {
   const { getTeamById, getLeagueName } = useTeamLeague();
@@ -56,19 +57,19 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const statusInfo = getStatusInfo(status);
   const statusText = statusInfo.text;
 
-  // 4590 표준: Storage URL 사용 (다크모드 지원)
+  // 4590 표준: CDN URL 직접 경로 (다크모드 지원)
   const getLeagueLogo = () => {
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}-1.webp`;
+      return `${CDN_URL}/leagues/md/${leagueId}-1.webp`;
     }
-    return `${SUPABASE_URL}/storage/v1/object/public/leagues/md/${leagueId}.webp`;
+    return `${CDN_URL}/leagues/md/${leagueId}.webp`;
   };
 
   const getTeamLogo = (teamId: number | undefined) => {
     if (!teamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
+    return `${CDN_URL}/teams/md/${teamId}.webp`;
   };
 
   const leagueLogo = getLeagueLogo();

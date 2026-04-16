@@ -4,10 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
 
-// 4590 표준: placeholder 및 Storage URL
+// 4590 표준: placeholder 및 CDN URL (CDN은 /teams/md/... 직접 경로)
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-const SUPABASE_URL = 'https://cdn.4590football.com';
+const CDN_URL = 'https://cdn.4590football.com';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
   const { name, koreanName, team, photo } = playerData;
@@ -16,15 +16,15 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
   const teamId = typeof team?.id === 'string' ? parseInt(team.id, 10) : team?.id;
 
-  // 4590 표준: Storage URL 사용
+  // 4590 표준: CDN URL 직접 경로
   const getTeamLogo = () => {
     if (!teamId) return TEAM_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/teams/md/${teamId}.webp`;
+    return `${CDN_URL}/teams/md/${teamId}.webp`;
   };
 
   const getPlayerPhoto = () => {
     if (!numericPlayerId) return PLAYER_PLACEHOLDER;
-    return `${SUPABASE_URL}/storage/v1/object/public/players/md/${numericPlayerId}.webp`;
+    return `${CDN_URL}/players/md/${numericPlayerId}.webp`;
   };
 
   const teamLogo = team?.id ? getTeamLogo() : TEAM_PLACEHOLDER;
