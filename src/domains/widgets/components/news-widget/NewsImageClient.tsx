@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
 
 const IMAGE_TIMEOUT_MS = 5000;
-const FALLBACK_LOGO = siteConfig.logo;
+const FALLBACK_LOGO = siteConfig.icon;
 
 /** 외부 이미지 URL을 Cloudflare CDN 프록시 경유 URL로 변환 */
 function toProxyUrl(url: string): string {
@@ -89,7 +89,7 @@ export default function NewsImageClient({
         fill
         unoptimized={finalImageUrl.includes('/proxy?url=')}
         className={useFallback
-          ? "object-contain p-4 dark:invert transition-all"
+          ? "object-contain p-4 invert dark:invert-0 transition-all"
           : "object-cover transition-all"
         }
         sizes={sizes}

@@ -107,11 +107,11 @@ export default function PopularPostList({
                   />
                 ) : (
                   <Image
-                    src={siteConfig.logo}
+                    src={siteConfig.icon}
                     alt="사이트 로고"
                     fill
                     sizes="(max-width: 640px) 80px, 96px"
-                    className="object-contain p-2 dark:invert"
+                    className="object-contain p-2 invert dark:invert-0"
                   />
                 )}
               </div>

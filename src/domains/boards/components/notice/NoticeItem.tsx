@@ -100,11 +100,11 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
         <Link href={boardLinkUrl} prefetch={false} className="flex items-center hover:underline">
           <div className="relative w-5 h-5 mr-1">
             <Image
-              src={siteConfig.logo}
+              src={siteConfig.icon}
               alt={notice.board?.name || notice.board_name || ''}
               width={20}
               height={20}
-              className="object-contain w-5 h-5 dark:invert"
+              className="object-contain w-5 h-5 invert dark:invert-0"
               loading="lazy"
             />
           </div>

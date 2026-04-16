@@ -83,11 +83,11 @@ export const MobilePostItem = React.memo(function MobilePostItem({
               />
             ) : (
               <Image
-                src={siteConfig.logo}
+                src={siteConfig.icon}
                 alt="사이트 로고"
                 fill
                 sizes="80px"
-                className="object-contain p-2 dark:invert"
+                className="object-contain p-2 invert dark:invert-0"
               />
             )}
           </div>

@@ -99,11 +99,11 @@ export default function NicknameChangeModal({
           <div className="mb-4 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-2 text-[13px] text-gray-700 dark:text-gray-300">
               <Image
-                src={siteConfig.logo}
+                src={siteConfig.icon}
                 alt="변경권"
                 width={16}
                 height={16}
-                className="dark:invert"
+                className="invert dark:invert-0"
               />
               <span>보유 변경권: <strong className="text-gray-900 dark:text-[#F0F0F0]">{ticketCount}개</strong></span>
             </div>

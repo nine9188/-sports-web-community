@@ -70,7 +70,7 @@ export function getImageProps(url: string | null | undefined) {
 
   if (!proxiedUrl) {
     return {
-      src: siteConfig.logo, // 기본 이미지
+      src: siteConfig.icon, // 기본 아이콘 fallback
       unoptimized: false,
     };
   }

@@ -91,12 +91,12 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
     if (post.league_logo) {
       return isDark && post.league_logo_dark ? post.league_logo_dark : post.league_logo;
     }
-    // 기본 사이트 로고
-    return siteConfig.logo;
+    // 기본 사이트 아이콘 (흰색 → 라이트모드에서만 반전)
+    return siteConfig.icon;
   };
 
   const logoUrl = getLogoUrl();
-  const needsInvert = !post.team_logo && !post.league_logo;
+  const isDefaultIcon = !post.team_logo && !post.league_logo;
 
   return (
     <li className={!isLast ? "border-b border-black/5 dark:border-white/10" : ""}>
@@ -111,7 +111,7 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
               alt={post.board_name}
               width={20}
               height={20}
-              className={`object-contain w-5 h-5 ${needsInvert ? 'dark:invert' : ''}`}
+              className={`object-contain w-5 h-5 ${isDefaultIcon ? 'invert dark:invert-0' : ''}`}
               loading="lazy"
             />
           </div>

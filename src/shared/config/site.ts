@@ -23,7 +23,8 @@ export const siteConfig = {
   twitterHandle: '@4590football',
 
   // 로고 및 이미지
-  logo: logoOptions[logoVariant],
+  logo: logoOptions[logoVariant],         // 풀로고용 (헤더, 정책 페이지 등)
+  icon: '/logo/icon-04.png',              // 아이콘용 — 흰색 베이스 (기본은 invert 필요, 다크모드는 그대로)
   logoOptions,
   defaultOgImage: `${siteUrl}/og-image.png`,
 
