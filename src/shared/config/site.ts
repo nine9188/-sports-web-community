@@ -7,16 +7,11 @@
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
 
-// 테스트 로고 후보 — 아래 인덱스를 바꿔서 하나씩 확인
-// 0: 163522 / 1: 163530 / 2: 163536 / 3: 163547
 export const logoOptions = [
-  '/test/스크린샷_2026-04-15_163522-removebg-preview.png',
-  '/test/스크린샷_2026-04-15_163530-removebg-preview.png',
-  '/test/스크린샷_2026-04-15_163536-removebg-preview.png',
-  '/test/스크린샷_2026-04-15_163547-removebg-preview.png',
+  '/logo/4590football-logo-test.png',
 ] as const;
 
-const logoVariant = 1;
+const logoVariant = 0;
 
 export const siteConfig = {
   // 기본 설정
