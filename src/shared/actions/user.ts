@@ -1,10 +1,38 @@
 'use server';
 
 import { cache } from 'react';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseServer, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { FullUserDataWithSession } from '@/shared/types/user';
 import { getAuthenticatedUser } from './auth';
+
+/**
+ * 유저 통계 (게시글/댓글 수) 캐싱
+ *
+ * 현재 authenticated role로 매 페이지마다 343만 호출/일 발생 중.
+ * 10분 TTL로 99% 이상 감소 예상.
+ * 게시글/댓글 작성·삭제 시 revalidateTag(`user-stats-${userId}`) 호출로 즉시 반영.
+ */
+const _getCachedUserStatsImpl = (userId: string) => unstable_cache(
+  async (): Promise<{ postCount: number; commentCount: number }> => {
+    const supabase = getSupabaseAdmin();
+    const [postCountResult, commentCountResult] = await Promise.all([
+      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      supabase.from('comments').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    ]);
+    return {
+      postCount: postCountResult.count || 0,
+      commentCount: commentCountResult.count || 0,
+    };
+  },
+  ['user-stats', userId],
+  { revalidate: 600, tags: [`user-stats-${userId}`] }  // 10분
+)();
+
+async function getCachedUserStats(userId: string) {
+  return _getCachedUserStatsImpl(userId);
+}
 
 /**
  * 통합 사용자 데이터 fetch 함수
@@ -190,25 +218,15 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
     }
 
     // 2. 모든 데이터 병렬 fetch
-    const [profileResult, postCountResult, commentCountResult] = await Promise.all([
-      // 프로필 기본 정보
+    // profile: 자주 변경되는 값(level, exp, points) 포함 → 캐싱 없이 매번 조회
+    // userStats: 게시글/댓글 count → unstable_cache 10분 (egress 절감)
+    const [profileResult, userStats] = await Promise.all([
       supabase
         .from('profiles')
         .select('id, nickname, email, username, level, exp, points, icon_id, is_admin')
         .eq('id', user.id)
         .single(),
-
-      // 게시글 수
-      supabase
-        .from('posts')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id),
-
-      // 댓글 수
-      supabase
-        .from('comments')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+      getCachedUserStats(user.id),
     ]);
 
     // 프로필 정보 처리
@@ -241,9 +259,8 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
       }
     }
 
-    // 4. 통계 데이터 처리
-    const postCount = postCountResult.count || 0;
-    const commentCount = commentCountResult.count || 0;
+    // 4. 통계 데이터 처리 (캐시된 값 사용)
+    const { postCount, commentCount } = userStats;
 
     return {
       id: profile.id,

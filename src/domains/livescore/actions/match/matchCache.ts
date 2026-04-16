@@ -1,5 +1,6 @@
 'use server';
 
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 /**
@@ -63,60 +64,65 @@ function validateCacheData(dataType: MatchDataType, data: unknown): boolean {
 }
 
 /**
- * 캐시에서 데이터 읽기
+ * 캐시에서 데이터 읽기 (Next.js unstable_cache 7일 래핑)
+ *
+ * 종료 경기 데이터는 영구 불변 → Next.js 레이어에서 장기 캐싱 안전.
+ * setMatchCache가 저장 성공 시 revalidateTag로 즉시 무효화.
+ *
  * is_complete=false인 캐시는 미스로 처리 (API 재호출 유도)
  */
+const _getMatchCacheImpl = (matchId: number, dataType: MatchDataType) => unstable_cache(
+  async (): Promise<unknown | null> => {
+    try {
+      const supabase = getSupabaseAdmin();
+
+      const { data: row, error } = await supabase
+        .from('match_cache')
+        .select('data, is_complete')
+        .eq('match_id', matchId)
+        .eq('data_type', dataType)
+        .maybeSingle();
+
+      if (error || !row) return null;
+
+      if (row.is_complete === false) {
+        return null;
+      }
+
+      return row.data;
+    } catch {
+      return null;
+    }
+  },
+  ['match-cache', String(matchId), dataType],
+  { revalidate: 604800, tags: ['match-cache', `match-${matchId}`] }  // 7일
+)();
+
 export async function getMatchCache(
   matchId: number,
   dataType: MatchDataType
 ): Promise<unknown | null> {
-  try {
-    const supabase = getSupabaseAdmin();
-
-    const { data: row, error } = await supabase
-      .from('match_cache')
-      .select('data, is_complete')
-      .eq('match_id', matchId)
-      .eq('data_type', dataType)
-      .maybeSingle();
-
-    if (error || !row) return null;
-
-    // is_complete=false면 불완전 데이터 → 캐시 미스 처리
-    // 단, created_at이 1시간 이내면 불완전해도 사용 (무한 재호출 방지)
-    if (row.is_complete === false) {
-      return null;
-    }
-
-    return row.data;
-  } catch {
-    return null;
-  }
+  return _getMatchCacheImpl(matchId, dataType);
 }
 
 /**
- * 여러 데이터 타입을 한번에 읽기 (1회 쿼리)
+ * 여러 데이터 타입을 한번에 읽기
+ * getMatchCache를 병렬 호출 → 모두 캐시 히트 시 DB 0회
  */
 export async function getMatchCacheBulk(
   matchId: number,
   dataTypes: MatchDataType[]
 ): Promise<Record<string, unknown>> {
   try {
-    const supabase = getSupabaseAdmin();
-
-    const { data: rows, error } = await supabase
-      .from('match_cache')
-      .select('data_type, data, is_complete')
-      .eq('match_id', matchId)
-      .in('data_type', dataTypes);
-
-    if (error || !rows) return {};
+    const entries = await Promise.all(
+      dataTypes.map(async (dt) => [dt, await getMatchCache(matchId, dt)] as const)
+    );
 
     const result: Record<string, unknown> = {};
-    for (const row of rows) {
-      // is_complete=false인 데이터는 캐시 미스 처리 (getMatchCache와 동일 정책)
-      if (row.is_complete === false) continue;
-      result[row.data_type] = row.data;
+    for (const [dt, data] of entries) {
+      if (data !== null) {
+        result[dt] = data;
+      }
     }
     return result;
   } catch {
@@ -157,6 +163,9 @@ export async function setMatchCache(
         },
         { onConflict: 'match_id,data_type' }
       );
+
+    // Next.js 캐시 무효화 (null 캐싱 회피: 진행 중 → 종료 전환 시 즉시 반영)
+    revalidateTag(`match-${matchId}`);
   } catch {
     // 캐시 저장 실패는 무시
   }
@@ -185,6 +194,10 @@ export async function deleteMatchCache(
 
     const { error } = await query;
     if (error) return { success: false, error: error.message };
+
+    // Next.js 캐시 무효화
+    revalidateTag(`match-${matchId}`);
+
     return { success: true };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : '알 수 없는 오류' };

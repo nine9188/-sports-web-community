@@ -5,6 +5,9 @@
 import { ContentTypeCheck, Post } from './types';
 import { DEFAULT_MAX_HEIGHT } from './constants';
 
+// 공용 위치로 이동됨 (서버/클라이언트 공용). 하위 호환을 위해 re-export.
+export { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
+
 /**
  * 게시글 콘텐츠에 특정 요소가 포함되어 있는지 확인
  *
@@ -283,99 +286,6 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
   } catch {
     return defaultResult;
   }
-}
-
-/**
- * 게시글 콘텐츠에서 첫 번째 이미지 URL 추출
- *
- * @param content - 게시글 콘텐츠 (TipTap JSON 또는 HTML 문자열)
- * @returns 첫 번째 이미지 URL 또는 null
- */
-export function extractFirstImageUrl(content?: string): string | null {
-  if (!content) return null;
-
-  try {
-    // TipTap JSON 형식 확인
-    if (content.trim().startsWith('{')) {
-      try {
-        const obj = JSON.parse(content);
-        if (obj?.type === 'doc' && Array.isArray(obj.content)) {
-          // 재귀적으로 실제 image 노드만 찾기 (matchCard 제외)
-          const findImageUrl = (nodes: unknown[]): string | null => {
-            for (const node of nodes) {
-              if (typeof node !== 'object' || node === null) continue;
-              const nodeObj = node as Record<string, unknown>;
-
-              // matchCard 노드는 건너뜀
-              if (nodeObj.type === 'matchCard') continue;
-
-              // image 노드 발견
-              if (nodeObj.type === 'image') {
-                const attrs = nodeObj.attrs as Record<string, unknown> | undefined;
-                if (attrs?.src && typeof attrs.src === 'string') {
-                  return attrs.src;
-                }
-              }
-
-              // 중첩된 content 탐색
-              if (Array.isArray(nodeObj.content)) {
-                const found = findImageUrl(nodeObj.content);
-                if (found) return found;
-              }
-            }
-            return null;
-          };
-
-          const imageUrl = findImageUrl(obj.content);
-          if (imageUrl) return imageUrl;
-
-          // TipTap JSON이지만 image 노드가 없으면 null 반환
-          // (매치카드만 있는 경우 여기서 종료)
-          return null;
-        }
-        // RSS 등 다른 JSON 형식
-        if (obj?.imageUrl) return obj.imageUrl as string;
-        if (obj?.image_url) return obj.image_url as string;
-
-        // JSON이지만 알 수 없는 형식이면 null 반환
-        return null;
-      } catch {
-        // JSON 파싱 실패 시 HTML로 처리
-      }
-    }
-
-    // 매치카드 포함 여부 확인
-    const hasMatchCard = content.includes('match-card') || content.includes('data-type="match-card"');
-
-    // 매치카드가 있으면 매치카드 외부의 이미지만 추출
-    if (hasMatchCard) {
-      // 매치카드 시작 전의 콘텐츠에서만 이미지 찾기
-      const beforeMatchCard = content.split(/class="[^"]*match-card/i)[0] || '';
-
-      const imgTag = beforeMatchCard.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["'][^>]*>/i);
-      if (imgTag?.[1]) return imgTag[1];
-
-      // 매치카드만 있고 다른 이미지 없으면 null
-      return null;
-    }
-
-    // 매치카드 없는 일반 콘텐츠
-    // HTML img 태그에서 추출 (http로 시작하는 URL만)
-    const imgTag = content.match(/<img[^>]+src=["'](https?:\/\/[^"']+)["'][^>]*>/i);
-    if (imgTag?.[1]) return imgTag[1];
-
-    // Markdown 이미지 형식에서 추출
-    const mdImg = content.match(/!\[[^\]]*\]\(([^)]+)\)/i);
-    if (mdImg?.[1]) return mdImg[1];
-
-    // 일반 이미지 URL 패턴에서 추출
-    const url = content.match(/(https?:\/\/[^\s"'<>)]+\.(?:jpg|jpeg|png|gif|webp))/i);
-    if (url?.[1]) return url[1];
-  } catch (error) {
-    console.error('Failed to extract image URL:', error);
-  }
-
-  return null;
 }
 
 /**

@@ -61,11 +61,11 @@ export async function getUserPosts(
       authorIconUrl = getLevelIconUrl(profile.level || 1);
     }
 
-    // 게시글 조회
+    // 게시글 조회 (리스트 뷰: thumbnail_url 사용, content 제외)
     const { data, count, error } = await supabase
       .from('posts')
       .select(`
-        id, title, content, created_at, views, likes, post_number, is_hidden, is_deleted,
+        id, title, thumbnail_url, created_at, views, likes, post_number, is_hidden, is_deleted,
         board_id,
         boards!inner(id, name, slug, team_id, league_id)
       `, { count: 'exact' })
@@ -119,7 +119,7 @@ export async function getUserPosts(
     const formattedData: Post[] = (data || []).map((post: any) => ({
       id: post.id,
       title: post.title,
-      content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+      thumbnail_url: post.thumbnail_url ?? null,
       created_at: post.created_at,
       formattedDate: formatDate(post.created_at),
       views: post.views || 0,

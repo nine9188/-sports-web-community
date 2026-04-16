@@ -49,7 +49,7 @@ interface RawPostData {
   is_deleted?: boolean;
   is_notice?: boolean;
   profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null };
-  content?: Json;
+  thumbnail_url?: string | null;
   deal_info?: DealInfo | null;
 }
 
@@ -73,7 +73,12 @@ export interface Post {
   views: number;
   likes: number;
   comment_count: number;
+  /**
+   * @deprecated 리스트 뷰에서는 thumbnail_url 사용. content는 상세 페이지에서만 fetch.
+   * 하위 호환을 위해 빈 문자열로 유지.
+   */
   content: string;
+  thumbnail_url?: string | null;
   team_id?: string | number | null;
   league_id?: string | number | null;
   team_logo?: string | null;
@@ -188,7 +193,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         id, title, created_at, updated_at, board_id, views, likes,
         post_number, user_id, is_hidden, is_deleted, is_notice,
         profiles (id, nickname, level, exp, icon_id, public_id),
-        content, deal_info
+        thumbnail_url, deal_info
       `)
       .order('created_at', { ascending: false })
       .eq('is_deleted', false)

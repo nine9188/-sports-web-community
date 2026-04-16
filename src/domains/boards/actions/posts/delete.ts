@@ -107,7 +107,10 @@ export async function deletePost(
     if (existingPost.board_id && existingPost.post_number) {
       revalidateTag(`post-${existingPost.board_id}-${existingPost.post_number}`);
     }
-    
+
+    // 유저 통계 캐시 무효화 (게시글 수 변경)
+    revalidateTag(`user-stats-${userId}`);
+
     if (deleteError) {
       return {
         success: false,

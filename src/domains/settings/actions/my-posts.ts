@@ -29,12 +29,12 @@ export async function getMyPosts(
     const supabase = await getSupabaseServer();
     
     try {
-      // 게시글 조회 (실제 테이블 구조에 맞게 필드명 수정)
+      // 게시글 조회 (리스트 뷰: content 제외, 썸네일 미사용)
       const { data, count, error } = await supabase
         .from('posts')
         .select(`
-          id, title, content, created_at, updated_at, 
-          views, likes, dislikes, category, tags, 
+          id, title, created_at, updated_at,
+          views, likes, dislikes, category, tags,
           board_id, status, post_number, user_id
         `, { count: 'exact' })
         .eq('user_id', userId)
@@ -58,7 +58,6 @@ export async function getMyPosts(
       const formattedData: MyPostItem[] = (data as DbPostResult[]).map(post => ({
         id: post.id,
         title: post.title,
-        content: post.content,
         created_at: post.created_at,
         updated_at: post.updated_at,
         views: post.views || 0,

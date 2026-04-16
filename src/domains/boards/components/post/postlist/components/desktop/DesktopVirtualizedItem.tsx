@@ -46,7 +46,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
   // 썸네일 URL 추출 (Hook은 early return 전에 호출)
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table' || !post) return null;
-    const originalUrl = extractFirstImageUrl(post.content);
+    const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
     return getProxiedImageUrl(originalUrl);
   }, [variant, post]);
 

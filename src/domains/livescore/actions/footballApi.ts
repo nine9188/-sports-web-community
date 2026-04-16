@@ -20,7 +20,18 @@ interface ApiUsageData {
   responseTimeMs: number;
 }
 
+/**
+ * API 사용량 로깅 (샘플링)
+ * - 에러는 100% 기록 (디버깅용)
+ * - 정상 응답은 10%만 샘플링 (INSERT 쿼리 ~90% 감소)
+ * - 4xx/5xx status도 에러로 간주해 100% 기록
+ */
 async function logApiUsage(data: ApiUsageData): Promise<void> {
+  const isError = data.responseHasError || data.statusCode >= 400;
+  if (!isError && Math.random() > 0.1) {
+    return;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
     await supabase.from('api_usage_log').insert({

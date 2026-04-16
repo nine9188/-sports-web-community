@@ -25,7 +25,7 @@ export interface PopularPost {
   team_id?: string | number | null;
   league_id?: string | number | null;
   deal_info?: DealInfo | null;
-  content?: string;
+  thumbnail_url?: string | null;
 }
 
 /**
@@ -79,8 +79,8 @@ export async function getBoardPopularPosts(boardId: string) {
       likes,
       views,
       created_at,
-      content,
       deal_info,
+      thumbnail_url,
       boards!inner(slug, name, team_id, league_id),
       profiles!left(id, nickname, level, exp, icon_id, public_id)
     `)
@@ -166,8 +166,8 @@ export async function getBoardPopularPosts(boardId: string) {
       formattedDate,
       team_id: post.boards?.team_id,
       league_id: post.boards?.league_id,
-      content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
-      deal_info: (post.deal_info as unknown as DealInfo) || null
+      deal_info: (post.deal_info as unknown as DealInfo) || null,
+      thumbnail_url: post.thumbnail_url ?? null,
     };
   };
 

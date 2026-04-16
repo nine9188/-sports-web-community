@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidateTag } from 'next/cache';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
@@ -187,7 +188,10 @@ export async function createComment({
       console.error('알림 생성 오류:', notificationError);
       // 알림 생성 실패해도 댓글 작성은 성공으로 처리
     }
-    
+
+    // 유저 통계 캐시 무효화 (댓글 수 변경)
+    revalidateTag(`user-stats-${user.id}`);
+
     return { success: true, comment: newComment };
   } catch (error) {
     return { 

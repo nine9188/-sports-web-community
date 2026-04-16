@@ -117,6 +117,24 @@ export async function middleware(request: NextRequest) {
     return botResponse
   }
 
+  // 경로 분류
+  const protectedPaths = ['/settings'] // 로그인 필요 경로
+  const authPaths = ['/signin', '/signup'] // 인증 페이지 (로그인 사용자 접근 방지)
+  // 콜백/소셜 회원가입은 로그인 사용자도 접근 가능해야 함
+  const authExceptionPaths = ['/auth/callback', '/auth/naver', '/social-signup']
+
+  const isProtected = protectedPaths.some(path => pathname.startsWith(path))
+  const isAuthPage = authPaths.some(path => pathname.startsWith(path))
+  const isAdmin = pathname.startsWith('/admin')
+  const isAuthException = authExceptionPaths.some(path => pathname.startsWith(path)) || pathname.startsWith('/auth')
+  const hasNicknameCookie = request.cookies.get('has_nickname')?.value === '1'
+
+  // Fast path: 일반 페이지 + 닉네임 확인됨 → auth 체크 완전 스킵
+  // (일반 유저가 /boards, /livescore 등 방문하는 대다수 케이스)
+  if (!isProtected && !isAuthPage && !isAdmin && !isAuthException && hasNicknameCookie) {
+    return NextResponse.next({ request: { headers: request.headers } })
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -176,18 +194,12 @@ export async function middleware(request: NextRequest) {
   )
 
   try {
-    // 세션 조회 (토큰 갱신 없이 현재 세션만 확인)
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user || null
-
-    // 경로 분류
-    const protectedPaths = ['/settings'] // 로그인 필요 경로
-    const authPaths = ['/signin', '/signup'] // 인증 페이지 (로그인 사용자 접근 방지)
-    // 콜백/소셜 회원가입은 로그인 사용자도 접근 가능해야 함
-    const authExceptionPaths = ['/auth/callback', '/auth/naver', '/social-signup']
+    // 사용자 인증 확인 (getUser: JWT 검증, Supabase 공식 권장)
+    // getSession().user는 JWT 검증을 안 해서 Vercel WARNING 유발 → getUser 사용
+    const { data: { user } } = await supabase.auth.getUser()
 
     // 1. 보호된 경로 접근 제어 (비로그인 사용자 차단)
-    if (protectedPaths.some(path => pathname.startsWith(path)) && !user) {
+    if (isProtected && !user) {
       const redirectUrl = new URL('/signin', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
       redirectUrl.searchParams.set('message', '로그인이 필요한 페이지입니다')
@@ -195,10 +207,8 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. 닉네임 미설정 사용자 강제 소셜 회원가입 리다이렉트
-    if (user && !authExceptionPaths.some(path => pathname.startsWith(path)) && !pathname.startsWith('/auth')) {
-      const hasNickname = request.cookies.get('has_nickname')?.value
-
-      if (hasNickname !== '1') {
+    if (user && !isAuthException) {
+      if (!hasNicknameCookie) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('nickname')
@@ -220,13 +230,13 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. 로그인 사용자의 인증 페이지 접근 방지 (소셜 회원가입 제외)
-    if (authPaths.some(path => pathname.startsWith(path)) && user) {
+    if (isAuthPage && user) {
       const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/'
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
-    // 3. 관리자 페이지 접근 제어
-    if (pathname.startsWith('/admin')) {
+    // 4. 관리자 페이지 접근 제어
+    if (isAdmin) {
       // 비로그인 사용자 차단
       if (!user) {
         return NextResponse.redirect(new URL('/', request.url))

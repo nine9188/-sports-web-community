@@ -6,7 +6,6 @@
 export interface MyPostItem {
   id: string;
   title: string;
-  content: string | null;
   created_at: string;
   updated_at: string | null;
   views: number;
@@ -27,7 +26,6 @@ export interface MyPostItem {
 export interface DbPostResult {
   id: string;
   title: string;
-  content: string | null;
   created_at: string;
   updated_at: string | null;
   views: number;
@@ -40,4 +38,4 @@ export interface DbPostResult {
   post_number: number;
   user_id: string;
   [key: string]: unknown;
-} 
+}

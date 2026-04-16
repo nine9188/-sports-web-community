@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getAllPopularPosts } from '@/domains/boards/actions/getAllPopularPosts';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import PopularPageClient from './PopularPageClient';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -43,12 +43,8 @@ export default async function PopularPostsPage({
     // getAllPopularPosts 결과를 직접 사용 (content 포함)
     const layoutPosts = postsData.data || [];
 
-    // HoverMenu용 데이터 가져오기
-    const supabase = await getSupabaseServer();
-    const { data: boardsData } = await supabase
-      .from('boards')
-      .select('*')
-      .order('display_order', { ascending: true });
+    // HoverMenu용 데이터 가져오기 (unstable_cache 7일, DB 조회 없음)
+    const boardsData = await getCachedAllBoards();
 
     // HoverMenu용 데이터 구조화
     const topBoards: Array<{

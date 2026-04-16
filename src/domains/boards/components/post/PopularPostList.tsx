@@ -33,6 +33,7 @@ interface Post {
   author_exp?: number;
   comment_count: number;
   content?: string;
+  thumbnail_url?: string | null;
   team_logo?: string | null;
   league_logo?: string | null;
   deal_info?: DealInfo | null;
@@ -68,7 +69,7 @@ export default function PopularPostList({
   return (
     <Container className="bg-white dark:bg-[#1D1D1D]">
       {posts.map((post, index) => {
-        const originalUrl = extractFirstImageUrl(post.content);
+        const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
         const thumbnailUrl = getProxiedImageUrl(originalUrl); // 프록시 URL로 변환
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;

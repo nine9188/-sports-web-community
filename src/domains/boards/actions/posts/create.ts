@@ -1,12 +1,13 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
 import type { PostActionResponse } from './utils';
 
@@ -91,7 +92,8 @@ async function createPostInternal(params: {
       title: title.trim(),
       content: typeof content === 'string' && content.startsWith('{') ? JSON.parse(content) : content,
       user_id: userId,
-      board_id: boardId
+      board_id: boardId,
+      thumbnail_url: extractFirstImageUrl(content),
     };
 
     // 핫딜 정보 추가
@@ -145,6 +147,9 @@ async function createPostInternal(params: {
     const boardSlug = boardData.slug || boardId;
     revalidatePath(`/boards/${boardSlug}`);
     revalidatePath('/boards');
+
+    // 유저 통계 캐시 무효화 (게시글 수 변경)
+    revalidateTag(`user-stats-${userId}`);
 
     // 로그 및 보상 처리 (병렬 실행 - 응답 차단하지 않음)
     // 실패해도 게시글 생성은 이미 성공했으므로 무시

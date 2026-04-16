@@ -1,6 +1,7 @@
 'use server';
 
 import sharp from 'sharp';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
   AssetType,
@@ -18,6 +19,33 @@ import {
   SIZE_CONFIG,
   VENUE_SIZE_CONFIG,
 } from './constants';
+
+/**
+ * 타입별 ready 상태 asset_cache entity_id 목록을 캐싱 (24시간)
+ *
+ * 하루 85만 회의 asset_cache SELECT를 타입당 1회/24h로 감소.
+ * - Set 크기: 타입당 ~30KB (전체 ~155KB)
+ * - 새 이미지 업로드 시 cacheAsset이 revalidateTag('asset-cache') 호출 → 즉시 무효화
+ * - error/pending 상태는 Set에 없음 → 기존 DB 로직으로 fallback
+ */
+const _getReadyAssetIdSetImpl = (type: AssetType) => unstable_cache(
+  async (): Promise<number[]> => {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('asset_cache')
+      .select('entity_id')
+      .eq('type', type)
+      .eq('status', 'ready');
+    return (data || []).map(r => r.entity_id as number);
+  },
+  ['asset-cache-ready', type],
+  { revalidate: 86400, tags: ['asset-cache', `asset-cache-${type}`] }
+)();
+
+async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
+  const ids = await _getReadyAssetIdSetImpl(type);
+  return new Set(ids);
+}
 
 interface AssetCacheRow {
   id: string;
@@ -76,9 +104,15 @@ export async function ensureAssetCached(
   }
 
   try {
+    // 0. Fast path: unstable_cache에 ready로 등록된 ID면 DB 스킵
+    const readySet = await getReadyAssetIdSet(type);
+    if (readySet.has(entityId)) {
+      return getStoragePublicUrl(type, entityId, size);
+    }
+
     const supabase = getSupabaseAdmin();
 
-    // 1. 캐시 조회
+    // 1. 캐시 조회 (readySet에 없는 ID만 도달: 신규/error/pending)
     const { data: cache } = await supabase
       .from('asset_cache')
       .select('*')
@@ -214,6 +248,9 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
+    // 5. readySet 캐시 무효화 (새로 ready된 ID 즉시 반영)
+    revalidateTag(`asset-cache-${type}`);
+
     return getStoragePublicUrl(type, entityId, size);
 
   } catch (error) {
@@ -255,28 +292,47 @@ export async function ensureAssetsCached(
   }
 
   const result: Record<number, string> = {};
-  const supabase = getSupabaseAdmin();
 
   try {
-    // 1. 한 번에 모든 캐시 조회
+    // 1. Fast path: unstable_cache의 ready Set으로 DB 조회 없이 분류
+    const readySet = await getReadyAssetIdSet(type);
+    const unknownIds: number[] = [];
+
+    for (const id of uniqueIds) {
+      if (readySet.has(id)) {
+        result[id] = getStoragePublicUrl(type, id, size);
+      } else {
+        unknownIds.push(id);
+      }
+    }
+
+    // 모든 ID가 ready면 DB 조회 완전 스킵
+    if (unknownIds.length === 0) {
+      return result;
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // 2. readySet에 없는 것들만 DB 조회 (신규/error/pending)
     const { data: caches } = await supabase
       .from('asset_cache')
       .select('entity_id, status, checked_at')
       .eq('type', type)
-      .in('entity_id', uniqueIds);
+      .in('entity_id', unknownIds);
 
     const cacheMap = new Map<number, AssetCacheRow>();
     (caches || []).forEach((c: AssetCacheRow) => {
       cacheMap.set(c.entity_id, c);
     });
 
-    // 2. ready인 것들은 바로 URL 생성
+    // 3. 상태별 분기
     const needsCaching: number[] = [];
 
-    for (const id of uniqueIds) {
+    for (const id of unknownIds) {
       const cache = cacheMap.get(id);
 
       if (cache?.status === 'ready') {
+        // readySet 캐시가 아직 갱신 전인 경우 (업로드 직후)
         result[id] = getStoragePublicUrl(type, id, size);
       } else if (cache?.status === 'error') {
         // 에러 쿨다운 체크
@@ -384,6 +440,9 @@ export async function forceRefreshAsset(
       .delete()
       .eq('type', type)
       .eq('entity_id', entityId);
+
+    // readySet 캐시 무효화 (삭제된 ID가 Set에서 빠지도록)
+    revalidateTag(`asset-cache-${type}`);
 
     // 새로 다운로드 (ensureAssetCached가 "레코드 없음" → cacheAsset 실행)
     const url = await ensureAssetCached(type, entityId, size);

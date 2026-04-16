@@ -1,5 +1,6 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { TopicPost } from '../types';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
@@ -18,12 +19,18 @@ interface AllTopicPostsData {
 }
 
 /**
- * 모든 인기글 탭 데이터를 한 번에 조회
+ * 모든 인기글 탭 데이터를 한 번에 조회 (unstable_cache 5분)
+ * 사이드바는 모든 페이지에 렌더됨 → 캐싱 임팩트 가장 큼.
+ * 사용자 개인화 없음 (로그인 여부 무관한 공통 데이터).
  * 기존: views, likes, comments, hot 각각 별도 쿼리 (4회)
- * 최적화: 한 번의 쿼리로 가져와서 서버에서 정렬별로 분리
+ * 최적화: 한 번의 쿼리로 가져와서 서버에서 정렬별로 분리 + 5분 캐싱
  */
 export async function getAllTopicPosts(limit = 20): Promise<AllTopicPostsData> {
-  return fetchAllTopicPosts(limit);
+  return unstable_cache(
+    () => fetchAllTopicPosts(limit),
+    ['all-topic-posts', String(limit)],
+    { revalidate: 300, tags: ['all-topic-posts'] }  // 5분
+  )();
 }
 
 /**
@@ -45,6 +52,9 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
     const windowStart = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
 
     // Step 1: 모든 게시글을 한 번에 가져오기
+    // 사이드바 렌더링은 제목/카운트만 사용 (썸네일 없음) → content 제외
+    // HOT 점수 계산용으로 1000개 fetch (폭증 시 방어선, 상위 20개만 탭에 표시)
+    // 현재 7일 게시글 ~271개로 LIMIT 미발동. 트래픽 급증 대비용.
     const { data: postsData, error } = await supabase
       .from('posts')
       .select(`
@@ -55,13 +65,14 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
         views,
         likes,
         post_number,
-        content,
         is_hidden,
         is_deleted
       `)
       .gte('created_at', windowStart)
       .eq('is_deleted', false)
-      .eq('is_hidden', false);
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false })
+      .limit(1000);
 
     if (error || !postsData || postsData.length === 0) {
       return emptyResult;
@@ -196,7 +207,6 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
         team_logo: teamLogo,
         league_logo: leagueLogo,
         league_logo_dark: leagueLogoDark,
-        content: typeof post.content === 'string' ? post.content : (post.content ? JSON.stringify(post.content) : undefined),
         hot_score: hotScore
       };
     });

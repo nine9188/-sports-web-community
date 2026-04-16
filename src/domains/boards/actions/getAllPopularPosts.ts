@@ -27,7 +27,7 @@ export interface PopularPost {
   league_id?: string | number | null;
   team_logo?: string | null;
   league_logo?: string | null;
-  content?: string;
+  thumbnail_url?: string | null;
 }
 
 export interface PopularPostsResponse {
@@ -118,8 +118,8 @@ export async function getAllPopularPosts({
         views,
         created_at,
         board_id,
-        content,
         user_id,
+        thumbnail_url,
         boards!inner(id, slug, name, team_id, league_id),
         profiles!left(id, nickname, level, exp, icon_id, public_id)
       `)
@@ -285,7 +285,7 @@ export async function getAllPopularPosts({
         league_id: post.boards?.league_id,
         team_logo: teamLogo,
         league_logo: leagueLogo,
-        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || '')
+        thumbnail_url: post.thumbnail_url ?? null,
       };
     });
 

@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidateTag } from 'next/cache';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentDeleteResponse } from './utils';
@@ -53,7 +54,10 @@ export async function deleteComment(commentId: string): Promise<CommentDeleteRes
         commentId
       }
     );
-    
+
+    // 유저 통계 캐시 무효화 (댓글 수 변경)
+    revalidateTag(`user-stats-${user.id}`);
+
     return { success: true };
   } catch (error) {
     return { 

@@ -49,9 +49,9 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
   // 썸네일 URL 추출 (image-table variant일 때만)
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table') return null;
-    const originalUrl = extractFirstImageUrl(post.content);
+    const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
     return getProxiedImageUrl(originalUrl);
-  }, [variant, post.content]);
+  }, [variant, post.thumbnail_url, post.content]);
 
   // 핫딜 정보 계산
   const dealInfo = post.deal_info;

@@ -54,9 +54,9 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
 
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table') return null;
-    const originalUrl = extractFirstImageUrl(post.content);
+    const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
     return getProxiedImageUrl(originalUrl);
-  }, [variant, post.content]);
+  }, [variant, post.thumbnail_url, post.content]);
 
   const titleText = getPostTitleText(post);
   const titleClassName = getPostTitleClassName(post, isCurrentPost);

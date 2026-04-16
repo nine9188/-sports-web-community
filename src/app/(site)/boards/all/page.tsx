@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { fetchPosts } from '@/domains/boards/actions';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getNotices } from '@/domains/boards/actions/posts/notices';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
@@ -42,12 +42,8 @@ export default async function AllPostsPage({
     // fetchPosts 결과를 직접 사용 (content 포함)
     const layoutPosts = postsData.data || [];
 
-    // HoverMenu용 데이터 가져오기
-    const supabase = await getSupabaseServer();
-    const { data: boardsData } = await supabase
-      .from('boards')
-      .select('*')
-      .order('display_order', { ascending: true });
+    // HoverMenu용 데이터 가져오기 (unstable_cache 7일, DB 조회 없음)
+    const boardsData = await getCachedAllBoards();
 
     // HoverMenu용 데이터 구조화
     const topBoards: Array<{

@@ -4,6 +4,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { revalidateTag } from 'next/cache';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
@@ -90,11 +91,13 @@ export async function updatePost(
       title: string;
       content: string;
       updated_at: string;
+      thumbnail_url: string | null;
       deal_info?: DealInfo | null;
     } = {
       title: title.trim(),
       content: content,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      thumbnail_url: extractFirstImageUrl(content),
     };
 
     // 핫딜 정보가 제공된 경우 추가

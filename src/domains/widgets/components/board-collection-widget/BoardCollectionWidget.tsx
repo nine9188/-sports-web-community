@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { ChevronRight } from 'lucide-react';
 import BoardPostItem from './BoardPostItem';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import type { BoardPost } from './types';
 
 const POSTS_PER_SECTION = 5;
@@ -18,13 +19,12 @@ interface SectionData {
 }
 
 /**
- * 데이터분석 위젯 데이터를 가져오는 함수
- * - 해외축구 분석: meta.analysis_region = 'foreign' 분석글
- * - 국내축구 분석: meta.analysis_region = 'domestic' 분석글
+ * 데이터분석 위젯 DB 조회 로직 (캐시 래퍼 내부용)
+ * Admin 클라이언트 사용 (unstable_cache 내부는 cookies() 사용 불가)
  */
-export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData; domestic: SectionData } | null> {
+async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; domestic: SectionData } | null> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
     // 해외/국내 분석글 직접 조회 (analysis_region 필터 + 실제 board slug 조인)
     const [foreignPostsResult, domesticPostsResult] = await Promise.all([
@@ -95,6 +95,20 @@ export async function fetchBoardCollectionData(): Promise<{ foreign: SectionData
     return null;
   }
 }
+
+/**
+ * 데이터분석 위젯 데이터를 가져오는 함수 (unstable_cache 10분)
+ * - 해외축구 분석: meta.analysis_region = 'foreign' 분석글
+ * - 국내축구 분석: meta.analysis_region = 'domestic' 분석글
+ *
+ * 메인 페이지에 포함되는 위젯이라 호출 빈도 높음 → 10분 캐시로 DB 부하 대폭 감소.
+ * 분석글 작성은 빈도가 낮아 최대 10분 stale 허용 가능.
+ */
+export const fetchBoardCollectionData = unstable_cache(
+  _fetchBoardCollectionDataImpl,
+  ['board-collection-widget'],
+  { revalidate: 600, tags: ['board-collection', 'analysis-posts'] }
+);
 
 interface BoardCollectionWidgetProps {
   initialData?: { foreign: SectionData; domestic: SectionData } | null;

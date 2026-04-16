@@ -97,11 +97,11 @@ export async function getUserCommentedPosts(
       };
     }
 
-    // 게시글 상세 조회
+    // 게시글 상세 조회 (리스트 뷰: thumbnail_url 사용, content 제외)
     const { data: posts, error: postsError } = await supabase
       .from('posts')
       .select(`
-        id, title, content, created_at, views, likes, post_number, is_hidden, is_deleted,
+        id, title, thumbnail_url, created_at, views, likes, post_number, is_hidden, is_deleted,
         board_id, user_id,
         boards!inner(id, name, slug, team_id, league_id),
         profiles!inner(id, nickname, public_id, level, exp, icon_id)
@@ -184,7 +184,7 @@ export async function getUserCommentedPosts(
       return {
         id: post.id,
         title: post.title,
-        content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+        thumbnail_url: post.thumbnail_url ?? null,
         created_at: post.created_at,
         formattedDate: formatDate(post.created_at),
         views: post.views || 0,

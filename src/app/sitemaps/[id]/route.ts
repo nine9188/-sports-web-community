@@ -1,10 +1,54 @@
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { siteConfig } from '@/shared/config';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 // ISR: 1시간
 export const revalidate = 3600;
+
+// 거의 변하지 않는 참조 데이터는 1시간 캐시 (sitemap은 최신성 요구 낮음)
+const _getCachedActiveTeams = unstable_cache(
+  async () => {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('football_teams')
+      .select('team_id, slug, updated_at, league_id')
+      .eq('is_active', true);
+    return data || [];
+  },
+  ['sitemap-active-teams'],
+  { revalidate: 3600, tags: ['sitemap-teams'] }
+);
+
+const _getCachedActivePlayersByTeam = (teamIds: number[]) => unstable_cache(
+  async () => {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('football_players')
+      .select('player_id, slug, updated_at')
+      .in('team_id', teamIds)
+      .eq('is_active', true);
+    return data || [];
+  },
+  ['sitemap-active-players', teamIds.sort().join(',')],
+  { revalidate: 3600, tags: ['sitemap-players'] }
+)();
+
+const _getCachedActiveShopCategories = unstable_cache(
+  async () => {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('shop_categories')
+      .select('slug')
+      .eq('is_active', true);
+    return data || [];
+  },
+  ['sitemap-shop-categories'],
+  { revalidate: 3600, tags: ['sitemap-shop'] }
+);
 
 const BASE_URL = siteConfig.url;
 
@@ -87,21 +131,28 @@ async function getSupabase() {
   return getSupabaseServer();
 }
 
+/**
+ * 게시판 카테고리 → 하위 게시판 ID 목록 조회
+ * getCachedAllBoards() 활용 (unstable_cache 7일) → DB 조회 없음
+ */
 async function getBoardIdsByCategory(category: string): Promise<string[]> {
-  const supabase = await getSupabase();
   const config = BOARD_CATEGORIES[category];
   if (!config) return [];
 
-  const { data: parents } = await supabase
-    .from('boards').select('id').in('slug', config.parentSlugs);
-  if (!parents?.length) return [];
+  const allBoards = await getCachedAllBoards();
 
-  const parentIds = parents.map(p => p.id);
-  const { data: boards } = await supabase
-    .from('boards').select('id')
-    .or(`id.in.(${parentIds.join(',')}),parent_id.in.(${parentIds.join(',')})`);
+  // parent slugs와 일치하는 보드의 ID 수집
+  const parents = allBoards.filter(b => b.slug && config.parentSlugs.includes(b.slug));
+  if (!parents.length) return [];
 
-  return (boards || []).map(b => b.id);
+  const parentIds = new Set(parents.map(p => p.id));
+
+  // parent 자신 + parent_id가 parent에 속하는 보드의 ID 수집
+  const relevant = allBoards.filter(
+    b => parentIds.has(b.id) || (b.parent_id && parentIds.has(b.parent_id))
+  );
+
+  return relevant.map(b => b.id);
 }
 
 // --- GET handler ---
@@ -130,22 +181,24 @@ export async function GET(
       return sitemapResponse(entries);
     }
 
-    // 게시판
+    // 게시판 (getCachedAllBoards 활용, DB 조회 없음)
     if (id.startsWith('boards-')) {
       const category = id.replace('boards-', '');
-      const supabase = await getSupabase();
       const config = BOARD_CATEGORIES[category];
       if (!config) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      const { data: parents } = await supabase
-        .from('boards').select('id, slug').in('slug', config.parentSlugs);
-      if (!parents?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      const allBoards = await getCachedAllBoards();
+      const parents = allBoards.filter(b => b.slug && config.parentSlugs.includes(b.slug));
+      if (!parents.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      const parentIds = parents.map(p => p.id);
-      const { data: boards } = await supabase
-        .from('boards').select('slug').in('parent_id', parentIds).not('slug', 'is', null);
+      const parentIds = new Set(parents.map(p => p.id));
+      const children = allBoards.filter(b => b.parent_id && parentIds.has(b.parent_id) && b.slug);
 
-      const allSlugs = [...new Set([...parents.map(p => p.slug), ...(boards || []).map(b => b.slug)].filter(Boolean))];
+      const allSlugs = [...new Set([
+        ...parents.map(p => p.slug),
+        ...children.map(b => b.slug),
+      ].filter(Boolean))] as string[];
+
       return sitemapResponse(allSlugs.map(slug => ({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'daily', priority: 0.5 })));
     }
 
@@ -176,52 +229,45 @@ export async function GET(
       return sitemapResponse(entries);
     }
 
-    // 팀
+    // 팀 (unstable_cache 1시간)
     if (id === 'teams') {
-      const supabase = await getSupabase();
-      const { data: teams } = await supabase
-        .from('football_teams').select('team_id, slug, updated_at')
-        .in('league_id', Object.values(PLAYER_LEAGUES))
-        .eq('is_active', true);
+      const allTeams = await _getCachedActiveTeams();
+      const leagueIdSet = new Set(Object.values(PLAYER_LEAGUES));
+      const teams = allTeams.filter(t => t.league_id !== null && leagueIdSet.has(t.league_id));
 
-      return sitemapResponse((teams || []).map(t => ({
+      return sitemapResponse(teams.map(t => ({
         loc: `${BASE_URL}/livescore/football/team/${t.team_id}/${t.slug || 'team'}`,
         lastmod: t.updated_at || undefined,
         changefreq: 'weekly', priority: 0.6,
       })));
     }
 
-    // 선수 (리그별)
+    // 선수 (리그별, unstable_cache 1시간)
     if (id.startsWith('players-')) {
       const leagueSlug = id.replace('players-', '');
       const leagueId = PLAYER_LEAGUES[leagueSlug];
       if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      const supabase = await getSupabase();
-      const { data: teams } = await supabase
-        .from('football_teams').select('team_id')
-        .eq('league_id', leagueId).eq('is_active', true);
-      if (!teams?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      const allTeams = await _getCachedActiveTeams();
+      const leagueTeamIds = allTeams
+        .filter(t => t.league_id === leagueId)
+        .map(t => t.team_id);
+      if (!leagueTeamIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      const { data: players } = await supabase
-        .from('football_players').select('player_id, slug, updated_at')
-        .in('team_id', teams.map(t => t.team_id))
-        .eq('is_active', true);
+      const players = await _getCachedActivePlayersByTeam(leagueTeamIds);
 
-      return sitemapResponse((players || []).map(p => ({
+      return sitemapResponse(players.map(p => ({
         loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
         lastmod: p.updated_at || undefined,
         changefreq: 'monthly', priority: 0.4,
       })));
     }
 
-    // 샵
+    // 샵 (unstable_cache 1시간)
     if (id === 'shop') {
-      const supabase = await getSupabase();
-      const { data: categories } = await supabase
-        .from('shop_categories').select('slug').eq('is_active', true);
+      const categories = await _getCachedActiveShopCategories();
 
-      return sitemapResponse((categories || []).map(c => ({
+      return sitemapResponse(categories.map(c => ({
         loc: `${BASE_URL}/shop/${c.slug}`, changefreq: 'weekly', priority: 0.3,
       })));
     }

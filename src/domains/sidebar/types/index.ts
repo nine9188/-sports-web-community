@@ -98,7 +98,6 @@ export interface TopicPost {
   team_logo: string | null;
   league_logo: string | null;
   league_logo_dark: string | null;
-  content?: string;
 }
 
 // 인기글 데이터 타입 (탭별 분류)

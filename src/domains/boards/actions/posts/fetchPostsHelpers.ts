@@ -234,6 +234,7 @@ export function formatPostData(
     is_notice?: boolean;
     profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
+    thumbnail_url?: string | null;
     deal_info?: DealInfo | null;
   },
   boardsData: Record<string, { name: string; team_id?: number | null; league_id?: number | null; slug: string; logo?: string | null }>,
@@ -309,7 +310,9 @@ export function formatPostData(
     views: post.views || 0,
     likes: post.likes || 0,
     comment_count: commentCountMap[post.id] || 0,
+    // content 필드는 deprecated — 리스트 뷰에서는 thumbnail_url 사용. 하위 호환을 위해 빈 값 유지.
     content: typeof post.content === 'string' ? post.content : JSON.stringify(post.content || ''),
+    thumbnail_url: post.thumbnail_url ?? null,
     team_id: safeBoardInfo.team_id,
     league_id: safeBoardInfo.league_id,
     team_logo: teamLogo,

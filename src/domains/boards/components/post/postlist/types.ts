@@ -30,7 +30,11 @@ export interface Post {
   author_icon_id?: number | null;
   author_icon_url?: string | null;
   comment_count: number;
+  /**
+   * @deprecated 리스트 뷰에서는 thumbnail_url 사용. 하위 호환용.
+   */
   content?: string;
+  thumbnail_url?: string | null;
   team_id?: string | number | null;
   league_id?: string | number | null;
   team_logo?: string | null;
