@@ -8,6 +8,7 @@ import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
+import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
 import type { PostActionResponse } from './utils';
 
@@ -94,6 +95,7 @@ async function createPostInternal(params: {
       user_id: userId,
       board_id: boardId,
       thumbnail_url: extractFirstImageUrl(content),
+      summary: extractSummary(content),
     };
 
     // 핫딜 정보 추가

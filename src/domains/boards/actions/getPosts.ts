@@ -3,6 +3,7 @@
 import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import type { Json } from '@/shared/types/supabase';
+import { getCachedBoardById } from './getCachedBoards';
 import {
   createFallbackPost,
   createEmptyResponse,
@@ -133,11 +134,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     const checkBoardId = boardId || currentBoardId;
 
     if (checkBoardId) {
-      const { data: boardData } = await supabase
-        .from('boards')
-        .select('id, slug')
-        .eq('id', checkBoardId)
-        .single();
+      // 캐시된 boards에서 조회 (unstable_cache 7일)
+      const boardData = await getCachedBoardById(checkBoardId);
 
       if (boardData?.slug === 'notice') {
         isNoticeBoard = true;
@@ -165,11 +163,8 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     if (fromParam === 'boards' && currentBoardId) {
       currentBoardFilter = currentBoardId;
     } else if (fromParam && fromParam !== 'boards') {
-      const { data: fromBoardData } = await supabase
-        .from('boards')
-        .select('id')
-        .eq('id', fromParam)
-        .single();
+      // 캐시된 boards에서 조회
+      const fromBoardData = await getCachedBoardById(fromParam);
 
       if (fromBoardData) {
         currentBoardFilter = fromParam;

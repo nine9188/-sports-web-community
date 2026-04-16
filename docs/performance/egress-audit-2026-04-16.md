@@ -1009,93 +1009,204 @@ $$ LANGUAGE sql;
 
 ---
 
-### 🟢 P4-1. `posts` ↔ `posts_content` 테이블 분리
+### 🟢 P4-1. `posts` ↔ `posts_content` 테이블 분리 (FTS 통합 전략)
 
 **현재 문제**:
 - `posts` 테이블이 JSONB `content` 필드 때문에 row당 수 KB ~ 수십 KB
 - 리스트 조회 시 불필요한 content 전송 (P1에서 이미 select 제거했지만 테이블 레벨 분리가 더 근본적)
 - 인덱스 스캔 시에도 TOAST 압박
 
-#### 개선 방안
+### 🔮 미래 관점 — 지금 하는 게 합리적인 이유
 
-**새 테이블 구조**:
+| 시점 | posts 수 | 마이그레이션 난이도 |
+|---|---|---|
+| **지금** | **1,694건** | 🟢 **쉬움** (수 초 내 데이터 복사) |
+| 6개월 후 | ~10,000건 | 🟡 중간 |
+| 1년 후 | ~50,000건 | 🔴 어려움 (락, 다운타임) |
+| 2년 후 | ~200,000건+ | 🔴🔴 매우 어려움 |
+
+**트래픽 성장하면 마이그레이션 비용 기하급수적 증가**. 지금 하는 게 가장 쌈.
+
+### 🛡️ 안전 전략 — 병행 유지 방식 (롤백 가능)
+
+**`posts.content` 컬럼을 즉시 DROP 하지 않음**. 대신:
+1. `posts_content` 새 테이블 생성 + 데이터 복사 (기존 content는 그대로)
+2. 트리거로 **양방향 동기화** 유지
+3. 앱 코드를 단계별로 이전 (상세 → 편집 → 검색)
+4. 3개월 모니터링 후 문제 없으면 `posts.content` DROP (선택)
+5. 문제 생기면 **앱 코드만 revert** → 기존 posts.content 그대로 동작 ✅
+
+### 📋 통합 설계 — FTS + 테이블 분리 동시 진행
+
 ```sql
--- posts: 경량 메타데이터만 (리스트 뷰 전용)
-CREATE TABLE posts (
-  id uuid PRIMARY KEY,
-  title text NOT NULL,
-  user_id uuid REFERENCES auth.users,
-  board_id uuid REFERENCES boards,
-  category text,
-  views int DEFAULT 0,
-  likes int DEFAULT 0,
-  dislikes int DEFAULT 0,
-  post_number int NOT NULL,
-  is_hidden boolean DEFAULT false,
-  is_deleted boolean DEFAULT false,
-  is_notice boolean DEFAULT false,
-  notice_type text,
-  notice_order int,
-  deal_info jsonb,
-  thumbnail_url text,
-  meta jsonb,
-  source_url text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz
-);
-
--- posts_content: 본문만 (상세 페이지 + 편집 + 검색)
 CREATE TABLE posts_content (
   post_id uuid PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
   content jsonb NOT NULL,
-  search_vector tsvector,  -- P3-4와 통합 가능
-  content_text text         -- plain text 버전 (snippet용)
+  search_vector tsvector,      -- ← P3-4 FTS 여기에 통합
+  content_text text             -- ← snippet용 plain text
 );
+
+-- pgroonga 한글 지원 인덱스
+CREATE INDEX posts_content_search_idx ON posts_content USING pgroonga(search_vector);
 ```
 
-#### 마이그레이션 단계
+**한 번의 마이그레이션으로 2개 문제 동시 해결** — posts 경량화 + FTS 검색.
 
-**1단계: 새 테이블 생성 + 데이터 이동**
+### 📅 Phase별 로드맵
+
+#### Phase 1 — 인프라 준비 (안전, 완전 롤백 가능)
 ```sql
-CREATE TABLE posts_content AS
-SELECT id AS post_id, content FROM posts;
+-- 1. pgroonga 확장 (한글 FTS)
+CREATE EXTENSION IF NOT EXISTS pgroonga;
 
-ALTER TABLE posts_content ADD PRIMARY KEY (post_id);
-ALTER TABLE posts_content ADD FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE;
+-- 2. posts_content 테이블 생성
+CREATE TABLE posts_content (
+  post_id uuid PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  content jsonb NOT NULL,
+  content_text text,
+  search_vector tsvector,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- 3. 기존 데이터 복사 (posts.content는 그대로 유지)
+INSERT INTO posts_content (post_id, content, content_text)
+SELECT
+  id,
+  content,
+  -- TipTap JSON → plain text
+  (SELECT string_agg(n->>'text', ' ')
+   FROM jsonb_path_query(content, '$..text ? (@ != null)') n
+   WHERE n->>'text' IS NOT NULL)
+FROM posts;
+
+-- 4. pgroonga FTS 인덱스
+CREATE INDEX posts_content_text_pgroonga_idx
+ON posts_content USING pgroonga (content_text);
 ```
 
-**2단계: `posts.content` 컬럼 삭제 (주의!)**
+**이 시점**: 앱 코드 변경 0. `posts.content` 그대로 동작. `posts_content`는 읽기 전용 복사본.
+
+#### Phase 2 — 동기화 트리거 (안전망)
+
 ```sql
--- ⚠️ 완전 롤백 불가. 백업 후 실행
+-- posts.content 변경 → posts_content 자동 반영
+CREATE OR REPLACE FUNCTION sync_posts_to_content() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO posts_content (post_id, content, content_text)
+    VALUES (NEW.id, NEW.content, extract_plain_text(NEW.content))
+    ON CONFLICT (post_id) DO UPDATE
+    SET content = EXCLUDED.content,
+        content_text = EXCLUDED.content_text,
+        updated_at = now();
+  ELSIF TG_OP = 'UPDATE' AND NEW.content IS DISTINCT FROM OLD.content THEN
+    UPDATE posts_content
+    SET content = NEW.content,
+        content_text = extract_plain_text(NEW.content),
+        updated_at = now()
+    WHERE post_id = NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER posts_sync_to_content_trigger
+AFTER INSERT OR UPDATE OF content ON posts
+FOR EACH ROW EXECUTE FUNCTION sync_posts_to_content();
+```
+
+#### Phase 3 — 읽기 경로 이전
+
+**상세 페이지**:
+```typescript
+// Before
+const { data: post } = await supabase
+  .from('posts').select('*').eq('id', postId).single();
+
+// After
+const { data: post } = await supabase
+  .from('posts')
+  .select('*, posts_content(content)')
+  .eq('id', postId)
+  .single();
+const content = post.posts_content?.content;
+```
+
+**검색 (FTS)**:
+```typescript
+// Before
+.ilike('content', `%${query}%`)
+
+// After (pgroonga)
+.from('posts_content')
+.select('post_id, content, ts_headline(content_text, $1) as snippet')
+.textSearch('content_text', query, { type: 'websearch' })
+```
+
+**편집 페이지**: 상세 페이지와 동일하게 `posts_content.content` 로드.
+
+#### Phase 4 — 쓰기 경로 이전 (점진적, 트리거는 유지)
+
+```typescript
+// create.ts
+const { data: post } = await supabase.from('posts').insert({...}).select().single();
+await supabase.from('posts_content').insert({
+  post_id: post.id,
+  content: parsedContent,
+  content_text: extractSummary(parsedContent, 10000)
+});
+// ※ posts.content 도 함께 저장 (트리거 안전망)
+
+// update.ts
+await supabase.from('posts').update({ title, summary, thumbnail_url }).eq('id', postId);
+await supabase.from('posts_content').update({ content, content_text }).eq('post_id', postId);
+```
+
+#### Phase 5 (선택, 3개월 후) — posts.content DROP
+
+모니터링 후 문제 없으면:
+```sql
 ALTER TABLE posts DROP COLUMN content;
 ```
 
-**3단계: 모든 쿼리 수정** (40+ 파일)
-- 상세 페이지: `.from('posts').select('*, posts_content(content)').eq('id', id)`
-- 생성: posts insert 후 posts_content insert (트랜잭션)
-- 수정: posts_content update
-- 검색: posts_content의 search_vector로
+문제 있으면 앱 코드만 revert → 기존 `posts.content` 그대로 사용.
 
-#### 효과
+### 🎯 효과
 - **리스트 조회 성능 극대화** — posts row 크기 수 KB → 수백 byte
-- egress 감소 — 리스트 쿼리가 근본적으로 가벼워짐
-- 검색 분리 — posts_content에 FTS 전용 인덱스 집중
+- **FTS 검색 속도 10~100배 개선** (pgroonga 한글 인덱스)
+- egress ~50 MB/일 + 검색 속도
 - TOAST 압박 해소
 
-#### 예상 감소
-- **~50 MB/일** (리스트 조회 자체가 가벼워져서)
-- DB 용량도 일부 절감
+### 📊 예상 감소
+- **~60 MB/일** (P3-4 FTS + P4-1 통합 효과)
+- DB 용량 일부 절감
+- 검색 응답 시간 대폭 단축
 
-#### 난이도
-- ⭐⭐⭐⭐⭐ (매우 어려움, 2~3일)
-- **40개 이상 파일 수정 필요**
-- 프로덕션 마이그레이션 리스크 높음 (데이터 이동 중 writes 처리)
-- Supabase RLS 정책도 재작성
+### 🛡️ 리스크 관리
 
-#### 리스크
-- **롤백 어려움** — content 컬럼 삭제 후엔 되돌리기 힘듦
-- 다운타임 또는 큰 락 발생 가능
-- 새 버그 유입 가능성
+| 리스크 | 완화 방법 |
+|---|---|
+| 롤백 어려움 | `posts.content` 유지로 언제든 앱 코드만 revert |
+| 다운타임 | Phase 1~2는 무중단 (트리거만 추가) |
+| 쓰기 충돌 | 트리거로 자동 동기화 |
+| 쿼리 버그 | 점진적 이전 (Phase 3 → 4 순차) |
+
+### 📝 수정 대상 파일 (대략)
+- DB: 마이그레이션 4~5개
+- RPC 함수: `search_posts_by_content`, `count_search_posts` 재작성
+- 앱 코드:
+  - `posts/create.ts`, `posts/update.ts` — 쓰기 경로
+  - `[slug]/[postNumber]/page.tsx` — 상세 페이지
+  - `[postNumber]/edit/page.tsx` — 편집 페이지
+  - `search.ts` — 검색
+  - `searchPosts.ts`, `searchComments.ts` — 검색 도메인
+  - `getNewsPosts.ts` — 이미 summary로 이전 완료
+- Edge Function: `rss-news-bot` 업데이트
+
+### 난이도
+- ⭐⭐⭐⭐ (Phase 1~2 쉬움, Phase 3~4 중간, Phase 5 선택)
+- 총 1~2일 예상
 
 #### 판단
 - **egress 감소 대비 공수 과도**. P1~P3으로 이미 77% 감소 달성

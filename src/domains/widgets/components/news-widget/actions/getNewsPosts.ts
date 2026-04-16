@@ -1,31 +1,33 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { NewsItem } from '../types';
-import { extractImageFromContent, validateImageUrl } from '../utils';
+import { validateImageUrl } from '../utils';
 import { getCachedBoardBySlug } from '@/domains/boards/actions/getCachedBoards';
 
 /** 게시판당 가져올 게시글 수 */
 const POSTS_LIMIT = 15;
 
 /**
- * 단일 게시판에서 뉴스 게시글을 가져옵니다.
+ * 단일 게시판 뉴스 조회 DB 로직 (캐시 래퍼 내부)
+ * Admin client 사용 (unstable_cache 내부는 cookies() 불가)
+ *
+ * content JSONB 대신 summary/thumbnail_url 컬럼만 select → egress 대폭 감소
  */
-export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
+async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
   try {
-    // 1. 게시판 정보 조회 (캐시 7일)
     const boardData = await getCachedBoardBySlug(boardSlug);
     if (!boardData) {
       console.error(`게시판 조회 오류 (slug: ${boardSlug}): not found`);
       return [];
     }
 
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
 
-    // 2. 게시글 조회
     const { data: posts, error: postsError } = await supabase
       .from('posts')
-      .select('id, title, content, created_at, views, likes, post_number')
+      .select('id, title, summary, thumbnail_url, created_at, views, likes, post_number')
       .eq('board_id', boardData.id)
       .order('created_at', { ascending: false })
       .limit(POSTS_LIMIT);
@@ -35,21 +37,13 @@ export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
       return [];
     }
 
-    // 3. 데이터 포맷팅
-    const newsItems: NewsItem[] = posts.map((post, index) => {
-      // 콘텐츠를 문자열로 변환
-      const content = typeof post.content === 'string'
-        ? post.content
-        : (post.content ? JSON.stringify(post.content) : '');
+    const newsItems: NewsItem[] = posts.map((post) => {
+      const summary = post.summary
+        ? post.summary.slice(0, 150) + (post.summary.length > 150 ? '...' : '')
+        : '';
 
-      // 요약 생성 (HTML 태그 제거)
-      const plainText = content.replace(/<[^>]*>/g, '');
-      const summary = plainText.slice(0, 150) + (plainText.length > 150 ? '...' : '');
-
-      // 이미지 추출 및 검증 (이미지 없으면 undefined → 클라이언트에서 4590 로고로 대체)
-      const extractedImage = extractImageFromContent(content);
-      const imageUrl = extractedImage && validateImageUrl(extractedImage)
-        ? extractedImage
+      const imageUrl = post.thumbnail_url && validateImageUrl(post.thumbnail_url)
+        ? post.thumbnail_url
         : undefined;
 
       return {
@@ -72,6 +66,23 @@ export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
     }
     return [];
   }
+}
+
+/**
+ * 단일 게시판에서 뉴스 게시글을 가져옵니다 (unstable_cache 10분).
+ *
+ * 메인 페이지 위젯에서 호출됨 → 호출 빈도 매우 높음.
+ * content를 포함해 fetch하지만 캐시로 DB 호출 대폭 감소.
+ * 5~10분 stale 허용 (뉴스 실시간성 낮음).
+ *
+ * 장기적으로는 posts.summary 컬럼 추가해서 content fetch 제거 필요.
+ */
+export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
+  return unstable_cache(
+    () => _fetchNewsPostsImpl(boardSlug),
+    ['news-posts', boardSlug],
+    { revalidate: 600, tags: ['news-posts', `news-posts-${boardSlug}`] }
+  )();
 }
 
 /**

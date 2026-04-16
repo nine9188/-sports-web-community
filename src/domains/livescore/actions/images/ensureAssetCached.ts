@@ -127,26 +127,33 @@ export async function ensureAssetCached(
       return getStoragePublicUrl(type, entityId, size);
     }
 
-    // 3. pending 상태면 잠시 대기 후 재확인
+    // 3. pending 상태 — stale 락 체크 (60초 이상 pending = 죽은 작업으로 간주)
     if (cacheRow?.status === 'pending') {
-      await new Promise(resolve => setTimeout(resolve, PENDING_WAIT_TIME));
+      const pendingElapsed = Date.now() - new Date(cacheRow.checked_at).getTime();
+      const STALE_PENDING_MS = 60 * 1000; // 60초
 
-      const { data: recheckCache } = await supabase
-        .from('asset_cache')
-        .select('status')
-        .eq('type', type)
-        .eq('entity_id', entityId)
-        .maybeSingle();
+      if (pendingElapsed < STALE_PENDING_MS) {
+        // 다른 인스턴스가 처리 중 → 짧은 대기 후 재확인
+        await new Promise(resolve => setTimeout(resolve, PENDING_WAIT_TIME));
 
-      if (recheckCache?.status === 'ready') {
-        return getStoragePublicUrl(type, entityId, size);
+        const { data: recheckCache } = await supabase
+          .from('asset_cache')
+          .select('status')
+          .eq('type', type)
+          .eq('entity_id', entityId)
+          .maybeSingle();
+
+        if (recheckCache?.status === 'ready') {
+          return getStoragePublicUrl(type, entityId, size);
+        }
+
+        // 여전히 pending → placeholder 반환 (재업로드 시도 안 함)
+        return PLACEHOLDER_URLS[type];
       }
-
-      // 여전히 pending이거나 실패면 placeholder
-      return PLACEHOLDER_URLS[type];
+      // 60초 이상 pending = stale → 아래 cacheAsset로 재시도
     }
 
-    // 4. error 상태 - 쿨다운 체크
+    // 4. error 상태 - 쿨다운 체크 (24시간)
     if (cacheRow?.status === 'error') {
       const elapsed = Date.now() - new Date(cacheRow.checked_at).getTime();
       if (elapsed < ERROR_COOLDOWN) {

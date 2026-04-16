@@ -9,6 +9,7 @@
  */
 
 import 'server-only'
+import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
@@ -35,7 +36,7 @@ import type { Database } from './types'
  *
  * @returns {Promise<SupabaseClient>} Supabase 클라이언트 인스턴스
  */
-export async function getSupabaseServer() {
+export const getSupabaseServer = cache(async () => {
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
@@ -60,7 +61,7 @@ export async function getSupabaseServer() {
       },
     }
   )
-}
+})
 
 /**
  * Server Action용 Supabase 클라이언트 (읽기/쓰기)

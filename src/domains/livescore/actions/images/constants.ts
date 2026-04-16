@@ -78,8 +78,10 @@ export const PLACEHOLDER_URLS: Record<AssetType, string> = {
   venue_photo: '/images/placeholder-venue.svg',
 };
 
-// 에러 쿨다운 (1시간)
-export const ERROR_COOLDOWN = 60 * 60 * 1000;
+// 에러 쿨다운 (24시간)
+// API-Sports에 없는 이미지를 반복 재시도하지 않도록 연장
+// Storage objects upsert 842K/일 → 감소 목적
+export const ERROR_COOLDOWN = 24 * 60 * 60 * 1000;
 
 // 최대 재시도 횟수
 export const MAX_RETRIES = 2;
