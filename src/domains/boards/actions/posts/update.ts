@@ -87,17 +87,15 @@ export async function updatePost(
     // 매치카드는 TipTap JSON 그대로 저장 (HTML 변환 없음)
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
 
-    // 게시글 업데이트 쿼리
+    // 게시글 업데이트 쿼리 (content는 posts_content 테이블에 분리 저장)
     const updateData: {
       title: string;
-      content: string;
       updated_at: string;
       thumbnail_url: string | null;
       summary: string;
       deal_info?: DealInfo | null;
     } = {
       title: title.trim(),
-      content: content,
       updated_at: new Date().toISOString(),
       thumbnail_url: extractFirstImageUrl(content),
       summary: extractSummary(content),

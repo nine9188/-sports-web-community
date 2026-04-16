@@ -88,15 +88,14 @@ async function createPostInternal(params: {
       }
     }
 
-    // content JSON 파싱 (posts_content에도 저장하기 위해 변수로 추출)
+    // content JSON 파싱 (posts_content에 저장하기 위해 변수로 추출)
     const parsedContent = typeof content === 'string' && content.startsWith('{')
       ? JSON.parse(content)
       : content;
 
-    // 게시글 데이터 준비 (posts.content도 유지 - 이중 저장으로 롤백 안전망)
+    // 게시글 데이터 준비 (content는 posts_content 테이블에 분리 저장)
     const insertData: Record<string, unknown> = {
       title: title.trim(),
-      content: parsedContent,
       user_id: userId,
       board_id: boardId,
       thumbnail_url: extractFirstImageUrl(content),
@@ -162,7 +161,7 @@ async function createPostInternal(params: {
     // 카드 링크 저장 (실패해도 게시글 생성은 성공)
     // post_card_links 테이블은 Supabase 타입 생성 후 추가되어 타입 미포함
     try {
-      const cardLinks = extractCardLinks(data.content);
+      const cardLinks = extractCardLinks(parsedContent);
       if (cardLinks.length > 0) {
         const cardLinksData = cardLinks.map(link => ({ ...link, post_id: data.id }));
         // 타입 정의에 없는 테이블 접근을 위한 우회

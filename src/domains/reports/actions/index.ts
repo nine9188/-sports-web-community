@@ -381,13 +381,12 @@ async function handlePostAction(supabase: Awaited<ReturnType<typeof createClient
         .update({
           is_deleted: true,
           title: '[신고에 의해 삭제됨]',
-          content: '신고에 의해 삭제되었습니다.'
         })
         .eq('id', postId);
 
       if (error) throw error;
 
-      // posts_content 도 동기화 업데이트 (트리거 미사용, 앱 책임)
+      // posts_content 도 동기화 (본문 마스킹)
       const supabaseAny = supabase as unknown as {
         from: (table: string) => {
           update: (data: unknown) => { eq: (col: string, val: string) => Promise<unknown> };
