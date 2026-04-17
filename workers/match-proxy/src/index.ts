@@ -206,8 +206,11 @@ export default {
       return json({ ready }, 200, cors);
     }
 
-    // Asset type의 전체 ready ID 조회: GET /asset/ready/:type
+    // Asset type의 전체 ready ID 조회: GET /asset/ready/:type (관리자 전용 — list 비용 높음)
     if (url.pathname.startsWith('/asset/ready/') && req.method === 'GET') {
+      if (!isAuthorized(req, env)) {
+        return json({ error: 'Unauthorized — this endpoint uses KV list (expensive)' }, 401, cors);
+      }
       const type = url.pathname.slice('/asset/ready/'.length);
       if (!VALID_ASSET_TYPES.includes(type as AssetType)) {
         return json({ error: 'Invalid type' }, 400, cors);

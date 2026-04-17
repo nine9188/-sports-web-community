@@ -1,7 +1,7 @@
 'use server';
 
 import sharp from 'sharp';
-import { unstable_cache, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
@@ -22,12 +22,11 @@ import {
 } from './constants';
 
 /**
- * 타입별 ready 상태 entity_id 목록을 Cloudflare Worker/KV에서 조회 (24시간 Next.js 레이어 캐시)
+ * Cloudflare Worker/KV 기반 asset 캐시 조회
  *
- * 기존: Supabase asset_cache 테이블 SELECT (하루 85만 회 egress)
- * 현재: Worker /asset/ready/:type → KV에서 즉시 반환
- * - DB egress 0
- * - 타입당 Worker 호출 1회/24h (unstable_cache)
+ * 방식: 필요한 ID만 batch check (POST /asset/check)
+ * - KV list 사용 0 → list 한도 초과 방지
+ * - KV read만 사용 (100,000/일 무료 한도)
  * - 새 이미지 캐싱 성공 시 markAssetReadyInKV()로 즉시 KV에 반영
  */
 function getAssetWorkerUrl(): string {
@@ -42,27 +41,24 @@ function getAssetWriteSecret(): string {
   return s;
 }
 
-const _getReadyAssetIdSetImpl = (type: AssetType) => unstable_cache(
-  async (): Promise<number[]> => {
-    try {
-      const res = await fetch(`${getAssetWorkerUrl()}/asset/ready/${type}`, {
-        method: 'GET',
-        next: { revalidate: 86400, tags: [`asset-cache-${type}`] },
-      });
-      if (!res.ok) return [];
-      const body = await res.json() as { ids: number[] };
-      return body.ids || [];
-    } catch {
-      return [];
-    }
-  },
-  ['asset-cache-ready-kv', type],
-  { revalidate: 86400, tags: ['asset-cache', `asset-cache-${type}`] }
-)();
-
-async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
-  const ids = await _getReadyAssetIdSetImpl(type);
-  return new Set(ids);
+/**
+ * 특정 ID들의 ready 여부를 Worker에 batch check
+ * KV GET만 사용 (list 0회)
+ */
+async function checkReadyInKV(type: AssetType, ids: number[]): Promise<Set<number>> {
+  if (ids.length === 0) return new Set();
+  try {
+    const res = await fetch(`${getAssetWorkerUrl()}/asset/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, ids }),
+    });
+    if (!res.ok) return new Set();
+    const body = await res.json() as { ready: number[] };
+    return new Set(body.ready || []);
+  } catch {
+    return new Set();
+  }
 }
 
 /**
@@ -75,7 +71,7 @@ async function markAssetReadyInKV(type: AssetType, entityId: number): Promise<vo
       headers: { 'X-Write-Secret': getAssetWriteSecret() },
     });
   } catch {
-    // KV 쓰기 실패는 치명적이지 않음 (다음 backfill에서 동기화)
+    // KV 쓰기 실패는 치명적이지 않음
   }
 }
 
@@ -136,8 +132,8 @@ export async function ensureAssetCached(
   }
 
   try {
-    // 0. Fast path: unstable_cache에 ready로 등록된 ID면 DB 스킵
-    const readySet = await getReadyAssetIdSet(type);
+    // 0. Fast path: KV batch check (read만 사용, list 0)
+    const readySet = await checkReadyInKV(type, [entityId]);
     if (readySet.has(entityId)) {
       return getStoragePublicUrl(type, entityId, size);
     }
@@ -337,8 +333,8 @@ export async function ensureAssetsCached(
   const result: Record<number, string> = {};
 
   try {
-    // 1. Fast path: unstable_cache의 ready Set으로 DB 조회 없이 분류
-    const readySet = await getReadyAssetIdSet(type);
+    // 1. Fast path: KV batch check (read만 사용, list 0)
+    const readySet = await checkReadyInKV(type, uniqueIds);
     const unknownIds: number[] = [];
 
     for (const id of uniqueIds) {
