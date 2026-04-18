@@ -23,24 +23,31 @@ function getKickoffTime(dateString?: string): string | undefined {
   }
 }
 
+// 정적 팀 로고: /public/teams/{id}.webp (CDN 왕복 530ms → 0ms)
+function getStaticTeamLogo(teamId: number): string {
+  return `/teams/${teamId}.webp`;
+}
+
 // 경기 데이터를 Match 타입으로 변환
 async function convertToMatch(
   match: FootballMatchData,
   dateLabel: 'yesterday' | 'today' | 'tomorrow'
 ): Promise<WidgetMatch> {
   const names = await resolveMatchNames(match);
+  const homeId = match.teams?.home?.id || 0;
+  const awayId = match.teams?.away?.id || 0;
 
   return {
     id: String(match.id),
     homeTeam: {
-      id: match.teams?.home?.id || 0,
+      id: homeId,
       name: names.homeName || '홈팀',
-      logo: match.teams?.home?.logo,
+      logo: homeId > 0 ? getStaticTeamLogo(homeId) : match.teams?.home?.logo,
     },
     awayTeam: {
-      id: match.teams?.away?.id || 0,
+      id: awayId,
       name: names.awayName || '원정팀',
-      logo: match.teams?.away?.logo,
+      logo: awayId > 0 ? getStaticTeamLogo(awayId) : match.teams?.away?.logo,
     },
     score: {
       home: match.goals?.home ?? 0,
@@ -208,6 +215,7 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
                   key={match.id}
                   match={match}
                   isLast={idx === league.matches.length - 1}
+                  eager
                 />
               ))}
             </LeagueToggleClient>

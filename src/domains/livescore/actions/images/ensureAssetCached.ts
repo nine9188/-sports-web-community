@@ -1,7 +1,7 @@
 'use server';
 
 import sharp from 'sharp';
-import { revalidateTag } from 'next/cache';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
@@ -24,10 +24,11 @@ import {
 /**
  * Cloudflare Worker/KV 기반 asset 캐시 조회
  *
- * 방식: 필요한 ID만 batch check (POST /asset/check)
- * - KV list 사용 0 → list 한도 초과 방지
- * - KV read만 사용 (100,000/일 무료 한도)
- * - 새 이미지 캐싱 성공 시 markAssetReadyInKV()로 즉시 KV에 반영
+ * 방식: list + unstable_cache (24시간)
+ * - 타입당 1회/24h Worker 호출 → 전체 ready ID 가져옴
+ * - KV list 하루 ~27회 (무료 한도 1,000 내)
+ * - KV read 0회
+ * - 새 이미지 캐싱 성공 시 markAssetReadyInKV() + revalidateTag로 즉시 반영
  */
 function getAssetWorkerUrl(): string {
   const url = process.env.MATCH_CACHE_URL;
@@ -42,23 +43,31 @@ function getAssetWriteSecret(): string {
 }
 
 /**
- * 특정 ID들의 ready 여부를 Worker에 batch check
- * KV GET만 사용 (list 0회)
+ * 타입별 ready ID Set (unstable_cache 24h)
+ * Worker /asset/ready/:type → KV list로 전체 ID 반환
+ * 하루 ~27 list 호출 (5타입 × ~5.4 pages)
  */
-async function checkReadyInKV(type: AssetType, ids: number[]): Promise<Set<number>> {
-  if (ids.length === 0) return new Set();
-  try {
-    const res = await fetch(`${getAssetWorkerUrl()}/asset/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, ids }),
-    });
-    if (!res.ok) return new Set();
-    const body = await res.json() as { ready: number[] };
-    return new Set(body.ready || []);
-  } catch {
-    return new Set();
-  }
+const _getReadyAssetIdSetImpl = (type: AssetType) => unstable_cache(
+  async (): Promise<number[]> => {
+    try {
+      const res = await fetch(`${getAssetWorkerUrl()}/asset/ready/${type}`, {
+        method: 'GET',
+        headers: { 'X-Write-Secret': getAssetWriteSecret() },
+      });
+      if (!res.ok) return [];
+      const body = await res.json() as { ids: number[] };
+      return body.ids || [];
+    } catch {
+      return [];
+    }
+  },
+  ['asset-cache-ready-kv', type],
+  { revalidate: 86400, tags: ['asset-cache', `asset-cache-${type}`] }
+)();
+
+async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
+  const ids = await _getReadyAssetIdSetImpl(type);
+  return new Set(ids);
 }
 
 /**
@@ -133,7 +142,7 @@ export async function ensureAssetCached(
 
   try {
     // 0. Fast path: KV batch check (read만 사용, list 0)
-    const readySet = await checkReadyInKV(type, [entityId]);
+    const readySet = await getReadyAssetIdSet(type);
     if (readySet.has(entityId)) {
       return getStoragePublicUrl(type, entityId, size);
     }
@@ -334,7 +343,7 @@ export async function ensureAssetsCached(
 
   try {
     // 1. Fast path: KV batch check (read만 사용, list 0)
-    const readySet = await checkReadyInKV(type, uniqueIds);
+    const readySet = await getReadyAssetIdSet(type);
     const unknownIds: number[] = [];
 
     for (const id of uniqueIds) {
