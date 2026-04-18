@@ -506,35 +506,42 @@ export const fetchMatchesByDateCached = cache(async (date: string): Promise<Matc
 
 // ── 메인페이지 최적화 함수 ──
 
-// 오늘 경기만 가져오기 (메인페이지 초기 로딩용) - cache 적용
-export const fetchTodayMatches = cache(async (): Promise<TodayMatchesResult> => {
-  const nowUtc = new Date();
-  const todayFormatted = toKstDateString(nowUtc);
+// 오늘 경기 데이터 (unstable_cache: 동적 렌더링에서도 서버 전체 공유 캐시)
+const _fetchTodayMatchesCached = unstable_cache(
+  async (): Promise<TodayMatchesResult> => {
+    const nowUtc = new Date();
+    const todayFormatted = toKstDateString(nowUtc);
 
-  try {
-    const todayRaw = await fetchMatchesByDateRaw(todayFormatted);
+    try {
+      const todayRaw = await fetchMatchesByDateRaw(todayFormatted);
 
-    const resolved = await resolveMatchImages([
-      { key: 'today', matches: todayRaw }
-    ]);
+      const resolved = await resolveMatchImages([
+        { key: 'today', matches: todayRaw }
+      ]);
 
-    const todayMatches = resolved.get('today') || [];
+      const todayMatches = resolved.get('today') || [];
 
-    return {
-      success: true,
-      date: todayFormatted,
-      meta: { totalMatches: todayMatches.length },
-      data: {
-        today: { matches: todayMatches }
-      }
-    };
-  } catch {
-    return {
-      success: false,
-      error: '데이터를 가져오는데 실패했습니다.'
-    };
-  }
-});
+      return {
+        success: true,
+        date: todayFormatted,
+        meta: { totalMatches: todayMatches.length },
+        data: {
+          today: { matches: todayMatches }
+        }
+      };
+    } catch {
+      return {
+        success: false,
+        error: '데이터를 가져오는데 실패했습니다.'
+      };
+    }
+  },
+  ['livescore-today'],
+  { revalidate: 120, tags: ['livescore'] }
+);
+
+// React cache()로 같은 렌더 사이클 내 중복 호출도 방지
+export const fetchTodayMatches = cache(_fetchTodayMatchesCached);
 
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
 // 참고: API-Football의 from/to 파라미터는 league/season 필수 → date 파라미터 3회 병렬 호출 사용
