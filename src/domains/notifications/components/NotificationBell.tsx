@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Notification } from '../types/notification';
 import { markNotificationAsRead, markAllNotificationsAsRead } from '../actions';
@@ -20,10 +20,8 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = getSupabaseBrowser();
 
-  // 모바일 여부 감지 (md breakpoint: 768px)
   const isMobile = useMediaQuery('(max-width: 767px)');
 
-  // React Query로 알림 데이터 관리
   const {
     data,
     isLoading,
@@ -33,13 +31,16 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
   const notifications = data?.notifications ?? [];
   const unreadCount = data?.unreadCount ?? initialUnreadCount;
 
-  // 캐시 업데이트 유틸리티
   const { addNotification, markAsRead, markAllAsRead } = useNotificationCache();
+
+  // ref로 최신 콜백을 안정적으로 참조 (useEffect deps에서 제외)
+  const callbacksRef = useRef({ addNotification, refetch });
+  callbacksRef.current = { addNotification, refetch };
 
   // 드롭다운 외부 클릭 감지 (데스크톱에서만)
   useEffect(() => {
-    if (isMobile) return; // 모바일에서는 외부 클릭 감지 비활성화
-    
+    if (isMobile) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -62,23 +63,17 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     }
   }, [isOpen, userId, refetch]);
 
-  // 실시간 알림 구독
+  // 실시간 알림: Broadcast 채널 구독 (postgres_changes 대신 — RLS 바인딩 불필요)
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !supabase) return;
 
     const channel = supabase
       .channel(`notifications:${userId}`)
       .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload: { new: Notification }) => {
-          // 새 알림 캐시에 추가 (카운트도 자동 증가)
-          addNotification(payload.new);
+        'broadcast',
+        { event: 'new_notification' },
+        (payload: { payload: Notification }) => {
+          callbacksRef.current.addNotification(payload.payload);
         }
       )
       .subscribe();
@@ -86,7 +81,7 @@ export default function NotificationBell({ userId, initialUnreadCount = 0 }: Not
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, supabase, addNotification]);
+  }, [userId, supabase]);
 
   // 단일 알림 읽음 처리
   const handleMarkRead = async (notificationId: string) => {

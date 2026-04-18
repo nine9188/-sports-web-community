@@ -5,57 +5,56 @@ import { Notification, NotificationsResponse } from '../types/notification';
 
 /**
  * 알림 목록 조회
+ * - 알림 목록과 unreadCount를 단일 쿼리 + JS 카운트로 처리
+ * - limit이 충분히 크면 별도 count 쿼리 불필요
  */
 export async function getNotifications(limit: number = 20): Promise<NotificationsResponse> {
   try {
     const supabase = await getSupabaseServer();
-    
-    // 현재 사용자 확인
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return { success: false, error: '로그인이 필요합니다.' };
     }
-    
-    // 알림 목록 조회
-    const { data, error } = await supabase
-      .from('notifications')
-      .select(`
-        *,
-        actor:profiles!notifications_actor_id_fkey(
-          nickname,
-          icon_id,
-          level
-        )
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error('알림 조회 오류:', error);
-      return { success: false, error: error.message };
+
+    const [listResult, countResult] = await Promise.all([
+      supabase
+        .from('notifications')
+        .select(`
+          *,
+          actor:profiles!notifications_actor_id_fkey(
+            nickname,
+            icon_id,
+            level
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(limit),
+      supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+    ]);
+
+    if (listResult.error) {
+      console.error('알림 조회 오류:', listResult.error);
+      return { success: false, error: listResult.error.message };
     }
-    
-    // 아이콘 URL 추가
-    const notifications = await addActorIconUrls(data as Notification[] || [], supabase);
-    
-    // 안 읽은 알림 개수
-    const { count: unreadCount } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('is_read', false);
-    
-    return { 
-      success: true, 
+
+    const notifications = await addActorIconUrls(listResult.data as Notification[] || [], supabase);
+
+    return {
+      success: true,
       notifications,
-      unreadCount: unreadCount || 0
+      unreadCount: countResult.count || 0
     };
   } catch (error) {
     console.error('알림 목록 조회 중 예외:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : '알림 목록을 불러오는 중 오류가 발생했습니다.' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알림 목록을 불러오는 중 오류가 발생했습니다.'
     };
   }
 }

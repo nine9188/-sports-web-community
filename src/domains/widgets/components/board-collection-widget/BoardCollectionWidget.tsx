@@ -168,16 +168,8 @@ function SectionHeader({ title }: { title: string }) {
 export default async function BoardCollectionWidget({ initialData }: BoardCollectionWidgetProps = {}) {
   const data = initialData !== undefined ? initialData : await fetchBoardCollectionData();
 
-  if (!data) {
-    return null;
-  }
-
-  const { foreign, domestic } = data;
-
-  // 둘 다 게시글이 없으면 렌더링 안 함
-  if (foreign.posts.length === 0 && domestic.posts.length === 0) {
-    return null;
-  }
+  const foreign = data?.foreign ?? { boardName: '해외축구 분석', boardSlug: FOREIGN_ANALYSIS_SLUG, posts: [] };
+  const domestic = data?.domestic ?? { boardName: '국내축구 분석', boardSlug: DOMESTIC_ANALYSIS_SLUG, posts: [] };
 
   return (
     <div>

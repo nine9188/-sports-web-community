@@ -100,11 +100,6 @@ export default function HomePage() {
       <Suspense fallback={<LiveScoreSkeleton />}>
         <LiveScoreWidgetStreaming />
       </Suspense>
-      {/* 이적시장 배너 슬라이드 - 임시 비활성화 */}
-      {/* <Suspense>
-        <TransferBannerWidget />
-      </Suspense> */}
-
       {/* 게시판 모음 위젯 - Suspense 스트리밍 */}
       <Suspense>
         <BoardCollectionWidget />

@@ -2,11 +2,12 @@ import React, { Suspense } from 'react';
 import { headers } from 'next/headers';
 import BoardNavigation from '@/domains/sidebar/components/board/BoardNavigation';
 import { RightSidebar } from '@/domains/sidebar/components';
-import { getBoardsForNavigation } from '@/domains/layout/actions';
 import TotalPostCountValue from '@/domains/layout/components/TotalPostCountValue';
 import SiteLayoutClient from './SiteLayoutClient';
 import { TeamLeagueProvider } from '@/shared/context/TeamLeagueContext';
 import { getAllTeams, getAllLeagues } from '@/domains/livescore/actions/teamLeagueData';
+import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
+import { getFullUserData } from '@/shared/actions/user';
 
 /**
  * Suspense fallback: 우측 사이드바 (CLS 방지용 빈 영역)
@@ -52,19 +53,18 @@ export default async function SiteLayout({
   const isBot = headersList.get('x-is-bot') === '1';
 
   // 캐시 히트 시 < 1ms — 블로킹 비용 거의 없음
-  const [headerBoardsData, teams, leagues] = await Promise.all([
-    getBoardsForNavigation(),
+  const [teams, leagues, initialUserData] = await Promise.all([
     getAllTeams(),
     getAllLeagues(),
+    getFullUserData(),
   ]);
 
   // 헤더/모바일 메뉴/사이드바에서 공유하는 count 스트리밍 슬롯
   const totalPostCountSlot = <TotalPostCountStreamingSlot />;
 
-  // 사이드바용 BoardNavigation — 내부의 '전체글' 옆 카운트 자리를 슬롯으로 주입
   const boardNav = (
     <BoardNavigation
-      boardData={headerBoardsData.boardData}
+      boardData={STATIC_NAV_BOARDS}
       totalPostCountSlot={totalPostCountSlot}
     />
   );
@@ -77,14 +77,13 @@ export default async function SiteLayout({
           isMobilePhone || isBot ? (
             <RightSidebarSkeleton />
           ) : (
-            <Suspense fallback={<RightSidebarSkeleton />}>
-              <RightSidebar />
-            </Suspense>
+            <RightSidebar />
           )
         }
-        headerBoards={headerBoardsData.boardData}
+        headerBoards={STATIC_NAV_BOARDS}
         headerTotalPostCountSlot={totalPostCountSlot}
         isMobilePhone={isMobilePhone}
+        initialUserData={initialUserData}
       >
         {children}
       </SiteLayoutClient>

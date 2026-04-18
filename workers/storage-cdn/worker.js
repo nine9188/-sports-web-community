@@ -117,11 +117,17 @@ async function handleStorageProxy(request, url, ctx, pathname) {
       return new Response('Not Found', { status: 404 });
     }
 
-    response = new Response(originResponse.body, originResponse);
-    response.headers.set('Cache-Control', 'public, s-maxage=31536000, max-age=86400');
-    response.headers.set('CDN-Cache-Control', 'max-age=31536000');
-    response.headers.set('X-Cache', 'MISS');
-    response.headers.delete('Set-Cookie');
+    const originContentType = originResponse.headers.get('content-type') || 'application/octet-stream';
+    response = new Response(originResponse.body, {
+      status: 200,
+      headers: {
+        'Content-Type': originContentType,
+        'Cache-Control': 'public, s-maxage=31536000, max-age=86400',
+        'CDN-Cache-Control': 'max-age=31536000',
+        'Access-Control-Allow-Origin': '*',
+        'X-Cache': 'MISS',
+      },
+    });
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
@@ -188,12 +194,16 @@ async function handleExternalProxy(request, url, ctx) {
       return new Response('URL is not an image', { status: 400 });
     }
 
-    response = new Response(originResponse.body, originResponse);
-    // 뉴스 이미지: 24시간 CDN 캐시, 브라우저 1시간
-    response.headers.set('Cache-Control', 'public, s-maxage=86400, max-age=3600');
-    response.headers.set('CDN-Cache-Control', 'max-age=86400');
-    response.headers.set('X-Cache', 'MISS');
-    response.headers.delete('Set-Cookie');
+    response = new Response(originResponse.body, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, s-maxage=86400, max-age=3600',
+        'CDN-Cache-Control': 'max-age=86400',
+        'Access-Control-Allow-Origin': '*',
+        'X-Cache': 'MISS',
+      },
+    });
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;

@@ -83,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   foundingDate: '2026-03-15',
                   logo: {
                     '@type': 'ImageObject',
-                    url: `${siteConfig.url}/logo/4590football-logo.svg`,
+                    url: `${siteConfig.url}/logo/4590football-logo.png`,
                   },
                   sameAs: [
                     'https://www.instagram.com/4590_football',

@@ -15,7 +15,8 @@ export {
 } from './create';
 
 export { getNotifications, getUnreadNotificationCount } from './get';
-export { markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from './read';
+export { markNotificationAsRead, markAllNotificationsAsRead } from './read';
+export { deleteNotification, deleteNotifications } from './delete';
 
 
 

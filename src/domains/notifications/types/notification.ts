@@ -24,6 +24,7 @@ export interface Notification {
   message: string | null;
   link: string | null;
   is_read: boolean;
+  read_at: string | null;
   metadata: NotificationMetadata;
   created_at: string;
   // 조인된 데이터

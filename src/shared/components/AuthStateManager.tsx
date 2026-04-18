@@ -5,11 +5,10 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import HeaderClient from '@/domains/layout/components/HeaderClient';
 import Footer from '@/shared/components/Footer';
+import Sidebar from '@/domains/sidebar/components/Sidebar';
+import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
-// 사이드바 컴포넌트들을 lazy load (모바일에서는 숨겨져있으므로)
-const Sidebar = dynamic(() => import('@/domains/sidebar/components/Sidebar'), { ssr: false });
-const ProfileSidebar = dynamic(() => import('@/domains/sidebar/components/ProfileSidebar'), { ssr: false });
 const UniversalChatbot = dynamic(
   () => import('@/domains/chatbot/components/UniversalChatbot').then(mod => ({ default: mod.UniversalChatbot })),
   { ssr: false }
@@ -47,7 +46,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   isProfileOpen: boolean,
   onProfileClose: () => void,
   onProfileClick: () => void,
-  isMobilePhone?: boolean,
+  isMobilePhone?: boolean, // legacy — kept for interface compat
 }) {
   const pathname = usePathname();
 
@@ -65,15 +64,13 @@ const AuthStateManager = React.memo(function AuthStateManager({
         totalPostCountSlot={headerTotalPostCountSlot}
       />
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
-        {!isMobilePhone && (
-          <Sidebar
-            isOpen={isOpen}
-            onClose={onClose}
-            authSection={authSection}
-          >
-            {boardNavigation}
-          </Sidebar>
-        )}
+        <Sidebar
+          isOpen={isOpen}
+          onClose={onClose}
+          authSection={authSection}
+        >
+          {boardNavigation}
+        </Sidebar>
         <ProfileSidebar
           isOpen={isProfileOpen}
           onClose={onProfileClose}

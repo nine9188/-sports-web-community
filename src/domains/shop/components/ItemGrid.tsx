@@ -109,8 +109,8 @@ export default function ItemGrid({
       
       {/* 아이템이 없는 경우 (로딩 중에는 표시하지 않음) */}
       {items.length === 0 && !isLoading && (
-        <div className="text-center py-12 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-          <p className="text-gray-700 dark:text-gray-300">현재 구매 가능한 아이템이 없습니다.</p>
+        <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg p-8">
+          <div className="text-center text-gray-500 dark:text-gray-400">현재 구매 가능한 아이템이 없습니다.</div>
         </div>
       )}
     </div>

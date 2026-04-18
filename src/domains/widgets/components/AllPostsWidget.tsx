@@ -33,9 +33,28 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
       getNotices(),  // 전체 공지 (포맷팅된 데이터)
     ]);
 
-    // LCP 최적화: 게시글이 없으면 렌더링하지 않음
     if (!postsData.data || postsData.data.length === 0) {
-      return null;
+      return (
+        <Container className="h-full bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader>
+            <div className="w-full h-full flex items-center justify-between">
+              <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h2>
+              <Link
+                href="/boards/all"
+                className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
+              >
+                전체글 보기
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </ContainerHeader>
+          <ContainerContent>
+            <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
+              게시글이 없습니다.
+            </div>
+          </ContainerContent>
+        </Container>
+      );
     }
 
     // show_in_widget이 true인 공지만 필터링

@@ -15,7 +15,7 @@ import { siteConfig } from '@/shared/config';
 import dynamic from 'next/dynamic';
 
 const LiveScoreModal = dynamic(() => import('./livescoremodal'), { ssr: false });
-const UserProfileClient = dynamic(() => import('./UserProfileClient'), { ssr: false });
+import UserProfileClient from './UserProfileClient';
 const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { ssr: false });
 import RecentlyVisited from './RecentlyVisited';
 import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
@@ -186,14 +186,19 @@ export default function HeaderClient({
   }, [router]);
 
   // 인증 상태에 따른 렌더링 결정
-  const renderAuthState = useMemo(() => {
+  const renderNotificationBell = useMemo(() => {
     return (
-      <div className="flex items-center gap-0.5">
-        {/* 알림 벨 - 로그인한 사용자에게만 표시 */}
+      <div className="w-10 h-10 flex items-center justify-center">
         {userData && (
           <NotificationBell userId={userData.id} />
         )}
-        
+      </div>
+    );
+  }, [userData]);
+
+  const renderAuthState = useMemo(() => {
+    return (
+      <div className="flex items-center gap-0.5">
         {/* PC 버전(md 이상): UserProfileClient 사용 */}
         <UserProfileClient userData={userData || null} />
         
@@ -252,10 +257,11 @@ export default function HeaderClient({
                 <Image
                   src={logoUrl}
                   alt="4590football logo"
-                  width={124}
-                  height={60}
+                  width={340}
+                  height={148}
                   priority
                   fetchPriority="high"
+                  unoptimized
                   className="h-14 w-auto dark:invert"
                 />
               </Link>
@@ -265,9 +271,11 @@ export default function HeaderClient({
                 {/* 테마 토글 버튼 */}
                 <ThemeToggle />
 
-                <div className="min-w-[40px] h-10 flex items-center">
-                  {renderAuthState}
-                </div>
+                {/* 알림 벨 - 테마 토글 바로 옆 */}
+                {renderNotificationBell}
+
+                {/* 프로필/로그인 */}
+                {renderAuthState}
 
                 <Button
                   variant="ghost"
@@ -297,10 +305,11 @@ export default function HeaderClient({
                   <Image
                     src={logoUrl}
                     alt="SPORTS 로고"
-                    width={124}
-                    height={60}
+                    width={340}
+                    height={148}
                     priority
                     fetchPriority="high"
+                    unoptimized
                     className="h-10 w-auto dark:invert"
                   />
                 </Link>
@@ -341,9 +350,8 @@ export default function HeaderClient({
                   <Search className="h-5 w-5 text-gray-600 dark:text-gray-300" aria-hidden="true" />
                 </Button>
 
-                <div className="min-w-[40px] h-10 flex items-center">
-                  {renderAuthState}
-                </div>
+                {renderNotificationBell}
+                {renderAuthState}
 
                 <Button
                   variant="ghost"

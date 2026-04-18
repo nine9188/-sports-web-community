@@ -72,7 +72,7 @@ const createNavBoards = (boards: Board[]): Board[] => {
 };
 
 // 네비에서 제외할 보드 slug 목록 (가상 그룹으로 묶이거나 제외됨)
-const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'youtube', 'free', 'hotdeal', 'market', 'review', 'creative'];
+const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'youtube', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
 
 // 가상 보드 중 /boards/ 경로를 사용하는 보드 ID 목록
 const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular', 'nav-sports', 'nav-community'];

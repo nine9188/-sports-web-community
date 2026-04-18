@@ -15,7 +15,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center min-w-[40px] h-10 justify-center">
       <div className="hidden md:block">
         <Button
           variant="ghost"

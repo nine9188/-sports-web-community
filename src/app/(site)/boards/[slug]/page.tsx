@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
 import { searchBoardPosts } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
-import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { BoardListSkeleton } from '@/shared/components/skeletons/page-skeletons';
+import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
+import type { Board } from '@/domains/layout/types/board';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
@@ -100,6 +101,63 @@ export async function generateMetadata({
   });
 }
 
+/** 정적 보드 데이터에서 slug로 보드 정보 + 부모 정보 찾기 */
+function findStaticBoardInfo(slug: string): { name: string; parent?: Board } {
+  for (const board of STATIC_NAV_BOARDS) {
+    if (board.slug === slug) return { name: board.name };
+    if (board.children) {
+      const child = board.children.find(c => c.slug === slug);
+      if (child) return { name: child.name, parent: board };
+    }
+  }
+  return { name: slug };
+}
+
+/** 에러/notFound 시 정적 레이아웃 — 실제 게시판과 동일한 구조 */
+function BoardFallbackLayout({ slug }: { slug: string }) {
+  const { name: boardName, parent } = findStaticBoardInfo(slug);
+  const topBoards: Array<{ id: string; name: string; display_order: number; slug?: string }> = [];
+  const childBoardsMap: Record<string, Array<{ id: string; name: string; display_order: number; slug?: string }>> = {};
+
+  // 브레드크럼: 부모가 있으면 [부모 > 현재]
+  const breadcrumbs = parent
+    ? [{ id: parent.id, name: parent.name, slug: parent.slug || parent.id }, { id: slug, name: boardName, slug }]
+    : [];
+
+  // BoardDetailLayout에 정적 데이터 전달
+  const fallbackBoardData = {
+    id: slug,
+    name: boardName,
+    slug,
+    description: null,
+    parent_id: parent?.id || null,
+    team_id: null,
+    league_id: null,
+    display_order: 0,
+    views: 0,
+    access_level: null,
+    logo: null,
+  };
+
+  return (
+    <BoardDetailLayout
+      boardData={fallbackBoardData}
+      breadcrumbs={breadcrumbs}
+      teamData={null}
+      leagueData={null}
+      isLoggedIn={false}
+      currentPage={1}
+      slug={slug}
+      rootBoardId={parent?.id || slug}
+      rootBoardSlug={parent?.slug || slug}
+      posts={[]}
+      topBoards={topBoards}
+      hoverChildBoardsMap={childBoardsMap}
+      pagination={{ totalItems: 0, itemsPerPage: 20, currentPage: 1 }}
+    />
+  );
+}
+
 /** 게시판 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
 async function BoardDetailContent({
   slug, page, fromParam, store, search, searchType
@@ -117,26 +175,7 @@ async function BoardDetailContent({
 
     // 3. 에러 처리
     if ('error' in result) {
-      if (result.notFound) {
-        return (
-          <div className="container mx-auto">
-            <div className={errorBoxStyles}>
-              <h1 className={errorTitleStyles}>게시판을 찾을 수 없습니다</h1>
-              <p className={errorMessageStyles}>{result.error}</p>
-              <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-            </div>
-          </div>
-        );
-      }
-      return (
-        <div className="container mx-auto">
-          <div className={errorBoxStyles}>
-            <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
-            <p className={errorMessageStyles}>{result.error}</p>
-            <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-          </div>
-        </div>
-      );
+      return <BoardFallbackLayout slug={slug} />;
     }
 
     // 4. 검색 모드인 경우 검색 결과로 대체
@@ -277,15 +316,7 @@ async function BoardDetailContent({
     );
   } catch (error) {
     console.error("BoardDetailPage Error:", error);
-    return (
-      <div className="container mx-auto">
-        <div className={errorBoxStyles}>
-          <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
-          <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
-          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-        </div>
-      </div>
-    );
+    return <BoardFallbackLayout slug={slug} />;
   }
 }
 

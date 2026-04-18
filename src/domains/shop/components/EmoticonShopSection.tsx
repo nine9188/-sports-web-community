@@ -78,10 +78,10 @@ export default function EmoticonShopSection({
       {/* 이모티콘 스튜디오 링크 */}
       <Link
         href="/shop/emoticon-studio"
-        className="flex flex-col items-center gap-0.5 sm:flex-row px-4 py-3 bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] border border-black/7 dark:border-0 md:rounded-lg transition-colors"
+        className="relative flex items-center h-12 px-4 bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] border border-black/7 dark:border-0 md:rounded-lg transition-colors"
       >
-        <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] sm:absolute sm:left-1/2 sm:-translate-x-1/2">이모티콘 스튜디오 →</span>
-        <span className="text-xs text-gray-500 dark:text-gray-400 sm:mr-auto">나만의 이모티콘 만들기</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">나만의 이모티콘 만들기</span>
+        <span className="absolute left-1/2 -translate-x-1/2 text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">이모티콘 스튜디오 →</span>
       </Link>
 
       {/* 필터 + 검색 */}
@@ -135,10 +135,10 @@ export default function EmoticonShopSection({
       )}
 
       {paginatedPacks.length === 0 ? (
-        <div className="text-center py-10 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
-          <p className="text-[13px] text-gray-500 dark:text-gray-400">
+        <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg p-8">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             {query.trim() ? `'${query}' 검색 결과가 없습니다.` : subFilter === 'free' ? '무료 팩이 없습니다.' : subFilter === 'paid' ? '유료 팩이 없습니다.' : '이모티콘 팩이 없습니다.'}
-          </p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">

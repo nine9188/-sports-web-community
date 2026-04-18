@@ -7,7 +7,7 @@ import AuthStateManager from '@/shared/components/AuthStateManager';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
 import { getFullUserData } from '@/shared/actions/user';
 import { Board } from '@/domains/layout/types/board';
-import { HeaderUserData } from '@/shared/types/user';
+import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { scrollToTop } from '@/shared/utils/scroll';
 import Footer from '@/shared/components/Footer';
 interface SiteLayoutClientProps {
@@ -17,6 +17,7 @@ interface SiteLayoutClientProps {
   headerBoards?: Board[];
   headerTotalPostCountSlot?: React.ReactNode;
   isMobilePhone?: boolean;
+  initialUserData?: FullUserDataWithSession | null;
 }
 
 export default function SiteLayoutClient({
@@ -26,8 +27,9 @@ export default function SiteLayoutClient({
   headerBoards,
   headerTotalPostCountSlot,
   isMobilePhone,
+  initialUserData,
 }: SiteLayoutClientProps) {
-  // idle 이후에만 유저 데이터 fetch (TBT 최적화: 초기 렌더 차단 방지)
+  // idle 이후에만 유저 데이터 refetch (TBT 최적화: 초기 렌더 차단 방지)
   const [isIdle, setIsIdle] = useState(false);
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function SiteLayoutClient({
     queryFn: () => getFullUserData(),
     staleTime: 5 * 60 * 1000,
     enabled: isIdle,
+    initialData: initialUserData ?? undefined,
   });
 
   const isAdmin = fullUserData?.is_admin ?? false;

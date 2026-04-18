@@ -352,8 +352,9 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
           <Image
             src="/logo/4590football-logo-white.webp"
             alt="4590 Football"
-            width={120}
-            height={32}
+            width={340}
+            height={148}
+            unoptimized
             className="h-8 w-auto"
           />
         </div>

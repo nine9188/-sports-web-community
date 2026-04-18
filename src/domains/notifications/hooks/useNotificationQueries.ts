@@ -37,8 +37,9 @@ export function useNotifications(limit: number = 20, options: { enabled?: boolea
       throw new Error(result.error || '알림을 불러오는데 실패했습니다.');
     },
     enabled,
-    staleTime: 1000 * 60 * 2, // 2분 (알림은 자주 확인)
-    gcTime: 1000 * 60 * 10, // 10분
+    staleTime: 1000 * 30, // 30초
+    refetchInterval: 1000 * 60, // 1분 폴링 (Broadcast 보완)
+    gcTime: 1000 * 60 * 10,
   });
 }
 

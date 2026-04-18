@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { X, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/shared/components/ui/button';
@@ -14,16 +15,21 @@ export default function Sidebar({
   children,
   authSection,
 }: SidebarProps) {
+  // 클라이언트 마운트 후에만 모바일 overlay/sidebar 렌더 → hydration 불일치 방지
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   return (
-    <div className="contents" suppressHydrationWarning>
-      {/* Overlay - 모바일에서만 표시, CSS로 visibility 제어 */}
-      <div
-        className={`fixed inset-0 bg-black/70 z-[999] lg:hidden transition-opacity duration-300 ${
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-        suppressHydrationWarning
-      />
+    <>
+      {/* Overlay - 클라이언트에서만 렌더 */}
+      {mounted && (
+        <div
+          className={`fixed inset-0 bg-black/70 z-[999] lg:hidden transition-opacity duration-300 ${
+            isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={onClose}
+        />
+      )}
 
       {/* 데스크탑 사이드바 (왼쪽에 고정) */}
       <div
@@ -78,41 +84,37 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* 모바일 사이드바 (오른쪽에서 열림) */}
-      <div
-        className={`fixed top-0 right-0 h-full w-full max-w-md
-          bg-white transform transition-transform duration-300 ease-in-out z-[1000]
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'} lg:hidden`}
-      >
-        {/* 모바일 닫기 버튼 */}
-        <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 px-4">
-          <span className="font-medium text-gray-900">커뮤니티</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="사이드바 닫기"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </Button>
+      {/* 모바일 사이드바 (오른쪽에서 열림) - 클라이언트에서만 렌더 */}
+      {mounted && (
+        <div
+          className={`fixed top-0 right-0 h-full w-full max-w-md
+            bg-white transform transition-transform duration-300 ease-in-out z-[1000]
+            ${isOpen ? 'translate-x-0' : 'translate-x-full'} lg:hidden`}
+        >
+          <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 px-4">
+            <span className="font-medium text-gray-900">커뮤니티</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              aria-label="사이드바 닫기"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </Button>
+          </div>
+
+          <div className="h-[calc(100%-56px)] overflow-y-auto p-4">
+            <Container className="mb-4">
+              <ContainerHeader>
+                <p className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">카테고리</p>
+              </ContainerHeader>
+              <ContainerContent>
+                {children}
+              </ContainerContent>
+            </Container>
+          </div>
         </div>
-
-        {/* 스크롤 영역 */}
-        <div className="h-[calc(100%-56px)] overflow-y-auto p-4">
-          {/* 모바일에서는 사용자 정보 섹션 제거 */}
-
-          {/* 게시판 이동 섹션 */}
-          <Container className="mb-4">
-            <ContainerHeader>
-              <p className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">카테고리</p>
-            </ContainerHeader>
-            <ContainerContent>
-              {children}
-            </ContainerContent>
-          </Container>
-
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import {
   Trophy, Users, User, Tv, ArrowLeftRight, PenTool,
-  ChevronRight, ChevronDown, ArrowDown, BookOpen,
+  ChevronRight, ChevronDown, ArrowDown, ArrowUp, BookOpen,
   ShoppingBag, Palette, Bot, Bell, Search,
 } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
@@ -3570,16 +3570,45 @@ function EmoticonDemo() {
 export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoImages }) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
+  const tocRef = useRef<HTMLDivElement>(null);
+
   const toggleSection = (id: string) => {
     setActiveSection(prev => prev === id ? null : id);
   };
 
+  const [showFloating, setShowFloating] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowFloating(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToToc = () => {
+    tocRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#F5F5F5] dark:bg-[#111111]">
+      {/* 플로팅 목차 버튼 — 컨텐츠 오른쪽 바깥 */}
+      {showFloating && (
+        <div className="fixed bottom-6 z-50 left-1/2 pointer-events-none" style={{ marginLeft: 'calc(384px + 1rem)' }}>
+          <button
+            type="button"
+            onClick={scrollToToc}
+            className="pointer-events-auto flex items-center gap-1.5 px-4 py-2.5 bg-white dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-full shadow-lg hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors text-[13px] text-gray-700 dark:text-gray-300"
+          >
+            <ArrowUp className="w-4 h-4" />
+            목차
+          </button>
+        </div>
+      )}
       {/* 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="inline-block">
-          <Image src={siteConfig.logo} alt="4590 Football" width={124} height={60} className="h-10 sm:h-14 w-auto dark:invert" priority />
+          <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" priority />
         </Link>
       </div>
 
@@ -3603,7 +3632,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
         {/* 목차 (아코디언) */}
         <Section>
-          <Container className="dark:border dark:border-white/10">
+          <Container ref={tocRef} className="dark:border dark:border-white/10 scroll-mt-20">
             <ContainerHeader>
               <ContainerTitle>목차</ContainerTitle>
             </ContainerHeader>
@@ -3673,6 +3702,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
               <li><strong className="text-gray-900 dark:text-gray-100">트로피</strong> — 우승, 준우승 등 수상 이력</li>
             </ul>
           </GuideBox>
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 4. 라이브스코어·매치 ───── */}
@@ -3708,6 +3741,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
           <FlowArrow label="라인업에서 선수 클릭" />
           <PlayerStatsModalDemo images={demoImages} />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 5. 이적시장 ───── */}
@@ -3730,6 +3767,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <TransferDemo images={demoImages} />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 6. 게시글 카드 삽입 ───── */}
@@ -3746,6 +3787,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
           <EditorCardDemo images={demoImages} />
 
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 7. 상점 ───── */}
@@ -3773,6 +3818,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <ShopDemo images={demoImages} />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 8. 이모티콘 스튜디오 ───── */}
@@ -3823,6 +3872,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <EmoticonPickerDemo />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 9. 고객센터 문의 ───── */}
@@ -3859,6 +3912,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <ChatbotDemo />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 10. 알림 ───── */}
@@ -3889,6 +3946,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <NotificationDemo />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* ───── 11. 검색 ───── */}
@@ -3918,6 +3979,10 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <SearchDemo images={demoImages} />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
         </Section>}
 
         {/* 마무리 + CTA */}

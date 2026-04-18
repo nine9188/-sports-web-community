@@ -1,18 +1,15 @@
 import { Notification } from '../types/notification';
 
 /**
- * 읽은 알림을 이틀 후에 숨기는 필터 함수
- * @param notification 알림 객체
- * @returns 표시 여부
+ * 읽은 알림을 읽은 시점 기준 이틀 후에 숨기는 필터 함수
  */
 export function shouldShowNotification(notification: Notification): boolean {
-  // 읽은 알림 이틀 후 숨김 처리
   if (notification.is_read) {
-    const readDate = new Date(notification.created_at);
-    const now = new Date();
-    const diffInDays = (now.getTime() - readDate.getTime()) / (1000 * 60 * 60 * 24);
+    const baseDate = notification.read_at
+      ? new Date(notification.read_at)
+      : new Date(notification.created_at);
+    const diffInDays = (Date.now() - baseDate.getTime()) / (1000 * 60 * 60 * 24);
 
-    // 읽은 지 2일이 지난 알림은 숨김
     if (diffInDays > 2) {
       return false;
     }

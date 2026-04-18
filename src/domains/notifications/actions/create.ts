@@ -1,7 +1,22 @@
 'use server';
 
-import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CreateNotificationParams, NotificationActionResponse } from '../types/notification';
+
+async function requireAdmin(): Promise<{ userId: string } | { error: string }> {
+  const supabase = await getSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: '로그인이 필요합니다.' };
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.is_admin) return { error: '관리자 권한이 필요합니다.' };
+  return { userId: user.id };
+}
 
 /**
  * 알림 생성
@@ -37,6 +52,15 @@ export async function createNotification(params: CreateNotificationParams): Prom
       console.error('알림 생성 오류:', error);
       return { success: false, error: error.message };
     }
+
+    // Realtime Broadcast로 즉시 전송
+    const channel = supabase.channel(`notifications:${userId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'new_notification',
+      payload: data
+    });
+    supabase.removeChannel(channel);
 
     return { success: true, notification: data };
   } catch (error) {
@@ -271,7 +295,7 @@ export async function createReportResultNotification({
 }
 
 /**
- * 관리자 공지 알림 생성
+ * 관리자 공지 알림 생성 (배치 INSERT)
  */
 export async function createAdminNoticeNotification({
   userIds,
@@ -279,37 +303,46 @@ export async function createAdminNoticeNotification({
   message,
   link
 }: {
-  userIds: string[]; // 여러 사용자에게 동시 전송
+  userIds: string[];
   title: string;
   message: string;
   link?: string;
 }): Promise<{ success: boolean; sent: number; failed: number; errors?: string[] }> {
-  const results = await Promise.allSettled(
-    userIds.map(userId =>
-      createNotification({
-        userId,
-        actorId: undefined, // 관리자 알림
-        type: 'admin_notice',
-        title,
-        message,
-        link: link || undefined,
-        metadata: {
-          is_admin_notice: true
-        }
-      })
-    )
-  );
+  const supabase = getSupabaseAdmin();
+  const BATCH_SIZE = 500;
+  let totalSent = 0;
+  let totalFailed = 0;
+  const errors: string[] = [];
 
-  const sent = results.filter(r => r.status === 'fulfilled').length;
-  const failed = results.filter(r => r.status === 'rejected').length;
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-    .map(r => r.reason?.message || '알 수 없는 오류');
+  const rows = userIds.map(userId => ({
+    user_id: userId,
+    actor_id: null,
+    type: 'admin_notice' as const,
+    title,
+    message,
+    link: link || null,
+    metadata: { is_admin_notice: true }
+  }));
+
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert(batch)
+      .select('id');
+
+    if (error) {
+      totalFailed += batch.length;
+      errors.push(error.message);
+    } else {
+      totalSent += data?.length ?? 0;
+    }
+  }
 
   return {
-    success: failed === 0,
-    sent,
-    failed,
+    success: totalFailed === 0,
+    sent: totalSent,
+    failed: totalFailed,
     errors: errors.length > 0 ? errors : undefined
   };
 }
@@ -328,6 +361,11 @@ export async function createBroadcastNotification({
   link?: string;
   adminId?: string;
 }): Promise<{ success: boolean; sent: number; failed: number }> {
+  const adminCheck = await requireAdmin();
+  if ('error' in adminCheck) {
+    return { success: false, sent: 0, failed: 0 };
+  }
+
   const supabase = getSupabaseAdmin();
 
   // 모든 활성 사용자 ID 조회
@@ -381,6 +419,11 @@ export async function createAdminNoticeWithLog({
   link?: string;
   adminId: string;
 }): Promise<{ success: boolean; sent: number; failed: number; errors?: string[] }> {
+  const adminCheck = await requireAdmin();
+  if ('error' in adminCheck) {
+    return { success: false, sent: 0, failed: 0, errors: [adminCheck.error] };
+  }
+
   const result = await createAdminNoticeNotification({ userIds, title, message, link });
 
   // 로그 저장
@@ -618,6 +661,11 @@ export async function getUsersForAdminNotification(): Promise<{
   error?: string;
 }> {
   try {
+    const adminCheck = await requireAdmin();
+    if ('error' in adminCheck) {
+      return { success: false, error: adminCheck.error };
+    }
+
     const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
@@ -661,6 +709,11 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
   error?: string;
 }> {
   try {
+    const adminCheck = await requireAdmin();
+    if ('error' in adminCheck) {
+      return { success: false, error: adminCheck.error };
+    }
+
     const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase

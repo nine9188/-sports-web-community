@@ -103,12 +103,12 @@ export default function ProfileSidebar({
                 <ClientUserProfile profileData={profileData} showActions={false} />
               </div>
 
-              {/* 출석 현황 (미니 캘린더) */}
-              {user?.id && (
-                <div className="px-4 pt-2">
+              {/* 출석 현황 (미니 캘린더) - 고정 높이로 레이아웃 시프트 방지 */}
+              <div className="px-4 pt-2 min-h-[120px]">
+                {user?.id && (
                   <AttendanceCalendar userId={user.id} variant="mini" />
-                </div>
-              )}
+                )}
+              </div>
 
               {/* 메뉴 섹션 */}
               <div className="p-4 space-y-2">

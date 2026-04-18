@@ -127,12 +127,9 @@ export default async function TransfersPageContent({
               </span>
             </div>
           </ContainerHeader>
-          <div className="text-center py-12 bg-white dark:bg-[#1D1D1D]">
-            <div className="text-gray-700 dark:text-gray-300 text-lg mb-2">
-              {initialData.message || '이적 정보를 찾을 수 없습니다'}
-            </div>
-            <div className="text-gray-500 dark:text-gray-400 text-[13px]">
-              리그와 팀을 선택하면 이적 정보를 확인할 수 있습니다
+          <div className="bg-white dark:bg-[#1D1D1D] p-8">
+            <div className="text-center text-gray-500 dark:text-gray-400">
+              이적 목록이 없습니다.
             </div>
           </div>
         </Container>

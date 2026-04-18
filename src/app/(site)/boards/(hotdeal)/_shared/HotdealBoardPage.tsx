@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
-import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 
 interface HotdealBoardPageProps {
   slug: string;
@@ -18,25 +16,22 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
     const result = await getBoardPageAllData(slug, currentPage, fromParam, store);
 
     if ('error' in result) {
-      if (result.notFound) {
-        return (
-          <div className="container mx-auto">
-            <div className={errorBoxStyles}>
-              <h1 className={errorTitleStyles}>게시판을 찾을 수 없습니다</h1>
-              <p className={errorMessageStyles}>{result.error}</p>
-              <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-            </div>
-          </div>
-        );
-      }
       return (
-        <div className="container mx-auto">
-          <div className={errorBoxStyles}>
-            <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
-            <p className={errorMessageStyles}>{result.error}</p>
-            <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-          </div>
-        </div>
+        <BoardDetailLayout
+          boardData={{ id: slug, name: slug, slug, description: null, parent_id: null, team_id: null, league_id: null, display_order: 0, views: 0, access_level: null, logo: null }}
+          breadcrumbs={[]}
+          teamData={null}
+          leagueData={null}
+          isLoggedIn={false}
+          currentPage={1}
+          slug={slug}
+          rootBoardId={slug}
+          rootBoardSlug={slug}
+          posts={[]}
+          topBoards={[]}
+          hoverChildBoardsMap={{}}
+          pagination={{ totalItems: 0, itemsPerPage: 20, currentPage: 1 }}
+        />
       );
     }
 
@@ -72,13 +67,21 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
   } catch (error) {
     console.error("HotdealBoardPage Error:", error);
     return (
-      <div className="container mx-auto">
-        <div className={errorBoxStyles}>
-          <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
-          <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
-          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
-        </div>
-      </div>
+      <BoardDetailLayout
+        boardData={{ id: slug, name: slug, slug, description: null, parent_id: null, team_id: null, league_id: null, display_order: 0, views: 0, access_level: null, logo: null }}
+        breadcrumbs={[]}
+        teamData={null}
+        leagueData={null}
+        isLoggedIn={false}
+        currentPage={1}
+        slug={slug}
+        rootBoardId={slug}
+        rootBoardSlug={slug}
+        posts={[]}
+        topBoards={[]}
+        hoverChildBoardsMap={{}}
+        pagination={{ totalItems: 0, itemsPerPage: 20, currentPage: 1 }}
+      />
     );
   }
 }

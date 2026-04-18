@@ -77,12 +77,8 @@ export default function LeagueMatchList({
 
   if (matches.length === 0) {
     return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <div className="h-14 flex items-center justify-center px-4 text-center">
-          <p className="text-[13px] text-gray-500 dark:text-gray-400">
-            경기 일정이 없습니다.
-          </p>
-        </div>
+      <Container className="bg-white dark:bg-[#1D1D1D] p-8">
+        <div className="text-center text-gray-500 dark:text-gray-400">경기 일정이 없습니다.</div>
       </Container>
     );
   }

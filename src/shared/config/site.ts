@@ -8,7 +8,7 @@
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
 
 export const logoOptions = [
-  '/logo/4590football-logo-test.png',
+  '/logo/4590football-logo.png',
 ] as const;
 
 const logoVariant = 0;

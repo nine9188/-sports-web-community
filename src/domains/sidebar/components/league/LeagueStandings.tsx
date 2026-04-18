@@ -142,9 +142,9 @@ export default function LeagueStandings({
       </div>
 
       {/* 순위표 */}
-      <div className={`min-h-[200px] bg-white dark:bg-[#1D1D1D] ${isFetching ? 'opacity-70' : ''} transition-opacity`}>
+      <div className={`bg-white dark:bg-[#1D1D1D] ${isFetching ? 'opacity-70' : ''} transition-opacity`}>
         {error ? (
-          <div className="p-4 text-center text-red-500 dark:text-red-400 text-[13px]">
+          <div className="p-3 text-center text-red-500 dark:text-red-400 text-xs">
             {error}
           </div>
         ) : standings && standings.standings && standings.standings.length > 0 ? (
@@ -212,8 +212,8 @@ export default function LeagueStandings({
             </table>
           </div>
         ) : (
-          <div className="p-3">
-            <p className="text-xs text-gray-500 dark:text-gray-400">데이터가 없습니다.</p>
+          <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
+            데이터가 없습니다.
           </div>
         )}
       </div>

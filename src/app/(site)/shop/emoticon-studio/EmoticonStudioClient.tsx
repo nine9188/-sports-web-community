@@ -14,7 +14,7 @@ export default function EmoticonStudioClient() {
   const currentTab = (searchParams.get('tab') as StudioTab) || 'submit'
 
   return (
-    <div className="space-y-4">
+    <div className="container mx-auto space-y-4">
       <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden">
         <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center justify-between md:rounded-t-lg">
           <div className="flex items-center gap-2">

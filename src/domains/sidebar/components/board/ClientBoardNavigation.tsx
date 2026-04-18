@@ -20,7 +20,7 @@ const quickMenuItems = [
 ];
 
 // 네비에서 제외할 보드 slug 목록 (가상 그룹으로 묶임)
-const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'free', 'hotdeal', 'market', 'review', 'creative'];
+const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
 
 // 가상 네비게이션 Board 데이터 생성 (헤더와 동일한 구조)
 const createNavBoards = (boards: Board[]): Board[] => {

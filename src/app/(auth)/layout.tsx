@@ -32,9 +32,10 @@ export default function AuthLayout({
             <Image
               src={siteConfig.logo}
               alt="로고"
-              width={124}
-              height={60}
+              width={340}
+              height={148}
               priority
+              unoptimized
               className="h-10 sm:h-14 w-auto dark:invert"
             />
             <span className="ml-1 px-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] text-xs font-semibold rounded border border-black/7 dark:border-transparent">Member</span>
