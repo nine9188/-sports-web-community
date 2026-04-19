@@ -639,7 +639,6 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
 12. 분량은 500~700자 정도로 작성하세요.` },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.4
     })
 
     const aiAnalysis = completion.choices[0].message.content || '분석 결과를 가져올 수 없습니다.'
