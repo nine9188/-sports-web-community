@@ -608,7 +608,8 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-5-nano',
+      model: 'gpt-4.1-nano-2025-04-14',
+      temperature: 0.4,
       messages: [
         { role: 'system', content: `당신은 축구 데이터 분석가입니다. 아래 규칙을 반드시 지키세요:
 
