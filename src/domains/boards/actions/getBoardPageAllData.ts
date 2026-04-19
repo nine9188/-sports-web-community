@@ -1,5 +1,6 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
 import { getBoardPageData } from './getBoards';
 import { fetchPosts } from './getPosts';
 import { getBoardPopularPosts, type PopularPost } from './getPopularPosts';
@@ -100,6 +101,19 @@ export interface BoardPageError {
  * - getSupabaseServer() (HoverMenu용)
  */
 export async function getBoardPageAllData(
+  slug: string,
+  currentPage: number,
+  fromParam?: string,
+  store?: string
+): Promise<BoardPageAllData | BoardPageError> {
+  return unstable_cache(
+    () => _getBoardPageAllDataImpl(slug, currentPage, fromParam, store),
+    ['board-page', slug, String(currentPage), fromParam || '', store || ''],
+    { revalidate: 30, tags: ['board-page', `board-${slug}`] }
+  )();
+}
+
+async function _getBoardPageAllDataImpl(
   slug: string,
   currentPage: number,
   fromParam?: string,

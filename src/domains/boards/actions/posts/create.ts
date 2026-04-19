@@ -53,24 +53,22 @@ async function createPostInternal(params: {
   const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, dealInfo } = params;
 
   try {
-    // 계정 정지 상태 확인
-    const suspensionCheck = await checkSuspensionGuard(userId);
-    if (suspensionCheck.isSuspended) {
-      return { success: false, error: suspensionCheck.message || '계정이 정지되어 게시글을 작성할 수 없습니다.' };
-    }
-
     const supabase = await getSupabaseAction();
     if (!supabase) {
       return { success: false, error: 'Supabase 클라이언트 초기화 오류' };
     }
 
-    // 게시판 정보 조회
-    const { data: boardData, error: boardError } = await supabase
-      .from('boards')
-      .select('id, name, slug')
-      .eq('id', boardId)
-      .single();
+    // 정지 확인 + 게시판 조회 병렬 실행
+    const [suspensionCheck, boardResult] = await Promise.all([
+      checkSuspensionGuard(userId),
+      supabase.from('boards').select('id, name, slug').eq('id', boardId).single(),
+    ]);
 
+    if (suspensionCheck.isSuspended) {
+      return { success: false, error: suspensionCheck.message || '계정이 정지되어 게시글을 작성할 수 없습니다.' };
+    }
+
+    const { data: boardData, error: boardError } = boardResult;
     if (boardError || !boardData) {
       return { success: false, error: '게시판 정보를 찾을 수 없습니다.' };
     }
@@ -135,82 +133,54 @@ async function createPostInternal(params: {
       return { success: false, error: '게시글 생성은 되었으나 데이터를 받아오지 못했습니다.' };
     }
 
-    // posts_content에 본문 저장 (상세/검색 조회용)
-    // 트리거 없이 앱에서 직접 이중 저장
-    try {
-      const contentText = extractSummary(content, 10000); // plain text 전체
-      const supabaseAny = supabase as unknown as {
-        from: (table: string) => {
-          insert: (data: unknown) => Promise<{ error: { message: string } | null }>;
-        };
-      };
-      const { error: contentError } = await supabaseAny
-        .from('posts_content')
-        .insert({
-          post_id: data.id,
-          content: parsedContent,
-          content_text: contentText,
-        });
-      if (contentError) {
-        console.error('[posts_content INSERT 실패]', contentError.message, 'post_id:', data.id);
-      }
-    } catch (contentErr) {
-      console.error('[posts_content INSERT 예외]', contentErr);
-    }
-
-    // 카드 링크 저장 (실패해도 게시글 생성은 성공)
-    // post_card_links 테이블은 Supabase 타입 생성 후 추가되어 타입 미포함
-    try {
-      const cardLinks = extractCardLinks(parsedContent);
-      if (cardLinks.length > 0) {
-        const cardLinksData = cardLinks.map(link => ({ ...link, post_id: data.id }));
-        // 타입 정의에 없는 테이블 접근을 위한 우회
-        const supabaseAny = supabase as unknown as { from: (table: string) => { insert: (data: unknown) => Promise<unknown> } };
-        await supabaseAny.from('post_card_links').insert(cardLinksData);
-      }
-    } catch (cardErr) {
-      console.error('카드 링크 저장 실패:', cardErr);
-    }
-
     // 캐시 갱신 (즉시 실행 - 사용자 경험에 중요)
     const boardSlug = boardData.slug || boardId;
     revalidatePath(`/boards/${boardSlug}`);
     revalidatePath('/boards');
-
-    // 유저 통계 캐시 무효화 (게시글 수 변경)
     revalidateTag(`user-stats-${userId}`);
 
-    // 로그 및 보상 처리 (병렬 실행 - 응답 차단하지 않음)
-    // 실패해도 게시글 생성은 이미 성공했으므로 무시
+    // 후처리: 본문 분리 저장, 카드 링크, 로그, 보상 (전부 fire-and-forget)
+    // 게시글 INSERT 이미 성공 → 사용자 응답 차단하지 않음
+    const postId = data.id;
+    const postNumber = data.post_number;
     Promise.all([
+      // posts_content 분리 저장
+      (async () => {
+        try {
+          const contentText = extractSummary(content, 10000);
+          const supabaseAny = supabase as unknown as {
+            from: (table: string) => {
+              insert: (data: unknown) => Promise<{ error: { message: string } | null }>;
+            };
+          };
+          const { error: contentError } = await supabaseAny
+            .from('posts_content')
+            .insert({ post_id: postId, content: parsedContent, content_text: contentText });
+          if (contentError) console.error('[posts_content INSERT 실패]', contentError.message);
+        } catch (e) { console.error('[posts_content INSERT 예외]', e); }
+      })(),
+      // 카드 링크 저장
+      (async () => {
+        try {
+          const cardLinks = extractCardLinks(parsedContent);
+          if (cardLinks.length > 0) {
+            const supabaseAny = supabase as unknown as { from: (table: string) => { insert: (data: unknown) => Promise<unknown> } };
+            await supabaseAny.from('post_card_links').insert(cardLinks.map(link => ({ ...link, post_id: postId })));
+          }
+        } catch (e) { console.error('카드 링크 저장 실패:', e); }
+      })(),
       // 로그 기록
       logUserAction('POST_CREATE', `게시글 생성: ${title} (게시판: ${boardData.name})`, userId, {
-        postId: data.id,
-        postNumber: data.post_number,
-        boardId,
-        boardName: boardData.name,
-        boardSlug: boardData.slug,
-        title
+        postId, postNumber, boardId, boardName: boardData.name, boardSlug: boardData.slug, title
       }),
       // 보상 처리
-      getActivityTypeValues().then(activityTypes =>
-        rewardUserActivity(userId, activityTypes.POST_CREATION, data.id)
-      ),
-      // WebSub Hub에 RSS 업데이트 알림 (구글 실시간 색인)
+      getActivityTypeValues().then(types => rewardUserActivity(userId, types.POST_CREATION, postId)),
+      // WebSub Hub 알림
       pingWebSubHub(),
-      // 첫 게시글 마일스톤 체크
-      supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .then(({ count: postCount }) => {
-          if (postCount === 1) {
-            return checkReferralMilestone(userId, 'first_post');
-          }
-        })
-    ]).catch(err => {
-      console.error('게시글 생성 후처리 실패 (무시됨):', err);
-    });
+      // 첫 게시글 마일스톤
+      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+        .then(({ count }) => { if (count === 1) return checkReferralMilestone(userId, 'first_post'); }),
+    ]).catch(err => console.error('게시글 후처리 실패 (무시됨):', err));
 
     return { success: true, post: data as CreatedPost };
   } catch (error) {

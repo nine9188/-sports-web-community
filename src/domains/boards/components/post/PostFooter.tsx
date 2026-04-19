@@ -7,6 +7,7 @@ import { PenLine, Edit, Trash } from 'lucide-react';
 import { deletePost } from '@/domains/boards/actions/posts/index';
 import ReportButton from '@/domains/reports/components/ReportButton';
 import { Button } from '@/shared/components/ui';
+import { toast } from 'sonner';
 
 interface PostFooterProps {
   boardSlug: string;
@@ -47,19 +48,17 @@ export default function PostFooter({
       const response = await deletePost(postId, userId);
       
       if (!response.success) {
-        alert(`게시글 삭제 중 오류가 발생했습니다: ${response.error}`);
+        toast.error(response.error || '게시글 삭제 중 오류가 발생했습니다.');
         setIsDeleting(false);
         return;
       }
-      
-      // 삭제 성공 - 게시판 목록으로 강제 리다이렉트
-      const targetUrl = `/boards/${response.boardSlug || boardSlug}`;
-      alert('게시글이 삭제되었습니다.');
 
-      // window.location을 사용하여 강제 페이지 이동 (완전한 새로고침)
-      window.location.href = targetUrl;
+      // 삭제 성공 - 게시판 목록으로 즉시 이동 (404 방지)
+      const targetUrl = `/boards/${response.boardSlug || boardSlug}`;
+      toast.success('게시글이 삭제되었습니다.');
+      router.replace(targetUrl);
     } catch {
-      alert(`게시글 삭제 중 오류가 발생했습니다.`);
+      toast.error('게시글 삭제 중 오류가 발생했습니다.');
       setIsDeleting(false);
     }
   };
