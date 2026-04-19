@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useAuth } from '@/shared/context/AuthContext';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
 import { signIn, resendConfirmationByUsername, signInWithKakao, signInWithGoogle, signInWithDiscord, signInWithNaver } from '@/domains/auth/actions';

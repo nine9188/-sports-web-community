@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import {
   Dialog,

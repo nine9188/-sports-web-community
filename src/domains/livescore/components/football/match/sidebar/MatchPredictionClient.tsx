@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, GripVertical } from 'lucide-react';
 import Image from 'next/image';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   DndContext,
   closestCenter,

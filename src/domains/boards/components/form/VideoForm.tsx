@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { AlertCircle, FileVideo } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
 
 interface VideoFormProps {

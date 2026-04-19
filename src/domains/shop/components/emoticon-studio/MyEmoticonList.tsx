@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 import { Container, ContainerContent, Button } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner'
 import { useMySubmissions, useCancelSubmission } from '@/domains/shop/hooks/useEmoticonStudio'

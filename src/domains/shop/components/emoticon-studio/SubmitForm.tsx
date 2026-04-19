@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { X, Upload } from 'lucide-react'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 import { Button, Container, ContainerContent } from '@/shared/components/ui'
 import { getSupabaseBrowser } from '@/shared/lib/supabase/client.browser'
 import { useSubmitPack, useCheckPackName } from '@/domains/shop/hooks/useEmoticonStudio'

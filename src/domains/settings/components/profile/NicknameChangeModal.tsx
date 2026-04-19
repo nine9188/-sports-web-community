@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { AlertCircle, Check } from 'lucide-react';
 import { useNicknameTicket } from '@/domains/shop/actions/consumables';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import Spinner from '@/shared/components/Spinner';
 import { siteConfig } from '@/shared/config';
 import {

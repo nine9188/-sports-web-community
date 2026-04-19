@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { updateUserIconServer } from '@/domains/settings/actions/icons';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { IconItem } from '../../types';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';

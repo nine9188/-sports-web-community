@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   getReports,
   processReport,

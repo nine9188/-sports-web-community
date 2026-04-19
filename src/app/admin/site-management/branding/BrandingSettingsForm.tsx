@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SiteSetting } from '@/domains/site-config/types';
 import { updateMultipleSiteSettings } from '@/domains/site-config/actions';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Palette } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { inputBaseStyles, focusStyles } from '@/shared/styles';

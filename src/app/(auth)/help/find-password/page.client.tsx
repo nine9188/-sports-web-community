@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { sendPasswordResetLink } from '@/domains/auth/actions';
 import { AlertCircle, Check, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui';

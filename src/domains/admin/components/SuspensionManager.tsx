@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Ban, Clock, AlertTriangle, CheckCircle } from 'lucide-react'
 import { suspendUser, unsuspendUser, type SuspensionData } from '../actions/suspension'
 import { formatDate } from '@/shared/utils/dateUtils'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 import { DEFAULT_SUSPENSION_DAYS } from '../constants'
 
 interface SuspensionManagerProps {

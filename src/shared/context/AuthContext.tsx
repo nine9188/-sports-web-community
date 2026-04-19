@@ -1,11 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, signOut } from '@/domains/auth/actions';
 import { updateProfileIcon } from '@/shared/actions/user';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +35,7 @@ export function AuthProvider({
   children: React.ReactNode;
   initialSession?: Session | null;
 }) {
+  const router = useRouter();
   // initialSession에서 user를 초기값으로 설정 (서버-클라이언트 동기화)
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
@@ -151,10 +153,12 @@ export function AuthProvider({
           if (!userError && authenticatedUser) {
             setUser(authenticatedUser);
             setSession(currentSession);
+            router.refresh();
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
+          router.refresh();
         } else if (event === 'TOKEN_REFRESHED' && currentSession) {
           setSession(currentSession);
         } else if (event === 'USER_UPDATED' && currentSession) {

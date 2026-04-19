@@ -5,15 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/shared/context/ThemeContext';
 import { AuthProvider } from '@/shared/context/AuthContext';
 import { IconProvider } from '@/shared/context/IconContext';
-
-// 초기 로딩에 필수적이지 않은 컴포넌트들을 lazy load
-const ToastContainer = lazy(() =>
-  import('react-toastify').then(mod => {
-    // CSS도 함께 로드
-    import('react-toastify/dist/ReactToastify.css');
-    return { default: mod.ToastContainer };
-  })
-);
+import { Toaster } from 'sonner';
 
 const SuspensionPopup = lazy(() => import('@/shared/components/SuspensionPopup'));
 const AttendanceChecker = lazy(() => import('@/shared/components/AttendanceChecker'));
@@ -54,19 +46,6 @@ export default function RootLayoutProvider({ children }: { children: React.React
     },
   }), []);
 
-  // ToastContainer 설정
-  const toastConfig = useMemo(() => ({
-    position: "top-right" as const,
-    autoClose: 3000,
-    limit: 3,
-    newestOnTop: true,
-    closeOnClick: true,
-    rtl: false,
-    pauseOnFocusLoss: true,
-    draggable: true,
-    pauseOnHover: true
-  }), []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -78,8 +57,17 @@ export default function RootLayoutProvider({ children }: { children: React.React
         <AuthProvider>
           <IconProvider>
             {children}
+            <Toaster
+              position="top-right"
+              duration={3000}
+              visibleToasts={3}
+              closeButton
+              richColors
+              toastOptions={{
+                className: 'text-sm',
+              }}
+            />
             <Suspense fallback={null}>
-              <ToastContainer {...toastConfig} />
               <SuspensionPopup />
               <AttendanceChecker />
             </Suspense>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Coins } from "lucide-react";
 import { User } from "@supabase/supabase-js";

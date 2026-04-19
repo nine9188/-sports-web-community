@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'react-toastify'
+import { toast } from 'sonner'
 import { signInWithKakao } from '@/domains/auth/actions'
 import Spinner from '@/shared/components/Spinner';
 

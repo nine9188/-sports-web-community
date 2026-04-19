@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import type { Post, NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from '@/domains/boards/components/notice';

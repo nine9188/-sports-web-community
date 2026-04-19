@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useAuth } from '@/shared/context/AuthContext';
 import SuspensionManager from '@/domains/admin/components/SuspensionManager';
 import { checkUserSuspension } from '@/domains/admin/actions/suspension';

@@ -6,7 +6,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { getAllBoards, getBoardCollectionSettings, saveBoardCollectionSettings } from '@/domains/widgets/actions/boardCollectionSettings';
 import { NativeSelect } from '@/shared/components/ui';
 import Spinner from '@/shared/components/Spinner';

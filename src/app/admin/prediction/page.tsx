@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { TabList, type TabItem, Button } from '@/shared/components/ui';
 import { RefreshCw, Check, X, Target, Eye, CalendarDays } from 'lucide-react';
 import { formatDate } from '@/shared/utils/dateUtils';

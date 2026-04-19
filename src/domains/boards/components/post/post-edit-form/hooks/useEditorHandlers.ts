@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
 import { createPlayerCardData } from '@/domains/boards/actions/createPlayerCardData';

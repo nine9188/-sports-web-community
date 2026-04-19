@@ -18,7 +18,7 @@ import {
 } from '@/shared/components/ui';
 import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
 import { cn } from '@/shared/utils/cn';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { createReport } from '@/domains/reports/actions';
 import { REPORT_REASONS, ReportReason } from '@/domains/reports/types';
 

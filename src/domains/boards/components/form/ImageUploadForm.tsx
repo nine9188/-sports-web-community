@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
 
 const WEBP_QUALITY = 0.85;

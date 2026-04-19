@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
 import { signUp, checkEmailAvailability, checkUsernameAvailability, checkNicknameAvailability } from '@/domains/auth/actions';

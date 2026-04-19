@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { createShopItem, updateShopItem, deleteShopItem } from '@/shared/actions/admin-actions';
 import {

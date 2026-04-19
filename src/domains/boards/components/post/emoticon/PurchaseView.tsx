@@ -3,7 +3,7 @@
 import React, { useTransition } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { purchaseItem } from '@/domains/shop/actions/actions';
 import { useEmoticonShopData, useEmoticonInvalidation } from '@/domains/boards/hooks/useEmoticonQueries';

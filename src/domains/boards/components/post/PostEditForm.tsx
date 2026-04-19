@@ -8,7 +8,7 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, NativeSelect } from '@/shared/components/ui';

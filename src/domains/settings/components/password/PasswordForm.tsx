@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { changePassword } from '@/domains/settings';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
 import Spinner from '@/shared/components/Spinner';

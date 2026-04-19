@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { validateResetToken, resetPasswordWithToken } from '@/domains/auth/actions';
 import Link from 'next/link';
 import { EyeIcon, EyeOffIcon, AlertCircle, Check } from 'lucide-react';
