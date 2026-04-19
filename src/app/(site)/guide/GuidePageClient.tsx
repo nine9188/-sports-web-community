@@ -3572,8 +3572,21 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
 
   const tocRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    const valid = TOC_ITEMS.some(item => item.id === hash);
+    if (valid) {
+      setActiveSection(hash);
+      setTimeout(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, []);
+
   const toggleSection = (id: string) => {
-    setActiveSection(prev => prev === id ? null : id);
+    const next = activeSection === id ? null : id;
+    setActiveSection(next);
+    window.history.replaceState(null, '', next ? `#${next}` : window.location.pathname);
   };
 
   const [showFloating, setShowFloating] = useState(false);

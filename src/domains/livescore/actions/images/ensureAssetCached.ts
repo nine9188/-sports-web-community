@@ -28,7 +28,7 @@ import {
  * - 타입당 1회/24h Worker 호출 → 전체 ready ID 가져옴
  * - KV list 하루 ~27회 (무료 한도 1,000 내)
  * - KV read 0회
- * - 새 이미지 캐싱 성공 시 markAssetReadyInKV() + revalidateTag로 즉시 반영
+ * - 새 이미지 캐싱 성공 시 markAssetReadyInKV()로 KV 기록 (revalidateTag 제거 — list 폭증 방지)
  */
 function getAssetWorkerUrl(): string {
   const url = process.env.MATCH_CACHE_URL;
@@ -292,11 +292,10 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    // 5. KV에 ready 기록 + Next.js 캐시 무효화
-    // Next.js 16: render 중 revalidateTag 호출 불가 → after()로 응답 후 실행
+    // 5. KV에 ready 기록 (revalidateTag 제거: 매 캐싱마다 unstable_cache 무효화 → KV list 폭증 원인)
+    // 새 이미지는 readySet에 없어도 DB fallback 경로(:152-166)에서 정상 반환, 24h 후 자연 갱신
     after(async () => {
       await markAssetReadyInKV(type, entityId);
-      revalidateTag(`asset-cache-${type}`);
     });
 
     return getStoragePublicUrl(type, entityId, size);
