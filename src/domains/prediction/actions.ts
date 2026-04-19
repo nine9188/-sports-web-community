@@ -9,6 +9,8 @@ import { getTeamsByIds, getLeagueName } from '@/domains/livescore/actions/teamLe
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
+import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl'
+import { extractSummary } from '@/domains/boards/utils/post/extractSummary'
 // predictMatch는 OpenAI SDK를 사용하므로 동적 import로 처리
 // (모듈 레벨 import 시 OPENAI_API_KEY 누락 등으로 전체 모듈 로드 실패 방지)
 async function loadPredictMatch() {
@@ -678,13 +680,13 @@ async function generateMatchPredictionPost(
         teams: {
           home: {
             id: match.teams.home.id,
-            name: match.teams.home.name,
+            name: homeNameKo,
             logo: match.teams.home.logo,
             winner: null
           },
           away: {
             id: match.teams.away.id,
-            name: match.teams.away.name,
+            name: awayNameKo,
             logo: match.teams.away.logo,
             winner: null
           }
@@ -695,7 +697,7 @@ async function generateMatchPredictionPost(
         },
         league: {
           id: league.id.toString(),
-          name: league.name,
+          name: leagueNameKo,
           logo: leagueLogoUrl
         },
         status: {
@@ -722,7 +724,7 @@ async function generateMatchPredictionPost(
       {
         type: 'paragraph',
         content: [
-          { type: 'text', text: '※ 이 분석은 AI가 API-Football 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
+          { type: 'text', text: '※ 이 분석은 AI가 실제 통계 데이터를 바탕으로 생성한 예측입니다. 실제 경기 결과와 다를 수 있으며, 참고용으로만 활용해주세요.', marks: [{ type: 'italic' }] }
         ]
       }
     ]
@@ -767,36 +769,39 @@ async function generateLeaguePredictionPost(
     // 현재 로그인한 관리자 ID 사용 (없으면 fallback)
     const userId = await getCurrentUserId()
 
-    // 각 경기별로 개별 게시글 생성 (2개씩 병렬 처리)
+    // 각 경기별로 개별 게시글 생성
     let successCount = 0
     let errorCount = 0
-    const BATCH_SIZE = 2
+    const errorDetails: string[] = []
 
-    for (let i = 0; i < matches.length; i += BATCH_SIZE) {
-      const batch = matches.slice(i, i + BATCH_SIZE)
-      const results = await Promise.allSettled(
-        batch.map(match =>
-          generateMatchPredictionPost(match, league, targetDate, userId, teamLogoMap, leagueLogoUrl)
+    for (const match of matches) {
+      try {
+        const result = await generateMatchPredictionPost(
+          match, league, targetDate, userId, teamLogoMap, leagueLogoUrl
         )
-      )
 
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value.success) {
+        if (result.success) {
           successCount++
         } else {
           errorCount++
-          const error = result.status === 'rejected' ? result.reason : result.value.error
-          console.error(`경기 게시글 생성 실패:`, error)
+          const detail = `${match.teams.home.name} vs ${match.teams.away.name}: ${result.error}`
+          errorDetails.push(detail)
+          console.error(`경기 게시글 생성 실패 (${match.id}):`, result.error)
         }
+      } catch (err) {
+        errorCount++
+        const detail = `${match.teams.home.name} vs ${match.teams.away.name}: ${err instanceof Error ? err.message : '알 수 없는 오류'}`
+        errorDetails.push(detail)
+        console.error(`경기 게시글 생성 예외 (${match.id}):`, err)
       }
 
-      if (i + BATCH_SIZE < matches.length) {
+      if (matches.length > 1) {
         await new Promise(resolve => setTimeout(resolve, 300))
       }
     }
 
     if (successCount === 0 && errorCount > 0) {
-      throw new Error(`${errorCount}경기 게시글 생성 모두 실패`)
+      throw new Error(`${errorCount}경기 게시글 생성 모두 실패 - ${errorDetails.join('; ')}`)
     }
 
     return {
@@ -1069,7 +1074,7 @@ export async function generateSingleLeaguePrediction(
   }
 }
 
-// 예측 분석 게시글 생성 (단일 게시판)
+// 예측 분석 게시글 생성 (posts + posts_content 분리 저장)
 async function createPredictionPost(
   title: string,
   content: string,
@@ -1081,17 +1086,23 @@ async function createPredictionPost(
   const supabase = createSupabaseClient()
 
   try {
+    const parsedContent = typeof content === 'string' && content.startsWith('{')
+      ? JSON.parse(content)
+      : content
+
+    // 1. posts 테이블에 insert (content 없이, summary/thumbnail만)
     const { data: post, error: postError } = await supabase
       .from('posts')
       .insert({
         title,
-        content,
         board_id: boardId,
         user_id: userId,
         category: 'prediction',
         tags,
         meta,
-        status: 'published'
+        status: 'published',
+        thumbnail_url: extractFirstImageUrl(content),
+        summary: extractSummary(content),
       })
       .select()
       .single()
@@ -1101,9 +1112,18 @@ async function createPredictionPost(
       return { success: false, error: postError?.message || '게시글 생성 실패' }
     }
 
-    // 카드 링크 저장 (matchCard 등을 post_card_links에 저장하여 관련글 인식)
+    // 2. posts_content 테이블에 본문 분리 저장
+    const contentText = extractSummary(content, 10000)
+    const { error: contentError } = await supabase
+      .from('posts_content')
+      .insert({ post_id: post.id, content: parsedContent, content_text: contentText })
+
+    if (contentError) {
+      console.error('❌ posts_content 저장 실패:', contentError)
+    }
+
+    // 3. 카드 링크 저장
     try {
-      const parsedContent = typeof content === 'string' ? JSON.parse(content) : content
       const cardLinks = extractCardLinks(parsedContent)
       if (cardLinks.length > 0) {
         const cardLinksData = cardLinks.map(link => ({ ...link, post_id: post.id }))
@@ -1125,4 +1145,4 @@ async function createPredictionPost(
       error: error instanceof Error ? error.message : '알 수 없는 오류'
     }
   }
-} 
+}

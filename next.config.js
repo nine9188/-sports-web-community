@@ -31,6 +31,9 @@ const nextConfig = {
         pathname: '/teams/**',
       },
       {
+        pathname: '/leagues/**',
+      },
+      {
         pathname: '/test/**',
       },
     ],

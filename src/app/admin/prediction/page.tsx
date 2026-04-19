@@ -239,23 +239,40 @@ export default function PredictionAdminPage() {
 
     startTransition(async () => {
       try {
-        const results = await Promise.allSettled(
-          selectedGroups.map(group => {
-            const matchIds = group.matches.map(m => m.id);
-            return generateSingleLeaguePrediction(formatDateToString(selectedDate), group.league.id, 'manual', matchIds);
-          })
-        );
-
+        let successCount = 0;
+        let errorCount = 0;
         let totalMatchesProcessed = 0;
-        for (const result of results) {
-          if (result.status === 'fulfilled' && result.value.status === 'success') {
-            totalMatchesProcessed += result.value.matches_count;
+        const errorMessages: string[] = [];
+
+        for (const group of selectedGroups) {
+          try {
+            const matchIds = group.matches.map(m => m.id);
+            const result = await generateSingleLeaguePrediction(formatDateToString(selectedDate), group.league.id, 'manual', matchIds);
+
+            if (result.status === 'success') {
+              successCount++;
+              totalMatchesProcessed += result.matches_count;
+            } else if (result.status === 'error') {
+              errorCount++;
+              errorMessages.push(`${result.league_name}: ${result.message}`);
+            }
+          } catch (err) {
+            errorCount++;
+            errorMessages.push(`${group.league.name}: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
           }
         }
 
         loadAutomationLogs();
-        toast.success(`${totalMatchesProcessed}경기 예측 게시글 생성 완료`);
-        setSelectedMatches(new Set()); // 선택 초기화
+        if (totalMatchesProcessed > 0) {
+          toast.success(`${totalMatchesProcessed}경기 예측 게시글 생성 완료`);
+        }
+        if (errorCount > 0) {
+          toast.error(`${errorCount}개 리그 실패: ${errorMessages.join(', ')}`);
+        }
+        if (totalMatchesProcessed === 0 && errorCount === 0) {
+          toast.warning('생성된 게시글이 없습니다.');
+        }
+        setSelectedMatches(new Set());
       } catch (error) {
         console.error('선택 경기 예측 분석 생성 오류:', error);
         toast.error('예측 분석 생성에 실패했습니다.');

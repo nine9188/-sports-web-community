@@ -37,25 +37,54 @@ export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_STORAGE_CDN_URL || 'https://cdn.4590football.com';
 
+// 로컬 정적 파일이 있는 팀 ID (public/teams/{id}.webp)
+const STATIC_TEAM_IDS = new Set([
+  33,34,35,36,39,40,42,44,45,47,48,49,50,51,52,55,63,65,66,77,79,80,81,82,83,84,85,91,93,94,95,96,97,
+  106,108,111,112,114,116,157,160,161,162,163,164,165,167,168,169,170,172,173,175,176,180,182,186,191,192,
+  487,488,489,490,492,494,495,496,497,499,500,502,503,504,505,511,517,520,523,529,530,531,532,533,534,
+  536,537,538,539,540,541,542,543,546,547,548,718,720,727,728,746,797,798,801,867,895,
+  1063,1579,2745,2746,2747,2748,2749,2750,2751,2752,2753,2756,2757,2758,2759,2760,2761,2762,2763,2764,
+  2765,2766,2767,2768,7060,7061,7076,7078,7087,7098,9171,
+]);
+
+// 로컬 정적 파일이 있는 리그 ID (public/leagues/{id}.webp)
+const STATIC_LEAGUE_IDS = new Set([
+  2, 3, 39, 61, 78, 88, 94, 98, 135, 140, 179, 292, 293, 848,
+]);
+
+// 다크모드 로컬 파일이 있는 리그 ID (public/leagues/{id}-1.webp)
+const STATIC_DARK_LEAGUE_IDS = new Set([
+  2, 3, 39, 61, 88, 98, 179, 292, 848,
+]);
+
 /**
  * 이미지 URL 생성 (라이트/다크 모드 지원)
- *
- * @param logoUrl - 원본 로고 URL (API Sports 또는 Supabase)
- * @param id - 팀/리그 ID
- * @param type - 이미지 타입 ('teams' | 'leagues')
- * @returns 라이트/다크 모드 이미지 URL 쌍
+ * 로컬 정적 파일 우선, 없으면 CDN 경유
  */
 export function getImageUrls(
   logoUrl: string | undefined,
   id: number | string | undefined,
   type: 'teams' | 'leagues'
 ): ImageUrlPair {
-  // 1. ID가 있으면 Supabase Storage URL 생성
+  // 1. ID가 있으면 로컬 정적 파일 우선 확인
   if (id) {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const lightUrl = `${SUPABASE_URL}/${type}/md/${numericId}.webp`;
 
-    // 리그이고 다크모드 이미지가 있는 경우만 -1 추가
+    // 로컬 파일이 있는 경우
+    if (type === 'teams' && STATIC_TEAM_IDS.has(numericId)) {
+      const localUrl = `/teams/${numericId}.webp`;
+      return { light: localUrl, dark: localUrl };
+    }
+
+    if (type === 'leagues' && STATIC_LEAGUE_IDS.has(numericId)) {
+      const lightUrl = `/leagues/${numericId}.webp`;
+      const hasDarkLocal = STATIC_DARK_LEAGUE_IDS.has(numericId);
+      const darkUrl = hasDarkLocal ? `/leagues/${numericId}-1.webp` : lightUrl;
+      return { light: lightUrl, dark: darkUrl };
+    }
+
+    // 로컬에 없으면 CDN URL
+    const lightUrl = `${SUPABASE_URL}/${type}/md/${numericId}.webp`;
     const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
     const darkUrl = hasDarkImage
       ? `${SUPABASE_URL}/${type}/md/${numericId}-1.webp`
@@ -66,23 +95,27 @@ export function getImageUrls(
 
   // 2. URL이 있으면 처리
   if (logoUrl) {
-    // Supabase Storage URL인 경우
-    if (logoUrl.includes('supabase.co')) {
-      const lightUrl = logoUrl.replace(/-1\.webp$/, '.webp').replace(/-1\.png$/, '.png');
-      const leagueIdMatch = lightUrl.match(/\/leagues\/(?:md\/)?(\d+)\.(?:webp|png)$/);
-      const leagueId = leagueIdMatch ? parseInt(leagueIdMatch[1], 10) : null;
-      const hasDarkImage = type === 'leagues' && leagueId && DARK_MODE_LEAGUE_IDS.includes(leagueId);
-      const darkUrl = hasDarkImage ? lightUrl.replace(/\.webp$/, '-1.webp').replace(/\.png$/, '-1.png') : lightUrl;
-
-      return { light: lightUrl, dark: darkUrl };
+    // 이미 로컬 경로인 경우 그대로 사용
+    if (logoUrl.startsWith('/teams/') || logoUrl.startsWith('/leagues/')) {
+      return { light: logoUrl, dark: logoUrl };
     }
 
-    // API Sports URL인 경우 - Supabase Storage로 변환
+    // Supabase Storage / CDN URL인 경우 - ID 추출 후 로컬 우선 확인
+    if (logoUrl.includes('supabase.co') || logoUrl.includes('cdn.4590football.com')) {
+      const idMatch = logoUrl.match(/\/(teams|leagues)\/(?:md\/)?(\d+)(?:-1)?\.(?:webp|png)$/);
+      if (idMatch) {
+        const imageType = idMatch[1] as 'teams' | 'leagues';
+        const imageId = parseInt(idMatch[2], 10);
+        return getImageUrls(undefined, imageId, imageType);
+      }
+    }
+
+    // API Sports URL인 경우
     if (logoUrl.includes('media.api-sports.io')) {
       const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.(?:webp|png)$/);
       if (idMatch) {
         const imageId = parseInt(idMatch[2], 10);
-        return getImageUrls(logoUrl, imageId, type);
+        return getImageUrls(undefined, imageId, type);
       }
     }
 
