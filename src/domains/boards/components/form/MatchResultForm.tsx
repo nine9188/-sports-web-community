@@ -256,7 +256,13 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                         key={match.id || match.fixture?.id}
                         onClick={() => {
                           const matchId = (match.id || match.fixture?.id)?.toString() || '';
-                          // MatchData 타입에 맞게 변환
+                          const homeId = typeof match.teams.home.id === 'number' ? match.teams.home.id : Number(match.teams.home.id) || 0;
+                          const awayId = typeof match.teams.away.id === 'number' ? match.teams.away.id : Number(match.teams.away.id) || 0;
+                          const lgId = typeof match.league.id === 'number' ? match.league.id : Number(match.league.id) || 0;
+                          const homeKo = getTeamById(homeId)?.name_ko || match.teams.home.name;
+                          const awayKo = getTeamById(awayId)?.name_ko || match.teams.away.name;
+                          const leagueKoRaw = getLeagueName(lgId);
+                          const leagueKo = leagueKoRaw === '알 수 없는 리그' ? match.league.name : leagueKoRaw;
                           const matchData: MatchData = {
                             id: typeof match.id === 'number' ? match.id : Number(match.id) || 0,
                             status: {
@@ -265,27 +271,27 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                               elapsed: match.status.elapsed ?? null,
                             },
                             time: {
-                              timestamp: 0, // 실제 timestamp로 교체 필요 (match.fixture?.timestamp 등)
+                              timestamp: 0,
                               date: match.fixture?.date ?? '',
-                              timezone: '', // 필요시 추가
+                              timezone: '',
                             },
                             league: {
-                              id: typeof match.league.id === 'number' ? match.league.id : Number(match.league.id) || 0,
-                              name: match.league.name,
-                              country: '', // 필요시 추가
+                              id: lgId,
+                              name: leagueKo,
+                              country: '',
                               logo: match.league.logo,
-                              flag: '', // 필요시 추가
+                              flag: '',
                             },
                             teams: {
                               home: {
-                                id: typeof match.teams.home.id === 'number' ? match.teams.home.id : Number(match.teams.home.id) || 0,
-                                name: match.teams.home.name,
+                                id: homeId,
+                                name: homeKo,
                                 logo: match.teams.home.logo,
                                 winner: 'winner' in match.teams.home ? (match.teams.home as { winner: boolean | null }).winner : null,
                               },
                               away: {
-                                id: typeof match.teams.away.id === 'number' ? match.teams.away.id : Number(match.teams.away.id) || 0,
-                                name: match.teams.away.name,
+                                id: awayId,
+                                name: awayKo,
                                 logo: match.teams.away.logo,
                                 winner: 'winner' in match.teams.away ? (match.teams.away as { winner: boolean | null }).winner : null,
                               },
