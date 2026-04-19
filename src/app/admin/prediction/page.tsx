@@ -239,23 +239,17 @@ export default function PredictionAdminPage() {
 
     startTransition(async () => {
       try {
-        let successCount = 0;
-        let errorCount = 0;
-        let skippedCount = 0;
+        const results = await Promise.allSettled(
+          selectedGroups.map(group => {
+            const matchIds = group.matches.map(m => m.id);
+            return generateSingleLeaguePrediction(formatDateToString(selectedDate), group.league.id, 'manual', matchIds);
+          })
+        );
+
         let totalMatchesProcessed = 0;
-
-        for (const group of selectedGroups) {
-          // 선택된 경기 ID 목록 전달
-          const matchIds = group.matches.map(m => m.id);
-          const result = await generateSingleLeaguePrediction(formatDateToString(selectedDate), group.league.id, 'manual', matchIds);
-
-          if (result.status === 'success') {
-            successCount++;
-            totalMatchesProcessed += result.matches_count;
-          } else if (result.status === 'skipped') {
-            skippedCount++;
-          } else {
-            errorCount++;
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value.status === 'success') {
+            totalMatchesProcessed += result.value.matches_count;
           }
         }
 

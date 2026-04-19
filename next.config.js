@@ -28,6 +28,9 @@ const nextConfig = {
         pathname: '/emoticons/**',
       },
       {
+        pathname: '/teams/**',
+      },
+      {
         pathname: '/test/**',
       },
     ],

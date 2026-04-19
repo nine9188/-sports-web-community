@@ -767,24 +767,32 @@ async function generateLeaguePredictionPost(
     // 현재 로그인한 관리자 ID 사용 (없으면 fallback)
     const userId = await getCurrentUserId()
 
-    // 각 경기별로 개별 게시글 생성
+    // 각 경기별로 개별 게시글 생성 (2개씩 병렬 처리)
     let successCount = 0
     let errorCount = 0
+    const BATCH_SIZE = 2
 
-    for (const match of matches) {
-      const result = await generateMatchPredictionPost(
-        match, league, targetDate, userId, teamLogoMap, leagueLogoUrl
+    for (let i = 0; i < matches.length; i += BATCH_SIZE) {
+      const batch = matches.slice(i, i + BATCH_SIZE)
+      const results = await Promise.allSettled(
+        batch.map(match =>
+          generateMatchPredictionPost(match, league, targetDate, userId, teamLogoMap, leagueLogoUrl)
+        )
       )
 
-      if (result.success) {
-        successCount++
-      } else {
-        errorCount++
-        console.error(`경기 게시글 생성 실패 (${match.id}):`, result.error)
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value.success) {
+          successCount++
+        } else {
+          errorCount++
+          const error = result.status === 'rejected' ? result.reason : result.value.error
+          console.error(`경기 게시글 생성 실패:`, error)
+        }
       }
 
-      // API 레이트 리밋 방지
-      await new Promise(resolve => setTimeout(resolve, 500))
+      if (i + BATCH_SIZE < matches.length) {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      }
     }
 
     if (successCount === 0 && errorCount > 0) {
