@@ -6,37 +6,53 @@ import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
 
 const WEBP_QUALITY = 0.85;
+const CONVERT_TIMEOUT_MS = 10_000;
 
 /** 이미지 파일을 WebP로 변환 */
 async function convertToWebP(file: File): Promise<File> {
-  // 이미 WebP이거나 GIF(애니메이션)면 변환 스킵
   if (file.type === 'image/webp' || file.type === 'image/gif') return file;
 
   return new Promise((resolve) => {
+    let settled = false;
+    const done = (result: File) => {
+      if (settled) return;
+      settled = true;
+      URL.revokeObjectURL(objectUrl);
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => done(file), CONVERT_TIMEOUT_MS);
+
     const img = new window.Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve(file); return; }
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob || blob.size >= file.size) {
-            // 변환 실패하거나 오히려 커지면 원본 사용
-            resolve(file);
-            return;
-          }
-          const baseName = file.name.replace(/\.[^.]+$/, '');
-          resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
-        },
-        'image/webp',
-        WEBP_QUALITY
-      );
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { clearTimeout(timer); done(file); return; }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            clearTimeout(timer);
+            if (!blob || blob.size >= file.size) {
+              done(file);
+              return;
+            }
+            const baseName = file.name.replace(/\.[^.]+$/, '');
+            done(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+          },
+          'image/webp',
+          WEBP_QUALITY
+        );
+      } catch {
+        clearTimeout(timer);
+        done(file);
+      }
     };
-    img.onerror = () => resolve(file); // 변환 실패 시 원본
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => { clearTimeout(timer); done(file); };
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
   });
 }
 
