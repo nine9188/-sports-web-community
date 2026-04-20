@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { User, AlertTriangle } from 'lucide-react';
 import {
   Button,
@@ -20,54 +20,77 @@ interface AccountDeleteFormProps {
   nickname: string;
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = local.slice(0, Math.min(3, Math.ceil(local.length / 2)));
+  return `${visible}${'*'.repeat(local.length - visible.length)}@${domain}`;
+}
+
+function maskNickname(name: string): string {
+  if (name.length <= 1) return name;
+  if (name.length === 2) return name[0] + '*';
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+}
+
+const CONFIRM_TEXT = '삭제하겠습니다';
+
 export default function AccountDeleteForm({ email, nickname }: AccountDeleteFormProps) {
-  const router = useRouter();
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [confirmInput, setConfirmInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // 패스워드 입력 핸들러
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    setErrorMessage('');
   };
 
-  // 회원탈퇴 확인 모달 열기
+  const handlePasswordConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordConfirm(e.target.value);
+  };
+
   const handleOpenConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setErrorMessage('비밀번호를 입력해주세요.');
+      toast.error('비밀번호를 입력해주세요.');
       return;
     }
+    if (!passwordConfirm) {
+      toast.error('비밀번호 확인을 입력해주세요.');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      toast.error('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    setConfirmInput('');
     setIsConfirmOpen(true);
   };
 
-  // 회원탈퇴 취소
   const handleCancelDelete = () => {
     setIsConfirmOpen(false);
-    setPassword('');
+    setConfirmInput('');
   };
 
-  // 회원탈퇴 처리
   const handleDeleteAccount = async () => {
+    if (confirmInput !== CONFIRM_TEXT) return;
+
     setIsLoading(true);
-    setErrorMessage('');
 
     try {
       const response = await deleteAccount(password);
 
       if (response.success) {
-        // 탈퇴 성공 시 풀 리로드로 로그인 페이지 이동 (쿠키/세션 완전 초기화)
         window.location.href = '/signin?message=계정이 성공적으로 삭제되었습니다.';
         return;
       } else {
-        setErrorMessage(response.message);
+        toast.error(response.message);
         setIsConfirmOpen(false);
       }
     } catch (error) {
       console.error('회원탈퇴 처리 중 오류:', error);
-      setErrorMessage('회원탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      toast.error('회원탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -80,32 +103,48 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
         <div className="flex items-center text-[13px]">
           <User className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
           <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">계정 정보:</span>
-          <span className="ml-1 text-gray-900 dark:text-[#F0F0F0]">{nickname} ({email})</span>
+          <span className="ml-1 text-gray-900 dark:text-[#F0F0F0]">{maskNickname(nickname)} ({maskEmail(email)})</span>
         </div>
       </div>
 
       {/* 비밀번호 확인 폼 */}
       <form onSubmit={handleOpenConfirm} className="mt-6">
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-            비밀번호 확인
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={handlePasswordChange}
-            placeholder="현재 비밀번호"
-            className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors"
-            disabled={isLoading}
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            계정 삭제를 진행하려면 현재 비밀번호를 입력해주세요.
-          </p>
-          {errorMessage && (
-            <p className="mt-1 text-[13px] text-red-600 dark:text-red-400">{errorMessage}</p>
-          )}
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label htmlFor="password" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+              비밀번호
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={handlePasswordChange}
+              placeholder="현재 비밀번호"
+              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors"
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="passwordConfirm" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+              비밀번호 확인
+            </label>
+            <input
+              type="password"
+              id="passwordConfirm"
+              name="passwordConfirm"
+              value={passwordConfirm}
+              onChange={handlePasswordConfirmChange}
+              placeholder="비밀번호 재입력"
+              className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              계정 삭제를 진행하려면 비밀번호를 두 번 입력해주세요.
+            </p>
+          </div>
+
         </div>
 
         <div className="flex justify-end mt-4">
@@ -136,6 +175,20 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
                 <p className="font-medium text-red-600 dark:text-red-400">이 작업은 되돌릴 수 없습니다.</p>
               </div>
             </div>
+
+            <div className="mt-4 space-y-1">
+              <label className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                삭제하시려면 <span className="text-red-600 dark:text-red-400">{CONFIRM_TEXT}</span>를 입력해주세요.
+              </label>
+              <input
+                type="text"
+                value={confirmInput}
+                onChange={(e) => setConfirmInput(e.target.value)}
+                placeholder={CONFIRM_TEXT}
+                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] rounded-md outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#EAEAEA] dark:focus:bg-[#333333] transition-colors"
+                disabled={isLoading}
+              />
+            </div>
           </DialogBody>
 
           <DialogFooter className="justify-end">
@@ -151,7 +204,7 @@ export default function AccountDeleteForm({ email, nickname }: AccountDeleteForm
               type="button"
               variant="destructive"
               onClick={handleDeleteAccount}
-              disabled={isLoading}
+              disabled={isLoading || confirmInput !== CONFIRM_TEXT}
             >
               {isLoading ? '처리 중...' : '삭제 확인'}
             </Button>

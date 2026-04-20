@@ -118,7 +118,7 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
               width={20}
               height={20}
               loading="eager"
-              className="w-full h-full object-contain dark:invert"
+              className="w-full h-full object-contain invert dark:invert-0"
             />
           )}
         </div>

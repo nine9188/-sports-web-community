@@ -27,6 +27,19 @@ interface ProfileFormProps {
   initialPhoneStatus?: { verified: boolean; phoneNumber?: string };
 }
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!domain) return email;
+  const visible = local.slice(0, Math.min(3, Math.ceil(local.length / 2)));
+  return `${visible}${'*'.repeat(local.length - visible.length)}@${domain}`;
+}
+
+function maskName(name: string): string {
+  if (name.length <= 1) return name;
+  if (name.length === 2) return name[0] + '*';
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+}
+
 export default function ProfileForm({
   initialData,
   initialTicketCount,
@@ -58,7 +71,7 @@ export default function ProfileForm({
         <input
           type="email"
           id="email"
-          value={initialData.email || ''}
+          value={initialData.email ? maskEmail(initialData.email) : ''}
           disabled
           className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] rounded-md shadow-sm cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />
@@ -75,7 +88,7 @@ export default function ProfileForm({
         <input
           type="text"
           id="full_name"
-          value={initialData.full_name || ''}
+          value={initialData.full_name ? maskName(initialData.full_name) : ''}
           disabled
           className="w-full px-3 py-2 border border-black/7 dark:border-white/10 bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] rounded-md shadow-sm cursor-not-allowed outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         />

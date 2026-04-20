@@ -106,25 +106,34 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
         </div>
       )}
 
-      {/* 최근 추천 목록 */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300">최근 추천 친구</h4>
-          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-            <span>추천 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalReferrals}</strong></span>
-            <span>포인트 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalPointsEarned.toLocaleString()}P</strong></span>
-            <span>경험치 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalExpEarned.toLocaleString()}XP</strong></span>
-          </div>
+      {/* 추천 현황 */}
+      <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+        <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+          추천 현황
+        </div>
+        <div className="flex items-center gap-4 text-xs text-gray-700 dark:text-gray-300">
+          <span>추천 친구 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalReferrals}명</strong></span>
+          <span>포인트 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalPointsEarned.toLocaleString()}P</strong></span>
+          <span>경험치 <strong className="text-gray-900 dark:text-[#F0F0F0]">{stats.totalExpEarned.toLocaleString()}XP</strong></span>
+        </div>
+      </div>
+
+      {/* 추천 친구 목록 */}
+      <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
+        <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2">
+          추천 친구 목록
         </div>
         {stats.recentReferrals.length > 0 ? (
-          <div className="space-y-1">
-            {stats.recentReferrals.slice(0, 5).map((referral, index) => (
+          <div className="grid grid-cols-5 gap-2">
+            {stats.recentReferrals.map((referral, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between py-2 px-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-[13px]"
+                className="flex flex-col items-center gap-0.5 py-2 px-1 border border-black/10 dark:border-white/10 rounded-lg"
               >
-                <span className="text-gray-900 dark:text-[#F0F0F0]">{referral.nickname}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate w-full text-center">
+                  {referral.nickname}
+                </span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">
                   {new Date(referral.created_at).toLocaleDateString('ko-KR')}
                 </span>
               </div>

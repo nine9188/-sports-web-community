@@ -412,8 +412,7 @@ export async function getReferralStats(userId: string): Promise<ReferralStats | 
         referee:referee_id (nickname)
       `)
       .eq('referrer_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .order('created_at', { ascending: false });
 
     if (referralsError) {
       console.error('추천 목록 조회 오류:', referralsError);

@@ -48,9 +48,9 @@ export async function signIn(
     // 3. 아이디로 이메일 및 인증 상태 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, email_confirmed')
+      .select('id, email, email_confirmed, is_deleted')
       .eq('username', username)
-      .single<{ id: string; email: string | null; email_confirmed: boolean | null; is_deleted?: boolean }>()
+      .single<{ id: string; email: string | null; email_confirmed: boolean | null; is_deleted: boolean | null }>()
 
     if (profileError || !profile?.email) {
       await recordAttempt(username, 'invalid_username')
