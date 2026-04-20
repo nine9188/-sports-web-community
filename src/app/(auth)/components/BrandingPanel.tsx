@@ -57,7 +57,7 @@ const FEATURE_ICONS = {
   ),
 };
 
-// 회원가입 단계별 콘텐츠 (1~7)
+// 회원가입 단계별 콘텐츠 (1~8)
 const SIGNUP_STEPS: Record<number, BrandingContent> = {
   1: {
     title: <>함께해주셔서 감사합니다!</>,
@@ -74,20 +74,33 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
     ],
   },
   2: {
-    title: <>이메일과 이름을 알려주세요</>,
+    title: <>이메일을 인증해주세요</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
-        가입에 사용할 이메일 주소와<br />
-        실명을 입력해주세요.
+        가입에 사용할 이메일 주소를 입력하고<br />
+        인증번호로 본인 확인을 완료해주세요.
       </p>
     ),
     features: [
       { icon: 'mail', label: '이메일 주소 입력 및 중복 확인' },
-      { icon: 'user', label: '실명 입력 (계정 찾기에 사용)' },
-      { icon: 'check', label: '가입 후 이메일 인증 필요' },
+      { icon: 'bolt', label: '6자리 인증번호 발송' },
+      { icon: 'check', label: '인증번호 입력으로 본인 확인' },
     ],
   },
   3: {
+    title: <>이름을 알려주세요</>,
+    description: (
+      <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
+        계정 찾기 및 관리 용도로 사용됩니다.<br />
+        실명을 입력해주세요.
+      </p>
+    ),
+    features: [
+      { icon: 'user', label: '실명 입력 (계정 찾기에 사용)' },
+      { icon: 'lock', label: '개인정보는 안전하게 보호됩니다' },
+    ],
+  },
+  4: {
     title: <>생년월일을 입력해주세요</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
@@ -101,7 +114,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
       { icon: 'check', label: '만 14세 이상 가입 가능' },
     ],
   },
-  4: {
+  5: {
     title: <>아이디를 만들어주세요</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
@@ -115,7 +128,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
       { icon: 'bolt', label: '아이디는 변경할 수 없습니다' },
     ],
   },
-  5: {
+  6: {
     title: <>닉네임을 정해주세요</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
@@ -129,7 +142,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
       { icon: 'star', label: '나중에 상점에서 변경 가능' },
     ],
   },
-  6: {
+  7: {
     title: <>비밀번호를 설정해주세요</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
@@ -143,7 +156,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
       { icon: 'bolt', label: '대문자, 숫자 포함 시 더 안전' },
     ],
   },
-  7: {
+  8: {
     title: <>거의 다 됐어요!</>,
     description: (
       <p className="text-white/80 text-[13px] mb-5 leading-relaxed">
@@ -154,7 +167,7 @@ const SIGNUP_STEPS: Record<number, BrandingContent> = {
     features: [
       { icon: 'gift', label: '추천 코드 입력 (선택)' },
       { icon: 'star', label: '추천인과 함께 포인트 혜택' },
-      { icon: 'check', label: '가입 완료 후 이메일 인증' },
+      { icon: 'check', label: '가입 완료!' },
     ],
   },
 };
@@ -311,12 +324,13 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
           <p className="text-white/70 text-[13px]">
             {variant === 'signin' && '모든 축구팬을 위한 커뮤니티'}
             {variant === 'signup' && step === 1 && '약관을 읽고 동의해주세요'}
-            {variant === 'signup' && step === 2 && '이메일과 이름을 입력해주세요'}
-            {variant === 'signup' && step === 3 && '생년월일을 입력해주세요'}
-            {variant === 'signup' && step === 4 && '로그인에 사용할 아이디를 설정해주세요'}
-            {variant === 'signup' && step === 5 && '커뮤니티에서 사용할 닉네임을 정해주세요'}
-            {variant === 'signup' && step === 6 && '안전한 비밀번호를 설정해주세요'}
-            {variant === 'signup' && step === 7 && '추천 코드가 있다면 입력해주세요'}
+            {variant === 'signup' && step === 2 && '이메일 인증을 완료해주세요'}
+            {variant === 'signup' && step === 3 && '실명을 입력해주세요'}
+            {variant === 'signup' && step === 4 && '생년월일을 입력해주세요'}
+            {variant === 'signup' && step === 5 && '로그인에 사용할 아이디를 설정해주세요'}
+            {variant === 'signup' && step === 6 && '커뮤니티에서 사용할 닉네임을 정해주세요'}
+            {variant === 'signup' && step === 7 && '안전한 비밀번호를 설정해주세요'}
+            {variant === 'signup' && step === 8 && '추천 코드가 있다면 입력해주세요'}
             {variant === 'social-signup' && '아이디와 닉네임만 설정하면 완료'}
             {variant === 'find-id' && '이름과 이메일로 아이디를 찾을 수 있습니다'}
             {variant === 'find-password' && '등록된 이메일로 재설정 링크를 보내드립니다'}
@@ -329,10 +343,10 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
               <div className="w-full bg-white/20 rounded-full h-1">
                 <div
                   className="bg-white rounded-full h-1 transition-all duration-500"
-                  style={{ width: `${(step / 7) * 100}%` }}
+                  style={{ width: `${(step / 8) * 100}%` }}
                 />
               </div>
-              <span className="text-white/50 text-xs mt-0.5 inline-block">{step} / 7</span>
+              <span className="text-white/50 text-xs mt-0.5 inline-block">{step} / 8</span>
             </div>
           )}
         </div>
@@ -380,12 +394,12 @@ export default function BrandingPanel({ variant = 'signin', step }: { variant?: 
             <div className="mt-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white/60 text-xs">가입 진행률</span>
-                <span className="text-white/60 text-xs">{step} / 7</span>
+                <span className="text-white/60 text-xs">{step} / 8</span>
               </div>
               <div className="w-full bg-white/15 rounded-full h-1.5">
                 <div
                   className="bg-white rounded-full h-1.5 transition-all duration-500"
-                  style={{ width: `${(step / 7) * 100}%` }}
+                  style={{ width: `${(step / 8) * 100}%` }}
                 />
               </div>
             </div>

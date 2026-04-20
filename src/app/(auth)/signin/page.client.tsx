@@ -49,10 +49,14 @@ function LoginContent() {
   useEffect(() => {
     if (message) {
       toast.info(decodeURIComponent(message).replace(/\+/g, ' '));
-      // URL에서 message 파라미터 제거 (중복 토스트 방지)
       const url = new URL(window.location.href);
       url.searchParams.delete('message');
       window.history.replaceState({}, '', url.toString());
+    }
+    const signupSuccess = sessionStorage.getItem('signup-success');
+    if (signupSuccess === 'true') {
+      sessionStorage.removeItem('signup-success');
+      toast.success('회원가입이 완료되었습니다.');
     }
   }, [message]);
   
@@ -210,11 +214,13 @@ function LoginContent() {
       // 로그인 성공 시 이메일 인증 상태 초기화
       setNeedsEmailConfirmation(false);
 
-      // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
-      sessionStorage.setItem('login-success', 'true');
-
-      // full reload로 리다이렉트 (서버 세션 + 클라이언트 상태 완전 동기화)
-      window.location.href = redirectUrl;
+      // 첫 로그인이면 welcome 페이지로, 아니면 일반 리다이렉트
+      if (result.isFirstLogin) {
+        window.location.href = '/auth/welcome';
+      } else {
+        sessionStorage.setItem('login-success', 'true');
+        window.location.href = redirectUrl;
+      }
 
     } catch (error: unknown) {
       console.error('로그인 오류:', error);

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useAuth } from '@/shared/context/AuthContext';
 import { signUp, checkEmailAvailability, checkUsernameAvailability, checkNicknameAvailability } from '@/domains/auth/actions';
+import { sendEmailOtp, verifyEmailOtp } from '@/domains/auth/actions/emailOtp';
 import { validateReferralCode } from '@/shared/actions/referral-actions';
 import { AlertCircle, Check, Eye, EyeOff, Gift, Calendar as CalendarIcon } from 'lucide-react';
 import { signInWithKakao, signInWithGoogle, signInWithDiscord, signInWithNaver } from '@/domains/auth/actions';
@@ -23,6 +24,7 @@ export default function SignupPage() {
   
   // 단계 표시 상태
   const [showEmailStep, setShowEmailStep] = useState(false);
+  const [showNameStep, setShowNameStep] = useState(false);
   const [showBirthStep, setShowBirthStep] = useState(false);
   const [showIdStep, setShowIdStep] = useState(false);
   const [showNicknameStep, setShowNicknameStep] = useState(false);
@@ -81,6 +83,15 @@ export default function SignupPage() {
   const [referralValid, setReferralValid] = useState(false);
   const [, setReferrerNickname] = useState('');
 
+  // 이메일 OTP 상태
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpCooldown, setOtpCooldown] = useState(0);
+
   // 약관 동의 상태
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
@@ -133,23 +144,78 @@ export default function SignupPage() {
 
   // 현재 단계 계산
   const currentStep = !showEmailStep ? 1
-    : !showBirthStep ? 2
-    : !showIdStep ? 3
-    : !showNicknameStep ? 4
-    : !showPasswordStep ? 5
-    : !showReferralStep ? 6
-    : 7;
-  const totalSteps = 7;
+    : !showNameStep ? 2
+    : !showBirthStep ? 3
+    : !showIdStep ? 4
+    : !showNicknameStep ? 5
+    : !showPasswordStep ? 6
+    : !showReferralStep ? 7
+    : 8;
+  const totalSteps = 8;
 
   // 이전 단계로 돌아가기
   const handleBack = () => {
     switch (currentStep) {
       case 2: setShowEmailStep(false); break;
-      case 3: setShowBirthStep(false); break;
-      case 4: setShowIdStep(false); break;
-      case 5: setShowNicknameStep(false); break;
-      case 6: setShowPasswordStep(false); break;
-      case 7: setShowReferralStep(false); break;
+      case 3: setShowNameStep(false); break;
+      case 4: setShowBirthStep(false); break;
+      case 5: setShowIdStep(false); break;
+      case 6: setShowNicknameStep(false); break;
+      case 7: setShowPasswordStep(false); break;
+      case 8: setShowReferralStep(false); break;
+    }
+  };
+
+  // OTP 쿨다운 타이머
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
+
+  // OTP 발송
+  const handleSendOtp = async () => {
+    setOtpSending(true);
+    setOtpError('');
+    try {
+      const result = await sendEmailOtp(email);
+      if (result.success) {
+        setOtpSent(true);
+        setOtpCooldown(60);
+        toast.success('인증번호가 발송되었습니다.');
+      } else {
+        setOtpError(result.error || '발송 실패');
+        toast.error(result.error || '인증번호 발송에 실패했습니다.');
+      }
+    } catch {
+      toast.error('인증번호 발송 중 오류가 발생했습니다.');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // OTP 인증
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      setOtpError('6자리 인증번호를 입력해주세요.');
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError('');
+    try {
+      const result = await verifyEmailOtp(email, otpCode);
+      if (result.success) {
+        setOtpVerified(true);
+        toast.success('이메일 인증이 완료되었습니다.');
+      } else {
+        setOtpError(result.error || '인증 실패');
+      }
+    } catch {
+      setOtpError('인증 처리 중 오류가 발생했습니다.');
+    } finally {
+      setOtpVerifying(false);
     }
   };
 
@@ -621,17 +687,25 @@ export default function SignupPage() {
       return;
     }
 
-    // 2. 이메일 + 이름 단계
-    if (showEmailStep && !showBirthStep) {
-      if (emailChecked && emailAvailable && validateFullName(fullName)) {
-        setShowBirthStep(true);
+    // 2. 이메일 단계
+    if (showEmailStep && !showNameStep) {
+      if (otpVerified) {
+        setShowNameStep(true);
       } else if (emailValid && !emailChecked) {
         checkEmail();
       }
       return;
     }
 
-    // 3. 생년월일 단계
+    // 3. 이름 단계
+    if (showNameStep && !showBirthStep) {
+      if (validateFullName(fullName)) {
+        setShowBirthStep(true);
+      }
+      return;
+    }
+
+    // 4. 생년월일 단계
     if (showBirthStep && !showIdStep) {
       if (validateBirthDate(birthDate)) {
         setShowIdStep(true);
@@ -685,7 +759,8 @@ export default function SignupPage() {
       }, captchaToken);
 
       if (result.success) {
-        router.push('/signin?message=회원가입이 완료되었습니다. 이메일을 확인하고 로그인해주세요.');
+        sessionStorage.setItem('signup-success', 'true');
+        router.push('/signin');
       } else {
         toast.error(result.error || '회원가입에 실패했습니다.');
       }
@@ -823,7 +898,7 @@ export default function SignupPage() {
           )}
 
           {/* 이메일 + 이름 입력 단계 */}
-          {showEmailStep && !showBirthStep && (
+          {showEmailStep && !showNameStep && (
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">이메일 주소</label>
@@ -840,7 +915,7 @@ export default function SignupPage() {
                       setEmailMessage('');
                     }}
                     onBlur={() => validateEmail(email)}
-                    className={`flex-1 px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
+                    className={`flex-1 px-4 py-2 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       emailError ? 'border-red-500 dark:border-red-400' :
                       emailChecked && !emailAvailable ? 'border-red-500 dark:border-red-400' :
                       emailChecked && emailAvailable ? 'border-green-500 dark:border-green-400' :
@@ -854,6 +929,7 @@ export default function SignupPage() {
                     variant="primary"
                     onClick={checkEmail}
                     disabled={isCheckingEmail || !emailValid}
+                    className="px-4 whitespace-nowrap"
                   >
                     {isCheckingEmail ? '확인 중...' : '중복 확인'}
                   </Button>
@@ -877,6 +953,101 @@ export default function SignupPage() {
                 )}
               </div>
 
+              {/* 이메일 인증 (중복확인 완료 후 표시) */}
+              {emailChecked && emailAvailable && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">이메일 인증</label>
+                  {!otpSent && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={handleSendOtp}
+                      disabled={otpSending}
+                      className="w-full px-4 whitespace-nowrap"
+                    >
+                      {otpSending ? '발송 중...' : '인증번호 발송'}
+                    </Button>
+                  )}
+                  {otpSent && (
+                    <>
+                      <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">{email}</span>으로 발송된 6자리 인증번호를 입력해주세요.
+                      </p>
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={otpCode}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                            setOtpCode(value);
+                            setOtpError('');
+                          }}
+                          className={`flex-1 px-4 py-2 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base text-center tracking-[0.3em] font-mono transition-colors ${
+                            otpError ? 'border-red-500 dark:border-red-400' :
+                            otpVerified ? 'border-green-500 dark:border-green-400' :
+                            'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
+                          }`}
+                          placeholder="000000"
+                          maxLength={6}
+                          disabled={otpVerified}
+                        />
+                        <Button
+                          type="button"
+                          variant="primary"
+                          onClick={handleVerifyOtp}
+                          disabled={otpVerifying || otpCode.length !== 6 || otpVerified}
+                          className="px-4 whitespace-nowrap"
+                        >
+                          {otpVerifying ? '확인 중...' : otpVerified ? '인증완료' : '인증하기'}
+                        </Button>
+                      </div>
+                      {otpError && (
+                        <p className="mt-1 text-[13px] text-red-600 flex items-center">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          {otpError}
+                        </p>
+                      )}
+                      {otpVerified && (
+                        <p className="mt-1 text-[13px] text-green-600 flex items-center">
+                          <Check className="h-4 w-4 mr-1" />
+                          이메일 인증이 완료되었습니다.
+                        </p>
+                      )}
+                      {!otpVerified && (
+                        <div className="mt-2 text-center">
+                          <button
+                            type="button"
+                            onClick={handleSendOtp}
+                            disabled={otpSending || otpCooldown > 0}
+                            className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {otpCooldown > 0 ? `재발송 (${otpCooldown}초)` : otpSending ? '발송 중...' : '인증번호 재발송'}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* 인증 완료 후 계속하기 */}
+              {otpVerified && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => setShowNameStep(true)}
+                  className="w-full py-3 h-auto"
+                >
+                  계속하기
+                </Button>
+              )}
+
+            </div>
+          )}
+
+          {/* 이름 입력 단계 */}
+          {showNameStep && !showBirthStep && (
+            <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 text-[13px] font-medium">이름</label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
@@ -899,7 +1070,7 @@ export default function SignupPage() {
                     onBlur={() => {
                       if (fullName) validateFullName(fullName);
                     }}
-                    className={`w-full p-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
+                    className={`w-full px-4 py-2 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       fullNameError ? 'border-red-500 dark:border-red-400' :
                       fullNameValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -925,13 +1096,11 @@ export default function SignupPage() {
                 type="button"
                 variant="primary"
                 onClick={() => {
-                  if (emailChecked && emailAvailable && validateFullName(fullName)) {
+                  if (validateFullName(fullName)) {
                     setShowBirthStep(true);
-                  } else if (emailValid && !emailChecked) {
-                    checkEmail();
                   }
                 }}
-                disabled={!emailChecked || !emailAvailable || !fullNameValid || isLoading}
+                disabled={!fullNameValid || isLoading}
                 className="w-full py-3 h-auto"
               >
                 {isLoading ? '처리 중...' : '계속하기'}
@@ -1210,7 +1379,7 @@ export default function SignupPage() {
                       if (confirmPassword) validateConfirmPassword(confirmPassword);
                     }}
                     onBlur={() => validatePassword(password)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
+                    className={`w-full px-4 py-2 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       passwordError ? 'border-red-500 dark:border-red-400' :
                       passwordValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'
@@ -1282,7 +1451,7 @@ export default function SignupPage() {
                       validateConfirmPassword(e.target.value);
                     }}
                     onBlur={() => validateConfirmPassword(confirmPassword)}
-                    className={`w-full px-4 py-3 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
+                    className={`w-full px-4 py-2 border rounded-md md:rounded-md max-md:rounded-lg focus:outline-none bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] text-base transition-colors ${
                       confirmPasswordError ? 'border-red-500 dark:border-red-400' :
                       confirmPasswordValid ? 'border-green-500 dark:border-green-400' :
                       'border-black/7 dark:border-white/10 focus:border-black/10 dark:focus:border-white/20 focus:bg-[#F5F5F5] dark:focus:bg-[#262626]'

@@ -220,6 +220,42 @@ export async function sendSignupVerificationEmail(email: string, verificationTok
 /**
  * 인증 코드 발송 (아이디 찾기용)
  */
+/**
+ * 회원가입 이메일 인증코드 발송
+ */
+export async function sendSignupOtpEmail(email: string, verificationCode: string) {
+  const subject = '[4590 football] 회원가입 - 이메일 인증코드';
+
+  const html = emailLayout(`
+      <div style="padding: 40px 24px; background: white;">
+        <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">이메일 인증</h2>
+
+        <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
+          회원가입을 위한 이메일 인증코드를 발송해드립니다.
+        </p>
+
+        <div style="background: #f9fafb; border: 2px solid #374151; border-radius: 12px; padding: 30px; margin: 20px 0; text-align: center;">
+          <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">인증코드</p>
+          <p style="margin: 0; color: #1f2937; font-size: 32px; font-weight: bold; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+            ${verificationCode}
+          </p>
+        </div>
+
+        <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; color: #92400e; font-size: 14px;">
+            <strong>유효시간:</strong> 이 인증코드는 5분간 유효합니다.<br>
+            <strong>보안:</strong> 이 코드를 다른 사람과 공유하지 마세요.
+          </p>
+        </div>
+      </div>
+  `);
+
+  return sendEmail({ to: email, subject, html });
+}
+
+/**
+ * 인증 코드 발송 (아이디 찾기용)
+ */
 export async function sendVerificationCodeEmail(email: string, verificationCode: string) {
   const subject = '[4590 football] 아이디 찾기 - 인증코드';
 

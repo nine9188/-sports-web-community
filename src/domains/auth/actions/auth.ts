@@ -48,9 +48,9 @@ export async function signIn(
     // 3. 아이디로 이메일 및 인증 상태 조회
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, email, email_confirmed, is_deleted')
+      .select('id, email, email_confirmed, is_deleted, is_first_login')
       .eq('username', username)
-      .single<{ id: string; email: string | null; email_confirmed: boolean | null; is_deleted: boolean | null }>()
+      .single<{ id: string; email: string | null; email_confirmed: boolean | null; is_deleted: boolean | null; is_first_login: boolean | null }>()
 
     if (profileError || !profile?.email) {
       await recordAttempt(username, 'invalid_username')
@@ -150,7 +150,16 @@ export async function signIn(
     // 8. 로그인 성공 처리
     await clearAttempts(username)
 
-    // 9. 일일 출석 기록 및 보상 (비동기로 처리, 실패해도 로그인은 성공)
+    // 9. 첫 로그인 여부 확인 및 업데이트
+    const isFirstLogin = profile.is_first_login ?? false
+    if (isFirstLogin) {
+      await supabase
+        .from('profiles')
+        .update({ is_first_login: false })
+        .eq('id', profile.id)
+    }
+
+    // 10. 일일 출석 기록 및 보상 (비동기로 처리, 실패해도 로그인은 성공)
     recordDailyLogin(data.user.id).catch(err => {
       console.error('출석 기록 오류:', err)
     })
@@ -167,6 +176,7 @@ export async function signIn(
 
     return {
       success: true,
+      isFirstLogin,
       data: {
         user: data.user,
         session: data.session

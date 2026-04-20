@@ -69,15 +69,14 @@ export async function signUp(
       return { success: false, error: '보안 확인에 실패했습니다. 새로고침 후 다시 시도해주세요.' }
     }
 
-    // 3. 회원가입 처리
-    const supabase = await getSupabaseAction()
+    // 3. 회원가입 처리 (Admin API로 생성하여 인증 메일 발송 방지)
+    const supabaseAdmin = getSupabaseAdmin()
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data: adminData, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: metadata || {}
-      }
+      email_confirm: true,
+      user_metadata: metadata || {},
     })
 
     if (error) {
@@ -88,19 +87,19 @@ export async function signUp(
         false,
         { email, reason: error.message }
       )
-      // Supabase 에러 메시지를 사용자에게 직접 노출하지 않음
-      const userMessage = error.message?.includes('already registered')
+      const userMessage = error.message?.includes('already registered') || error.message?.includes('already been registered')
         ? '이미 등록된 이메일입니다.'
         : '회원가입 처리 중 오류가 발생했습니다.'
       return { success: false, error: userMessage }
     }
 
+    const data = { user: adminData.user }
+
     if (!data.user) {
       return { success: false, error: '회원가입 처리 중 오류가 발생했습니다.' }
     }
 
-    // 4. 프로필 직접 생성 (admin 클라이언트로 RLS 우회)
-    const supabaseAdmin = getSupabaseAdmin()
+    // 5. 프로필 직접 생성 (admin 클라이언트로 RLS 우회)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({
@@ -109,6 +108,8 @@ export async function signUp(
         username: (metadata?.username as string) || null,
         full_name: (metadata?.full_name as string) || null,
         nickname: (metadata?.nickname as string) || null,
+        email_confirmed: true,
+        email_confirmed_at: new Date().toISOString(),
       }, { onConflict: 'id' })
 
     const profileExists = !profileError
