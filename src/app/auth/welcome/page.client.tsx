@@ -16,7 +16,7 @@ const darkParticles: ISourceOptions = {
   fullScreen: false,
   background: { color: { value: 'transparent' } },
   particles: {
-    number: { value: 140, density: { enable: true } },
+    number: { value: 120, density: { enable: true } },
     color: { value: ['#ffffff', '#60a5fa', '#818cf8', '#c084fc', '#22d3ee'] },
     shape: { type: 'circle' },
     opacity: {
@@ -141,63 +141,72 @@ export default function WelcomePageClient() {
     const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
 
-    if (!mobile) {
-      initParticlesEngine(async (engine) => {
-        await loadSlim(engine);
-      }).then(() => setParticlesReady(true));
-    }
+    initParticlesEngine(async (engine) => {
+      await loadSlim(engine);
+    }).then(() => setParticlesReady(true));
 
     const timer = setTimeout(() => fireConfetti(), 600);
     return () => clearTimeout(timer);
   }, [fireConfetti]);
 
-  const memoizedOptions = useMemo(() => isDark ? darkParticles : lightParticles, [isDark]);
+  const memoizedOptions = useMemo(() => {
+    const base = isDark ? darkParticles : lightParticles;
+    if (!isMobile) return base;
+    return {
+      ...base,
+      particles: {
+        ...base.particles,
+        number: { value: 50, density: { enable: true } },
+      },
+      interactivity: {},
+    };
+  }, [isDark, isMobile]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* 배경 — 라이트/다크 */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-indigo-50/80 to-violet-50 dark:from-[#070b1a] dark:via-[#0c1240] dark:to-[#1a0a2e]" />
 
-      {/* 오로라 — 데스크톱만 */}
+      {/* 오로라 — PC: 2개, 모바일: 1개 */}
       <motion.div
-        className="hidden md:block absolute top-0 left-1/4 w-[800px] h-[400px] bg-gradient-to-r from-blue-400/10 via-cyan-300/10 to-purple-400/10 dark:from-blue-600/20 dark:via-cyan-400/15 dark:to-purple-600/20 blur-[130px]"
+        className="hidden md:block absolute top-0 left-1/4 w-[800px] h-[400px] bg-gradient-to-r from-blue-400/35 via-cyan-300/30 to-purple-400/35 dark:from-blue-600/40 dark:via-cyan-400/35 dark:to-purple-600/40 blur-[130px]"
         animate={{ x: [-80, 80, -80], rotate: [-5, 5, -5] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="hidden md:block absolute bottom-0 right-0 w-[600px] h-[300px] bg-gradient-to-l from-indigo-400/10 via-violet-300/10 to-fuchsia-400/10 dark:from-indigo-500/20 dark:via-violet-400/15 dark:to-fuchsia-500/20 blur-[100px]"
+        className="hidden md:block absolute bottom-0 right-0 w-[600px] h-[300px] bg-gradient-to-l from-indigo-400/35 via-violet-300/30 to-fuchsia-400/35 dark:from-indigo-500/40 dark:via-violet-400/35 dark:to-fuchsia-500/40 blur-[100px]"
         animate={{ x: [40, -60, 40], rotate: [3, -3, 3] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* tsParticles — 데스크톱만 */}
-      {particlesReady && mounted && !isMobile && (
-        <Particles
-          key={isDark ? 'dark' : 'light'}
-          className="absolute inset-0 z-[1]"
-          options={memoizedOptions}
-        />
-      )}
-
-      {/* 플로팅 오브 — 데스크톱만 */}
+      {/* 플로팅 오브 — PC: 3개, 모바일: 1개 */}
       <motion.div
-        className="hidden md:block absolute w-44 h-44 rounded-full bg-blue-400/10 dark:bg-blue-500/15 blur-[80px]"
+        className="hidden md:block absolute w-44 h-44 rounded-full bg-blue-400/30 dark:bg-blue-500/35 blur-[80px]"
         animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         style={{ top: '12%', right: '18%' }}
       />
       <motion.div
-        className="hidden md:block absolute w-56 h-56 rounded-full bg-violet-400/10 dark:bg-violet-500/10 blur-[90px]"
+        className="hidden md:block absolute w-56 h-56 rounded-full bg-violet-400/30 dark:bg-violet-500/35 blur-[90px]"
         animate={{ x: [0, -35, 0], y: [0, 25, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         style={{ bottom: '18%', left: '8%' }}
       />
       <motion.div
-        className="hidden md:block absolute w-36 h-36 rounded-full bg-cyan-300/10 dark:bg-cyan-400/10 blur-[60px]"
+        className="hidden md:block absolute w-36 h-36 rounded-full bg-cyan-300/30 dark:bg-cyan-400/35 blur-[60px]"
         animate={{ x: [0, 25, 0], y: [0, -40, 0] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         style={{ top: '50%', left: '65%' }}
       />
+
+      {/* tsParticles */}
+      {particlesReady && mounted && (
+        <Particles
+          key={`${isDark ? 'dark' : 'light'}-${isMobile ? 'mobile' : 'desktop'}`}
+          className="absolute inset-0 z-[1]"
+          options={memoizedOptions}
+        />
+      )}
 
       {/* 콘텐츠 */}
       <div className="relative z-10 min-h-screen">
