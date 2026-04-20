@@ -213,18 +213,8 @@ function LoginContent() {
       // 로그인 성공 플래그를 sessionStorage에 저장 (토스트용)
       sessionStorage.setItem('login-success', 'true');
 
-      // 로그인 성공 - 짧은 대기 후 리다이렉트하여 쿠키가 확실히 설정되도록 함
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // router.push로 클라이언트 사이드 네비게이션
-      router.push(redirectUrl);
-
-      // 추가 안전장치: 1초 후에도 페이지가 변경되지 않았다면 강제 새로고침
-      setTimeout(() => {
-        if (window.location.pathname.includes('/signin')) {
-          window.location.href = redirectUrl;
-        }
-      }, 1000);
+      // full reload로 리다이렉트 (서버 세션 + 클라이언트 상태 완전 동기화)
+      window.location.href = redirectUrl;
 
     } catch (error: unknown) {
       console.error('로그인 오류:', error);

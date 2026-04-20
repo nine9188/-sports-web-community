@@ -457,7 +457,7 @@ export async function createWelcomeNotification({
 }: {
   userId: string;
 }): Promise<NotificationActionResponse> {
-  const [guideResult, noticeResult] = await Promise.allSettled([
+  const [guideResult] = await Promise.allSettled([
     createNotification({
       userId,
       actorId: undefined,

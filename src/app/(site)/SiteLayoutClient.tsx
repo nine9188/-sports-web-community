@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import AuthStateManager from '@/shared/components/AuthStateManager';
 import AuthSection from '@/domains/sidebar/components/auth/AuthSection';
+import PhoneVerificationPopup from '@/shared/components/PhoneVerificationPopup';
 import { getFullUserData } from '@/shared/actions/user';
 import { Board } from '@/domains/layout/types/board';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
@@ -161,6 +162,9 @@ export default function SiteLayoutClient({
       isMobilePhone={isMobilePhone}
     >
       {children}
+      {fullUserData && (
+        <PhoneVerificationPopup userId={fullUserData.id} phoneVerified={fullUserData.phone_verified} />
+      )}
     </AuthStateManager>
   );
 }

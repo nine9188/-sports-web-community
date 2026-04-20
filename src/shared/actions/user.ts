@@ -223,7 +223,7 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
     const [profileResult, userStats] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, nickname, email, username, level, exp, points, icon_id, is_admin')
+        .select('id, nickname, email, username, level, exp, points, icon_id, is_admin, phone_verified')
         .eq('id', user.id)
         .single(),
       getCachedUserStats(user.id),
@@ -275,6 +275,7 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
       icon_name: iconName,
       postCount,
       commentCount,
+      phone_verified: profile.phone_verified || false,
       is_admin: profile.is_admin || false,
       session: null
     };

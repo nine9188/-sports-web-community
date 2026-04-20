@@ -25,6 +25,9 @@ export interface FullUserData {
   postCount: number;
   commentCount: number;
 
+  // 인증
+  phone_verified: boolean;
+
   // 권한
   is_admin: boolean;
 }

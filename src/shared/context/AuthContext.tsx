@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, signOut } from '@/domains/auth/actions';
@@ -36,6 +37,7 @@ export function AuthProvider({
   initialSession?: Session | null;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   // initialSession에서 user를 초기값으로 설정 (서버-클라이언트 동기화)
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
@@ -153,11 +155,13 @@ export function AuthProvider({
           if (!userError && authenticatedUser) {
             setUser(authenticatedUser);
             setSession(currentSession);
+            queryClient.clear();
             router.refresh();
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
+          queryClient.clear();
           router.refresh();
         } else if (event === 'TOKEN_REFRESHED' && currentSession) {
           setSession(currentSession);

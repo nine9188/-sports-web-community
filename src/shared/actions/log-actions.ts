@@ -1,6 +1,6 @@
 'use server'
 
-import { getSupabaseAction } from '@/shared/lib/supabase/server'
+import { getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { headers } from 'next/headers'
 import { Database, Json } from '@/shared/types/supabase'
 
@@ -45,7 +45,7 @@ export interface LogStatistics {
  */
 export async function writeLog(entry: LogEntry) {
   try {
-    const supabase = await getSupabaseAction()
+    const supabase = getSupabaseAdmin()
     const headersList = await headers()
     
     // 요청 정보 자동 수집
