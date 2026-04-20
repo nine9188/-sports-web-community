@@ -210,10 +210,10 @@ export default function WelcomePageClient() {
 
       {/* 콘텐츠 */}
       <div className="relative z-10 min-h-screen">
-        <div className="px-4 py-6 sm:p-6">
+        <div className="px-4 py-4 sm:px-6 sm:py-5">
           {/* 로고 */}
           <motion.div
-            className="mb-6 sm:mb-8"
+            className="mb-4 sm:mb-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
@@ -227,7 +227,7 @@ export default function WelcomePageClient() {
                   height={148}
                   priority
                   unoptimized
-                  className="h-14 w-auto dark:invert"
+                  className="h-10 sm:h-14 w-auto dark:invert"
                 />
                 <span className="ml-1 px-2 py-1 bg-gray-100 dark:bg-white/10 backdrop-blur-sm text-gray-700 dark:text-white/80 text-xs font-semibold rounded border border-black/7 dark:border-white/10">Member</span>
               </div>
