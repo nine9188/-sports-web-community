@@ -107,22 +107,25 @@ const lightParticles: ISourceOptions = {
 export default function WelcomePageClient() {
   const [mounted, setMounted] = useState(false);
   const [particlesReady, setParticlesReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
   const fireConfetti = useCallback(() => {
-    const duration = 3000;
+    const mobile = window.innerWidth < 768;
+    const duration = mobile ? 1500 : 3000;
     const end = Date.now() + duration;
+    const count = mobile ? 2 : 3;
     const frame = () => {
       confetti({
-        particleCount: 3,
+        particleCount: count,
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.6 },
         colors: ['#60a5fa', '#818cf8', '#c084fc', '#22d3ee', '#34d399'],
       });
       confetti({
-        particleCount: 3,
+        particleCount: count,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.6 },
@@ -135,9 +138,15 @@ export default function WelcomePageClient() {
 
   useEffect(() => {
     setMounted(true);
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => setParticlesReady(true));
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+
+    if (!mobile) {
+      initParticlesEngine(async (engine) => {
+        await loadSlim(engine);
+      }).then(() => setParticlesReady(true));
+    }
+
     const timer = setTimeout(() => fireConfetti(), 600);
     return () => clearTimeout(timer);
   }, [fireConfetti]);
@@ -149,20 +158,20 @@ export default function WelcomePageClient() {
       {/* 배경 — 라이트/다크 */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-indigo-50/80 to-violet-50 dark:from-[#070b1a] dark:via-[#0c1240] dark:to-[#1a0a2e]" />
 
-      {/* 오로라 */}
+      {/* 오로라 — 데스크톱만 */}
       <motion.div
-        className="absolute top-0 left-1/4 w-[800px] h-[400px] bg-gradient-to-r from-blue-400/10 via-cyan-300/10 to-purple-400/10 dark:from-blue-600/20 dark:via-cyan-400/15 dark:to-purple-600/20 blur-[130px]"
+        className="hidden md:block absolute top-0 left-1/4 w-[800px] h-[400px] bg-gradient-to-r from-blue-400/10 via-cyan-300/10 to-purple-400/10 dark:from-blue-600/20 dark:via-cyan-400/15 dark:to-purple-600/20 blur-[130px]"
         animate={{ x: [-80, 80, -80], rotate: [-5, 5, -5] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-0 right-0 w-[600px] h-[300px] bg-gradient-to-l from-indigo-400/10 via-violet-300/10 to-fuchsia-400/10 dark:from-indigo-500/20 dark:via-violet-400/15 dark:to-fuchsia-500/20 blur-[100px]"
+        className="hidden md:block absolute bottom-0 right-0 w-[600px] h-[300px] bg-gradient-to-l from-indigo-400/10 via-violet-300/10 to-fuchsia-400/10 dark:from-indigo-500/20 dark:via-violet-400/15 dark:to-fuchsia-500/20 blur-[100px]"
         animate={{ x: [40, -60, 40], rotate: [3, -3, 3] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* tsParticles */}
-      {particlesReady && mounted && (
+      {/* tsParticles — 데스크톱만 */}
+      {particlesReady && mounted && !isMobile && (
         <Particles
           key={isDark ? 'dark' : 'light'}
           className="absolute inset-0 z-[1]"
@@ -170,21 +179,21 @@ export default function WelcomePageClient() {
         />
       )}
 
-      {/* 플로팅 오브 */}
+      {/* 플로팅 오브 — 데스크톱만 */}
       <motion.div
-        className="absolute w-44 h-44 rounded-full bg-blue-400/10 dark:bg-blue-500/15 blur-[80px]"
+        className="hidden md:block absolute w-44 h-44 rounded-full bg-blue-400/10 dark:bg-blue-500/15 blur-[80px]"
         animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         style={{ top: '12%', right: '18%' }}
       />
       <motion.div
-        className="absolute w-56 h-56 rounded-full bg-violet-400/10 dark:bg-violet-500/10 blur-[90px]"
+        className="hidden md:block absolute w-56 h-56 rounded-full bg-violet-400/10 dark:bg-violet-500/10 blur-[90px]"
         animate={{ x: [0, -35, 0], y: [0, 25, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         style={{ bottom: '18%', left: '8%' }}
       />
       <motion.div
-        className="absolute w-36 h-36 rounded-full bg-cyan-300/10 dark:bg-cyan-400/10 blur-[60px]"
+        className="hidden md:block absolute w-36 h-36 rounded-full bg-cyan-300/10 dark:bg-cyan-400/10 blur-[60px]"
         animate={{ x: [0, 25, 0], y: [0, -40, 0] }}
         transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         style={{ top: '50%', left: '65%' }}
@@ -328,22 +337,13 @@ export default function WelcomePageClient() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.0 }}
               >
-                <Link href="/signin" className="block">
+                <Link href="/" className="block">
                   <motion.button
                     className="w-full py-3 px-4 h-auto rounded-xl font-medium text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-300/30 dark:shadow-indigo-500/20"
                     whileHover={{ scale: 1.02, boxShadow: '0 10px 40px rgba(99,102,241,0.35)' }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    로그인하기
-                  </motion.button>
-                </Link>
-                <Link href="/" className="block">
-                  <motion.button
-                    className="w-full py-3 px-4 h-auto rounded-xl font-medium text-gray-500 dark:text-white/50 bg-white/60 dark:bg-white/[0.03] border border-black/5 dark:border-white/[0.08]"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    메인으로
+                    시작하기
                   </motion.button>
                 </Link>
               </motion.div>
