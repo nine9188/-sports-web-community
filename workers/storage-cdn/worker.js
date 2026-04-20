@@ -30,21 +30,11 @@ const ALLOWED_BUCKETS = new Set([
 // 허용 확장자
 const ALLOWED_EXTENSIONS = new Set(['webp', 'png', 'jpg', 'jpeg', 'gif', 'svg']);
 
-// 외부 프록시 허용 도메인 (보안: 아무 URL이나 프록시 방지)
-const ALLOWED_PROXY_DOMAINS = new Set([
-  'img.mydaily.co.kr',
-  'imgnews.pstatic.net',
-  'mimgnews.pstatic.net',
-  's.pstatic.net',
-  'image.kmib.co.kr',
-  'flexible.img.hani.co.kr',
-  'img.khan.co.kr',
-  'img.sbs.co.kr',
-  'image.chosun.com',
-  'image.dongascience.com',
-  'cdn.footballist.co.kr',
-  'i.ytimg.com',
-]);
+// 프록시 요청 허용 Referer/Origin (우리 사이트에서만 사용 가능)
+const ALLOWED_ORIGINS = [
+  '4590football.com',
+  'localhost',
+];
 
 export default {
   async fetch(request, env, ctx) {
@@ -159,9 +149,14 @@ async function handleExternalProxy(request, url, ctx) {
     return new Response('Only HTTPS URLs are allowed', { status: 400 });
   }
 
-  // 허용 도메인 검증
-  if (!ALLOWED_PROXY_DOMAINS.has(parsedUrl.hostname)) {
-    return new Response('Domain not allowed', { status: 403 });
+  // Referer/Origin 검증 (우리 사이트에서만 프록시 사용 가능)
+  const referer = request.headers.get('referer') || '';
+  const origin = request.headers.get('origin') || '';
+  const isAllowedOrigin = ALLOWED_ORIGINS.some(
+    (d) => referer.includes(d) || origin.includes(d)
+  );
+  if (!isAllowedOrigin) {
+    return new Response('Forbidden', { status: 403 });
   }
 
   // 캐시 확인 (원본 URL 기반 캐시키)

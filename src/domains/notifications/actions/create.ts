@@ -457,19 +457,33 @@ export async function createWelcomeNotification({
 }: {
   userId: string;
 }): Promise<NotificationActionResponse> {
-  return createNotification({
-    userId,
-    actorId: undefined, // 시스템 알림
-    type: 'welcome',
-    title: '환영합니다! 4590 Football에 오신 것을 환영합니다! 👋',
-    message: '커뮤니티 가이드와 인기 게시판을 둘러보세요!',
-    // TODO: 공지사항 게시글 작성 후 해당 링크로 변경 (예: '/boards/notice/1')
-    link: '/boards/popular',
-    metadata: {
-      is_welcome: true,
-      popular_link: '/boards/popular'
-    }
-  });
+  const [guideResult, noticeResult] = await Promise.allSettled([
+    createNotification({
+      userId,
+      actorId: undefined,
+      type: 'welcome',
+      title: '가입을 축하합니다! 🎉 4590 Football에 오신 것을 환영합니다!',
+      message: '이용 가이드를 확인하고 커뮤니티를 시작해보세요!',
+      link: '/guide',
+      metadata: {
+        is_welcome: true,
+      }
+    }),
+    createNotification({
+      userId,
+      actorId: undefined,
+      type: 'welcome',
+      title: '📢 공지사항을 확인해주세요!',
+      message: '커뮤니티 이용 규칙과 최신 공지사항을 확인해보세요.',
+      link: '/boards/notice/2277',
+      metadata: {
+        is_welcome: true,
+      }
+    }),
+  ]);
+
+  const guideValue = guideResult.status === 'fulfilled' ? guideResult.value : { success: false, error: '가이드 알림 발송 실패' };
+  return guideValue;
 }
 
 /**

@@ -1,7 +1,6 @@
 'use server';
 
 import sharp from 'sharp';
-import { unstable_cache, revalidateTag } from 'next/cache';
 import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
@@ -13,10 +12,8 @@ import {
   EXTENSION_MAP,
   SUPABASE_STORAGE_URL,
   PLACEHOLDER_URLS,
-  TTL_MAP,
   ERROR_COOLDOWN,
   PENDING_WAIT_TIME,
-  CUSTOM_ASSETS,
   SIZE_CONFIG,
   VENUE_SIZE_CONFIG,
 } from './constants';
@@ -24,11 +21,9 @@ import {
 /**
  * Cloudflare Worker/KV 기반 asset 캐시 조회
  *
- * 방식: list + unstable_cache (24시간)
- * - 타입당 1회/24h Worker 호출 → 전체 ready ID 가져옴
- * - KV list 하루 ~27회 (무료 한도 1,000 내)
- * - KV read 0회
- * - 새 이미지 캐싱 성공 시 markAssetReadyInKV()로 KV 기록 (revalidateTag 제거 — list 폭증 방지)
+ * 방식: POST /asset/check → KV .get() (read 작업만 사용, list 0)
+ * - 무료 read 한도: 100,000/일 (충분)
+ * - list 한도: 1,000/일 → 더 이상 소비하지 않음
  */
 function getAssetWorkerUrl(): string {
   const url = process.env.MATCH_CACHE_URL;
@@ -43,31 +38,24 @@ function getAssetWriteSecret(): string {
 }
 
 /**
- * 타입별 ready ID Set (unstable_cache 24h)
- * Worker /asset/ready/:type → KV list로 전체 ID 반환
- * 하루 ~27 list 호출 (5타입 × ~5.4 pages)
+ * KV에서 ready 상태 확인 (get 기반, list 사용 안 함)
+ * Worker POST /asset/check → KV .get() per ID
  */
-const _getReadyAssetIdSetImpl = (type: AssetType) => unstable_cache(
-  async (): Promise<number[]> => {
-    try {
-      const res = await fetch(`${getAssetWorkerUrl()}/asset/ready/${type}`, {
-        method: 'GET',
-        headers: { 'X-Write-Secret': getAssetWriteSecret() },
-      });
-      if (!res.ok) return [];
-      const body = await res.json() as { ids: number[] };
-      return body.ids || [];
-    } catch {
-      return [];
-    }
-  },
-  ['asset-cache-ready-kv', type],
-  { revalidate: 86400, tags: ['asset-cache', `asset-cache-${type}`] }
-)();
+async function checkAssetsReadyInKV(type: AssetType, entityIds: number[]): Promise<Set<number>> {
+  if (entityIds.length === 0) return new Set();
 
-async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
-  const ids = await _getReadyAssetIdSetImpl(type);
-  return new Set(ids);
+  try {
+    const res = await fetch(`${getAssetWorkerUrl()}/asset/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, ids: entityIds }),
+    });
+    if (!res.ok) return new Set();
+    const body = await res.json() as { ready: number[] };
+    return new Set(body.ready || []);
+  } catch {
+    return new Set();
+  }
 }
 
 /**
@@ -141,8 +129,8 @@ export async function ensureAssetCached(
   }
 
   try {
-    // 0. Fast path: KV batch check (read만 사용, list 0)
-    const readySet = await getReadyAssetIdSet(type);
+    // 0. Fast path: KV check (read만 사용, list 0)
+    const readySet = await checkAssetsReadyInKV(type, [entityId]);
     if (readySet.has(entityId)) {
       return getStoragePublicUrl(type, entityId, size);
     }
@@ -292,8 +280,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    // 5. KV에 ready 기록 (revalidateTag 제거: 매 캐싱마다 unstable_cache 무효화 → KV list 폭증 원인)
-    // 새 이미지는 readySet에 없어도 DB fallback 경로(:152-166)에서 정상 반환, 24h 후 자연 갱신
+    // 5. KV에 ready 기록 (다음 요청부터 DB 조회 스킵)
     after(async () => {
       await markAssetReadyInKV(type, entityId);
     });
@@ -342,7 +329,7 @@ export async function ensureAssetsCached(
 
   try {
     // 1. Fast path: KV batch check (read만 사용, list 0)
-    const readySet = await getReadyAssetIdSet(type);
+    const readySet = await checkAssetsReadyInKV(type, uniqueIds);
     const unknownIds: number[] = [];
 
     for (const id of uniqueIds) {
@@ -430,44 +417,6 @@ export async function ensureAssetsCached(
 }
 
 /**
- * TTL 체크 및 백그라운드 갱신 (선택적)
- * - stale-while-revalidate 패턴
- * - 응답은 캐시로 즉시, 갱신은 백그라운드
- */
-export async function checkAndRefreshIfStale(
-  type: AssetType,
-  entityId: number
-): Promise<void> {
-  // 커스텀 에셋은 재다운로드 스킵
-  if (CUSTOM_ASSETS.has(`${type}:${entityId}`)) {
-    return;
-  }
-
-  try {
-    const supabase = getSupabaseAdmin();
-
-    const { data: cache } = await supabase
-      .from('asset_cache')
-      .select('checked_at')
-      .eq('type', type)
-      .eq('entity_id', entityId)
-      .maybeSingle();
-
-    if (!cache) return;
-
-    const elapsed = Date.now() - new Date(cache.checked_at).getTime();
-    const ttl = TTL_MAP[type];
-
-    if (elapsed > ttl) {
-      // 백그라운드에서 갱신 시도 (fire-and-forget)
-      cacheAsset(type, entityId).catch(() => {});
-    }
-  } catch {
-    // 무시
-  }
-}
-
-/**
  * 에셋 강제 재다운로드 (관리자용)
  *
  * 기존 캐시를 삭제하고 ensureAssetCached를 호출하면
@@ -481,15 +430,18 @@ export async function forceRefreshAsset(
   try {
     const supabase = getSupabaseAdmin();
 
-    // 기존 캐시 삭제
-    await supabase
-      .from('asset_cache')
-      .delete()
-      .eq('type', type)
-      .eq('entity_id', entityId);
-
-    // readySet 캐시 무효화 (삭제된 ID가 Set에서 빠지도록)
-    revalidateTag(`asset-cache-${type}`);
+    // 기존 캐시 삭제 (DB + KV 동시)
+    await Promise.all([
+      supabase
+        .from('asset_cache')
+        .delete()
+        .eq('type', type)
+        .eq('entity_id', entityId),
+      fetch(`${getAssetWorkerUrl()}/asset/${type}/${entityId}`, {
+        method: 'DELETE',
+        headers: { 'X-Write-Secret': getAssetWriteSecret() },
+      }).catch(() => {}),
+    ]);
 
     // 새로 다운로드 (ensureAssetCached가 "레코드 없음" → cacheAsset 실행)
     const url = await ensureAssetCached(type, entityId, size);
