@@ -8,8 +8,7 @@ import { fetchMatchStats } from './statsData';
 import { fetchCachedLeagueStandings } from './standingsData';
 import { TeamLineup } from './lineupData';
 import { TeamStats } from './statsData';
-import { getMatchCache, setMatchCache } from './matchCache';
-// PlayerStats import 제거: 평점은 fetchPlayerRatings(), 풀 데이터는 fetchCachedPlayerStats() 사용
+import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 // 4590 표준: 이미지 URL 함수
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
@@ -52,154 +51,6 @@ export async function fetchMatchFullData(
   } = {}
 ): Promise<MatchFullDataResponse> {
   try {
-    const numericMatchId = parseInt(matchId, 10);
-
-    // ============================================
-    // L2 (Supabase) 캐시 확인 — 종료된 경기(FT) 영구 캐시
-    // ============================================
-    const cached = await getMatchCache(numericMatchId, 'full');
-    if (cached) {
-      const cachedResponse = cached as MatchFullDataResponse;
-
-      // 캐시 데이터 완전성 검증: lineups, events, stats가 모두 있어야 캐시 사용
-      const isCacheComplete =
-        cachedResponse.lineups?.response &&
-        cachedResponse.events && cachedResponse.events.length > 0 &&
-        cachedResponse.stats && cachedResponse.stats.length > 0;
-
-      // 불완전한 캐시는 무시하고 API에서 새로 가져옴
-      if (!isCacheComplete) {
-      } else {
-
-      // 캐시 복원: 제거된 파생 데이터 재계산
-      if (cachedResponse.match?.teams) {
-        cachedResponse.homeTeam = {
-          id: cachedResponse.match.teams.home.id,
-          name: cachedResponse.match.teams.home.name,
-          logo: cachedResponse.match.teams.home.logo,
-        };
-        cachedResponse.awayTeam = {
-          id: cachedResponse.match.teams.away.id,
-          name: cachedResponse.match.teams.away.name,
-          logo: cachedResponse.match.teams.away.logo,
-        };
-      }
-
-      // 이미지 URL 재계산 (캐시에서 제거된 경우)
-      if (!cachedResponse.teamLogoUrls && cachedResponse.match?.teams) {
-        const teamIds = [cachedResponse.match.teams.home.id, cachedResponse.match.teams.away.id];
-        cachedResponse.teamLogoUrls = await getTeamLogoUrls(teamIds);
-      }
-      if (!cachedResponse.leagueLogoUrl && cachedResponse.match?.league?.id) {
-        const leagueId = cachedResponse.match.league.id;
-        const [lightUrl, darkUrl] = await Promise.all([
-          getLeagueLogoUrl(leagueId),
-          getLeagueLogoUrl(leagueId, true),
-        ]);
-        cachedResponse.leagueLogoUrl = lightUrl;
-        cachedResponse.leagueLogoDarkUrl = darkUrl;
-      }
-
-      // matchData 재구성: 저장 시 통째로 제거됐으므로, transformed `match`에서 복원
-      // MatchHeader가 matchData.fixture/league/teams/goals를 사용하므로 모두 채워야 함
-      const cachedVenue = (cachedResponse as any).venue;
-      if (!cachedResponse.matchData && cachedResponse.match) {
-        const m = cachedResponse.match;
-        cachedResponse.matchData = {
-          fixture: {
-            id: m.id,
-            date: m.time?.date,
-            timestamp: m.time?.timestamp,
-            timezone: m.time?.timezone,
-            status: {
-              short: m.status?.code,
-              long: m.status?.name,
-              elapsed: m.status?.elapsed,
-            },
-            ...(cachedVenue ? { venue: cachedVenue } : {}),
-          },
-          league: m.league,
-          teams: m.teams,
-          goals: m.goals,
-        } as unknown as Record<string, unknown>;
-      }
-
-      // standings는 실시간이므로 캐시에서 제외됨 → 필요하면 새로 가져옴
-      if (options.fetchStandings && cachedResponse.match?.league?.id) {
-        const season = cachedResponse.match.league.id
-          ? undefined  // standings API가 자동으로 현재 시즌 반환
-          : undefined;
-
-        const standings = await fetchCachedLeagueStandings(
-          cachedResponse.match.league.id,
-          season
-        );
-        if (standings.success && standings.data?.league) {
-          const leagueData = standings.data.league;
-          const transformedStandings: Standing[][] = [];
-          if (leagueData.standings) {
-            leagueData.standings.forEach(standingGroup => {
-              const transformedGroup: Standing[] = [];
-              standingGroup.forEach(item => {
-                if (item && item.rank !== undefined && item.team &&
-                    item.team.id !== undefined && item.team.name !== undefined &&
-                    item.team.logo !== undefined && item.points !== undefined &&
-                    item.goalsDiff !== undefined && item.all) {
-                  transformedGroup.push({
-                    rank: item.rank,
-                    team: { id: item.team.id, name: item.team.name, logo: item.team.logo },
-                    points: item.points,
-                    goalsDiff: item.goalsDiff,
-                    form: item.form,
-                    description: item.description,
-                    all: {
-                      played: item.all.played ?? 0, win: item.all.win ?? 0,
-                      draw: item.all.draw ?? 0, lose: item.all.lose ?? 0,
-                      goals: { for: item.all.goals?.for ?? 0, against: item.all.goals?.against ?? 0 }
-                    }
-                  });
-                }
-              });
-              if (transformedGroup.length > 0) transformedStandings.push(transformedGroup);
-            });
-          }
-          cachedResponse.standings = {
-            standings: {
-              league: {
-                id: leagueData.id ?? 0, name: leagueData.name ?? '',
-                logo: leagueData.logo ?? '', name_ko: leagueData.name_ko ?? '',
-                season: leagueData.season, standings: transformedStandings
-              }
-            }
-          };
-
-          // 4590 표준: standings 팀 로고 URL 추가 조회
-          const standingsTeamIds = new Set<number>();
-          for (const group of transformedStandings) {
-            for (const standing of group) {
-              if (standing.team?.id) {
-                standingsTeamIds.add(standing.team.id);
-              }
-            }
-          }
-          if (standingsTeamIds.size > 0) {
-            const standingsLogoUrls = await getTeamLogoUrls(Array.from(standingsTeamIds));
-            cachedResponse.teamLogoUrls = {
-              ...cachedResponse.teamLogoUrls,
-              ...standingsLogoUrls
-            };
-          }
-        }
-      }
-
-        return cachedResponse;
-      }
-    }
-
-    // ============================================
-    // 캐시 미스 또는 불완전한 캐시 → API에서 가져오기
-    // ============================================
-
     // 기본 매치 정보는 항상 가져옴
     const matchData = await fetchCachedMatchData(matchId);
 
@@ -422,32 +273,6 @@ export async function fetchMatchFullData(
       response.teamLogoUrls = await getTeamLogoUrls(Array.from(teamIds));
     }
 
-    // FT인 경우 L2 캐시에 저장 (standings 제외 — 실시간 데이터)
-    // 단, 필수 데이터(lineups, events, stats)가 모두 있을 때만 캐시
-    const hasCompleteData =
-      response.lineups?.response &&
-      response.events && response.events.length > 0 &&
-      response.stats && response.stats.length > 0;
-
-    const finishedCodes = ['FT', 'AET', 'PEN'];
-    if (finishedCodes.includes(response.match?.status?.code ?? '') && hasCompleteData) {
-      // 캐시 경량화: 파생 가능한 데이터 제거
-      const cacheData = { ...response };
-      delete cacheData.standings;       // 실시간 데이터
-      delete cacheData.teamLogoUrls;    // ID로 재계산 가능
-      delete cacheData.leagueLogoUrl;   // ID로 재계산 가능
-      delete cacheData.leagueLogoDarkUrl;
-      delete cacheData.homeTeam;        // match.teams에 이미 있음
-      delete cacheData.awayTeam;        // match.teams에 이미 있음
-      // matchData → venue 정보만 추출하여 경량 저장
-      const rawFixture = (response.matchData as Record<string, any>)?.fixture;
-      if (rawFixture?.venue) {
-        (cacheData as any).venue = { name: rawFixture.venue.name, city: rawFixture.venue.city };
-      }
-      delete cacheData.matchData;       // 가장 큰 절감 (43KB → 0)
-      setMatchCache(numericMatchId, 'full', cacheData).catch(() => {});
-    }
-
     return response;
   } catch (error) {
     console.error('매치 전체 데이터 로딩 오류:', error);
@@ -458,5 +283,30 @@ export async function fetchMatchFullData(
   }
 }
 
-// 캐싱 적용 함수
-export const fetchCachedMatchFullData = cache(fetchMatchFullData); 
+/**
+ * 종료 경기: unstable_cache(영구) → API 최초 1회만 호출
+ * 진행 중: React cache() → 같은 렌더 내 중복 제거 (revalidate는 fetchFromFootballApi가 관리)
+ */
+async function fetchMatchFullDataCached(
+  matchId: string,
+  options: Parameters<typeof fetchMatchFullData>[1] = {}
+): Promise<MatchFullDataResponse> {
+  // 먼저 경기 상태 확인 (가벼운 호출, fetchFromFootballApi의 revalidate 적용)
+  const basicData = await fetchCachedMatchData(matchId);
+  const statusCode = basicData.data?.fixture?.status?.short ?? '';
+  const finishedCodes = ['FT', 'AET', 'PEN'];
+
+  if (finishedCodes.includes(statusCode)) {
+    // 종료 경기: Vercel Data Cache에 영구 캐싱 (revalidate: false)
+    return unstable_cache(
+      () => fetchMatchFullData(matchId, options),
+      ['match-full', matchId],
+      { revalidate: false, tags: [`match-${matchId}`] }
+    )();
+  }
+
+  // 진행 중/예정: 캐싱 없이 실시간 데이터
+  return fetchMatchFullData(matchId, options);
+}
+
+export const fetchCachedMatchFullData = cache(fetchMatchFullDataCached);

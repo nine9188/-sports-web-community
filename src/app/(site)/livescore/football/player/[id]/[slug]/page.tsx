@@ -78,15 +78,19 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
       ? (tab as PlayerTabType)
       : 'stats';
 
-    // 모든 탭 데이터를 서버에서 미리 로드
+    // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
+    // 봇 감지: x-is-bot 헤더가 있으면 기본 정보만 (API 호출 최소화)
+    const headersList = await import('next/headers').then(m => m.headers());
+    const isBot = headersList.get('x-is-bot') === '1';
+
     const initialData = await fetchPlayerFullData(playerId, {
-      fetchSeasons: true,
-      fetchStats: true,
-      fetchFixtures: true,
-      fetchTrophies: true,
-      fetchTransfers: true,
-      fetchInjuries: true,
-      fetchRankings: true
+      fetchSeasons: !isBot && (initialTab === 'stats'),
+      fetchStats: !isBot && (initialTab === 'stats'),
+      fetchFixtures: !isBot && (initialTab === 'fixtures'),
+      fetchTrophies: !isBot && (initialTab === 'trophies'),
+      fetchTransfers: !isBot && (initialTab === 'transfers'),
+      fetchInjuries: !isBot && (initialTab === 'injuries'),
+      fetchRankings: !isBot && (initialTab === 'rankings'),
     });
 
     // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)

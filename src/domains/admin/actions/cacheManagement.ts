@@ -1,12 +1,60 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { getMatchCacheStats, deleteMatchCache } from '@/domains/livescore/actions/match/matchCache';
+import { revalidateTag } from 'next/cache';
 import { forceRefreshAsset } from '@/domains/livescore/actions/images/ensureAssetCached';
 
-// ── 경기 캐시 ──
+// ── 경기 캐시 (DB 직접 조회) ──
 
-export { getMatchCacheStats, deleteMatchCache };
+export async function getMatchCacheStats() {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { count: totalEntries } = await supabase
+      .from('match_cache')
+      .select('*', { count: 'exact', head: true });
+
+    const { count: completeEntries } = await supabase
+      .from('match_cache')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_complete', true);
+
+    const dataTypes = ['full', 'matchPlayerStats', 'power'] as const;
+    const byDataType: Record<string, number> = {};
+    for (const dt of dataTypes) {
+      const { count } = await supabase
+        .from('match_cache')
+        .select('*', { count: 'exact', head: true })
+        .eq('data_type', dt);
+      byDataType[dt] = count || 0;
+    }
+
+    return {
+      totalEntries: totalEntries || 0,
+      completeEntries: completeEntries || 0,
+      incompleteEntries: (totalEntries || 0) - (completeEntries || 0),
+      byDataType,
+    };
+  } catch {
+    return { totalEntries: 0, completeEntries: 0, incompleteEntries: 0, byDataType: {} };
+  }
+}
+
+export async function deleteMatchCache(
+  matchId: number,
+  dataType?: string
+) {
+  try {
+    const supabase = getSupabaseAdmin();
+    let query = supabase.from('match_cache').delete().eq('match_id', matchId);
+    if (dataType) query = query.eq('data_type', dataType);
+    const { error } = await query;
+    if (error) return { success: false, error: error.message };
+    revalidateTag(`match-${matchId}`);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : '알 수 없는 오류' };
+  }
+}
 
 /**
  * 불완전 캐시 목록 조회

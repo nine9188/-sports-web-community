@@ -31,40 +31,7 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
       return [];
     }
 
-    // 고유한 리그 이름 추출
-    const uniqueLeagues = [...new Set<string>(
-      data.response
-        .map((trophy: TrophyResponseItem) => {
-          if (typeof trophy.league === 'object' && trophy.league !== null) {
-            return trophy.league.name || '';
-          }
-          return typeof trophy.league === 'string' ? trophy.league : '';
-        })
-        .filter((name: string) => name !== '')
-    )];
-
-    // 리그 로고 맵 생성
-    const leagueLogosMap = new Map<string, string | null>();
-    
-    // 리그 로고 정보 가져오기
-    const leagueLogoPromises = uniqueLeagues.map(async (leagueName: string) => {
-      try {
-        const logoData = await fetchFromFootballApi('leagues', { name: leagueName });
-        if (logoData.response && logoData.response.length > 0) {
-          leagueLogosMap.set(leagueName, logoData.response[0].league.logo);
-        } else {
-          leagueLogosMap.set(leagueName, null);
-        }
-      } catch (error) {
-        console.error(`리그 로고 가져오기 오류 (${leagueName}):`, error);
-        leagueLogosMap.set(leagueName, null);
-      }
-    });
-    
-    // 모든 리그 로고 요청 완료 대기
-    await Promise.all(leagueLogoPromises);
-
-    // 트로피 데이터 변환
+    // 트로피 데이터 변환 (리그 로고는 컴포넌트에서 Storage URL로 처리)
     const trophies: TrophyData[] = data.response.map((trophy: TrophyResponseItem) => {
       // place 값 한글 번역
       let translatedPlace = trophy.place || '';
@@ -102,10 +69,7 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
         leagueName = trophy.league.name || '';
         leagueLogo = trophy.league.logo || null;
       } else if (typeof trophy.league === 'string') {
-        // 문자열인 경우
         leagueName = trophy.league;
-        // 이전에 가져온 로고 사용
-        leagueLogo = leagueLogosMap.get(leagueName) || null;
       }
       
       return {

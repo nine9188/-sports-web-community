@@ -65,13 +65,22 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
       ? (tab as TeamTabType)
       : 'overview';
 
-    // 모든 탭 데이터를 서버에서 미리 로드 (빠른 탭 전환을 위해)
+    // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
+    const headersList = await import('next/headers').then(m => m.headers());
+    const isBot = headersList.get('x-is-bot') === '1';
+
+    const needsMatches = !isBot && ['overview', 'fixtures'].includes(initialTab);
+    const needsSquad = !isBot && ['overview', 'squad'].includes(initialTab);
+    const needsPlayerStats = !isBot && ['squad', 'stats'].includes(initialTab);
+    const needsStandings = !isBot && ['overview', 'standings'].includes(initialTab);
+    const needsTransfers = !isBot && (initialTab === 'overview');
+
     const initialData = await fetchTeamFullData(id, {
-      fetchMatches: true,      // overview, fixtures 탭용
-      fetchSquad: true,        // squad 탭용
-      fetchPlayerStats: true,  // squad, stats 탭용
-      fetchStandings: true,    // overview, standings 탭용
-      fetchTransfers: true     // overview 탭용
+      fetchMatches: needsMatches,
+      fetchSquad: needsSquad,
+      fetchPlayerStats: needsPlayerStats,
+      fetchStandings: needsStandings,
+      fetchTransfers: needsTransfers,
     });
 
     if (!initialData.success || !initialData.teamData?.team) {

@@ -74,21 +74,6 @@ const getKstDateString = (): string => {
   return kstNow.toISOString().split('T')[0];
 };
 
-// 날짜에서 어제/내일 계산
-const getAdjacentDates = (dateStr: string) => {
-  const currentDate = new Date(dateStr + 'T00:00:00Z');
-
-  const yesterday = new Date(currentDate);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  const tomorrow = new Date(currentDate);
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-  return { yesterdayStr, tomorrowStr };
-};
-
 // 서버 컴포넌트 - HydrationBoundary + prefetchQuery 패턴
 export default async function FootballLiveScorePage({
   searchParams: searchParamsPromise
@@ -97,25 +82,13 @@ export default async function FootballLiveScorePage({
 }) {
   const searchParams = await searchParamsPromise;
   const dateParam = searchParams?.date ?? getKstDateString();
-  const { yesterdayStr, tomorrowStr } = getAdjacentDates(dateParam);
-
   const queryClient = getQueryClient();
 
-  // 3일치 prefetch (병렬) — prefetchQuery는 에러를 throw하지 않음
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: liveScoreKeys.matches(yesterdayStr),
-      queryFn: async () => transformMatches(await fetchMatchesByDateCached(yesterdayStr)),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: liveScoreKeys.matches(dateParam),
-      queryFn: async () => transformMatches(await fetchMatchesByDateCached(dateParam)),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: liveScoreKeys.matches(tomorrowStr),
-      queryFn: async () => transformMatches(await fetchMatchesByDateCached(tomorrowStr)),
-    }),
-  ]);
+  // 선택된 날짜만 prefetch (어제/내일은 날짜 전환 시 SSR에서 로드)
+  await queryClient.prefetchQuery({
+    queryKey: liveScoreKeys.matches(dateParam),
+    queryFn: async () => transformMatches(await fetchMatchesByDateCached(dateParam)),
+  });
 
   const pageUrl = `${siteConfig.url}/livescore/football`;
 

@@ -32,8 +32,9 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
   const todayStr = getTodayKst();
   const isToday = formattedDate === todayStr;
 
-  // 폴링 간격: LIVE 모드면 30초, 오늘이면 60초, 과거/미래면 폴링 없음
-  const refetchInterval = showLiveOnly ? 30000 : isToday ? 60000 : false;
+  // 폴링 간격: API cache가 120초이므로 그보다 자주 호출해봐야 의미 없음
+  // 오늘이면 120초 폴링, 과거/미래면 폴링 없음
+  const refetchInterval = isToday ? 120000 : false;
 
   const query = useQuery({
     queryKey: liveScoreKeys.matches(formattedDate),
@@ -41,10 +42,10 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
       const data = await fetchMatchesByDate(formattedDate);
       return transformMatches(data);
     },
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: 1000 * 60 * 2, // 2분 (API cache와 동일)
     gcTime: 1000 * 60 * 30, // 30분
     refetchInterval,
-    refetchIntervalInBackground: true, // 탭 비활성화돼도 폴링 유지
+    refetchIntervalInBackground: false, // 탭 비활성화 시 폴링 중지
   });
 
   // 라이브 경기 수 계산
@@ -75,10 +76,10 @@ export function useTodayLiveCount(enabled: boolean = true) {
       return transformMatches(data);
     },
     enabled,
-    staleTime: 1000 * 60, // 1분
+    staleTime: 1000 * 60 * 2, // 2분 (API cache와 동일)
     gcTime: 1000 * 60 * 10, // 10분
-    refetchInterval: 60000, // 60초마다 갱신
-    refetchIntervalInBackground: true, // 탭 비활성화돼도 폴링 유지
+    refetchInterval: 120000, // 120초 (API cache 주기와 동일)
+    refetchIntervalInBackground: false, // 탭 비활성화 시 폴링 중지
   });
 
   return {

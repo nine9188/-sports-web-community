@@ -6,7 +6,6 @@ import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarD
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
 import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import type { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
-import { getMatchCache, getMatchCacheBulk, setMatchCache } from '@/domains/livescore/actions/match/matchCache';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound } from 'next/navigation';
 import { getMatchSlug } from '@/domains/livescore/utils/slugs';
@@ -160,58 +159,6 @@ async function MatchContentLoader({
   const playerIds = extractPlayerIds(matchData);
   const leagueId = matchData.match?.league?.id;
 
-  // 종료 경기: matchPlayerStats + power DB 캐시 먼저 확인
-  let cachedPlayerStats: AllPlayerStatsResponse | null = null;
-  let cachedPower: HeadToHeadTestData | null = null;
-
-  if (isFinished) {
-    const [cachedExtra, cachedPowerData] = await Promise.all([
-      getMatchCacheBulk(numericMatchId, ['matchPlayerStats']),
-      getMatchCache(numericMatchId, 'power'),
-    ]);
-
-    if (cachedExtra['matchPlayerStats']) {
-      const cached = cachedExtra['matchPlayerStats'] as Record<string, unknown>;
-      if ('allPlayersData' in cached && Array.isArray(cached.allPlayersData)) {
-        cachedPlayerStats = cached as unknown as AllPlayerStatsResponse;
-      }
-    }
-
-    if (cachedPowerData) {
-      const power = cachedPowerData as HeadToHeadTestData;
-      // 캐시에서 strip된 이미지 URL 재계산
-      if (!power.playerPhotoUrls || !power.teamLogoUrls || !power.leagueLogoUrls) {
-        const playerIds = new Set<number>();
-        const teamIds = new Set<number>([power.teamA, power.teamB]);
-        const leagueIds = new Set<number>();
-
-        if (power.topPlayers) {
-          for (const p of power.topPlayers.teamA?.topScorers || []) playerIds.add(p.playerId);
-          for (const p of power.topPlayers.teamA?.topAssist || []) playerIds.add(p.playerId);
-          for (const p of power.topPlayers.teamB?.topScorers || []) playerIds.add(p.playerId);
-          for (const p of power.topPlayers.teamB?.topAssist || []) playerIds.add(p.playerId);
-        }
-        if (power.recent) {
-          for (const item of power.recent.teamA?.items || []) { if (item.opponent.id) teamIds.add(item.opponent.id); }
-          for (const item of power.recent.teamB?.items || []) { if (item.opponent.id) teamIds.add(item.opponent.id); }
-        }
-        if (power.h2h) {
-          for (const item of power.h2h.items || []) { if (item.league.id) leagueIds.add(item.league.id); }
-        }
-
-        const [photos, logos, leagueLogos] = await Promise.all([
-          playerIds.size > 0 ? getPlayerPhotoUrls([...playerIds]) : Promise.resolve({}),
-          getTeamLogoUrls([...teamIds]),
-          leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : Promise.resolve({}),
-        ]);
-        power.playerPhotoUrls = photos;
-        power.teamLogoUrls = logos;
-        power.leagueLogoUrls = leagueLogos;
-      }
-      cachedPower = power;
-    }
-  }
-
   // 컵 대회 여부 판정 (순위 탭에서 라운드별 경기 뷰 사용)
   const [leagueIsCup, cupSeason] = await Promise.all([
     isCupLeague(leagueId),
@@ -221,17 +168,10 @@ async function MatchContentLoader({
   // 나머지 전부 병렬 호출
   const [sidebarDataResult, powerDataResult, playerStatsResult, playerKoreanNames, highlightData, cupRoundsResult] = await Promise.all([
     getCachedSidebarData(matchId),
-    cachedPower
-      ? Promise.resolve({ success: true, data: cachedPower })
-      : (homeTeamId && awayTeamId)
-        ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-        : Promise.resolve({ success: false, data: undefined }),
-    cachedPlayerStats
-      ? Promise.resolve(cachedPlayerStats)
-      : fetchAllPlayerStats(matchId, matchData.match?.status?.code).then(r => {
-          if (isFinished) setMatchCache(numericMatchId, 'matchPlayerStats', r, statusCode, leagueId).catch(() => {});
-          return r;
-        }),
+    (homeTeamId && awayTeamId)
+      ? getCachedPowerData(homeTeamId, awayTeamId, 5)
+      : Promise.resolve({ success: false, data: undefined }),
+    fetchAllPlayerStats(matchId, matchData.match?.status?.code),
     getPlayersKoreanNames(playerIds),
     isFinished && homeTeamId && awayTeamId && leagueId
       ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.time?.date).catch(() => null)
@@ -244,13 +184,6 @@ async function MatchContentLoader({
   const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
   const powerResult = powerDataResult as { success?: boolean; data?: HeadToHeadTestData };
   const powerData = powerResult.success ? powerResult.data : undefined;
-
-  // 종료 경기: 전력 데이터 캐시 저장 (DB 캐시 미스였을 때만)
-  // 캐시 경량화: 이미지 URL은 저장하지 않음 (읽기 시 재계산)
-  if (isFinished && !cachedPower && powerResult.success && powerResult.data) {
-    const { playerPhotoUrls, teamLogoUrls, leagueLogoUrls, ...powerCacheData } = powerResult.data;
-    setMatchCache(numericMatchId, 'power', powerCacheData, statusCode, leagueId).catch(() => {});
-  }
 
   return (
     <MatchPageClient

@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getMatchCache } from './matchCache';
+import { unstable_cache } from 'next/cache';
 import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '../images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import type {
@@ -37,37 +37,24 @@ async function fetchAllPlayerStatsInternal(
       };
     }
 
-    const numericMatchId = parseInt(matchId, 10);
     const isFinished = matchStatus && FINISHED_STATUSES.includes(matchStatus);
 
-    // ============================================
-    // 종료된 경기: DB 캐시 확인
-    // ============================================
+    // 종료 경기: unstable_cache로 영구 캐싱 (API 최초 1회만)
     if (isFinished) {
-      const cached = await getMatchCache(numericMatchId, 'matchPlayerStats');
-
-      if (cached) {
-        // 캐시 데이터 형식 확인 - AllPlayerStatsResponse 형식인지 또는 raw response 형식인지
-        const cachedAny = cached as Record<string, unknown>;
-
-        // 새 형식 (AllPlayerStatsResponse)
-        if ('allPlayersData' in cachedAny && Array.isArray(cachedAny.allPlayersData)) {
-          return cached as AllPlayerStatsResponse;
-        }
-
-        // 구 형식 (raw API response)
-        const cachedData = cached as { response?: unknown[] };
-        const responseArray = cachedData?.response;
-
-        if (Array.isArray(responseArray) && responseArray.length > 0) {
-          return await extractAllDataFromResponse(responseArray);
-        }
-      }
+      return unstable_cache(
+        async () => {
+          const data = await fetchFromFootballApi('fixtures/players', { fixture: matchId });
+          if (!data?.response?.length) {
+            return { success: false, allPlayersData: [], ratings: {}, captainIds: [], message: '경기 데이터를 찾을 수 없습니다' };
+          }
+          return extractAllDataFromResponse(data.response);
+        },
+        ['player-stats', matchId],
+        { revalidate: false, tags: [`match-${matchId}`] }
+      )();
     }
 
-    // ============================================
-    // API 호출
-    // ============================================
+    // 진행 중: 매번 API 호출 (fetchFromFootballApi의 revalidate 적용)
     const data = await fetchFromFootballApi('fixtures/players', { fixture: matchId });
 
     if (!data?.response?.length) {

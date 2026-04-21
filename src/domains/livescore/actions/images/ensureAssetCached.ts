@@ -1,7 +1,7 @@
 'use server';
 
 import sharp from 'sharp';
-import { after } from 'next/server';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import {
   AssetType,
@@ -19,58 +19,18 @@ import {
 } from './constants';
 
 /**
- * Cloudflare Worker/KV 기반 asset 캐시 조회
+ * Asset 캐시 시스템
  *
- * 방식: POST /asset/check → KV .get() (read 작업만 사용, list 0)
- * - 무료 read 한도: 100,000/일 (충분)
- * - list 한도: 1,000/일 → 더 이상 소비하지 않음
+ * 핵심 전략: unstable_cache(Vercel Data Cache)로 DB 쿼리 최소화
+ * - 타입별 ready ID Set을 1시간마다 DB에서 1회 조회 → 캐싱
+ * - 나머지 요청은 캐시 히트 → DB 0회, KV 0회
+ * - KV는 hot path에서 완전히 제거 (무료 한도 보호)
+ *
+ * 호출 비용:
+ * - Cloudflare KV: 0회/일
+ * - Supabase DB: ~120회/일 (5타입 × 24시간)
+ * - API-Sports: 새 이미지 캐싱 시만
  */
-function getAssetWorkerUrl(): string {
-  const url = process.env.MATCH_CACHE_URL;
-  if (!url) throw new Error('MATCH_CACHE_URL env var not set');
-  return url.replace(/\/$/, '');
-}
-
-function getAssetWriteSecret(): string {
-  const s = process.env.MATCH_CACHE_WRITE_SECRET;
-  if (!s) throw new Error('MATCH_CACHE_WRITE_SECRET env var not set');
-  return s;
-}
-
-/**
- * KV에서 ready 상태 확인 (get 기반, list 사용 안 함)
- * Worker POST /asset/check → KV .get() per ID
- */
-async function checkAssetsReadyInKV(type: AssetType, entityIds: number[]): Promise<Set<number>> {
-  if (entityIds.length === 0) return new Set();
-
-  try {
-    const res = await fetch(`${getAssetWorkerUrl()}/asset/check`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, ids: entityIds }),
-    });
-    if (!res.ok) return new Set();
-    const body = await res.json() as { ready: number[] };
-    return new Set(body.ready || []);
-  } catch {
-    return new Set();
-  }
-}
-
-/**
- * 새로 ready된 에셋을 KV에 기록 (DB 업데이트 후 호출)
- */
-async function markAssetReadyInKV(type: AssetType, entityId: number): Promise<void> {
-  try {
-    await fetch(`${getAssetWorkerUrl()}/asset/${type}/${entityId}`, {
-      method: 'POST',
-      headers: { 'X-Write-Secret': getAssetWriteSecret() },
-    });
-  } catch {
-    // KV 쓰기 실패는 치명적이지 않음
-  }
-}
 
 interface AssetCacheRow {
   id: string;
@@ -84,40 +44,56 @@ interface AssetCacheRow {
 
 const ALL_SIZES: ImageSize[] = ['sm', 'md'];
 
-/**
- * Storage 공개 URL 생성
- * 새 구조: {bucket}/{size}/{entityId}.webp
- */
 function getStoragePublicUrl(type: AssetType, entityId: number, size: ImageSize = 'md'): string {
   const bucket = BUCKET_MAP[type];
   const ext = EXTENSION_MAP[type];
   return `${SUPABASE_STORAGE_URL}/${bucket}/${size}/${entityId}.${ext}`;
 }
 
-/**
- * API-Sports 원본 URL 생성
- */
 function getApiSportsUrl(type: AssetType, entityId: number): string {
   const path = API_PATH_MAP[type];
   return `${API_SPORTS_BASE_URL}/${path}/${entityId}.png`;
 }
 
-/**
- * Storage 경로 생성
- * 새 구조: {size}/{entityId}.webp
- */
 function getStoragePath(type: AssetType, entityId: number, size: ImageSize): string {
   const ext = EXTENSION_MAP[type];
   return `${size}/${entityId}.${ext}`;
 }
 
 /**
- * 단일 에셋 캐시 확인 및 URL 반환
+ * 타입별 ready ID Set (unstable_cache 1시간)
  *
- * 1. asset_cache 조회
- * 2. ready면 Storage URL 반환
- * 3. 없거나 error면 캐싱 시도
- * 4. 실패 시 placeholder 반환
+ * DB에서 ready 상태인 entity_id만 조회 → Set으로 캐싱
+ * Vercel Data Cache에 저장되어 서버 재시작해도 유지됨
+ * 1시간마다 자동 갱신 (revalidate: 3600)
+ *
+ * 비용: 5타입 × 24시간 = 120 DB 쿼리/일
+ */
+const _getReadyAssetIdsImpl = (type: AssetType) => unstable_cache(
+  async (): Promise<number[]> => {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data } = await supabase
+        .from('asset_cache')
+        .select('entity_id')
+        .eq('type', type)
+        .eq('status', 'ready');
+      return (data || []).map((r: { entity_id: number }) => r.entity_id);
+    } catch {
+      return [];
+    }
+  },
+  ['asset-ready-ids-db', type],
+  { revalidate: 3600, tags: ['asset-cache', `asset-cache-${type}`] }
+)();
+
+async function getReadyAssetIdSet(type: AssetType): Promise<Set<number>> {
+  const ids = await _getReadyAssetIdsImpl(type);
+  return new Set(ids);
+}
+
+/**
+ * 단일 에셋 캐시 확인 및 URL 반환
  */
 export async function ensureAssetCached(
   type: AssetType,
@@ -129,15 +105,15 @@ export async function ensureAssetCached(
   }
 
   try {
-    // 0. Fast path: KV check (read만 사용, list 0)
-    const readySet = await checkAssetsReadyInKV(type, [entityId]);
+    // 0. Fast path: unstable_cache에서 ready Set 확인 (DB/KV 호출 0회)
+    const readySet = await getReadyAssetIdSet(type);
     if (readySet.has(entityId)) {
       return getStoragePublicUrl(type, entityId, size);
     }
 
     const supabase = getSupabaseAdmin();
 
-    // 1. 캐시 조회 (readySet에 없는 ID만 도달: 신규/error/pending)
+    // 1. Set에 없는 ID만 DB 개별 조회 (신규/error/pending)
     const { data: cache } = await supabase
       .from('asset_cache')
       .select('*')
@@ -147,18 +123,17 @@ export async function ensureAssetCached(
 
     const cacheRow = cache as AssetCacheRow | null;
 
-    // 2. ready 상태면 URL 반환
+    // 2. ready 상태면 URL 반환 (캐시 갱신 전 업로드된 것)
     if (cacheRow?.status === 'ready') {
       return getStoragePublicUrl(type, entityId, size);
     }
 
-    // 3. pending 상태 — stale 락 체크 (60초 이상 pending = 죽은 작업으로 간주)
+    // 3. pending 상태 — stale 체크 (60초 이상 = 죽은 작업)
     if (cacheRow?.status === 'pending') {
       const pendingElapsed = Date.now() - new Date(cacheRow.checked_at).getTime();
-      const STALE_PENDING_MS = 60 * 1000; // 60초
+      const STALE_PENDING_MS = 60 * 1000;
 
       if (pendingElapsed < STALE_PENDING_MS) {
-        // 다른 인스턴스가 처리 중 → 짧은 대기 후 재확인
         await new Promise(resolve => setTimeout(resolve, PENDING_WAIT_TIME));
 
         const { data: recheckCache } = await supabase
@@ -172,19 +147,17 @@ export async function ensureAssetCached(
           return getStoragePublicUrl(type, entityId, size);
         }
 
-        // 여전히 pending → placeholder 반환 (재업로드 시도 안 함)
         return PLACEHOLDER_URLS[type];
       }
-      // 60초 이상 pending = stale → 아래 cacheAsset로 재시도
+      // 60초 이상 stale pending → 아래에서 재시도
     }
 
-    // 4. error 상태 - 쿨다운 체크 (24시간)
+    // 4. error 상태 - 쿨다운 (24시간)
     if (cacheRow?.status === 'error') {
       const elapsed = Date.now() - new Date(cacheRow.checked_at).getTime();
       if (elapsed < ERROR_COOLDOWN) {
         return PLACEHOLDER_URLS[type];
       }
-      // 쿨다운 지남 - 재시도
     }
 
     // 5. 캐싱 시도
@@ -198,18 +171,12 @@ export async function ensureAssetCached(
 
 /**
  * 에셋 캐싱 실행 (멀티사이즈 WebP 변환)
- *
- * 1. pending 락 선점
- * 2. API-Sports에서 다운로드
- * 3. sharp로 2사이즈 WebP 변환 및 업로드
- * 4. DB 업데이트
  */
 async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = 'md'): Promise<string> {
   const supabase = getSupabaseAdmin();
   const sourceUrl = getApiSportsUrl(type, entityId);
 
   try {
-    // 1. pending 락 선점 (upsert)
     const { error: lockError } = await supabase
       .from('asset_cache')
       .upsert(
@@ -229,11 +196,8 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       return PLACEHOLDER_URLS[type];
     }
 
-    // 2. API-Sports에서 이미지 다운로드
     const response = await fetch(sourceUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-      },
+      headers: { 'User-Agent': 'Mozilla/5.0' },
     });
 
     if (!response.ok) {
@@ -242,8 +206,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
 
     const imageBuffer = await response.arrayBuffer();
     const bucket = BUCKET_MAP[type];
-
-    // 3. sharp로 2사이즈 WebP 변환 및 업로드
     const sizeConfig = type === 'venue_photo' ? VENUE_SIZE_CONFIG : SIZE_CONFIG;
 
     for (const s of ALL_SIZES) {
@@ -260,7 +222,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
         .upload(storagePath, webpBuffer, {
           contentType: 'image/webp',
           upsert: true,
-          cacheControl: '31536000', // 1년 캐시 (팀/리그 로고는 거의 변하지 않음)
+          cacheControl: '31536000',
         });
 
       if (uploadError) {
@@ -268,7 +230,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       }
     }
 
-    // 4. 성공 - DB 업데이트
     await supabase
       .from('asset_cache')
       .update({
@@ -280,15 +241,9 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    // 5. KV에 ready 기록 (다음 요청부터 DB 조회 스킵)
-    after(async () => {
-      await markAssetReadyInKV(type, entityId);
-    });
-
     return getStoragePublicUrl(type, entityId, size);
 
   } catch (error) {
-    // 실패 - error 상태로 업데이트
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     await supabase
@@ -309,10 +264,6 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
 
 /**
  * 배치로 여러 에셋 캐시 확인 및 URL 맵 반환
- *
- * 성능 최적화:
- * - 한 번의 DB 조회로 모든 캐시 확인
- * - 없는 것들만 병렬로 캐싱 시도
  */
 export async function ensureAssetsCached(
   type: AssetType,
@@ -328,8 +279,8 @@ export async function ensureAssetsCached(
   const result: Record<number, string> = {};
 
   try {
-    // 1. Fast path: KV batch check (read만 사용, list 0)
-    const readySet = await checkAssetsReadyInKV(type, uniqueIds);
+    // 1. Fast path: unstable_cache에서 ready Set (DB/KV 호출 0회)
+    const readySet = await getReadyAssetIdSet(type);
     const unknownIds: number[] = [];
 
     for (const id of uniqueIds) {
@@ -340,14 +291,13 @@ export async function ensureAssetsCached(
       }
     }
 
-    // 모든 ID가 ready면 DB 조회 완전 스킵
     if (unknownIds.length === 0) {
       return result;
     }
 
     const supabase = getSupabaseAdmin();
 
-    // 2. readySet에 없는 것들만 DB 조회 (신규/error/pending)
+    // 2. Set에 없는 것만 DB 배치 조회 (신규/error만 해당)
     const { data: caches } = await supabase
       .from('asset_cache')
       .select('entity_id, status, checked_at')
@@ -359,17 +309,14 @@ export async function ensureAssetsCached(
       cacheMap.set(c.entity_id, c);
     });
 
-    // 3. 상태별 분기
     const needsCaching: number[] = [];
 
     for (const id of unknownIds) {
       const cache = cacheMap.get(id);
 
       if (cache?.status === 'ready') {
-        // readySet 캐시가 아직 갱신 전인 경우 (업로드 직후)
         result[id] = getStoragePublicUrl(type, id, size);
       } else if (cache?.status === 'error') {
-        // 에러 쿨다운 체크
         const elapsed = Date.now() - new Date(cache.checked_at).getTime();
         if (elapsed < ERROR_COOLDOWN) {
           result[id] = PLACEHOLDER_URLS[type];
@@ -381,7 +328,7 @@ export async function ensureAssetsCached(
       }
     }
 
-    // 3. 캐싱이 필요한 것들 병렬 처리 (최대 5개씩)
+    // 3. 캐싱 필요한 것만 병렬 처리
     if (needsCaching.length > 0) {
       const BATCH_SIZE = 5;
 
@@ -408,7 +355,6 @@ export async function ensureAssetsCached(
   } catch (error) {
     console.error(`[ensureAssetsCached] Error for ${type}:`, error);
 
-    // 전체 실패 시 placeholder로 채움
     for (const id of uniqueIds) {
       result[id] = PLACEHOLDER_URLS[type];
     }
@@ -418,9 +364,6 @@ export async function ensureAssetsCached(
 
 /**
  * 에셋 강제 재다운로드 (관리자용)
- *
- * 기존 캐시를 삭제하고 ensureAssetCached를 호출하면
- * "레코드 없음" 경로를 타서 새로 다운로드됩니다.
  */
 export async function forceRefreshAsset(
   type: AssetType,
@@ -430,20 +373,15 @@ export async function forceRefreshAsset(
   try {
     const supabase = getSupabaseAdmin();
 
-    // 기존 캐시 삭제 (DB + KV 동시)
-    await Promise.all([
-      supabase
-        .from('asset_cache')
-        .delete()
-        .eq('type', type)
-        .eq('entity_id', entityId),
-      fetch(`${getAssetWorkerUrl()}/asset/${type}/${entityId}`, {
-        method: 'DELETE',
-        headers: { 'X-Write-Secret': getAssetWriteSecret() },
-      }).catch(() => {}),
-    ]);
+    await supabase
+      .from('asset_cache')
+      .delete()
+      .eq('type', type)
+      .eq('entity_id', entityId);
 
-    // 새로 다운로드 (ensureAssetCached가 "레코드 없음" → cacheAsset 실행)
+    // unstable_cache 무효화 (삭제된 ID가 Set에서 빠지도록)
+    revalidateTag(`asset-cache-${type}`);
+
     const url = await ensureAssetCached(type, entityId, size);
     const isPlaceholder = url.startsWith('/images/placeholder');
 

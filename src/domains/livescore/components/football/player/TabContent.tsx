@@ -123,13 +123,14 @@ const InjuriesTab = memo(function InjuriesTab({
 });
 
 const RankingsTab = memo(function RankingsTab({
-  playerId, rankingsData, playerKoreanNames = {}
+  playerId, rankingsData, playerKoreanNames = {}, leagueId
 }: {
-  playerId: number, rankingsData: RankingsData, playerKoreanNames?: Record<number, string | null>
+  playerId: number, rankingsData: RankingsData, playerKoreanNames?: Record<number, string | null>, leagueId?: number
 }) {
   return (
     <PlayerRankings
       playerId={playerId}
+      leagueId={leagueId}
       rankingsData={rankingsData}
       playerKoreanNames={playerKoreanNames}
       playerPhotoUrls={rankingsData.playerPhotoUrls}
@@ -267,7 +268,8 @@ export default function TabContent({
 
       case 'rankings': {
         const rankings = rankingsData || {} as RankingsData;
-        return <RankingsTab playerId={playerIdNum} rankingsData={rankings} playerKoreanNames={rankingsKoreanNames} />;
+        const currentLeagueId = initialData?.playerData?.statistics?.[0]?.league?.id;
+        return <RankingsTab playerId={playerIdNum} rankingsData={rankings} playerKoreanNames={rankingsKoreanNames} leagueId={currentLeagueId} />;
       }
 
       default:

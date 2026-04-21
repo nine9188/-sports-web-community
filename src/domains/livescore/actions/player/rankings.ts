@@ -178,4 +178,74 @@ export async function fetchPlayerRankings(
 }
 
 // 캐싱 적용 함수
-export const fetchCachedPlayerRankings = cache(fetchPlayerRankings); 
+export const fetchCachedPlayerRankings = cache(fetchPlayerRankings);
+
+/**
+ * 개별 랭킹 타입 조회 (서브탭별 lazy loading용)
+ * 클라이언트에서 서브탭 클릭 시 해당 타입만 호출
+ */
+type RankingApiType = 'topscorers' | 'topassists' | 'topyellowcards' | 'topredcards';
+
+export async function fetchSingleRanking(
+  leagueId: number,
+  rankingType: RankingApiType
+): Promise<{ rankings: PlayerRanking[]; playerPhotoUrls: Record<number, string>; teamLogoUrls: Record<number, string> }> {
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const currentSeason = month >= 6 ? year : year - 1;
+
+    const response = await fetchFromFootballApi(`players/${rankingType}`, {
+      league: leagueId,
+      season: currentSeason,
+    });
+
+    if (!response?.response || !Array.isArray(response.response)) {
+      return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {} };
+    }
+
+    const rankings: PlayerRanking[] = response.response
+      .filter((item: ApiRankingItem) => item.player?.id)
+      .slice(0, 20)
+      .map((item: ApiRankingItem) => ({
+        player: {
+          id: item.player?.id || 0,
+          name: item.player?.name || '',
+          photo: item.player?.photo || '',
+        },
+        statistics: [{
+          team: {
+            id: item.statistics?.[0]?.team?.id || 0,
+            name: item.statistics?.[0]?.team?.name || '',
+            logo: item.statistics?.[0]?.team?.logo || '',
+          },
+          goals: {
+            total: item.statistics?.[0]?.goals?.total || 0,
+            assists: item.statistics?.[0]?.goals?.assists || 0,
+          },
+          games: {
+            appearences: item.statistics?.[0]?.games?.appearences || 0,
+            minutes: item.statistics?.[0]?.games?.minutes || 0,
+          },
+          cards: {
+            yellow: item.statistics?.[0]?.cards?.yellow || 0,
+            red: item.statistics?.[0]?.cards?.red || 0,
+          },
+        }],
+      }));
+
+    // 이미지 URL 배치 조회
+    const playerIds = rankings.map(r => r.player.id).filter(Boolean);
+    const teamIds = rankings.map(r => r.statistics[0]?.team?.id).filter(Boolean);
+
+    const [playerPhotoUrls, teamLogoUrls] = await Promise.all([
+      playerIds.length > 0 ? getPlayerPhotoUrls(playerIds) : {},
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : {},
+    ]);
+
+    return { rankings, playerPhotoUrls, teamLogoUrls };
+  } catch {
+    return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {} };
+  }
+}
