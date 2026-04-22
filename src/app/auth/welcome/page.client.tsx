@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
-import { BookOpen, Megaphone, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -293,51 +293,16 @@ export default function WelcomePageClient() {
               >
                 회원가입을 축하합니다!
               </motion.h1>
-              <p className="text-lg text-gray-500 dark:text-white/40 font-light">
-                새로운 여정이 시작됩니다
+              <p className="text-lg sm:text-xl text-gray-500 dark:text-white/40 font-light mb-3">
+                축구에 진심인 사람들의 집합소, 4590
+              </p>
+              <p className="text-sm text-gray-400 dark:text-white/25">
+                실시간 스코어, 커뮤니티, 승부예측까지<br />
+                모든 축구를 한곳에서
               </p>
             </motion.div>
 
             <div className="w-full max-w-md px-2 sm:px-0">
-              {/* 바로가기 카드 */}
-              <motion.div
-                className="space-y-3 mb-6 sm:mb-8"
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-              >
-                <Link
-                  href="/guide"
-                  className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-black/5 dark:border-white/[0.08] hover:bg-white/80 dark:hover:bg-white/[0.1] hover:border-indigo-200 dark:hover:border-white/20 hover:shadow-lg hover:shadow-indigo-100/50 dark:hover:shadow-none transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 dark:group-hover:bg-blue-500/30 group-hover:shadow-[0_0_25px_rgba(59,130,246,0.2)] dark:group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] transition-all duration-300">
-                    <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[13px] font-medium text-gray-900 dark:text-white/90">이용 가이드</p>
-                    <p className="text-xs text-gray-500 dark:text-white/30">사이트 이용 방법을 확인해보세요</p>
-                  </div>
-                  <svg className="w-4 h-4 text-gray-300 dark:text-white/15 group-hover:text-indigo-400 dark:group-hover:text-white/40 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-
-                <Link
-                  href="/boards/notice/2277"
-                  className="flex items-center gap-3 p-4 rounded-xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-black/5 dark:border-white/[0.08] hover:bg-white/80 dark:hover:bg-white/[0.1] hover:border-emerald-200 dark:hover:border-white/20 hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-none transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/30 group-hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] dark:group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] transition-all duration-300">
-                    <Megaphone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[13px] font-medium text-gray-900 dark:text-white/90">공지사항</p>
-                    <p className="text-xs text-gray-500 dark:text-white/30">커뮤니티 이용 규칙을 확인해주세요</p>
-                  </div>
-                  <svg className="w-4 h-4 text-gray-300 dark:text-white/15 group-hover:text-emerald-400 dark:group-hover:text-white/40 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </motion.div>
 
               {/* 버튼 */}
               <motion.div

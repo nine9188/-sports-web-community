@@ -154,6 +154,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                   level={notice.author_level || 1}
                   exp={notice.author_exp}
                   iconSize={20}
+                  showIcon={false}
                 />
                 <span className="mx-1 flex-shrink-0">|</span>
                 <span className="flex-shrink-0 flex items-center">

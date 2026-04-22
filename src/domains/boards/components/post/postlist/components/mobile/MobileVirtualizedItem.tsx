@@ -8,7 +8,6 @@
 import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar as CalendarIcon } from 'lucide-react';
 import { Post, PostVariant } from '../../types';
 import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
@@ -42,22 +41,20 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
     }
   }, [currentBoardId]);
 
+  const formattedDate = useMemo(() => {
+    return post?.formattedDate || '-';
+  }, [post?.formattedDate]);
+
+  const thumbnailUrl = useMemo(() => {
+    if (!post || variant !== 'image-table') return null;
+    const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
+    return getProxiedImageUrl(originalUrl);
+  }, [variant, post]);
+
   if (!post) return null;
 
   const isCurrentPost = post.id === currentPostId;
-  // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
   const href = `/boards/${post.board_slug}/${post.post_number}`;
-
-  const formattedDate = useMemo(() => {
-    return post.formattedDate || '-';
-  }, [post.formattedDate]);
-
-  const thumbnailUrl = useMemo(() => {
-    if (variant !== 'image-table') return null;
-    const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-    return getProxiedImageUrl(originalUrl);
-  }, [variant, post.thumbnail_url, post.content]);
-
   const titleText = getPostTitleText(post);
   const titleClassName = getPostTitleClassName(post, isCurrentPost);
 
@@ -86,13 +83,22 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
         </div>
       </Link>
 
-      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        {renderAuthor(post, 16, 'justify-start')}
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <span className="flex items-center">
-          <CalendarIcon className="w-3 h-3 mr-0.5" />
-          {formattedDate}
-        </span>
+      <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="w-full flex items-center justify-between gap-2">
+          <div className="flex items-center overflow-hidden whitespace-nowrap">
+            <span className="text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
+              {post.board_name || '-'}
+            </span>
+            <span className="mx-1 flex-shrink-0">|</span>
+            {renderAuthor(post, 16, 'justify-start')}
+            <span className="mx-1 flex-shrink-0">|</span>
+            <span className="flex-shrink-0">{formattedDate}</span>
+          </div>
+          <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+            <span>조회 {post.views || 0}</span>
+            <span>추천 {post.likes || 0}</span>
+          </div>
+        </div>
       </div>
 
       {thumbnailUrl && (

@@ -8,7 +8,6 @@
 import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ThumbsUp } from 'lucide-react';
 import { PostItemProps } from '../../types';
 import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons } from '../shared/PostRenderers';
@@ -141,45 +140,42 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           )}
 
           {/* 메타 정보 */}
-          <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400">
-            {/* 게시판 + 작성자 */}
-            <div className="flex items-center gap-2">
-              {post.is_notice ? (
-                <Link href="/boards/notice" className="inline-flex items-center">
-                  <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
-                    post.is_must_read
-                      ? 'bg-red-600 dark:bg-red-700 text-white'
-                      : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-                  }`}>
-                    {post.is_must_read ? '필독' : '공지'}
-                  </span>
-                </Link>
-              ) : (
-                <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
-                  {post.board_name}
-                </Link>
-              )}
-              <AuthorLink
-                nickname={post.author_nickname}
-                publicId={post.author_public_id}
-                oddsUserId={post.author_id}
-                iconUrl={post.author_icon_url}
-                level={post.author_level || 1}
-                exp={post.author_exp}
-                iconSize={20}
-                showIcon={false}
-              />
-            </div>
-            {/* 추천 + 조회 + 시간 */}
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1">
-                <ThumbsUp className="w-3 h-3" />
-                {post.likes || 0}
-              </span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>조회 {post.views || 0}</span>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
-              <span>{formattedDate}</span>
+          <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
+            <div className="w-full flex items-center justify-between gap-2">
+              <div className="flex items-center overflow-hidden whitespace-nowrap">
+                {post.is_notice ? (
+                  <Link href="/boards/notice" className="inline-flex items-center">
+                    <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
+                      post.is_must_read
+                        ? 'bg-red-600 dark:bg-red-700 text-white'
+                        : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                    }`}>
+                      {post.is_must_read ? '필독' : '공지'}
+                    </span>
+                  </Link>
+                ) : (
+                  <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
+                    {post.board_name}
+                  </Link>
+                )}
+                <span className="mx-1 flex-shrink-0">|</span>
+                <AuthorLink
+                  nickname={post.author_nickname}
+                  publicId={post.author_public_id}
+                  oddsUserId={post.author_id}
+                  iconUrl={post.author_icon_url}
+                  level={post.author_level || 1}
+                  exp={post.author_exp}
+                  iconSize={20}
+                  showIcon={false}
+                />
+                <span className="mx-1 flex-shrink-0">|</span>
+                <span className="flex-shrink-0">{formattedDate}</span>
+              </div>
+              <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+                <span>조회 {post.views || 0}</span>
+                <span>추천 {post.likes || 0}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -223,19 +219,43 @@ export const MobilePostItem = React.memo(function MobilePostItem({
         </div>
       </Link>
 
-      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <AuthorLink
-          nickname={post.author_nickname}
-          publicId={post.author_public_id}
-          oddsUserId={post.author_id}
-          iconUrl={post.author_icon_url}
-          level={post.author_level || 1}
-          exp={post.author_exp}
-          iconSize={20}
-          showIcon={false}
-        />
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <span>{formattedDate}</span>
+      <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="w-full flex items-center justify-between gap-2">
+          <div className="flex items-center overflow-hidden whitespace-nowrap">
+            {post.is_notice ? (
+              <Link href="/boards/notice" className="inline-flex items-center">
+                <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
+                  post.is_must_read
+                    ? 'bg-red-600 dark:bg-red-700 text-white'
+                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
+                }`}>
+                  {post.is_must_read ? '필독' : '공지'}
+                </span>
+              </Link>
+            ) : (
+              <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
+                {post.board_name}
+              </Link>
+            )}
+            <span className="mx-1 flex-shrink-0">|</span>
+            <AuthorLink
+              nickname={post.author_nickname}
+              publicId={post.author_public_id}
+              oddsUserId={post.author_id}
+              iconUrl={post.author_icon_url}
+              level={post.author_level || 1}
+              exp={post.author_exp}
+              iconSize={20}
+              showIcon={false}
+            />
+            <span className="mx-1 flex-shrink-0">|</span>
+            <span className="flex-shrink-0">{formattedDate}</span>
+          </div>
+          <div className="flex items-center justify-end space-x-2 flex-shrink-0">
+            <span>조회 {post.views || 0}</span>
+            <span>추천 {post.likes || 0}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
