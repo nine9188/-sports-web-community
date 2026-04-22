@@ -234,10 +234,10 @@ export default function WelcomePageClient() {
             </Link>
           </motion.div>
 
-          <div className="flex flex-col justify-center items-center min-h-[calc(100vh-140px)] sm:min-h-[calc(100vh-120px)]">
+          <div className="flex flex-col justify-center items-center min-h-0 sm:min-h-[calc(100vh-120px)]">
             {/* 배너 이미지 */}
             <motion.div
-              className="w-full max-w-3xl mb-10 relative"
+              className="w-full max-w-3xl mb-6 sm:mb-10 relative"
               initial={{ opacity: 0, y: 30, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -272,7 +272,7 @@ export default function WelcomePageClient() {
 
             {/* 축하 메시지 */}
             <motion.div
-              className="text-center mb-10"
+              className="text-center mb-6 sm:mb-10"
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
@@ -301,7 +301,7 @@ export default function WelcomePageClient() {
             <div className="w-full max-w-md px-2 sm:px-0">
               {/* 바로가기 카드 */}
               <motion.div
-                className="space-y-3 mb-8"
+                className="space-y-3 mb-6 sm:mb-8"
                 initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.8 }}

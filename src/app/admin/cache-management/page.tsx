@@ -2,17 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Database, Image, Activity } from 'lucide-react';
+import { Database, Image } from 'lucide-react';
 import Spinner from '@/shared/components/Spinner';
 import { StatCard } from '@/domains/admin/components/StatCard';
-import { getMatchCacheStats } from '@/domains/admin/actions/cacheManagement';
-import { getAssetCacheStats } from '@/domains/admin/actions/cacheManagement';
-import { getApiUsageSummary } from '@/domains/admin/actions/cacheManagement';
+import { getMatchCacheStats, getAssetCacheStats } from '@/domains/admin/actions/cacheManagement';
 
 interface CacheOverview {
   matchCache: { totalEntries: number; completeEntries: number; incompleteEntries: number };
   assetCache: { total: number; byStatus: Record<string, number> };
-  apiUsage: { totalCalls: number; errors: number; remainingDaily: number | null };
 }
 
 export default function CacheManagementPage() {
@@ -21,15 +18,13 @@ export default function CacheManagementPage() {
 
   useEffect(() => {
     async function load() {
-      const [matchStats, assetStats, apiStats] = await Promise.all([
+      const [matchStats, assetStats] = await Promise.all([
         getMatchCacheStats(),
         getAssetCacheStats(),
-        getApiUsageSummary(),
       ]);
       setData({
         matchCache: matchStats,
         assetCache: assetStats,
-        apiUsage: apiStats,
       });
       setIsLoading(false);
     }
@@ -59,19 +54,13 @@ export default function CacheManagementPage() {
       title: '이미지 캐시',
       stats: `${data.assetCache.total.toLocaleString()}건 (에러: ${data.assetCache.byStatus['error'] || 0}건)`,
     },
-    {
-      href: '/admin/cache-management/api-usage',
-      icon: <Activity className="w-8 h-8 text-purple-500" />,
-      title: 'API 사용량',
-      stats: `오늘 ${data.apiUsage.totalCalls}회 (잔여: ${data.apiUsage.remainingDaily?.toLocaleString() || '확인 안 됨'})`,
-    },
   ];
 
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-gray-900 dark:text-[#F0F0F0]">캐시 관리</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StatCard
           title="경기 캐시"
           value={data.matchCache.totalEntries}
@@ -82,14 +71,9 @@ export default function CacheManagementPage() {
           value={data.assetCache.total}
           icon={<Image className="w-6 h-6 text-gray-600 dark:text-gray-400" />}
         />
-        <StatCard
-          title="오늘 API 호출"
-          value={data.apiUsage.totalCalls}
-          icon={<Activity className="w-6 h-6 text-gray-600 dark:text-gray-400" />}
-        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {pages.map((page) => (
           <Link
             key={page.href}

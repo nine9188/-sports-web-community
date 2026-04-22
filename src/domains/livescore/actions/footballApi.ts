@@ -4,51 +4,6 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from './teamLeagueData';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
-import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-
-// ── API 사용량 로깅 (fire-and-forget) ──
-
-interface ApiUsageData {
-  endpoint: string;
-  params: Record<string, string | number>;
-  statusCode: number;
-  remainingDaily: number | null;
-  remainingMinute: number | null;
-  responseHasError: boolean;
-  responseResults: number;
-  errorDetails?: Record<string, unknown>;
-  responseTimeMs: number;
-}
-
-/**
- * API 사용량 로깅 (샘플링)
- * - 에러는 100% 기록 (디버깅용)
- * - 정상 응답은 10%만 샘플링 (INSERT 쿼리 ~90% 감소)
- * - 4xx/5xx status도 에러로 간주해 100% 기록
- */
-async function logApiUsage(data: ApiUsageData): Promise<void> {
-  const isError = data.responseHasError || data.statusCode >= 400;
-  if (!isError && Math.random() > 0.1) {
-    return;
-  }
-
-  try {
-    const supabase = getSupabaseAdmin();
-    await supabase.from('api_usage_log').insert({
-      endpoint: data.endpoint,
-      params: data.params,
-      status_code: data.statusCode,
-      remaining_daily: data.remainingDaily,
-      remaining_minute: data.remainingMinute,
-      response_has_error: data.responseHasError,
-      response_results: data.responseResults,
-      error_details: data.errorDetails || null,
-      response_time_ms: data.responseTimeMs,
-    });
-  } catch {
-    // 로깅 실패는 무시 — API 응답에 영향 주면 안 됨
-  }
-}
 
 // 매치 데이터 인터페이스
 export interface MatchData {
@@ -274,8 +229,6 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
     return 300; // 5분
   };
 
-  const startTime = Date.now();
-
   try {
     const response = await fetch(url, {
       headers: {
@@ -287,18 +240,6 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
     });
 
     if (!response.ok) {
-      // HTTP 에러 시 로깅
-      logApiUsage({
-        endpoint,
-        params: finalParams as Record<string, string | number>,
-        statusCode: response.status,
-        remainingDaily: null,
-        remainingMinute: null,
-        responseHasError: true,
-        responseResults: 0,
-        errorDetails: { httpError: response.status, statusText: response.statusText },
-        responseTimeMs: Date.now() - startTime,
-      }).catch(() => {});
       throw new Error(`API 응답 오류: ${response.status}`);
     }
 
@@ -314,31 +255,8 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
     // response.errors 확인 (HTTP 200이어도 body에 에러가 있을 수 있음)
     if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {
-      logApiUsage({
-        endpoint,
-        params: finalParams as Record<string, string | number>,
-        statusCode: response.status,
-        remainingDaily: remainingDaily ? parseInt(remainingDaily) : null,
-        remainingMinute: remainingMinute ? parseInt(remainingMinute) : null,
-        responseHasError: true,
-        responseResults: 0,
-        errorDetails: data.errors,
-        responseTimeMs: Date.now() - startTime,
-      }).catch(() => {});
       throw new Error(`API-Football 에러: ${JSON.stringify(data.errors)}`);
     }
-
-    // 정상 응답 로깅 (fire-and-forget)
-    logApiUsage({
-      endpoint,
-      params: finalParams as Record<string, string | number>,
-      statusCode: response.status,
-      remainingDaily: remainingDaily ? parseInt(remainingDaily) : null,
-      remainingMinute: remainingMinute ? parseInt(remainingMinute) : null,
-      responseHasError: false,
-      responseResults: data.results ?? 0,
-      responseTimeMs: Date.now() - startTime,
-    }).catch(() => {});
 
     return data;
   } catch (error) {
