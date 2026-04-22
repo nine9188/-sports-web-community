@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { siteConfig } from '@/shared/config';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
-import { getLeagueSlug, getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
 
 // ISR: 1시간
 export const revalidate = 3600;
@@ -24,52 +23,6 @@ const _getCachedActiveTeams = unstable_cache(
   { revalidate: 3600, tags: ['sitemap-teams'] }
 );
 
-const _getCachedActivePlayersByTeam = (teamIds: number[]) => unstable_cache(
-  async () => {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase
-      .from('football_players')
-      .select('player_id, slug, updated_at')
-      .in('team_id', teamIds)
-      .eq('is_active', true);
-    return data || [];
-  },
-  ['sitemap-active-players', teamIds.sort().join(',')],
-  { revalidate: 3600, tags: ['sitemap-players'] }
-)();
-
-// 매치 사이트맵: 최근 7일 + 앞으로 7일 (총 14일 rolling window)
-// getMajorLeagueIds()로 필터된 매치만 포함 (footballApi에서 이미 필터링됨)
-const _getCachedRecentMatches = unstable_cache(
-  async () => {
-    const results: Array<{ id: number; homeName: string; awayName: string; date: string }> = [];
-    const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-
-    for (let offset = -7; offset <= 6; offset++) {
-      const d = new Date(nowKst);
-      d.setUTCDate(d.getUTCDate() + offset);
-      const dateStr = d.toISOString().split('T')[0];
-
-      try {
-        const matches = await fetchMatchesByDate(dateStr);
-        for (const m of matches) {
-          if (!m.id || !m.teams?.home?.name || !m.teams?.away?.name) continue;
-          results.push({
-            id: m.id,
-            homeName: m.teams.home.name,
-            awayName: m.teams.away.name,
-            date: m.time?.date || dateStr,
-          });
-        }
-      } catch {
-        // skip failed date
-      }
-    }
-    return results;
-  },
-  ['sitemap-recent-matches'],
-  { revalidate: 21600, tags: ['sitemap-matches'] }  // 6시간
-);
 
 const _getCachedActiveShopCategories = unstable_cache(
   async () => {
@@ -86,11 +39,9 @@ const _getCachedActiveShopCategories = unstable_cache(
 
 const BASE_URL = siteConfig.url;
 
-// 선수 사이트맵 대상 리그
-const PLAYER_LEAGUES: Record<string, number> = {
+// 사이트맵 대상 리그 (5대 리그만 — 봇 크롤링 비용 절감)
+const SITEMAP_LEAGUES: Record<string, number> = {
   epl: 39, laliga: 140, bundesliga: 78, 'serie-a': 135, ligue1: 61,
-  eredivisie: 88, primeira: 94, danish: 119, kleague: 292, kleague2: 293, jleague: 98,
-  saudi: 307, mls: 253,
 };
 
 // 게시판 카테고리
@@ -263,10 +214,10 @@ export async function GET(
       return sitemapResponse(entries);
     }
 
-    // 팀 (unstable_cache 1시간)
+    // 팀 (5대 리그만, unstable_cache 1시간)
     if (id === 'teams') {
       const allTeams = await _getCachedActiveTeams();
-      const leagueIdSet = new Set(Object.values(PLAYER_LEAGUES));
+      const leagueIdSet = new Set(Object.values(SITEMAP_LEAGUES));
       const teams = allTeams.filter(t => t.league_id !== null && leagueIdSet.has(t.league_id));
 
       return sitemapResponse(teams.map(t => ({
@@ -276,10 +227,11 @@ export async function GET(
       })));
     }
 
-    // 선수 (리그별, unstable_cache 1시간)
+    // 선수 — 사이트맵 인덱스에서 제거됨 (봇 크롤링 비용 절감)
     if (id.startsWith('players-')) {
+      return sitemapResponse([]);
       const leagueSlug = id.replace('players-', '');
-      const leagueId = PLAYER_LEAGUES[leagueSlug];
+      const leagueId = SITEMAP_LEAGUES[leagueSlug];
       if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const allTeams = await _getCachedActiveTeams();
@@ -297,14 +249,9 @@ export async function GET(
       })));
     }
 
-    // 매치 (최근 7일 + 앞으로 7일, unstable_cache 6시간)
+    // 매치 — 사이트맵 인덱스에서 제거됨 (API 호출 절감)
     if (id === 'matches') {
-      const matches = await _getCachedRecentMatches();
-      return sitemapResponse(matches.map(m => ({
-        loc: `${BASE_URL}/livescore/football/match/${m.id}/${getMatchSlug(m.homeName, m.awayName)}`,
-        lastmod: m.date || undefined,
-        changefreq: 'daily', priority: 0.5,
-      })));
+      return sitemapResponse([]);
     }
 
     // 샵 (unstable_cache 1시간)
