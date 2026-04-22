@@ -1,5 +1,6 @@
 import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
 import { getLeaguesByIds } from '@/domains/livescore/actions/teamLeagueData';
+import { getTeamLogoUrls } from '@/domains/livescore/actions/images/getTeamLogoUrl';
 import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';
 import { Container } from '@/shared/components/ui';
 import LeagueToggleClient from './LeagueToggleClient';
@@ -8,6 +9,8 @@ import MatchCardServer from './MatchCardServer';
 import WidgetHeader from './WidgetHeader';
 import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 import type { WidgetLeague, WidgetMatch } from './types';
+
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // 경기 시작 시간 추출 (HH:mm 형식, KST 고정)
 function getKickoffTime(dateString?: string): string | undefined {
@@ -23,58 +26,62 @@ function getKickoffTime(dateString?: string): string | undefined {
   }
 }
 
-// 정적 팀 로고: /public/teams/{id}.webp (CDN 왕복 530ms → 0ms)
-function getStaticTeamLogo(teamId: number): string {
-  return `/teams/${teamId}.webp`;
-}
-
-// 경기 데이터를 Match 타입으로 변환
-async function convertToMatch(
-  match: FootballMatchData,
-  dateLabel: 'yesterday' | 'today' | 'tomorrow'
-): Promise<WidgetMatch> {
-  const names = await resolveMatchNames(match);
-  const homeId = match.teams?.home?.id || 0;
-  const awayId = match.teams?.away?.id || 0;
-
-  return {
-    id: String(match.id),
-    homeTeam: {
-      id: homeId,
-      name: names.homeName || '홈팀',
-      logo: homeId > 0 ? getStaticTeamLogo(homeId) : match.teams?.home?.logo,
-    },
-    awayTeam: {
-      id: awayId,
-      name: names.awayName || '원정팀',
-      logo: awayId > 0 ? getStaticTeamLogo(awayId) : match.teams?.away?.logo,
-    },
-    score: {
-      home: match.goals?.home ?? 0,
-      away: match.goals?.away ?? 0,
-    },
-    status: match.status?.code || 'NS',
-    elapsed: match.status?.elapsed || 0,
-    dateLabel,
-    kickoffTime: getKickoffTime(match.time?.date),
-  };
-}
-
 // 리그별로 경기를 그룹화하는 함수
+// 4590 표준: 팀 로고를 배치로 조회 (로컬 있으면 로컬, 없으면 CDN 폴백)
 async function groupMatchesByLeague(
   matches: FootballMatchData[],
   dateLabel: 'yesterday' | 'today' | 'tomorrow' = 'today'
 ): Promise<WidgetLeague[]> {
+  // 1. 모든 팀 ID 수집
+  const allTeamIds = new Set<number>();
+  for (const match of matches) {
+    if (match.teams?.home?.id) allTeamIds.add(match.teams.home.id);
+    if (match.teams?.away?.id) allTeamIds.add(match.teams.away.id);
+  }
+
+  // 2. 팀 로고 + 팀명 배치 조회 (병렬)
+  const [teamLogoMap, teamNameResults] = await Promise.all([
+    getTeamLogoUrls(Array.from(allTeamIds)),
+    Promise.all(matches.map(m => resolveMatchNames(m))),
+  ]);
+
+  // 3. 리그별 그룹화
   const leagueMap = new Map<number, { matches: WidgetMatch[]; firstMatch: FootballMatchData }>();
 
-  for (const match of matches) {
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
     if (!match.league?.id) continue;
     const leagueId = match.league.id;
+    const names = teamNameResults[i];
+    const homeId = match.teams?.home?.id || 0;
+    const awayId = match.teams?.away?.id || 0;
+
+    const widgetMatch: WidgetMatch = {
+      id: String(match.id),
+      homeTeam: {
+        id: homeId,
+        name: names.homeName || '홈팀',
+        logo: teamLogoMap[homeId] || TEAM_PLACEHOLDER,
+      },
+      awayTeam: {
+        id: awayId,
+        name: names.awayName || '원정팀',
+        logo: teamLogoMap[awayId] || TEAM_PLACEHOLDER,
+      },
+      score: {
+        home: match.goals?.home ?? 0,
+        away: match.goals?.away ?? 0,
+      },
+      status: match.status?.code || 'NS',
+      elapsed: match.status?.elapsed || 0,
+      dateLabel,
+      kickoffTime: getKickoffTime(match.time?.date),
+    };
 
     if (!leagueMap.has(leagueId)) {
       leagueMap.set(leagueId, { matches: [], firstMatch: match });
     }
-    leagueMap.get(leagueId)!.matches.push(await convertToMatch(match, dateLabel));
+    leagueMap.get(leagueId)!.matches.push(widgetMatch);
   }
 
   const leagueIds = Array.from(leagueMap.keys());
