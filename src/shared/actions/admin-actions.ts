@@ -1,31 +1,9 @@
 'use server'
 
-import { getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { calculateLevelFromExp } from '@/shared/utils/level-icons'
 import { revalidateTag } from 'next/cache'
-
-// 관리자 권한 확인 함수
-async function checkAdminPermission() {
-  const supabase = await getSupabaseAction()
-  
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    throw new Error('인증되지 않은 사용자입니다.')
-  }
-  
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
-  
-  if (!profile?.is_admin) {
-    throw new Error('관리자 권한이 필요합니다.')
-  }
-  
-  return { user, supabase }
-}
+import { checkAdmin as checkAdminPermission } from '@/shared/utils/checkAdmin'
 
 // 포인트 관리용 사용자 목록 조회
 export async function getPointsUsers() {

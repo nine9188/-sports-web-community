@@ -1,21 +1,10 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { checkAdmin as checkAdminBase } from '@/shared/utils/checkAdmin';
 
-// 관리자 권한 확인
-async function checkAdmin(): ReturnType<typeof getSupabaseServer> {
-  const supabase = await getSupabaseServer();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) throw new Error('인증되지 않은 사용자입니다.');
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) throw new Error('관리자 권한이 필요합니다.');
+async function checkAdmin() {
+  const { supabase } = await checkAdminBase();
   return supabase;
 }
 

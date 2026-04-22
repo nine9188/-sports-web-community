@@ -2,13 +2,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 
-// 서비스 역할 클라이언트 (RLS 우회 가능)
-const supabaseService = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// 서비스 역할 클라이언트 (RLS 우회)
+const supabaseService = getSupabaseAdmin()
 
 export interface PredictionSummary {
   home_win_percentage: number

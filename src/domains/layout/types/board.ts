@@ -1,11 +1,2 @@
-// 게시판 공통 타입 정의
-export interface Board {
-  id: string;
-  name: string;
-  slug: string | null;
-  display_order: number;
-  parent_id: string | null;
-  team_id?: number | null;
-  league_id?: number | null;
-  children?: Board[];
-} 
+// 게시판 공통 타입 - canonical 소스에서 re-export
+export type { Board } from '@/domains/boards/types/board';

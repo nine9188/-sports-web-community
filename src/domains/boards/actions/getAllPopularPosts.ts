@@ -3,32 +3,9 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
+import type { PopularPost } from '../types/post';
 
-export interface PopularPost {
-  id: string;
-  title: string;
-  board_id: string;
-  board_slug: string;
-  board_name: string;
-  post_number: number;
-  likes: number;
-  views: number;
-  comment_count: number;
-  author_nickname: string;
-  author_id?: string;
-  author_level?: number;
-  author_exp?: number;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  author_public_id?: string | null;
-  created_at: string;
-  formattedDate: string;
-  team_id?: string | number | null;
-  league_id?: string | number | null;
-  team_logo?: string | null;
-  league_logo?: string | null;
-  thumbnail_url?: string | null;
-}
+export type { PopularPost };
 
 export interface PopularPostsResponse {
   data: PopularPost[];

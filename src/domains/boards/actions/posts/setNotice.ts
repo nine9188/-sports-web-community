@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { NoticeType } from '@/domains/boards/types/post';
+import { checkAdmin } from '@/shared/utils/checkAdmin';
 
 interface SetNoticeResult {
   success: boolean;
@@ -31,25 +32,10 @@ function createSuccess(message: string): SetNoticeResult {
   return { success: true, message };
 }
 
-/**
- * 관리자 권한 확인
- */
 async function checkAdminPermission(): Promise<boolean> {
   try {
-    const supabase = await getSupabaseServer();
-    if (!supabase) return false;
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) return false;
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) return false;
-    return profile?.is_admin === true;
+    await checkAdmin();
+    return true;
   } catch {
     return false;
   }

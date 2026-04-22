@@ -14,6 +14,7 @@ export interface Board {
   logo: string | null;
   views: number | null;
   view_type?: 'list' | 'image-table';
+  children?: Board[];
 }
 
 export interface BoardMap {

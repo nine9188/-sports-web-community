@@ -9,6 +9,8 @@ const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { formatDateDot } from '@/shared/utils/dateUtils';
+import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
 import { PlayerKoreanNames } from '../../../TeamPageClient';
 
 interface RecentTransfersProps {
@@ -20,30 +22,6 @@ interface RecentTransfersProps {
   teamLogoUrls?: Record<number, string>;
 }
 
-/** YYYY-MM-DD → YYYY.MM.DD (타임존 이슈 방지를 위해 문자열 직접 분리) */
-function formatDate(dateStr: string): string {
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  return `${parts[0]}.${parts[1]}.${parts[2]}`;
-}
-
-/** 이적 타입 한국어 변환 */
-function formatType(type: string): string {
-  if (!type || type === 'N/A') return '';
-  const lower = type.trim().toLowerCase();
-  if (lower === 'free transfer' || lower === 'free') return '자유이적';
-  if (lower === 'free agent') return '자유계약';
-  if (lower === 'loan') return '임대';
-  if (lower === 'return from loan' || lower.includes('return from loan')) return '임대복귀';
-  if (lower.includes('end of loan')) return '임대종료';
-  if (lower === 'permanent') return '완전이적';
-  if (lower === 'transfer') return '이적';
-  if (lower === 'return') return '복귀';
-  if (lower === 'raise') return '승격';
-  // 금액 포함된 경우 (€25M 등) 그대로 표시
-  if (type.match(/[€$£]/)) return type.trim();
-  return type.trim();
-}
 
 export default function RecentTransfers({ transfers, onTabChange, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: RecentTransfersProps) {
   const { getTeamDisplayName } = useTeamLeague();
@@ -135,7 +113,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {formatDate(transfer.date)}
+                          {formatDateDot(transfer.date)}
                         </span>
                         {formatType(transfer.type) && (
                           <span className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -167,7 +145,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                        <span>{formatDate(transfer.date)}</span>
+                        <span>{formatDateDot(transfer.date)}</span>
                         {formatType(transfer.type) && <span>{formatType(transfer.type)}</span>}
                       </div>
                     </div>
@@ -229,7 +207,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {formatDate(transfer.date)}
+                          {formatDateDot(transfer.date)}
                         </span>
                         {formatType(transfer.type) && (
                           <span className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -261,7 +239,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                        <span>{formatDate(transfer.date)}</span>
+                        <span>{formatDateDot(transfer.date)}</span>
                         {formatType(transfer.type) && <span>{formatType(transfer.type)}</span>}
                       </div>
                     </div>

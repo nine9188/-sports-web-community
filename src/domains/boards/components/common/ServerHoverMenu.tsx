@@ -1,5 +1,6 @@
 import ClientHoverMenu from '@/domains/boards/components/common/ClientHoverMenu';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
+import type { Board } from '@/domains/boards/types/board';
 
 interface ServerHoverMenuProps {
   currentBoardId: string;
@@ -7,14 +8,6 @@ interface ServerHoverMenuProps {
   rootBoardSlug?: string;
   currentBoardSlug?: string;
   fromParam?: string;
-}
-
-interface Board {
-  id: string;
-  name: string;
-  display_order: number | null;
-  slug?: string | null;
-  parent_id?: string | null;
 }
 
 export default async function ServerHoverMenu({
@@ -41,17 +34,17 @@ export default async function ServerHoverMenu({
   const childBoardsMap: Record<string, Board[]> = {};
   
   // 1. 모든 게시판을 맵에 저장
-  boardsData.forEach(board => {
+  boardsData.forEach((board: Board) => {
     boardsMap[board.id] = board;
   });
-  
+
   // 2. 최상위, 중간, 하위 게시판 관계 설정
   // 최상위 게시판 (해외축구/전체): parent_id가 없는 게시판 (rootBoardId)
   // 상위 게시판 (프리미어리그, 라리가): 최상위 게시판의 직접 하위 게시판
   // 하위 게시판: 상위 게시판의 하위 게시판
-  
+
   // 모든 게시판을 순회하며 부모-자식 관계 맵핑
-  boardsData.forEach(board => {
+  boardsData.forEach((board: Board) => {
     if (board.parent_id) {
       if (!childBoardsMap[board.parent_id]) {
         childBoardsMap[board.parent_id] = [];
@@ -66,7 +59,7 @@ export default async function ServerHoverMenu({
     rootBoard = boardsMap[rootBoardId];
   } else {
     // rootBoardId가 없으면 parent_id가 없는 첫 번째 게시판을 루트로 사용
-    rootBoard = boardsData.find(board => !board.parent_id);
+    rootBoard = boardsData.find((board: Board) => !board.parent_id);
   }
   
   if (!rootBoard) {

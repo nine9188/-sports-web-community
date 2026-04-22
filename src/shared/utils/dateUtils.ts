@@ -419,6 +419,15 @@ export function getDateDifference(start: Date, end: Date = new Date()): string {
   }
 }
 
+/**
+ * YYYY-MM-DD → YYYY.MM.DD (타임존 이슈 방지를 위해 문자열 직접 분리)
+ */
+export function formatDateDot(dateStr: string): string {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[0]}.${parts[1]}.${parts[2]}`;
+}
+
 // ========================================
 // 레거시 호환성 (기존 코드 마이그레이션용)
 // ========================================

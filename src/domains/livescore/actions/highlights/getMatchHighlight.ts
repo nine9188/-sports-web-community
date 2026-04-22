@@ -1,16 +1,9 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 import { findHighlightForMatch } from './fetchHighlights';
 import { HIGHLIGHT_SUPPORTED_LEAGUE_IDS } from '@/domains/livescore/constants/youtube-channels';
-
-function createSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 /**
  * 매치 하이라이트 조회 (DB 캐시 → YouTube 검색)
@@ -31,7 +24,7 @@ export async function getMatchHighlight(
     return null;
   }
 
-  const supabase = createSupabaseClient();
+  const supabase = getSupabaseAdmin();
 
   // 1. DB 캐시 확인
   const { data: cached } = await supabase

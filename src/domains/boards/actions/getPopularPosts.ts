@@ -1,32 +1,10 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import type { DealInfo } from '../types/hotdeal';
 import { getCachedChildBoardIds } from './getCachedBoards';
+import type { PopularPost } from '../types/post';
 
-export interface PopularPost {
-  id: string;
-  title: string;
-  board_slug: string;
-  board_name: string;
-  post_number: number;
-  likes: number;
-  views: number;
-  comment_count: number;
-  author_nickname: string;
-  author_id?: string;
-  author_level?: number;
-  author_exp?: number;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  author_public_id?: string | null;
-  created_at: string;
-  formattedDate?: string;
-  team_id?: string | number | null;
-  league_id?: string | number | null;
-  deal_info?: DealInfo | null;
-  thumbnail_url?: string | null;
-}
+export type { PopularPost };
 
 /**
  * HOT 점수 계산 (사이드바와 동일한 공식)

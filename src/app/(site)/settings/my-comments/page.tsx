@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { serverAuthGuard } from '@/shared/utils/auth-guard';
+import { authGuard } from '@/shared/guards/auth.guard';
 import { getMyComments } from '@/domains/settings/actions/my-comments';
 import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
 import { Container, ContainerContent, Pagination } from '@/shared/components/ui';
@@ -28,12 +28,11 @@ export default async function MyCommentsPage({
   searchParams: Promise<SearchParams>;
 }) {
   try {
-    // 통합된 인증 체크 사용
-    const user = await serverAuthGuard({
+    const { user } = await authGuard({
       redirectTo: '/signin',
       logUnauthorizedAccess: true
     });
-    
+
     const userId = user.id;
     
     // searchParams가 Promise이므로 await 해야 함

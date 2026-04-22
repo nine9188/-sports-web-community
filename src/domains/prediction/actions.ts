@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData'
@@ -155,13 +155,6 @@ async function getLeagueNameKo(leagueId: number, fallbackName: string): Promise<
   return name === '알 수 없는 리그' ? fallbackName : name
 }
 
-// API 라우트용 Supabase 클라이언트 생성
-function createSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 // Predictions API 호출 함수
 async function fetchPredictions(fixtureId: number): Promise<PredictionApiData | null> {
@@ -427,7 +420,7 @@ async function getBoardSlugByLeagueId(leagueId: number): Promise<string | null> 
   }
   
   // 2. DB에서 league_id로 게시판 찾기
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseAdmin()
   const { data } = await supabase
     .from('boards')
     .select('slug')
@@ -439,7 +432,7 @@ async function getBoardSlugByLeagueId(leagueId: number): Promise<string | null> 
 
 // 게시판 슬러그로 ID 찾기
 async function getBoardIdBySlug(slug: string): Promise<string | null> {
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseAdmin()
   const { data } = await supabase
     .from('boards')
     .select('id')
@@ -836,7 +829,7 @@ async function savePredictionLog(
   details?: Record<string, unknown>
 ) {
   try {
-    const supabase = createSupabaseClient()
+    const supabase = getSupabaseAdmin()
     
     const { error } = await supabase
       .from('prediction_automation_logs')
@@ -941,7 +934,7 @@ export async function generateAllPredictions(
 
 // 예측 자동화 로그 조회
 export async function getPredictionAutomationLogs(limit: number = 20) {
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseAdmin()
   
   const { data, error } = await supabase
     .from('prediction_automation_logs')
@@ -1083,7 +1076,7 @@ async function createPredictionPost(
   tags: string[] = [],
   meta: Record<string, unknown> | null = null
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
-  const supabase = createSupabaseClient()
+  const supabase = getSupabaseAdmin()
 
   try {
     const parsedContent = typeof content === 'string' && content.startsWith('{')

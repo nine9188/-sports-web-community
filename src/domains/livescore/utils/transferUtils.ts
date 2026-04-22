@@ -127,15 +127,17 @@ export function formatTransferFee(fee: number): string {
  * 이적 유형 한국어 변환
  */
 export function translateTransferType(type: string): string {
-  const typeMap: { [key: string]: string } = {
-    'Free': '자유이적',
-    'Loan': '임대',
-    'Permanent': '완전이적',
-    'N/A': '정보없음'
-  };
-  
-  // 이적료가 포함된 경우
-  if (type.includes('€')) return `완전이적 (${type})`;
-  
-  return typeMap[type] || type;
+  if (!type || type === 'N/A') return '';
+  const lower = type.trim().toLowerCase();
+  if (lower === 'free transfer' || lower === 'free') return '자유이적';
+  if (lower === 'free agent') return '자유계약';
+  if (lower === 'loan') return '임대';
+  if (lower === 'return from loan' || lower.includes('return from loan')) return '임대복귀';
+  if (lower.includes('end of loan')) return '임대종료';
+  if (lower === 'permanent') return '완전이적';
+  if (lower === 'transfer') return '이적';
+  if (lower === 'return') return '복귀';
+  if (lower === 'raise') return '승격';
+  if (type.match(/[€$£]/)) return type.trim();
+  return type.trim();
 }

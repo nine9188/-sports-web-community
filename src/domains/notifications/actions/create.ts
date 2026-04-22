@@ -1,21 +1,16 @@
 'use server';
 
-import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { CreateNotificationParams, NotificationActionResponse } from '../types/notification';
+import { checkAdmin } from '@/shared/utils/checkAdmin';
 
 async function requireAdmin(): Promise<{ userId: string } | { error: string }> {
-  const supabase = await getSupabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: '로그인이 필요합니다.' };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) return { error: '관리자 권한이 필요합니다.' };
-  return { userId: user.id };
+  try {
+    const { user } = await checkAdmin();
+    return { userId: user.id };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : '관리자 권한이 필요합니다.' };
+  }
 }
 
 /**

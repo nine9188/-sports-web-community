@@ -263,11 +263,3 @@ async function logUnauthorizedRequest(
   }
 }
 
-/**
- * 레거시 호환성: serverAuthGuard
- * @deprecated authGuard()를 사용하세요
- */
-export async function serverAuthGuard(options: AuthGuardOptions = {}) {
-  const result = await authGuard(options)
-  return result.user
-}

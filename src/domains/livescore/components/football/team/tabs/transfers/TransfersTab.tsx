@@ -14,6 +14,8 @@ import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { formatDateDot } from '@/shared/utils/dateUtils';
+import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
 import { PlayerKoreanNames } from '../../TeamPageClient';
 
 const ITEMS_PER_PAGE = 20;
@@ -31,30 +33,6 @@ interface TransfersTabProps {
   teamLogoUrls?: Record<number, string>;
 }
 
-/** YYYY-MM-DD → YYYY.MM.DD */
-function formatDate(dateStr: string): string {
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  return `${parts[0]}.${parts[1]}.${parts[2]}`;
-}
-
-/** 이적 타입 한국어 변환 */
-function formatType(type: string): string {
-  if (!type || type === 'N/A') return '';
-  const lower = type.trim().toLowerCase();
-  if (lower === 'free transfer' || lower === 'free') return '자유이적';
-  if (lower === 'free agent') return '자유계약';
-  if (lower === 'loan') return '임대';
-  if (lower === 'return from loan' || lower.includes('return from loan')) return '임대복귀';
-  if (lower.includes('end of loan')) return '임대종료';
-  if (lower === 'permanent') return '완전이적';
-  if (lower === 'transfer') return '이적';
-  if (lower === 'return') return '복귀';
-  if (lower === 'raise') return '승격';
-  // 금액 포함된 경우 (€25M 등) 그대로 표시
-  if (type.match(/[€$£]/)) return type.trim();
-  return type.trim();
-}
 
 export default function TransfersTab({ transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
   const { getTeamDisplayName } = useTeamLeague();
@@ -151,7 +129,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                      <span>{formatDate(transfer.date)}</span>
+                      <span>{formatDateDot(transfer.date)}</span>
                       {formatType(transfer.type) && <span>{formatType(transfer.type)}</span>}
                     </div>
                   </div>
@@ -193,7 +171,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                     className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                   >
                     <td className="px-6 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {formatDate(transfer.date)}
+                      {formatDateDot(transfer.date)}
                     </td>
                     <td className="px-6 py-2">
                       <div className="flex items-center gap-2">

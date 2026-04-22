@@ -80,6 +80,7 @@ export interface ApiPost {
 export interface PopularPost {
   id: string;
   title: string;
+  board_id?: string;
   board_slug: string;
   board_name: string;
   post_number: number;
@@ -97,4 +98,8 @@ export interface PopularPost {
   formattedDate?: string;
   team_id?: string | number | null;
   league_id?: string | number | null;
+  team_logo?: string | null;
+  league_logo?: string | null;
+  thumbnail_url?: string | null;
+  deal_info?: import('../hotdeal/deal-info').DealInfo | null;
 }

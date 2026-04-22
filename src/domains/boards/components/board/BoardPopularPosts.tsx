@@ -10,27 +10,7 @@ import {
 import { Button } from '@/shared/components/ui';
 import { renderContentTypeIcons } from '../post/postlist/components/shared/PostRenderers';
 import { skeletonText } from '@/shared/styles';
-
-interface PopularPost {
-  id: string;
-  title: string;
-  board_slug: string;
-  board_name: string;
-  post_number: number;
-  likes: number;
-  views: number;
-  comment_count: number;
-  author_nickname: string;
-  author_id?: string;
-  author_level?: number;
-  author_icon_id?: number | null;
-  author_icon_url?: string | null;
-  created_at: string;
-  formattedDate?: string;
-  team_id?: string | number | null;
-  league_id?: string | number | null;
-  content?: string;
-}
+import type { PopularPost } from '@/domains/boards/types/post';
 
 interface BoardPopularPostsProps {
   weekPosts: PopularPost[];
@@ -97,7 +77,7 @@ export default function BoardPopularPosts({
                   <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
                     {post.title}
                   </span>
-                  {renderContentTypeIcons(post)}
+                  {renderContentTypeIcons(post as { content?: string })}
                   {post.comment_count > 0 && (
                     <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
                       [{post.comment_count}]

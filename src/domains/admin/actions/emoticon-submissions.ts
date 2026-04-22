@@ -1,28 +1,15 @@
 'use server'
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { EmoticonSubmission, EmoticonSubmissionWithUser, SubmissionStatus } from '@/domains/shop/types/emoticon-submission'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { checkAdmin } from '@/shared/utils/checkAdmin'
 
 // emoticon_submissions / emoticon_packs 테이블은 생성된 Supabase 타입에 없으므로
 // 타입 안전하게 접근하기 위한 헬퍼
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function untypedFrom(supabase: SupabaseClient, table: string): any {
   return (supabase as SupabaseClient<Record<string, never>>).from(table as never)
-}
-
-async function checkAdmin() {
-  const supabase = await getSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('인증되지 않은 사용자입니다.')
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single()
-  if (!profile?.is_admin) throw new Error('관리자 권한이 필요합니다.')
-  return { user, supabase }
 }
 
 /**
