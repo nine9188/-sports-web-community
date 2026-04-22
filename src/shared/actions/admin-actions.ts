@@ -459,7 +459,7 @@ export async function createShopItem(item: ShopItemInput) {
       throw new Error(`아이콘 등록 실패: ${error.message}`)
     }
 
-    revalidateTag('shop-items')
+    revalidateTag('shop-items', 'default')
 
     return {
       success: true,
@@ -491,7 +491,7 @@ export async function updateShopItem(itemId: number, updates: Partial<ShopItemIn
       throw new Error(`아이콘 수정 실패: ${error.message}`)
     }
 
-    revalidateTag('shop-items')
+    revalidateTag('shop-items', 'default')
 
     return {
       success: true,
@@ -521,7 +521,7 @@ export async function deleteShopItem(itemId: number) {
       throw new Error(`아이콘 삭제 실패: ${error.message}`)
     }
 
-    revalidateTag('shop-items')
+    revalidateTag('shop-items', 'default')
 
     return {
       success: true

@@ -19,9 +19,12 @@ interface ProfileData {
   level: number;
   exp: number;
   points: number;
+  icon_id?: number | null;
   icon_url: string | null;
+  icon_name?: string | null;
   postCount: number;
   commentCount: number;
+  is_admin?: boolean;
 }
 
 interface ClientUserProfileProps {

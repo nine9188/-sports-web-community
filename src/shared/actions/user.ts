@@ -12,7 +12,7 @@ import { getAuthenticatedUser } from './auth';
  *
  * 현재 authenticated role로 매 페이지마다 343만 호출/일 발생 중.
  * 10분 TTL로 99% 이상 감소 예상.
- * 게시글/댓글 작성·삭제 시 revalidateTag(`user-stats-${userId}`) 호출로 즉시 반영.
+ * 게시글/댓글 작성·삭제 시 revalidateTag(`user-stats-${userId}`, 'default') 호출로 즉시 반영.
  */
 const _getCachedUserStatsImpl = (userId: string) => unstable_cache(
   async (): Promise<{ postCount: number; commentCount: number }> => {

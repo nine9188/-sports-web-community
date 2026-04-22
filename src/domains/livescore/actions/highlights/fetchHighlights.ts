@@ -115,7 +115,8 @@ async function searchYouTube(
       return null;
     }
 
-    const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await res.json();
     return data.items || null;
   } catch (error) {
     console.error('[Highlights] Search error:', error);

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChatMessage } from '../types';
+import { ChatMessage, FormConfig } from '../types';
 import { formatMessageTime } from '../utils';
 import { Check, CheckCheck, Clock, User, Bot } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
@@ -119,7 +119,7 @@ export function ChatMessageBubble({
         <div className="max-w-xs lg:max-w-md">
           <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-none" />}>
             <ChatFormRenderer
-              formConfig={message.form_data}
+              formConfig={message.form_data as FormConfig}
               onSubmit={onFormSubmit || (() => {})}
               isSubmitting={isFormSubmitting}
               messageSubmitted={message.form_data?.is_submitted === true}

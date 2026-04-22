@@ -11,6 +11,7 @@ import {
   type SupportComment
 } from '@/domains/livescore/actions/match/supportComments';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { AuthorLink } from '@/domains/user/components';
 
 // 매치 데이터 타입 정의
@@ -187,7 +188,7 @@ export default function SupportCommentsSection({
     checkAuth();
 
     // 로그인 상태 변화 감지
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (session) {
         // 보안 강화: getUser()로 실제 인증 확인
         const { data: { user }, error } = await supabase.auth.getUser();

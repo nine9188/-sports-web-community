@@ -97,7 +97,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
               <div className="space-y-1">
                 {board.children && board.children.length > 0 ? (
                   board.children
-                    .sort((a, b) => a.display_order - b.display_order)
+                    .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
                     .map(secondLevel => (
                       <Button
                         key={secondLevel.id}

@@ -13,7 +13,7 @@ export async function getSiteSettingsByType(type: string): Promise<SiteSetting[]
 
   // 임시 구현: site_settings 테이블(키/값 저장) 가정
   // 실제 테이블 스키마에 맞게 컬럼명과 테이블명을 조정하세요.
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('site_settings')
     .select('key, value, type')
     .eq('type', type)
@@ -40,7 +40,7 @@ export async function updateMultipleSiteSettings(settings: Array<{ key: string; 
     // upsert: key를 고유키로 가정. type은 없으면 'branding'으로 기본값.
     const rows = settings.map((s) => ({ key: s.key, value: s.value, type: s.type ?? 'branding', updated_by: user.id }))
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('site_settings')
       .upsert(rows, { onConflict: 'key' })
 

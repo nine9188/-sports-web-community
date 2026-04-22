@@ -68,7 +68,7 @@ export async function getCachedTeamsByIds(teamIds: number[]): Promise<{ id: numb
   if (teamIds.length === 0) return [];
   const all = await getCachedAllTeams();
   const idSet = new Set(teamIds);
-  return all.filter(t => idSet.has(t.id));
+  return all.filter((t: { id: number; name: string }) => idSet.has(t.id));
 }
 
 /**
@@ -78,5 +78,5 @@ export async function getCachedLeaguesByIds(leagueIds: number[]): Promise<{ id: 
   if (leagueIds.length === 0) return [];
   const all = await getCachedAllLeagues();
   const idSet = new Set(leagueIds);
-  return all.filter(l => idSet.has(l.id));
+  return all.filter((l: { id: number; name: string }) => idSet.has(l.id));
 }

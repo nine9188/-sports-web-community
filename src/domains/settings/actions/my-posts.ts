@@ -86,7 +86,7 @@ export async function getMyPosts(
           if (boards) {
             // 게시판 정보 매핑
             const boardMap = new Map(
-              boards.map((board: { id: string; name: string; slug: string }) => [board.id, { name: board.name, slug: board.slug }])
+              boards.map((board: { id: string; name: string; slug: string | null }) => [board.id, { name: board.name, slug: board.slug ?? '' }])
             );
 
             formattedData.forEach(post => {

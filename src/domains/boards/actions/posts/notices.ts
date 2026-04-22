@@ -87,6 +87,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       id: string;
       title?: string;
       content?: unknown;
+      thumbnail_url?: string | null;
       user_id?: string;
       created_at?: string;
       updated_at?: string;

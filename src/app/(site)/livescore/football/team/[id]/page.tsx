@@ -24,7 +24,8 @@ export default async function TeamRedirect({
       `${supabaseUrl}/rest/v1/football_teams?team_id=eq.${id}&select=slug&limit=1`,
       { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }, cache: 'force-cache' }
     );
-    const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any[] = await res.json();
     if (data?.[0]?.slug) slug = data[0].slug;
   } catch {
     slug = 'team';

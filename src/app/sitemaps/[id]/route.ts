@@ -239,19 +239,8 @@ export async function GET(
       const leagueId = SITEMAP_LEAGUES[leagueSlug];
       if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      const allTeams = await _getCachedActiveTeams();
-      const leagueTeamIds = allTeams
-        .filter((t: TeamRow) => t.league_id === leagueId)
-        .map((t: TeamRow) => t.team_id);
-      if (!leagueTeamIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
-
-      const players = await _getCachedActivePlayersByTeam(leagueTeamIds);
-
-      return sitemapResponse((players as PlayerRow[]).map((p: PlayerRow) => ({
-        loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
-        lastmod: p.updated_at || undefined,
-        changefreq: 'monthly', priority: 0.4,
-      })));
+      // 선수 사이트맵은 사이트맵 축소 정책에 의해 비활성화
+      return sitemapResponse([]);
     }
 
     // 매치 — 사이트맵 인덱스에서 제거됨 (API 호출 절감)

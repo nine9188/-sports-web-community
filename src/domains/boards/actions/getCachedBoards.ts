@@ -10,7 +10,7 @@ type BoardRow = { id: string; name: string; slug: string | null; parent_id: stri
  *
  * Next.js unstable_cache 기반 서버 레벨 캐싱 (7일)
  * - 모든 요청이 캐시 공유 → DB 호출 최소화
- * - 게시판 추가/수정 시 revalidateTag('boards')로 즉시 무효화
+ * - 게시판 추가/수정 시 revalidateTag('boards', 'default')로 즉시 무효화
  * - revalidate: 7일 안전장치 (tag 호출 누락 시 자동 갱신)
  *
  * 사용처: 사이드바, 호버메뉴, 게시판 페이지, 게시글 페이지 등

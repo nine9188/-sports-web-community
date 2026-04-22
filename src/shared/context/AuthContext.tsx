@@ -54,9 +54,9 @@ export function AuthProvider({
     if (!user) return;
 
     try {
-      const result = await updateUserData();
-      if (result.success && result.data) {
-        setUser(result.data as User);
+      const result = await updateUserData(user.id, {});
+      if (result.success && result.user) {
+        setUser(result.user);
       }
     } catch (error) {
       console.error('사용자 데이터 새로고침 중 오류:', error);
@@ -146,7 +146,7 @@ export function AuthProvider({
 
     // 인증 상태 변경 감지 (Supabase가 자동으로 세션 갱신 처리)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      async (event: string, currentSession: Session | null) => {
         if (!mounted) return;
 
         if (event === 'SIGNED_IN' && currentSession) {

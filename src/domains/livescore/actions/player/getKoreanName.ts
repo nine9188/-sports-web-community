@@ -8,7 +8,7 @@ import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/serve
  * - 9,300여명 전체를 한 번에 로드 후 캐싱
  * - unstable_cache로 1일 전역 캐싱 (모든 요청 공유)
  * - 한글명은 거의 변경되지 않음
- * - 관리자가 수정 시 revalidateTag('players-korean-names') 호출
+ * - 관리자가 수정 시 revalidateTag('players-korean-names', 'default') 호출
  * - 주의: unstable_cache 내부에서는 cookies()를 쓸 수 없으므로 Admin 클라이언트 사용
  */
 const getAllKoreanNamesMap = unstable_cache(

@@ -56,7 +56,7 @@ export async function deleteComment(commentId: string): Promise<CommentDeleteRes
     );
 
     // 유저 통계 캐시 무효화 (댓글 수 변경)
-    revalidateTag(`user-stats-${user.id}`);
+    revalidateTag(`user-stats-${user.id}`, 'default');
 
     return { success: true };
   } catch (error) {

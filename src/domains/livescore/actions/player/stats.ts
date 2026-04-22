@@ -234,7 +234,7 @@ export async function fetchPlayerStats(playerId: number, season: number): Promis
     }));
 
     // 리그 우선순위로 정렬
-    return stats.sort((a, b) => {
+    return stats.sort((a: PlayerStatistic, b: PlayerStatistic) => {
       const priorityA = getLeaguePriority(a.league.id);
       const priorityB = getLeaguePriority(b.league.id);
 

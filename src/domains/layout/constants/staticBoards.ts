@@ -29,4 +29,4 @@ export const STATIC_NAV_BOARDS = [
       { id: 'creative', name: '창작', slug: 'creative', parent_id: 'nav-community', display_order: 4, children: [] },
     ],
   },
-] as Board[];
+] as unknown as Board[];

@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCachedChildBoardIds } from './getCachedBoards';
 import type { PopularPost } from '../types/post';
+import type { DealInfo } from '../types/hotdeal/deal-info';
 
 /**
  * HOT 점수 계산 (사이드바와 동일한 공식)

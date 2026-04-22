@@ -49,7 +49,7 @@ export async function deleteMatchCache(
     if (dataType) query = query.eq('data_type', dataType);
     const { error } = await query;
     if (error) return { success: false, error: error.message };
-    revalidateTag(`match-${matchId}`);
+    revalidateTag(`match-${matchId}`, 'default');
     return { success: true };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : '알 수 없는 오류' };

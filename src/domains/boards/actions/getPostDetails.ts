@@ -124,7 +124,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         display_order: board.display_order || 0,
         view_type: board.view_type as Board['view_type']
       };
-      boardsMap[board.id] = safeBoard;
+      boardsMap[board.id] = safeBoard as Board;
       boardNameMap[board.id] = board.name;
       boardsData[board.id] = {
         team_id: board.team_id || null,
@@ -136,7 +136,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         if (!childBoardsMap[board.parent_id]) {
           childBoardsMap[board.parent_id] = [];
         }
-        childBoardsMap[board.parent_id].push(safeBoard);
+        childBoardsMap[board.parent_id].push(safeBoard as Board);
       }
     });
     
@@ -335,7 +335,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
           ...p.profiles,
           level: p.profiles.level || undefined
         } : undefined
-      })) as import('../types/post').Post[],
+      })) as unknown as import('../types/post').Post[],
       commentCounts,
       boardsData,
       boardNameMap,
@@ -441,8 +441,8 @@ export async function getPost(postId: string) {
         updated_at,
         user_id,
         board_id,
-        view_count,
-        like_count,
+        views,
+        likes,
         profiles(id, username, avatar_url, full_name),
         boards(id, name, slug)
       `)
@@ -465,7 +465,7 @@ export async function getPost(postId: string) {
     await supabase.rpc('increment_view_count', { post_id: postId })
 
     return {
-      ...data,
+      ...((data || {}) as Record<string, unknown>),
       content: contentRow?.content ?? null,
     }
   } catch (error) {

@@ -46,8 +46,8 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
 
     // 댓글 수 가져오기
     const allPostIds = [
-      ...(foreignPostsResult.data || []).map(p => p.id),
-      ...(domesticPostsResult.data || []).map(p => p.id),
+      ...(foreignPostsResult.data || []).map((p: { id: string }) => p.id),
+      ...(domesticPostsResult.data || []).map((p: { id: string }) => p.id),
     ];
 
     const commentCountMap: Record<string, number> = {};
@@ -57,7 +57,7 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
         .select('post_id')
         .in('post_id', allPostIds);
 
-      (commentCounts || []).forEach(c => {
+      (commentCounts || []).forEach((c: { post_id: string | null }) => {
         if (c.post_id) {
           commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
         }

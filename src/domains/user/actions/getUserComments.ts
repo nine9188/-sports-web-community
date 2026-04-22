@@ -68,7 +68,7 @@ export async function getUserCommentedPosts(
     const uniquePostIds: string[] = [];
     const seenPosts = new Set<string>();
     for (const comment of commentedPostIds || []) {
-      if (!seenPosts.has(comment.post_id)) {
+      if (comment.post_id && !seenPosts.has(comment.post_id)) {
         seenPosts.add(comment.post_id);
         uniquePostIds.push(comment.post_id);
       }

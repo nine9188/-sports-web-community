@@ -151,7 +151,7 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
     });
 
     const allStandings = (await Promise.all(standingsPromises))
-      .filter(standing => standing !== null);
+      .filter((standing: unknown) => standing !== null) as Array<{ league: { type: string; name: string } }>;
 
     // 메인 리그를 먼저 정렬하고, 그 다음에 컵 대회 순으로 정렬
     allStandings.sort((a, b) => {

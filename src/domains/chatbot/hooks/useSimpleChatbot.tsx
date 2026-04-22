@@ -228,9 +228,9 @@ export function useSimpleChatbot() {
     // 3) 일반 칩 → 타이핑 → 설명 → 타이핑 → 폼
     const chipData = CHIP_BUTTONS.find(c => c.type === chip.type);
     if (chipData) {
-      enqueue(() => showTypingThenMessage(convId, chipData.description));
+      enqueue(() => showTypingThenMessage(convId, chipData.description ?? ''));
       if (chipData.form_config) {
-        enqueue(() => showTypingThenForm(convId, chip.type!, chipData.form_config));
+        enqueue(() => showTypingThenForm(convId, chip.type ?? '', chipData.form_config));
       }
     }
   }, [activeConversation, disableChips, addMessage, enqueue, showTypingThenMessage, showTypingThenChips, showTypingThenForm, completeConversation]);

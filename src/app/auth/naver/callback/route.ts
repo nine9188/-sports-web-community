@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
       }),
     })
 
-    const tokenData = await tokenRes.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tokenData: any = await tokenRes.json()
 
     if (tokenData.error || !tokenData.access_token) {
       console.error('네이버 토큰 교환 실패:', tokenData)
@@ -47,7 +48,8 @@ export async function GET(request: NextRequest) {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     })
 
-    const profileData = await profileRes.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profileData: any = await profileRes.json()
 
     if (profileData.resultcode !== '00' || !profileData.response) {
       console.error('네이버 프로필 조회 실패:', profileData)
@@ -146,7 +148,8 @@ export async function GET(request: NextRequest) {
       }),
     })
 
-    const session = await verifyRes.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session: any = await verifyRes.json()
 
     if (!session.access_token || !session.refresh_token) {
       console.error('세션 획득 실패:', session)

@@ -210,9 +210,10 @@ export function getSupabaseAdmin() {
     )
   }
 
-  const { createClient } = require('@supabase/supabase-js')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
+  const { createClient } = require('@supabase/supabase-js') as any
 
-  return createClient<Database>(
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {

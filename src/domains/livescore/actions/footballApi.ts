@@ -184,7 +184,8 @@ export interface TodayMatchesResult {
 
 // ── API 호출 ──
 
-export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}): Promise<any> => {
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
 
@@ -251,7 +252,8 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
       console.warn(`[API-Football] 일일 할당량 잔여: ${remainingDaily} (endpoint: ${endpoint})`);
     }
 
-    const data = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await response.json();
 
     // response.errors 확인 (HTTP 200이어도 body에 에러가 있을 수 있음)
     if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {

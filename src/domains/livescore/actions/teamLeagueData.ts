@@ -10,7 +10,7 @@
  * 이 모듈은 기존 src/domains/livescore/constants/teams/* 및
  * src/domains/livescore/constants/league-mappings.ts 의 데이터 헬퍼들을 대체합니다.
  *
- * 캐싱: unstable_cache + revalidateTag('teams' | 'leagues')
+ * 캐싱: unstable_cache + revalidateTag('teams' | 'leagues', 'default')
  */
 
 import { unstable_cache } from 'next/cache';
@@ -61,7 +61,7 @@ const _getAllTeamsImpl = unstable_cache(
       return [];
     }
 
-    return (data || []).map((row) => ({
+    return (data || []).map((row: { team_id: number; name: string | null; name_ko: string | null; country: string | null; country_ko: string | null; code: string | null; league_id: number | null; conference: string | null }) => ({
       id: row.team_id,
       name_ko: row.name_ko ?? row.name ?? '',
       name_en: row.name ?? '',
@@ -88,7 +88,7 @@ const _getAllLeaguesImpl = unstable_cache(
       return [];
     }
 
-    return (data || []).map((row) => ({
+    return (data || []).map((row: { id: number; name: string | null; name_ko: string | null; country: string | null; country_ko: string | null; logo: string | null; flag: string | null; is_calendar_season: boolean | null; is_cup: boolean | null; is_major: boolean | null }) => ({
       id: row.id,
       name: row.name ?? '',
       name_ko: row.name_ko ?? row.name ?? '',

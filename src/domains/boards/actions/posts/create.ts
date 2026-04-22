@@ -137,7 +137,7 @@ async function createPostInternal(params: {
     const boardSlug = boardData.slug || boardId;
     revalidatePath(`/boards/${boardSlug}`);
     revalidatePath('/boards');
-    revalidateTag(`user-stats-${userId}`);
+    revalidateTag(`user-stats-${userId}`, 'default');
 
     // 후처리: 본문 분리 저장, 카드 링크, 로그, 보상 (전부 fire-and-forget)
     // 게시글 INSERT 이미 성공 → 사용자 응답 차단하지 않음
@@ -182,7 +182,7 @@ async function createPostInternal(params: {
         .then(({ count }) => { if (count === 1) return checkReferralMilestone(userId, 'first_post'); }),
     ]).catch(err => console.error('게시글 후처리 실패 (무시됨):', err));
 
-    return { success: true, post: data as CreatedPost };
+    return { success: true, post: data as unknown as CreatedPost };
   } catch (error) {
     console.error('[createPost] 예외 발생:', error);
     await logError('POST_CREATE_ERROR', error instanceof Error ? error : new Error(String(error)), userId, { boardId, title });

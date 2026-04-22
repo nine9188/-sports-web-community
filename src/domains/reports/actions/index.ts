@@ -372,7 +372,7 @@ export async function executeReportAction(
 }
 
 // 게시글 조치 처리
-async function handlePostAction(supabase: Awaited<ReturnType<typeof createClient>>, postId: string, action: string) {
+async function handlePostAction(supabase: Awaited<ReturnType<typeof getSupabaseServer>>, postId: string, action: string) {
   try {
     if (action === 'delete') {
       // 게시글 삭제 처리 - 실제 삭제 대신 is_deleted 플래그 설정
@@ -429,7 +429,7 @@ async function handlePostAction(supabase: Awaited<ReturnType<typeof createClient
 }
 
 // 댓글 조치 처리
-async function handleCommentAction(supabase: Awaited<ReturnType<typeof createClient>>, commentId: string, action: string) {
+async function handleCommentAction(supabase: Awaited<ReturnType<typeof getSupabaseServer>>, commentId: string, action: string) {
   try {
     if (action === 'delete') {
       // 댓글 삭제 처리
@@ -470,7 +470,7 @@ async function handleCommentAction(supabase: Awaited<ReturnType<typeof createCli
 }
 
 // 응원 댓글 조치 처리
-async function handleMatchCommentAction(supabase: Awaited<ReturnType<typeof createClient>>, commentId: string, action: string) {
+async function handleMatchCommentAction(supabase: Awaited<ReturnType<typeof getSupabaseServer>>, commentId: string, action: string) {
   try {
     if (action === 'delete') {
       // 응원 댓글 삭제 처리
@@ -511,7 +511,7 @@ async function handleMatchCommentAction(supabase: Awaited<ReturnType<typeof crea
 }
 
 // 사용자 정지 처리
-async function handleUserSuspension(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, days: number, reason?: string) {
+async function handleUserSuspension(supabase: Awaited<ReturnType<typeof getSupabaseServer>>, userId: string, days: number, reason?: string) {
   try {
     // 실제 정지 시스템 사용
     const result = await suspendUser({

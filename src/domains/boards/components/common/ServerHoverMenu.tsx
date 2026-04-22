@@ -29,12 +29,13 @@ export default async function ServerHoverMenu({
     );
   }
 
-  // 게시판 데이터 구조화
+  // 게시판 데이터 구조화 (BoardRow를 Board로 캐스팅하여 사용)
+  const boards = boardsData as unknown as Board[];
   const boardsMap: Record<string, Board> = {};
   const childBoardsMap: Record<string, Board[]> = {};
-  
+
   // 1. 모든 게시판을 맵에 저장
-  boardsData.forEach((board: Board) => {
+  boards.forEach((board: Board) => {
     boardsMap[board.id] = board;
   });
 
@@ -44,7 +45,7 @@ export default async function ServerHoverMenu({
   // 하위 게시판: 상위 게시판의 하위 게시판
 
   // 모든 게시판을 순회하며 부모-자식 관계 맵핑
-  boardsData.forEach((board: Board) => {
+  boards.forEach((board: Board) => {
     if (board.parent_id) {
       if (!childBoardsMap[board.parent_id]) {
         childBoardsMap[board.parent_id] = [];
@@ -52,14 +53,14 @@ export default async function ServerHoverMenu({
       childBoardsMap[board.parent_id].push(board);
     }
   });
-  
+
   // 최상위 게시판 (루트) 찾기
   let rootBoard: Board | undefined;
   if (rootBoardId) {
     rootBoard = boardsMap[rootBoardId];
   } else {
     // rootBoardId가 없으면 parent_id가 없는 첫 번째 게시판을 루트로 사용
-    rootBoard = boardsData.find((board: Board) => !board.parent_id);
+    rootBoard = boards.find((board: Board) => !board.parent_id);
   }
   
   if (!rootBoard) {

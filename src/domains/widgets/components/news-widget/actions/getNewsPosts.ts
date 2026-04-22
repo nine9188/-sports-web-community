@@ -37,7 +37,7 @@ async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
       return [];
     }
 
-    const newsItems: NewsItem[] = posts.map((post) => {
+    const newsItems: NewsItem[] = posts.map((post: { id: string; title: string; summary: string | null; thumbnail_url: string | null; created_at: string; views: number | null; likes: number | null; post_number: number }) => {
       const summary = post.summary
         ? post.summary.slice(0, 150) + (post.summary.length > 150 ? '...' : '')
         : '';

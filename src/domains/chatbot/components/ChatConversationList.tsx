@@ -124,7 +124,7 @@ export function ChatConversationList({
                       </h4>
                       <div className="flex items-center space-x-1 text-xs text-gray-700 dark:text-gray-300 ml-2">
                         <Clock className="w-3 h-3" />
-                        <span>{formatMessageTime(conversation.last_message_at)}</span>
+                        <span>{formatMessageTime(conversation.last_message_at ?? '')}</span>
                       </div>
                     </div>
 

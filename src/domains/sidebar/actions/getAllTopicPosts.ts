@@ -138,9 +138,9 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
       .filter(Boolean) as number[];
 
     const [teamLogoMap, leagueLogoMap, leagueLogoDarkMap] = await Promise.all([
-      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({}),
-      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({}),
-      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({})
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({} as Record<number, string>)
     ]);
 
     // Step 4: 댓글 수 구하기 (한 번만)

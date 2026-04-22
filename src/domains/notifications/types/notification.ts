@@ -13,7 +13,8 @@ export type NotificationType =
   | 'welcome'        // 회원가입 환영 알림
   | 'hot_post'       // 내 게시글 HOT 진입
   | 'profile_update' // 프로필 변경 (자기 알림)
-  | 'suspension';    // 계정 정지 알림
+  | 'suspension'     // 계정 정지 알림
+  | 'phone_verified'; // 전화번호 인증 완료
 
 export interface Notification {
   id: string;

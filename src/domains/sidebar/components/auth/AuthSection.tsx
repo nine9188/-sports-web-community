@@ -40,7 +40,6 @@ export default function AuthSection({ userData }: AuthSectionProps) {
     <ClientUserProfile profileData={{
       id: userData.id,
       nickname: userData.nickname,
-      email: userData.email,
       level: userData.level,
       exp: userData.exp,
       points: userData.points,

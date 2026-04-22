@@ -98,7 +98,7 @@ export async function validateReferralCode(
     return {
       valid: true,
       referrerId: referrer.id,
-      referrerNickname: referrer.nickname,
+      referrerNickname: referrer.nickname ?? undefined,
     };
   } catch (error) {
     console.error('추천 코드 검증 오류:', error);
@@ -456,8 +456,8 @@ export async function getReferralStats(userId: string): Promise<ReferralStats | 
 
       if (referrer) {
         referredBy = {
-          nickname: referrer.nickname,
-          public_id: referrer.public_id,
+          nickname: referrer.nickname ?? '',
+          public_id: referrer.public_id ?? '',
         };
       }
     }
@@ -471,8 +471,8 @@ export async function getReferralStats(userId: string): Promise<ReferralStats | 
       totalExpEarned: totalExp,
       referredBy,
       recentReferrals: (referrals || []).map(r => ({
-        nickname: (r.referee as { nickname: string })?.nickname || '알 수 없음',
-        created_at: r.created_at,
+        nickname: (r.referee as unknown as { nickname: string })?.nickname || '알 수 없음',
+        created_at: r.created_at ?? '',
         status: r.status,
       })),
     };

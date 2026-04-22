@@ -263,8 +263,8 @@ export function MatchInfoSection({
           <RelatedPosts
             posts={sidebarData?.relatedPosts ?? []}
             teams={{
-              home: matchData.teams?.home ? { id: matchData.teams.home.id, name: getTeamById(matchData.teams.home.id)?.name_ko || matchData.teams.home.name, boardSlug: sidebarData?.homeBoardSlug } : undefined,
-              away: matchData.teams?.away ? { id: matchData.teams.away.id, name: getTeamById(matchData.teams.away.id)?.name_ko || matchData.teams.away.name, boardSlug: sidebarData?.awayBoardSlug } : undefined,
+              home: matchData.teams?.home ? { id: matchData.teams.home.id!, name: getTeamById(matchData.teams.home.id!)?.name_ko || matchData.teams.home.name!, boardSlug: sidebarData?.homeBoardSlug } : undefined,
+              away: matchData.teams?.away ? { id: matchData.teams.away.id!, name: getTeamById(matchData.teams.away.id!)?.name_ko || matchData.teams.away.name!, boardSlug: sidebarData?.awayBoardSlug } : undefined,
             }}
           />
         </>

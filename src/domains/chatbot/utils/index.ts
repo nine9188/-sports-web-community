@@ -1,6 +1,8 @@
 // UI 컴포넌트용 유틸
 
-export const CHIP_BUTTONS = [
+import { ChipButton } from '../types';
+
+export const CHIP_BUTTONS: ChipButton[] = [
   {
     id: 'community_inquiry',
     type: 'community_inquiry',

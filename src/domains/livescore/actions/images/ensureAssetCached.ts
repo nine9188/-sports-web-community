@@ -380,7 +380,7 @@ export async function forceRefreshAsset(
       .eq('entity_id', entityId);
 
     // unstable_cache 무효화 (삭제된 ID가 Set에서 빠지도록)
-    revalidateTag(`asset-cache-${type}`);
+    revalidateTag(`asset-cache-${type}`, 'default');
 
     const url = await ensureAssetCached(type, entityId, size);
     const isPlaceholder = url.startsWith('/images/placeholder');

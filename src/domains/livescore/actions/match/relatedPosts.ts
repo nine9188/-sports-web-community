@@ -223,8 +223,8 @@ export const getRelatedPosts = cache(async (
     const leagueIdsForLogo = [...new Set(sortedPosts.filter(p => p.board_league_id && !p.board_team_id).map(p => p.board_league_id!))];
 
     const [teamLogoMap, leagueLogoMap] = await Promise.all([
-      teamIdsForLogo.length > 0 ? getTeamLogoUrls(teamIdsForLogo) : Promise.resolve({}),
-      leagueIdsForLogo.length > 0 ? getLeagueLogoUrls(leagueIdsForLogo) : Promise.resolve({}),
+      teamIdsForLogo.length > 0 ? getTeamLogoUrls(teamIdsForLogo) : Promise.resolve({} as Record<number, string>),
+      leagueIdsForLogo.length > 0 ? getLeagueLogoUrls(leagueIdsForLogo) : Promise.resolve({} as Record<number, string>),
     ]);
 
     // boardLogoUrl 채우기

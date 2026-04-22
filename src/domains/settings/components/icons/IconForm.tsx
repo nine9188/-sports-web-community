@@ -60,8 +60,7 @@ export default function IconForm({
       if (result.success) {
         // 고유 ID로 토스트 생성하여 중복 방지
         toast.success('아이콘이 변경되었습니다.', {
-          toastId: 'icon-update-success',
-          autoClose: 2000
+          id: 'icon-update-success',
         });
 
         // 선택된 아이콘에 따라 전역 상태 업데이트
@@ -81,8 +80,7 @@ export default function IconForm({
       } else {
         // 고유 ID로 토스트 생성하여 중복 방지
         toast.error(result.error || '아이콘 변경에 실패했습니다.', {
-          toastId: 'icon-update-error',
-          autoClose: 2000
+          id: 'icon-update-error',
         });
         // 실패 시 원래 선택으로 되돌림
         setSelectedIconId(currentIconId);
@@ -90,8 +88,7 @@ export default function IconForm({
     } catch (error) {
       console.error('아이콘 변경 오류:', error);
       toast.error('아이콘 변경 중 오류가 발생했습니다.', {
-        toastId: 'icon-update-exception',
-        autoClose: 2000
+        id: 'icon-update-exception',
       });
       setSelectedIconId(currentIconId);
     } finally {

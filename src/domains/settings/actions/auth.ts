@@ -77,7 +77,8 @@ export async function changePassword(
       method: 'POST',
       body,
     });
-    const verify = await resp.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const verify: any = await resp.json();
     if (!verify?.success) {
       return { success: false, error: '봇 검증에 실패했습니다. 새로고침 후 다시 시도해주세요.' };
     }

@@ -325,16 +325,16 @@ function TeamDetailCard({ team, label, predictedGoals }: { team: TeamData; label
             <div key={type} className="flex text-center text-xs border-b border-black/5 dark:border-white/10 last:border-b-0">
               <div className="flex-1 py-1 text-gray-400">{type === 'total' ? '합계' : type === 'home' ? '홈' : '원정'}</div>
               <div className="flex-1 py-1 font-medium text-gray-900 dark:text-[#F0F0F0]">
-                {league.fixtures.played?.[type as keyof typeof league.fixtures.played] || 0}
+                {league.fixtures?.played?.[type as keyof typeof league.fixtures.played] || 0}
               </div>
               <div className="flex-1 py-1 font-medium text-green-600 dark:text-green-400">
-                {league.fixtures.wins?.[type as keyof typeof league.fixtures.wins] || 0}
+                {league.fixtures?.wins?.[type as keyof typeof league.fixtures.wins] || 0}
               </div>
               <div className="flex-1 py-1 font-medium text-yellow-600 dark:text-yellow-400">
-                {league.fixtures.draws?.[type as keyof typeof league.fixtures.draws] || 0}
+                {league.fixtures?.draws?.[type as keyof typeof league.fixtures.draws] || 0}
               </div>
               <div className="flex-1 py-1 font-medium text-red-600 dark:text-red-400">
-                {league.fixtures.loses?.[type as keyof typeof league.fixtures.loses] || 0}
+                {league.fixtures?.loses?.[type as keyof typeof league.fixtures.loses] || 0}
               </div>
             </div>
           ))}

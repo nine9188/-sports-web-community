@@ -109,7 +109,7 @@ export async function sendPhoneVerificationCode(phoneNumber: string): Promise<{
 
     if (recentOTP) {
       const waitTime = Math.ceil(
-        (new Date(recentOTP.created_at).getTime() + RESEND_COOLDOWN_SECONDS * 1000 - Date.now()) / 1000
+        (new Date(recentOTP.created_at ?? Date.now()).getTime() + RESEND_COOLDOWN_SECONDS * 1000 - Date.now()) / 1000
       );
       return { success: false, error: `${waitTime}초 후에 다시 시도해주세요.` };
     }
@@ -218,7 +218,8 @@ export async function verifyPhoneCode(phoneNumber: string, code: string): Promis
     }
 
     // 시도 횟수 확인
-    if (verification.attempts >= MAX_ATTEMPTS) {
+    const attempts = verification.attempts ?? 0;
+    if (attempts >= MAX_ATTEMPTS) {
       return { success: false, error: '인증 시도 횟수를 초과했습니다. 다시 요청해주세요.' };
     }
 
@@ -227,10 +228,10 @@ export async function verifyPhoneCode(phoneNumber: string, code: string): Promis
       // 시도 횟수 증가
       await supabase
         .from('phone_verifications')
-        .update({ attempts: verification.attempts + 1 })
+        .update({ attempts: attempts + 1 })
         .eq('id', verification.id);
 
-      const remaining = MAX_ATTEMPTS - verification.attempts - 1;
+      const remaining = MAX_ATTEMPTS - attempts - 1;
       return {
         success: false,
         error: `인증번호가 일치하지 않습니다. (남은 시도: ${remaining}회)`

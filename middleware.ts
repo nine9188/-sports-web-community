@@ -94,7 +94,8 @@ export async function middleware(request: NextRequest) {
       const res = await fetch(`${supabaseUrl}/rest/v1/football_teams?team_id=eq.${teamId}&select=slug&limit=1`, {
         headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
       })
-      const data = await res.json()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: any[] = await res.json()
       const slug = data?.[0]?.slug || 'team'
       const url = request.nextUrl.clone()
       url.pathname = `/livescore/football/team/${teamId}/${slug}`

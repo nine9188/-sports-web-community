@@ -12,7 +12,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
  * 60초 TTL로 "거의 실시간" 유지 — DB count 쿼리는 비싸므로
  * 매 요청 DB를 때리지는 않되, 1분 이상 stale은 허용하지 않음.
  * 정확한 즉시 반영이 필요하면 posts 작성/삭제 로직에서
- * revalidateTag('posts-count') 호출하면 즉시 갱신됨.
+ * revalidateTag('posts-count', 'default') 호출하면 즉시 갱신됨.
  */
 const _getTotalPostCountImpl = unstable_cache(
   async (): Promise<number> => {

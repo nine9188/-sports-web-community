@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { Json } from '@/shared/types/supabase';
 
 // ========== 타입 정의 ==========
 
@@ -140,7 +141,7 @@ export async function updatePageSeo(
   const { error } = await supabase
     .from('seo_settings')
     .update({
-      page_overrides: pageOverrides,
+      page_overrides: pageOverrides as unknown as Json,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })
@@ -196,7 +197,7 @@ export async function deletePageSeo(
   const { error } = await supabase
     .from('seo_settings')
     .update({
-      page_overrides: pageOverrides,
+      page_overrides: pageOverrides as unknown as Json,
       updated_at: new Date().toISOString(),
       updated_by: user.id,
     })

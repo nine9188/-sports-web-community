@@ -58,7 +58,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
       >
         {children.length > 0 ? (
           children
-            .sort((a, b) => a.display_order - b.display_order)
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map((child, index, arr) => (
               index === 0 ? (
                 <Link

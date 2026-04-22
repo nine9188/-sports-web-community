@@ -33,6 +33,7 @@ interface Team {
 
 // 리그 정보 타입
 interface LeagueInfo {
+  id?: number;
   name: string;
   country: string;
   logo: string;

@@ -1,8 +1,8 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { getBoardsForNavigation } from '@/domains/layout/actions';
-import { Board } from '@/domains/layout/types/board';
+import { getCachedAllBoards } from './getCachedBoards';
+import type { Board } from '@/domains/boards/types/board';
 
 /**
  * 계층 구조의 게시판을 flat 배열로 변환
@@ -126,8 +126,8 @@ export async function getCreatePostData(slug: string) {
         .select('*')
         .eq('slug', slug)
         .single(),
-      // 모든 게시판 정보 (캐시된 getBoardsForNavigation 사용)
-      getBoardsForNavigation()
+      // 모든 게시판 정보 (캐시된 getCachedAllBoards 사용)
+      getCachedAllBoards()
     ]);
 
     const { data: board, error: boardError } = boardResult;
@@ -148,8 +148,8 @@ export async function getCreatePostData(slug: string) {
       };
     }
 
-    // 계층 구조를 flat 배열로 변환 (BoardSelector가 flat 배열 기대)
-    let allBoards = flattenBoards(navigationData.boardData);
+    // flat 배열 (BoardSelector가 flat 배열 기대)
+    let allBoards = (navigationData ?? []) as Board[];
 
     // 관리자가 아니면 공지사항 게시판 제외
     const { data: { user } } = await supabase.auth.getUser();

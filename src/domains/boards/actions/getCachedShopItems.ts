@@ -22,7 +22,7 @@ const _getCachedShopItemIconMapImpl = unstable_cache(
     }
 
     const map: Record<number, string> = {};
-    (data || []).forEach(item => {
+    (data || []).forEach((item: { id: number | null; image_url: string | null }) => {
       if (item.id && item.image_url) {
         map[item.id] = item.image_url;
       }

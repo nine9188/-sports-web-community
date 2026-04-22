@@ -124,19 +124,20 @@ export default function TeamSearchResults({
       const result = await getTeamMatchesRecent(team.team_id, 5) // 최근 5경기만
 
       if (result.success && result.data) {
+        const matchData: Match[] = result.data
         // 4590 표준: 매치 팀 로고 Storage URL 배치 조회
         const matchTeamIds = new Set<number>()
-        result.data.forEach(match => {
+        matchData.forEach(match => {
           if (match.teams.home.id) matchTeamIds.add(match.teams.home.id)
           if (match.teams.away.id) matchTeamIds.add(match.teams.away.id)
         })
-        const logoUrls = matchTeamIds.size > 0 ? await getTeamLogoUrls([...matchTeamIds]) : {}
+        const logoUrls = matchTeamIds.size > 0 ? await getTeamLogoUrls([...matchTeamIds]) : {} as Record<number, string>
 
         // 캐시에 데이터 저장
         setTeamMatchCache(prev => ({
           ...prev,
           [team.team_id]: {
-            data: result.data,
+            data: matchData,
             logoUrls,
             timestamp: Date.now(),
             loading: false
@@ -330,7 +331,7 @@ function TeamRowWithMatches({
   team: TeamSearchResult
   onToggle: (team: TeamSearchResult) => void
   isExpanded: boolean
-  matches: TeamMatch[]
+  matches: Match[]
   matchesLoading: boolean
   matchTeamLogoUrls: Record<number, string>
 }) {

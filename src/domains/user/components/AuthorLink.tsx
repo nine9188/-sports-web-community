@@ -140,7 +140,7 @@ export default function AuthorLink({
     try {
       const result = await createReport({
         targetType: 'user',
-        targetId: oddsUserId,
+        targetId: oddsUserId ?? '',
         reason: reason as ReportReason,
         description: description.trim() || undefined
       });

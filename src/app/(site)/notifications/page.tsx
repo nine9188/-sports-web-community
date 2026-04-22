@@ -34,6 +34,7 @@ const notificationTypeLabels: Record<TypeFilter, string> = {
   hot_post: "인기 게시글",
   profile_update: "프로필 업데이트",
   suspension: "계정 정지",
+  phone_verified: "전화번호 인증",
 };
 
 export default function NotificationsPage() {

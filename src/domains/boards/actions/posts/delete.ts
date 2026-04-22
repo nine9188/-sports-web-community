@@ -71,7 +71,7 @@ export async function deletePost(
     }
 
     // 캐시 무효화 (게시판 목록 + 유저 통계만, 삭제된 게시글 페이지는 무효화 안 함)
-    revalidateTag(`user-stats-${userId}`);
+    revalidateTag(`user-stats-${userId}`, 'default');
 
     // 로그 기록 (fire-and-forget)
     logUserAction('POST_DELETE', `게시글 삭제 (ID: ${postId})`, userId, {

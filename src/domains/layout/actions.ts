@@ -14,7 +14,7 @@ interface GetBoardsResult {
  * getCachedAllBoards()를 재사용하여 DB 왕복을 제거했습니다.
  * - 캐시 히트: 메모리 조회 (< 1ms)
  * - 캐시 미스: DB 1회 + 이후 7일간 캐시
- * - 게시판 추가/수정 시 revalidateTag('boards')로 자동 무효화
+ * - 게시판 추가/수정 시 revalidateTag('boards', 'default')로 자동 무효화
  *
  * NOTE: 전체 글 개수(totalPostCount)는 별도 서버 컴포넌트에서
  *       Suspense 스트리밍으로 분리되었습니다. (getTotalPostCount.ts)
@@ -36,11 +36,15 @@ export const getBoardsForNavigation = cache(async (): Promise<GetBoardsResult> =
       boardMap.set(board.id, {
         id: board.id,
         name: board.name,
-        slug: board.slug,
+        slug: board.slug ?? '',
         parent_id: board.parent_id,
         display_order: board.display_order || 0,
         team_id: board.team_id,
         league_id: board.league_id,
+        description: null,
+        access_level: null,
+        logo: null,
+        views: null,
         children: [],
       });
     });
@@ -61,7 +65,7 @@ export const getBoardsForNavigation = cache(async (): Promise<GetBoardsResult> =
 
     // 3단계: 각 레벨에서 정렬
     const sortBoards = (list: Board[]) => {
-      list.sort((a, b) => a.display_order - b.display_order);
+      list.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
       list.forEach(board => {
         if (board.children && board.children.length > 0) {
           sortBoards(board.children);

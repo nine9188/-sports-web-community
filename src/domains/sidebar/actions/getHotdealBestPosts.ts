@@ -74,7 +74,7 @@ async function fetchHotdealBestPosts(
     }
 
     // 댓글 수 조회 (1회만)
-    const postIds = allPostsData.map(post => post.id);
+    const postIds = allPostsData.map((post: { id: string }) => post.id);
     const commentCountMap: Record<string, number> = {};
 
     const { data: commentCounts } = await supabase
@@ -85,7 +85,7 @@ async function fetchHotdealBestPosts(
       .eq('is_deleted', false);
 
     if (commentCounts) {
-      commentCounts.forEach((comment) => {
+      commentCounts.forEach((comment: { post_id: string | null }) => {
         if (comment.post_id) {
           commentCountMap[comment.post_id] = (commentCountMap[comment.post_id] || 0) + 1;
         }

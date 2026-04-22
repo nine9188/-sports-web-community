@@ -68,7 +68,7 @@ export default function PlayerRankings({
     ...CACHE_STRATEGIES.STATIC_DATA,
     // SSR에서 전달된 initialData가 있으면 사용
     initialData: rankingsData && apiType ? (() => {
-      const keyMap: Record<string, keyof RankingsData> = {
+      const keyMap: Record<string, 'topScorers' | 'topAssists' | 'topYellowCards' | 'topRedCards'> = {
         topscorers: 'topScorers',
         topassists: 'topAssists',
         topyellowcards: 'topYellowCards',

@@ -26,5 +26,5 @@ export default async function Page() {
     );
   }
 
-  return <SeoSettingsPage initialSettings={settings} boards={boards || []} />;
+  return <SeoSettingsPage initialSettings={settings} boards={(boards || []) as import('@/domains/admin/components/seo').BoardData[]} />;
 }

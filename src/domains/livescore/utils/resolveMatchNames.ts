@@ -1,4 +1,4 @@
-import { getTeamsByIds, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
+import { getTeamsByIds, getLeagueById, type TeamData } from '@/domains/livescore/actions/teamLeagueData';
 
 /** API 매치 데이터에서 한국어 팀명/리그명 해석 */
 export async function resolveMatchNames(match: {
@@ -14,7 +14,7 @@ export async function resolveMatchNames(match: {
 
   const [leagueInfo, teamMap] = await Promise.all([
     match.league?.id ? getLeagueById(match.league.id) : Promise.resolve(null),
-    teamIds.length > 0 ? getTeamsByIds(teamIds) : Promise.resolve({}),
+    teamIds.length > 0 ? getTeamsByIds(teamIds) : Promise.resolve({} as Record<number, TeamData>),
   ]);
 
   const homeInfo = match.teams?.home?.id ? teamMap[match.teams.home.id] : null;

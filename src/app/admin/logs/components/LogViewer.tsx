@@ -22,7 +22,7 @@ export default function LogViewer() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [filters, setFilters] = useState<LogFiltersType>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<typeof DEFAULT_FILTERS>(DEFAULT_FILTERS);
 
   const limit = 50;
 
@@ -67,8 +67,8 @@ export default function LogViewer() {
   }, []);
 
   // 필터 변경 시 페이지를 1로 리셋
-  const handleFilterChange = (key: keyof LogFiltersType, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const handleFilterChange = (key: keyof typeof DEFAULT_FILTERS, value: string) => {
+    setFilters((prev: typeof DEFAULT_FILTERS) => ({ ...prev, [key]: value }));
     setPage(1);
   };
 

@@ -32,9 +32,15 @@ const createNavBoards = (boards: Board[]): Board[] => {
       slug: 'all',
       parent_id: null,
       display_order: -2,
+      team_id: null,
+      league_id: null,
+      description: null,
+      access_level: null,
+      logo: null,
+      views: null,
       children: [
-        { id: 'nav-all', name: '전체글', slug: 'all', parent_id: 'nav-posts', display_order: 0, children: [] },
-        { id: 'nav-popular', name: '인기글', slug: 'popular', parent_id: 'nav-posts', display_order: 1, children: [] }
+        { id: 'nav-all', name: '전체글', slug: 'all', parent_id: 'nav-posts', display_order: 0, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
+        { id: 'nav-popular', name: '인기글', slug: 'popular', parent_id: 'nav-posts', display_order: 1, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] }
       ]
     },
     {
@@ -43,6 +49,12 @@ const createNavBoards = (boards: Board[]): Board[] => {
       slug: 'soccer',
       parent_id: null,
       display_order: -1,
+      team_id: null,
+      league_id: null,
+      description: null,
+      access_level: null,
+      logo: null,
+      views: null,
       children: [
         ...(soccerBoard ? [{ ...soccerBoard, name: '해외축구', parent_id: 'nav-sports', display_order: 0 }] : []),
         ...(kleagueBoard ? [{ ...kleagueBoard, name: '국내축구', parent_id: 'nav-sports', display_order: 1 }] : []),
@@ -56,6 +68,12 @@ const createNavBoards = (boards: Board[]): Board[] => {
       slug: 'free',
       parent_id: null,
       display_order: 50,
+      team_id: null,
+      league_id: null,
+      description: null,
+      access_level: null,
+      logo: null,
+      views: null,
       children: [
         ...(freeBoard ? [{ ...freeBoard, name: '자유게시판', parent_id: 'nav-community', display_order: 0 }] : []),
         ...(hotdealBoard ? [{ ...hotdealBoard, name: '핫딜', parent_id: 'nav-community', display_order: 1 }] : []),
@@ -65,9 +83,9 @@ const createNavBoards = (boards: Board[]): Board[] => {
       ]
     },
     // 개별 링크들 (드롭다운 없음)
-    { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: null, display_order: 100, children: [] },
-    { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: null, display_order: 101, children: [] },
-    { id: 'nav-datacenter', name: '리그·팀', slug: 'livescore/football/leagues', parent_id: null, display_order: 102, children: [] }
+    { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: null, display_order: 100, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
+    { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: null, display_order: 101, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
+    { id: 'nav-datacenter', name: '리그·팀', slug: 'livescore/football/leagues', parent_id: null, display_order: 102, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] }
   ];
 };
 

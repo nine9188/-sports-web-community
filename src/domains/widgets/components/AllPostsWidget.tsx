@@ -58,7 +58,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     }
 
     // show_in_widget이 true인 공지만 필터링
-    const allNoticeData = globalNotices as Array<Record<string, unknown>>;
+    const allNoticeData = globalNotices as unknown as Array<Record<string, unknown>>;
     const noticeData = allNoticeData.filter(notice => notice.show_in_widget === true);
     const noticePosts = noticeData.map(notice => ({
       id: notice.id as string,

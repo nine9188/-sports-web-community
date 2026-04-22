@@ -1,6 +1,10 @@
 // 이적 관련 유틸리티 함수들 (클라이언트/서버 공용)
 
-import { TransferMarketData, TeamTransfersData } from '../types/transfers';
+import { TransferMarketItem, TeamTransfers } from '../types/transfers';
+
+// 레거시 호환 alias
+type TransferMarketData = TransferMarketItem;
+type TeamTransfersData = TeamTransfers;
 
 /**
  * 이적 데이터 통계 정보 생성

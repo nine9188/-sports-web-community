@@ -12,7 +12,7 @@ import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/
 import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
-import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
+import { TeamTransfersData, TransferInRecord, TransferOutRecord } from '@/domains/livescore/actions/teams/transfers';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { formatDateDot } from '@/shared/utils/dateUtils';
 import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
@@ -65,7 +65,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   }, [searchParams]);
 
   // 현재 탭에 따른 데이터
-  const currentTransfers = activeTab === 'in' ? (transfers?.in || []) : (transfers?.out || []);
+  const currentTransfers: (TransferInRecord | TransferOutRecord)[] = activeTab === 'in' ? (transfers?.in || []) : (transfers?.out || []);
   const currentPage = activeTab === 'in' ? inPage : outPage;
   const setCurrentPage = activeTab === 'in' ? setInPage : setOutPage;
   const totalPages = Math.ceil(currentTransfers.length / ITEMS_PER_PAGE);
@@ -106,7 +106,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
         {/* 모바일: 카드 형식 */}
         <div className="md:hidden divide-y divide-black/5 dark:divide-white/10">
           {paginatedTransfers.length > 0 ? paginatedTransfers.map((transfer, index) => {
-            const otherTeam = isInTab ? transfer.fromTeam : transfer.toTeam;
+            const otherTeam = isInTab ? (transfer as TransferInRecord).fromTeam : (transfer as TransferOutRecord).toTeam;
             return (
               <div key={`${transfer.player.id}-${index}`} className="px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
                 <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/10">
               {paginatedTransfers.length > 0 ? paginatedTransfers.map((transfer, index) => {
-                const otherTeam = isInTab ? transfer.fromTeam : transfer.toTeam;
+                const otherTeam = isInTab ? (transfer as TransferInRecord).fromTeam : (transfer as TransferOutRecord).toTeam;
                 return (
                   <tr
                     key={`${transfer.player.id}-${index}`}

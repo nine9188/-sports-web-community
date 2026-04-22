@@ -90,7 +90,7 @@ export async function createBoard(formData: BoardFormData) {
     }
 
     revalidatePath('/admin/boards');
-    revalidateTag('boards');
+    revalidateTag('boards', 'default');
     return { success: true };
   } catch (error) {
     console.error('게시판 추가 오류:', error);
@@ -120,7 +120,7 @@ export async function updateBoard(id: string, formData: BoardFormData) {
     }
 
     revalidatePath('/admin/boards');
-    revalidateTag('boards');
+    revalidateTag('boards', 'default');
     return { success: true };
   } catch (error) {
     console.error('게시판 수정 오류:', error);
@@ -147,7 +147,7 @@ export async function deleteBoard(id: string) {
     }
 
     revalidatePath('/admin/boards');
-    revalidateTag('boards');
+    revalidateTag('boards', 'default');
     return { success: true };
   } catch (error) {
     console.error('게시판 삭제 오류:', error);
@@ -178,7 +178,7 @@ export async function swapBoardOrder(boardId: string, targetId: string, boardOrd
     }
 
     revalidatePath('/admin/boards');
-    revalidateTag('boards');
+    revalidateTag('boards', 'default');
     return { success: true };
   } catch (error) {
     console.error('순서 변경 오류:', error);

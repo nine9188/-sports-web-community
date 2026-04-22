@@ -102,7 +102,7 @@ export async function getAllBoards(): Promise<{ id: string; name: string; slug: 
       return [];
     }
 
-    return data || [];
+    return (data || []).map(b => ({ id: b.id, name: b.name, slug: b.slug ?? '' }));
   } catch (error) {
     console.error('게시판 목록 조회 오류:', error);
     return [];

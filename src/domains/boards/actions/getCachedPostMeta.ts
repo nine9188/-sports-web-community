@@ -22,7 +22,7 @@ async function fetchPostMeta(boardId: string, postNumber: number) {
  * 게시글 메타데이터 조회 (generateMetadata 전용, per-post 캐싱)
  *
  * - 1시간 캐시
- * - 게시글 편집/삭제 시 revalidateTag(`post-${boardId}-${postNumber}`) 호출로 무효화
+ * - 게시글 편집/삭제 시 revalidateTag(`post-${boardId}-${postNumber}`, 'default') 호출로 무효화
  *
  * NOTE: Next.js unstable_cache는 dynamic tags를 지원 안 하므로
  *       per-post 태그를 위해 매 호출 시 wrapper 생성 (cache hit/miss는 정상 작동).

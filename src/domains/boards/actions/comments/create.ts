@@ -78,7 +78,7 @@ export async function createComment({
         user_id: user.id,
         content: sanitizedContent,
         parent_id: parentId || null
-      })
+      } as never)
       .select('*, profiles(nickname, icon_id, level, exp, public_id)')
       .single();
       
@@ -190,7 +190,7 @@ export async function createComment({
     }
 
     // 유저 통계 캐시 무효화 (댓글 수 변경)
-    revalidateTag(`user-stats-${user.id}`);
+    revalidateTag(`user-stats-${user.id}`, 'default');
 
     return { success: true, comment: newComment };
   } catch (error) {

@@ -53,8 +53,8 @@ export async function fetchMatchEvents(matchId: string): Promise<EventDataRespon
 
     // 팀 데이터 일괄 조회 후 매핑
     const teamIds = Array.from(
-      new Set(events.map((e: ApiEvent) => e.team?.id).filter((id): id is number => typeof id === 'number'))
-    );
+      new Set(events.map((e: ApiEvent) => e.team?.id).filter((id: number | undefined): id is number => typeof id === 'number'))
+    ) as number[];
     const teamMap = await getTeamsByIds(teamIds);
 
     events = events.map((event: ApiEvent) => {

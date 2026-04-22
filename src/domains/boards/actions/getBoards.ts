@@ -8,7 +8,7 @@ import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types
 import { getCachedAllBoards, getCachedBoardBySlugOrId, getCachedBoardMaps } from './getCachedBoards';
 import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 
-type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null };
+type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null; description?: string | null; access_level?: string | null; logo?: string | null; views?: number | null };
 
 /**
  * 모든 게시판 목록을 가져옵니다.

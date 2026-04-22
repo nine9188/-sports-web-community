@@ -103,7 +103,7 @@ export function TeamMatchDropdownButton({
         setTeamMatchCache(prev => ({
           ...prev,
           [team.team_id]: {
-            data: result.data,
+            data: result.data ?? [],
             timestamp: Date.now(),
             loading: false
           }

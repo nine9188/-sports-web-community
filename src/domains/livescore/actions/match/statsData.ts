@@ -55,8 +55,8 @@ export async function fetchMatchStats(matchId: string): Promise<StatsResponse> {
     
     // 팀 정보 보강 (한국어/영어 이름 추가) — 일괄 조회
     const teamIds = Array.from(
-      new Set(data.response.map((t: TeamStats) => t.team?.id).filter((id): id is number => typeof id === 'number'))
-    );
+      new Set(data.response.map((t: TeamStats) => t.team?.id).filter((id: number | undefined): id is number => typeof id === 'number'))
+    ) as number[];
     const teamMap = await getTeamsByIds(teamIds);
 
     const enhancedResponse = data.response.map((teamStats: TeamStats) => {
