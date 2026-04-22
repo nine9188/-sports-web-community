@@ -100,7 +100,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       content: contentRow?.content ?? null,
     } as typeof postRaw & { content: unknown };
 
-    const boardStructure = cachedBoardStructure;
+    type BoardStructureRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; view_type: string | null; team_id: number | null; league_id: number | null };
+    const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
     const { data: prevPostData } = prevPostResult;
     const { data: nextPostData } = nextPostResult;
     
@@ -116,7 +117,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const boardNameMap: Record<string, string> = {};
     const boardsData: Record<string, BoardData> = {};
     
-    (boardStructure || []).forEach((board) => {
+    boardStructure.forEach((board) => {
       const safeBoard = {
         ...board,
         slug: board.slug || board.id,
@@ -144,7 +145,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const boardLevel = getBoardLevel(board.id, boardsMap, childBoardsMap);
     
     // 5. 최상위 게시판의 직계 하위 게시판들
-    const topLevelBoards = (boardStructure || [])
+    const topLevelBoards = boardStructure
       .filter((b) => b.parent_id === rootBoardId)
       .sort((a, b) => ((a.display_order || 0) - (b.display_order || 0)));
     
@@ -286,14 +287,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const teamsMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
     const leaguesMap: Record<string, { id: number; name: string; logo: string; logo_dark: string; [key: string]: unknown }> = {};
 
-    (teamsResult.data || []).forEach((team) => {
+    ((teamsResult.data ?? []) as Array<{ id: number; name: string; [key: string]: unknown }>).forEach((team) => {
       teamsMap[team.id] = {
         ...team,
         logo: teamLogoUrlMap[team.id] || ''  // 4590 표준: Storage URL
       };
     });
 
-    (leaguesResult.data || []).forEach((league) => {
+    ((leaguesResult.data ?? []) as Array<{ id: number; name: string; [key: string]: unknown }>).forEach((league) => {
       leaguesMap[league.id] = {
         ...league,
         logo: leagueLogoUrlMap[league.id] || '',  // 4590 표준: Storage URL
@@ -358,11 +359,11 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     
     // 15. 하위 게시판 ID 찾기
     const allSubBoardIds: string[] = [];
-    (boardStructure || []).forEach((b) => {
+    boardStructure.forEach((b) => {
       if (b.parent_id === rootBoardId) {
         allSubBoardIds.push(b.id);
         
-        (boardStructure || []).forEach((subBoard) => {
+        boardStructure.forEach((subBoard) => {
           if (subBoard.parent_id === b.id) {
             allSubBoardIds.push(subBoard.id);
           }

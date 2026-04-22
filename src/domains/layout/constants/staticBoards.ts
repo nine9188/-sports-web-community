@@ -1,6 +1,6 @@
-import { Board } from '../types/board';
+import type { Board } from '../types/board';
 
-export const STATIC_NAV_BOARDS: Board[] = [
+export const STATIC_NAV_BOARDS = [
   { id: 'notice', name: '공지사항', slug: 'notice', parent_id: null, display_order: 0, children: [] },
   {
     id: 'nav-sports',
@@ -29,4 +29,4 @@ export const STATIC_NAV_BOARDS: Board[] = [
       { id: 'creative', name: '창작', slug: 'creative', parent_id: 'nav-community', display_order: 4, children: [] },
     ],
   },
-];
+] as Board[];

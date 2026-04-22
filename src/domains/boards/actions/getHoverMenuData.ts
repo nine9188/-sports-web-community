@@ -3,6 +3,8 @@
 import { cache } from 'react';
 import { getCachedAllBoards } from './getCachedBoards';
 
+type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null };
+
 export interface HoverMenuBoard {
   id: string;
   name: string;
@@ -21,7 +23,7 @@ export interface HoverMenuData {
  * - React cache()는 동일 요청 내 중복 방지용
  */
 export const getHoverMenuData = cache(async (rootBoardId: string): Promise<HoverMenuData> => {
-  const boardsData = await getCachedAllBoards();
+  const boardsData = (await getCachedAllBoards()) as BoardRow[];
 
   const topBoards: HoverMenuBoard[] = [];
   const childBoardsMap: Record<string, HoverMenuBoard[]> = {};
@@ -31,9 +33,9 @@ export const getHoverMenuData = cache(async (rootBoardId: string): Promise<Hover
   }
 
   // 루트 게시판의 직접 하위 게시판들 (상위 게시판들)
-  const rootChildBoards = boardsData.filter(board => board.parent_id === rootBoardId);
+  const rootChildBoards = boardsData.filter((board: BoardRow) => board.parent_id === rootBoardId);
 
-  topBoards.push(...rootChildBoards.map(board => ({
+  topBoards.push(...rootChildBoards.map((board: BoardRow) => ({
     id: board.id,
     name: board.name,
     display_order: board.display_order || 0,
@@ -41,7 +43,7 @@ export const getHoverMenuData = cache(async (rootBoardId: string): Promise<Hover
   })));
 
   // 모든 하위 게시판 관계 맵핑
-  boardsData.forEach(board => {
+  boardsData.forEach((board: BoardRow) => {
     if (board.parent_id) {
       if (!childBoardsMap[board.parent_id]) {
         childBoardsMap[board.parent_id] = [];

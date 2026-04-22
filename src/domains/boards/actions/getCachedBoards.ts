@@ -3,6 +3,8 @@
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
+type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null; description?: string | null; access_level?: string | null; logo?: string | null; views?: number | null };
+
 /**
  * 캐시된 모든 게시판 데이터 조회
  *
@@ -14,7 +16,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
  * 사용처: 사이드바, 호버메뉴, 게시판 페이지, 게시글 페이지 등
  */
 const _getCachedAllBoardsImpl = unstable_cache(
-  async () => {
+  async (): Promise<BoardRow[]> => {
     // unstable_cache 내부에서는 cookies()를 사용하지 않는 Admin 클라이언트 사용
     const supabase = getSupabaseAdmin();
 
@@ -29,7 +31,7 @@ const _getCachedAllBoardsImpl = unstable_cache(
       return [];
     }
 
-    return data || [];
+    return (data || []) as BoardRow[];
   },
   ['all-boards'],
   { revalidate: 604800, tags: ['boards'] } // 7일
@@ -43,43 +45,43 @@ export async function getCachedAllBoards() {
  * 캐시된 게시판 데이터에서 slug로 찾기
  */
 export async function getCachedBoardBySlug(slug: string) {
-  const allBoards = await getCachedAllBoards();
-  return allBoards.find(board => board.slug === slug) || null;
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
+  return allBoards.find((board: BoardRow) => board.slug === slug) || null;
 }
 
 /**
  * 캐시된 게시판 데이터에서 ID로 찾기
  */
 export async function getCachedBoardById(id: string) {
-  const allBoards = await getCachedAllBoards();
-  return allBoards.find(board => board.id === id) || null;
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
+  return allBoards.find((board: BoardRow) => board.id === id) || null;
 }
 
 /**
  * 캐시된 게시판 데이터에서 slug 또는 ID로 찾기
  */
 export async function getCachedBoardBySlugOrId(slugOrId: string) {
-  const allBoards = await getCachedAllBoards();
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
 
   // slug가 숫자로만 구성된 경우 ID로 처리
   if (/^\d+$/.test(slugOrId)) {
-    return allBoards.find(board => board.id === slugOrId) || null;
+    return allBoards.find((board: BoardRow) => board.id === slugOrId) || null;
   }
 
-  return allBoards.find(board => board.slug === slugOrId) || null;
+  return allBoards.find((board: BoardRow) => board.slug === slugOrId) || null;
 }
 
 /**
  * 게시판의 모든 하위 게시판 ID를 재귀적으로 가져오기 (캐시된 데이터 사용)
  */
 export async function getCachedChildBoardIds(boardId: string): Promise<string[]> {
-  const allBoards = await getCachedAllBoards();
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
 
   const findChildren = (parentId: string): string[] => {
-    const children = allBoards.filter(b => b.parent_id === parentId);
+    const children = allBoards.filter((b: BoardRow) => b.parent_id === parentId);
     return [
       parentId,
-      ...children.flatMap(c => findChildren(c.id))
+      ...children.flatMap((c: BoardRow) => findChildren(c.id))
     ];
   };
 
@@ -90,13 +92,13 @@ export async function getCachedChildBoardIds(boardId: string): Promise<string[]>
  * 게시판 계층 구조 맵 생성 (캐시)
  */
 export async function getCachedBoardMaps() {
-  const allBoards = await getCachedAllBoards();
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
 
-  const boardsMap: Record<string, typeof allBoards[0]> = {};
-  const childBoardsMap: Record<string, typeof allBoards> = {};
+  const boardsMap: Record<string, BoardRow> = {};
+  const childBoardsMap: Record<string, BoardRow[]> = {};
   const boardNameMap: Record<string, string> = {};
 
-  allBoards.forEach(board => {
+  allBoards.forEach((board: BoardRow) => {
     const safeBoard = {
       ...board,
       slug: board.slug || board.id,

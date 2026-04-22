@@ -8,6 +8,8 @@ import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types
 import { getCachedAllBoards, getCachedBoardBySlugOrId, getCachedBoardMaps } from './getCachedBoards';
 import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 
+type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null };
+
 /**
  * 모든 게시판 목록을 가져옵니다.
  * @deprecated getCachedAllBoards() 사용 권장
@@ -53,7 +55,7 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
     const childBoardsMap = rawChildBoardsMap as unknown as ChildBoardsMap;
 
     // 캐시된 데이터에서 slug로 게시판 찾기
-    const boardData = allBoards.find(b => b.slug === slug);
+    const boardData = (allBoards as BoardRow[]).find((b: BoardRow) => b.slug === slug);
 
     // 게시판 검증
     if (!boardData) {
@@ -253,8 +255,8 @@ function buildHierarchicalBoards(boards: Board[]): HierarchicalBoard[] {
  * 캐시된 게시판 데이터를 사용하여 추가 DB 쿼리 없이 조회.
  */
 export async function getBoardSlugByTeamId(teamId: number): Promise<string | null> {
-  const allBoards = await getCachedAllBoards();
-  const board = allBoards.find(b => b.team_id === teamId && b.slug);
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
+  const board = allBoards.find((b: BoardRow) => b.team_id === teamId && b.slug);
   return board?.slug ?? null;
 }
 
@@ -263,8 +265,8 @@ export async function getBoardSlugByTeamId(teamId: number): Promise<string | nul
  * 캐시된 게시판 데이터를 사용하여 추가 DB 쿼리 없이 조회.
  */
 export async function getBoardSlugByLeagueId(leagueId: number): Promise<string | null> {
-  const allBoards = await getCachedAllBoards();
-  const board = allBoards.find(b => b.league_id === leagueId && b.slug);
+  const allBoards = (await getCachedAllBoards()) as BoardRow[];
+  const board = allBoards.find((b: BoardRow) => b.league_id === leagueId && b.slug);
   return board?.slug ?? null;
 }
 

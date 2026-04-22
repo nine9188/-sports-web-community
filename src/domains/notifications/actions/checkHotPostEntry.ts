@@ -3,6 +3,10 @@
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { createHotPostNotification } from './create';
 
+type RecentPost = { id: string; views: number | null; likes: number | null; created_at: string };
+type CommentRow = { post_id: string | null };
+type ScoredPost = { id: string; score: number };
+
 const WINDOW_DAYS = 7;
 const HOT_TOP_N = 10;
 
@@ -76,7 +80,7 @@ export async function checkHotPostEntry(postId: string): Promise<void> {
     if (!recentPosts) return;
 
     // 댓글 수 배치 조회
-    const postIds = recentPosts.map(p => p.id);
+    const postIds = (recentPosts as RecentPost[]).map((p: RecentPost) => p.id);
     const { data: commentsData } = await supabase
       .from('comments')
       .select('post_id')
@@ -84,7 +88,7 @@ export async function checkHotPostEntry(postId: string): Promise<void> {
 
     const commentCounts: Record<string, number> = {};
     if (commentsData) {
-      commentsData.forEach(c => {
+      (commentsData as CommentRow[]).forEach((c: CommentRow) => {
         if (c.post_id) {
           commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1;
         }
@@ -92,8 +96,8 @@ export async function checkHotPostEntry(postId: string): Promise<void> {
     }
 
     // 모든 게시글 점수 계산 후 정렬
-    const scored = recentPosts
-      .map(p => ({
+    const scored: ScoredPost[] = (recentPosts as RecentPost[])
+      .map((p: RecentPost) => ({
         id: p.id,
         score: calculateHotScore(
           p.views || 0,
@@ -102,10 +106,10 @@ export async function checkHotPostEntry(postId: string): Promise<void> {
           p.created_at
         )
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a: ScoredPost, b: ScoredPost) => b.score - a.score);
 
     // 4. 현재 게시글의 순위 확인
-    const rank = scored.findIndex(s => s.id === postId) + 1;
+    const rank = scored.findIndex((s: ScoredPost) => s.id === postId) + 1;
     if (rank === 0 || rank > HOT_TOP_N) return;
 
     // 5. 24시간 내 이미 알림 보냈는지 확인

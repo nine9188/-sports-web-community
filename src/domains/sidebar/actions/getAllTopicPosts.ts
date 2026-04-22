@@ -6,6 +6,8 @@ import { TopicPost } from '../types';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
+type PostRow = { id: string; title: string | null; created_at: string | null; board_id: string | null; views: number | null; likes: number | null; post_number: number | null; is_hidden: boolean | null; is_deleted: boolean | null };
+
 interface AllTopicPostsData {
   views: TopicPost[];
   likes: TopicPost[];
@@ -79,7 +81,7 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
     }
 
     // Step 2: 게시판 정보 가져오기
-    const boardIds = [...new Set(postsData.map(post => post.board_id).filter(Boolean))] as string[];
+    const boardIds = [...new Set((postsData as PostRow[]).map((post: PostRow) => post.board_id).filter(Boolean))] as string[];
 
     const { data: boardsData } = await supabase
       .from('boards')
@@ -93,7 +95,10 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
       league_id: number | null
     }> = {};
 
-    (boardsData || []).forEach((board) => {
+    type BoardRow = { id: string; name: string; slug: string | null; team_id: number | null; league_id: number | null };
+    const boards = (boardsData ?? []) as BoardRow[];
+
+    boards.forEach((board) => {
       if (board && board.id) {
         boardMap[board.id] = {
           name: board.name || '',
@@ -106,14 +111,14 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
 
     // 핫딜 게시판 제외
     const hotdealBoardIds = new Set(
-      (boardsData || [])
+      boards
         .filter((board) =>
           board.slug !== null &&
           (HOTDEAL_BOARD_SLUGS as readonly string[]).includes(board.slug)
         )
         .map((board) => board.id)
     );
-    const filteredPostsData = postsData.filter(post =>
+    const filteredPostsData = (postsData as PostRow[]).filter((post: PostRow) =>
       post.board_id !== null && !hotdealBoardIds.has(post.board_id)
     );
 
@@ -122,12 +127,12 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
     }
 
     // Step 3: 팀/리그 로고 URL 조회 (한 번만)
-    const teamIds = (boardsData || [])
+    const teamIds = boards
       .filter((b) => b.team_id)
       .map((b) => b.team_id)
       .filter(Boolean) as number[];
 
-    const leagueIds = (boardsData || [])
+    const leagueIds = boards
       .filter((b) => b.league_id)
       .map((b) => b.league_id)
       .filter(Boolean) as number[];
@@ -140,7 +145,7 @@ async function fetchAllTopicPosts(limit: number): Promise<AllTopicPostsData> {
 
     // Step 4: 댓글 수 구하기 (한 번만)
     const commentCounts: Record<string, number> = {};
-    const postIds = filteredPostsData.map(post => post.id);
+    const postIds = filteredPostsData.map((post: PostRow) => post.id);
 
     if (postIds.length > 0) {
       const { data: commentsData } = await supabase

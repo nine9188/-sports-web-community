@@ -213,6 +213,7 @@ export type Database = {
       boards: {
         Row: {
           access_level: string | null
+          content_type: string
           description: string | null
           display_order: number | null
           id: string
@@ -227,6 +228,7 @@ export type Database = {
         }
         Insert: {
           access_level?: string | null
+          content_type?: string
           description?: string | null
           display_order?: number | null
           id?: string
@@ -241,6 +243,7 @@ export type Database = {
         }
         Update: {
           access_level?: string | null
+          content_type?: string
           description?: string | null
           display_order?: number | null
           id?: string
@@ -259,6 +262,101 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comment_bot_config: {
+        Row: {
+          active_end_hour: number | null
+          active_start_hour: number | null
+          comment_templates: string[] | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          max_daily_comments: number | null
+          min_daily_comments: number | null
+          name: string | null
+          selected_bot_ids: string[] | null
+          selected_post_ids: string[] | null
+          today_count: number | null
+          today_date: string | null
+          today_target: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_end_hour?: number | null
+          active_start_hour?: number | null
+          comment_templates?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_daily_comments?: number | null
+          min_daily_comments?: number | null
+          name?: string | null
+          selected_bot_ids?: string[] | null
+          selected_post_ids?: string[] | null
+          today_count?: number | null
+          today_date?: string | null
+          today_target?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_end_hour?: number | null
+          active_start_hour?: number | null
+          comment_templates?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_daily_comments?: number | null
+          min_daily_comments?: number | null
+          name?: string | null
+          selected_bot_ids?: string[] | null
+          selected_post_ids?: string[] | null
+          today_count?: number | null
+          today_date?: string | null
+          today_target?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      comment_bot_logs: {
+        Row: {
+          bot_user_id: string | null
+          comment_content: string | null
+          config_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          post_id: string | null
+          status: string | null
+        }
+        Insert: {
+          bot_user_id?: string | null
+          comment_content?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          post_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          bot_user_id?: string | null
+          comment_content?: string | null
+          config_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          post_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_bot_logs_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "comment_bot_config"
             referencedColumns: ["id"]
           },
         ]
@@ -313,7 +411,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          comment_number?: number
+          comment_number: number
           content: string
           created_at?: string | null
           dislikes?: number
@@ -356,6 +454,13 @@ export type Database = {
             foreignKeyName: "comments_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -367,6 +472,125 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      emoticon_packs: {
+        Row: {
+          code: string
+          created_at: string | null
+          display_order: number | null
+          id: number
+          is_active: boolean | null
+          name: string
+          pack_creator: string | null
+          pack_description: string | null
+          pack_id: string
+          pack_name: string
+          pack_thumbnail: string
+          shop_item_id: number | null
+          url: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          pack_creator?: string | null
+          pack_description?: string | null
+          pack_id: string
+          pack_name: string
+          pack_thumbnail: string
+          shop_item_id?: number | null
+          url: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          pack_creator?: string | null
+          pack_description?: string | null
+          pack_id?: string
+          pack_name?: string
+          pack_thumbnail?: string
+          shop_item_id?: number | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emoticon_packs_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emoticon_submissions: {
+        Row: {
+          approved_pack_id: string | null
+          approved_shop_item_id: number | null
+          category: string | null
+          created_at: string | null
+          description: string
+          emoticon_count: number
+          emoticon_paths: Json
+          id: number
+          pack_name: string
+          reject_reason: string | null
+          requested_price: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suspend_reason: string | null
+          tags: string[] | null
+          thumbnail_path: string
+          user_id: string
+        }
+        Insert: {
+          approved_pack_id?: string | null
+          approved_shop_item_id?: number | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          emoticon_count?: number
+          emoticon_paths?: Json
+          id?: number
+          pack_name: string
+          reject_reason?: string | null
+          requested_price?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suspend_reason?: string | null
+          tags?: string[] | null
+          thumbnail_path: string
+          user_id: string
+        }
+        Update: {
+          approved_pack_id?: string | null
+          approved_shop_item_id?: number | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          emoticon_count?: number
+          emoticon_paths?: Json
+          id?: number
+          pack_name?: string
+          reject_reason?: string | null
+          requested_price?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suspend_reason?: string | null
+          tags?: string[] | null
+          thumbnail_path?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       exp_history: {
         Row: {
@@ -401,6 +625,13 @@ export type Database = {
             foreignKeyName: "exp_history_related_id_fkey"
             columns: ["related_id"]
             isOneToOne: false
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exp_history_related_id_fkey"
+            columns: ["related_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -428,6 +659,7 @@ export type Database = {
           position: string | null
           search_keywords: string[] | null
           search_vector: unknown
+          slug: string | null
           team_id: number
           team_name: string | null
           updated_at: string | null
@@ -454,6 +686,7 @@ export type Database = {
           position?: string | null
           search_keywords?: string[] | null
           search_vector?: unknown
+          slug?: string | null
           team_id: number
           team_name?: string | null
           updated_at?: string | null
@@ -480,6 +713,7 @@ export type Database = {
           position?: string | null
           search_keywords?: string[] | null
           search_vector?: unknown
+          slug?: string | null
           team_id?: number
           team_name?: string | null
           updated_at?: string | null
@@ -491,6 +725,7 @@ export type Database = {
         Row: {
           api_data: Json | null
           code: string | null
+          conference: string | null
           country: string
           country_code: string | null
           country_ko: string | null
@@ -515,6 +750,7 @@ export type Database = {
           search_keywords: string[] | null
           search_vector: unknown
           short_name: string | null
+          slug: string | null
           team_id: number
           updated_at: string | null
           venue_address: string | null
@@ -527,6 +763,7 @@ export type Database = {
         Insert: {
           api_data?: Json | null
           code?: string | null
+          conference?: string | null
           country: string
           country_code?: string | null
           country_ko?: string | null
@@ -551,6 +788,7 @@ export type Database = {
           search_keywords?: string[] | null
           search_vector?: unknown
           short_name?: string | null
+          slug?: string | null
           team_id: number
           updated_at?: string | null
           venue_address?: string | null
@@ -563,6 +801,7 @@ export type Database = {
         Update: {
           api_data?: Json | null
           code?: string | null
+          conference?: string | null
           country?: string
           country_code?: string | null
           country_ko?: string | null
@@ -587,6 +826,7 @@ export type Database = {
           search_keywords?: string[] | null
           search_vector?: unknown
           short_name?: string | null
+          slug?: string | null
           team_id?: number
           updated_at?: string | null
           venue_address?: string | null
@@ -597,6 +837,38 @@ export type Database = {
           venue_surface?: string | null
         }
         Relationships: []
+      }
+      item_purchases: {
+        Row: {
+          id: string
+          item_id: number
+          price: number
+          purchased_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: number
+          price: number
+          purchased_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: number
+          price?: number
+          purchased_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       item_usage_log: {
         Row: {
@@ -646,24 +918,39 @@ export type Database = {
       leagues: {
         Row: {
           country: string
+          country_ko: string | null
           flag: string
           id: number
+          is_calendar_season: boolean
+          is_cup: boolean
+          is_major: boolean
           logo: string
           name: string
+          name_ko: string | null
         }
         Insert: {
           country: string
+          country_ko?: string | null
           flag: string
           id: number
+          is_calendar_season?: boolean
+          is_cup?: boolean
+          is_major?: boolean
           logo: string
           name: string
+          name_ko?: string | null
         }
         Update: {
           country?: string
+          country_ko?: string | null
           flag?: string
           id?: number
+          is_calendar_season?: boolean
+          is_cup?: boolean
+          is_major?: boolean
           logo?: string
           name?: string
+          name_ko?: string | null
         }
         Relationships: []
       }
@@ -804,33 +1091,6 @@ export type Database = {
           prediction_summary?: Json
           updated_at?: string | null
           view_count?: number | null
-        }
-        Relationships: []
-      }
-      match_cache: {
-        Row: {
-          data: Json
-          data_type: string
-          id: number
-          match_id: number
-          match_status: string
-          updated_at: string | null
-        }
-        Insert: {
-          data: Json
-          data_type: string
-          id?: never
-          match_id: number
-          match_status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          data?: Json
-          data_type?: string
-          id?: never
-          match_id?: number
-          match_status?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1019,6 +1279,7 @@ export type Database = {
           link: string | null
           message: string | null
           metadata: Json | null
+          read_at: string | null
           title: string
           type: string
           user_id: string
@@ -1031,6 +1292,7 @@ export type Database = {
           link?: string | null
           message?: string | null
           metadata?: Json | null
+          read_at?: string | null
           title: string
           type: string
           user_id: string
@@ -1043,6 +1305,7 @@ export type Database = {
           link?: string | null
           message?: string | null
           metadata?: Json | null
+          read_at?: string | null
           title?: string
           type?: string
           user_id?: string
@@ -1165,6 +1428,13 @@ export type Database = {
             foreignKeyName: "post_card_links_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_card_links_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -1206,6 +1476,13 @@ export type Database = {
             foreignKeyName: "post_files_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_files_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -1238,6 +1515,13 @@ export type Database = {
             foreignKeyName: "post_likes_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -1254,7 +1538,6 @@ export type Database = {
         Row: {
           board_id: string | null
           category: string
-          content: Json
           created_at: string | null
           deal_info: Json | null
           dislikes: number
@@ -1273,9 +1556,12 @@ export type Database = {
           notice_order: number | null
           notice_type: string | null
           post_number: number
+          show_in_widget: boolean | null
           source_url: string | null
           status: string | null
+          summary: string | null
           tags: string[] | null
+          thumbnail_url: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -1284,7 +1570,6 @@ export type Database = {
         Insert: {
           board_id?: string | null
           category?: string
-          content: Json
           created_at?: string | null
           deal_info?: Json | null
           dislikes?: number
@@ -1303,9 +1588,12 @@ export type Database = {
           notice_order?: number | null
           notice_type?: string | null
           post_number?: number
+          show_in_widget?: boolean | null
           source_url?: string | null
           status?: string | null
+          summary?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -1314,7 +1602,6 @@ export type Database = {
         Update: {
           board_id?: string | null
           category?: string
-          content?: Json
           created_at?: string | null
           deal_info?: Json | null
           dislikes?: number
@@ -1333,9 +1620,12 @@ export type Database = {
           notice_order?: number | null
           notice_type?: string | null
           post_number?: number
+          show_in_widget?: boolean | null
           source_url?: string | null
           status?: string | null
+          summary?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -1354,6 +1644,45 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts_content: {
+        Row: {
+          content: Json
+          content_text: string | null
+          created_at: string | null
+          post_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: Json
+          content_text?: string | null
+          created_at?: string | null
+          post_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json
+          content_text?: string | null
+          created_at?: string | null
+          post_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_content_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "hot_posts_7d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_content_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
@@ -1397,6 +1726,8 @@ export type Database = {
       profiles: {
         Row: {
           birth_date: string | null
+          deleted_at: string | null
+          dummy_number: number | null
           email: string | null
           email_confirmed: boolean | null
           email_confirmed_at: string | null
@@ -1405,6 +1736,9 @@ export type Database = {
           icon_id: number | null
           id: string
           is_admin: boolean | null
+          is_deleted: boolean | null
+          is_dummy: boolean | null
+          is_first_login: boolean | null
           is_suspended: boolean | null
           level: number | null
           nickname: string | null
@@ -1422,6 +1756,8 @@ export type Database = {
         }
         Insert: {
           birth_date?: string | null
+          deleted_at?: string | null
+          dummy_number?: number | null
           email?: string | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
@@ -1430,6 +1766,9 @@ export type Database = {
           icon_id?: number | null
           id: string
           is_admin?: boolean | null
+          is_deleted?: boolean | null
+          is_dummy?: boolean | null
+          is_first_login?: boolean | null
           is_suspended?: boolean | null
           level?: number | null
           nickname?: string | null
@@ -1447,6 +1786,8 @@ export type Database = {
         }
         Update: {
           birth_date?: string | null
+          deleted_at?: string | null
+          dummy_number?: number | null
           email?: string | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
@@ -1455,6 +1796,9 @@ export type Database = {
           icon_id?: number | null
           id?: string
           is_admin?: boolean | null
+          is_deleted?: boolean | null
+          is_dummy?: boolean | null
+          is_first_login?: boolean | null
           is_suspended?: boolean | null
           level?: number | null
           nickname?: string | null
@@ -1896,6 +2240,27 @@ export type Database = {
           },
         ]
       }
+      user_emoticon_settings: {
+        Row: {
+          id: string
+          pack_order: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          pack_order?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          pack_order?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_icons: {
         Row: {
           icon_id: number
@@ -1984,6 +2349,52 @@ export type Database = {
       }
     }
     Views: {
+      emoticon_pack_summary: {
+        Row: {
+          created_at: string | null
+          emoticon_count: number | null
+          pack_creator: string | null
+          pack_description: string | null
+          pack_id: string | null
+          pack_name: string | null
+          pack_thumbnail: string | null
+          shop_item_id: number | null
+        }
+        Relationships: []
+      }
+      hot_posts_7d: {
+        Row: {
+          board_id: string | null
+          comment_count: number | null
+          created_at: string | null
+          deal_info: Json | null
+          hot_score: number | null
+          id: string | null
+          likes: number | null
+          post_number: number | null
+          summary: string | null
+          thumbnail_url: string | null
+          title: string | null
+          user_id: string | null
+          views: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_support_stats: {
         Row: {
           comment_count: number | null
@@ -2025,13 +2436,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      change_profile_icon: {
-        Args: { p_icon_id: number; p_user_id: string }
-        Returns: boolean
-      }
-      cleanup_expired_data: { Args: never; Returns: undefined }
-      cleanup_expired_predictions: { Args: never; Returns: undefined }
-      cleanup_old_logs: { Args: { days_to_keep?: number }; Returns: undefined }
+      cleanup_expired_data: { Args: never; Returns: Json }
       count_search_posts: {
         Args: {
           p_board_ids: string[]
@@ -2040,13 +2445,9 @@ export type Database = {
         }
         Returns: number
       }
-      create_youtube_channels_table: { Args: never; Returns: undefined }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
-      delete_current_user: { Args: never; Returns: undefined }
-      delete_expired_verification_codes: { Args: never; Returns: undefined }
       delete_old_notifications: { Args: never; Returns: undefined }
-      delete_user_data: { Args: { user_uuid: string }; Returns: boolean }
-      delete_user_posts: { Args: { user_uuid: string }; Returns: undefined }
+      extract_plain_text: { Args: { content: Json }; Returns: string }
       get_application_logs: {
         Args: {
           p_action?: string
@@ -2103,6 +2504,13 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      get_comment_numbers: {
+        Args: { p_post_id: string }
+        Returns: {
+          comment_number: number
+          id: string
+        }[]
+      }
       get_comment_with_counts: {
         Args: { comment_id: string }
         Returns: {
@@ -2144,6 +2552,12 @@ export type Database = {
         Args: { board_slug: string; post_num: number }
         Returns: Json
       }
+      get_single_comment_number: {
+        Args: { p_comment_id: string }
+        Returns: {
+          comment_number: number
+        }[]
+      }
       get_user_last_sign_in: { Args: { user_id: string }; Returns: string }
       get_user_last_signin: { Args: { user_id: string }; Returns: string }
       get_user_profile_direct: {
@@ -2172,10 +2586,6 @@ export type Database = {
         }[]
       }
       increment_post_view: { Args: { post_id: string }; Returns: undefined }
-      increment_prediction_views: {
-        Args: { p_fixture_id: number }
-        Returns: undefined
-      }
       increment_referral_count: {
         Args: { user_id: string }
         Returns: undefined
@@ -2264,10 +2674,6 @@ export type Database = {
         Args: { p_item_id: number; p_user_id: string }
         Returns: boolean
       }
-      purchase_profile_icon: {
-        Args: { p_icon_id: number; p_user_id: string }
-        Returns: boolean
-      }
       save_match_prediction: {
         Args: {
           p_ai_analysis: string
@@ -2303,7 +2709,6 @@ export type Database = {
         }
         Returns: {
           board_id: string
-          content: Json
           created_at: string
           id: string
           is_deleted: boolean
@@ -2311,42 +2716,12 @@ export type Database = {
           is_notice: boolean
           likes: number
           post_number: number
+          snippet: string
+          thumbnail_url: string
           title: string
           user_id: string
           views: number
         }[]
-      }
-      toggle_post_dislike: {
-        Args: { post_id: string; user_id: string }
-        Returns: boolean
-      }
-      toggle_post_like: {
-        Args: { post_id: string; user_id: string }
-        Returns: boolean
-      }
-      update_match_prediction_stats: {
-        Args: { p_match_id: string }
-        Returns: undefined
-      }
-      update_post_like_count: { Args: { post_id: string }; Returns: undefined }
-      update_post_with_board: {
-        Args: {
-          p_board_id: string
-          p_content: string
-          p_id: string
-          p_title: string
-        }
-        Returns: boolean
-      }
-      update_profile_directly: {
-        Args: {
-          p_email: string
-          p_full_name: string
-          p_nickname: string
-          p_user_id: string
-          p_username: string
-        }
-        Returns: undefined
       }
       upsert_chat_session_read_at: {
         Args: { p_session_id: string }
