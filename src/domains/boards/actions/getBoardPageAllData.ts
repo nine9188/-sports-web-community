@@ -3,7 +3,8 @@
 import { unstable_cache } from 'next/cache';
 import { getBoardPageData } from './getBoards';
 import { fetchPosts } from './getPosts';
-import { getBoardPopularPosts, type PopularPost } from './getPopularPosts';
+import { getBoardPopularPosts } from './getPopularPosts';
+import type { PopularPost } from '../types/post';
 import { getNoticesForBoard } from './posts';
 import { getHoverMenuData, type HoverMenuBoard } from './getHoverMenuData';
 import { processNoticesForLayout } from '../utils/notice/noticeUtils';

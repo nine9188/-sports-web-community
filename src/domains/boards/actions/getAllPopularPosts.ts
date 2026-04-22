@@ -5,8 +5,6 @@ import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import type { PopularPost } from '../types/post';
 
-export type { PopularPost };
-
 export interface PopularPostsResponse {
   data: PopularPost[];
   meta: {

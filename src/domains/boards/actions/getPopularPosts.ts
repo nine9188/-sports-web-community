@@ -4,8 +4,6 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCachedChildBoardIds } from './getCachedBoards';
 import type { PopularPost } from '../types/post';
 
-export type { PopularPost };
-
 /**
  * HOT 점수 계산 (사이드바와 동일한 공식)
  * rawScore = (조회수 × 1) + (좋아요 × 10) + (댓글 × 20)
