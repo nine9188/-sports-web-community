@@ -9,31 +9,27 @@
   "lang": "ko",
   "icons": [
     {
-      "src": "/4590/favicon_no back/16-03.png",
-      "sizes": "16x16",
-      "type": "image/png"
-    },
-    {
-      "src": "/4590/favicon_no back/32-05.png",
-      "sizes": "32x32",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "/4590/favicon_no back/96-11.png",
       "sizes": "96x96",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/4590/favicon_no back/192-13.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     },
     {
       "src": "/4590/favicon_no back/512-15.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }
