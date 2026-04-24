@@ -225,6 +225,16 @@ export default function PostContent({ processedHtml, meta }: PostContentProps) {
           margin: 16px auto !important;
           display: block !important;
         }
+
+        :global(.prose .prediction-chart img),
+        :global(.prose .prediction-chart-hydrated img) {
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          display: inline-block !important;
+        }
       `}</style>
       <div
         ref={contentRef}

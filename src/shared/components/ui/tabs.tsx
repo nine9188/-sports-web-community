@@ -47,14 +47,14 @@ const TabButton = React.forwardRef<
   const underlineClasses = cn(
     "text-[13px] flex-shrink-0",
     active
-      ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-gray-900 dark:border-[#F0F0F0] pb-1"
+      ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#002FA7] dark:border-[#002FA7] pb-1"
       : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] pb-1"
   );
 
   const fillClasses = cn(
     "flex-1 text-xs",
     active
-      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]"
+      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#002FA7] dark:border-[#002FA7]"
       : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
   );
 
@@ -154,21 +154,21 @@ function TabList({
 
     if (variant === 'minimal') {
       return `${baseButton} py-2 px-3 ${isActive
-        ? 'border-b-2 border-[#262626] dark:border-[#F0F0F0] font-medium text-gray-900 dark:text-[#F0F0F0]'
+        ? 'border-b-2 border-[#002FA7] dark:border-[#002FA7] font-medium text-gray-900 dark:text-[#F0F0F0]'
         : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       } ${mobileClass}`;
     }
 
     if (variant === 'contained') {
       return `${baseButton} py-2 px-2 h-auto flex items-center justify-center text-xs flex-1 whitespace-nowrap ${isActive
-        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-[#002FA7] dark:border-[#002FA7]'
         : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       } ${mobileClass} ${disabledClass}`;
     }
 
     // default
     return `${baseButton} h-12 px-3 flex items-center justify-center text-xs font-medium flex-1 whitespace-nowrap ${isActive
-      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#262626] dark:border-[#F0F0F0]'
+      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#002FA7] dark:border-[#002FA7]'
       : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
     } ${mobileClass} ${disabledClass}`;
   };

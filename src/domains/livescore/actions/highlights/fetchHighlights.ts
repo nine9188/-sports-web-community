@@ -15,7 +15,7 @@ const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
  * 한글 팀명 별칭 (쿠팡플레이/SPOTV 제목에서 사용하는 약칭)
  */
 const TEAM_NAME_ALIASES: Record<number, string[]> = {
-  // EPL
+  // EPL (쿠팡플레이)
   42: ['아스날'],
   33: ['맨유'],
   50: ['맨시', '맨시티'],
@@ -35,34 +35,126 @@ const TEAM_NAME_ALIASES: Record<number, string[]> = {
   41: ['사우스햄튼', '사우샘프턴'],
   57: ['입스위치'],
   65: ['노팅엄', '노팅엄 포레스트'],
-  66: ['에스턴 빌라', '빌라'],
-  // 라리가
-  541: ['R.마드리드', '레알', '레알마드리드'],
+  66: ['아스톤 빌라', '에스턴 빌라', '빌라'],
+  63: ['리즈'],
+  44: ['번리'],
+  746: ['선덜랜드'],
+  // 라리가 (쿠팡플레이) — Coupang 제목 기준
+  541: ['레알 마드리드', '레알', 'R.마드리드', '레알마드리드'],
   529: ['바르셀로나', '바르사'],
-  530: ['AT 마드리드', '아틀레티코', '아틀레티코 마드리드'],
-  // 분데스리가
-  157: ['바이에른', '뮌헨', '바이에른 뮌헨'],
+  530: ['AT.마드리드', 'AT 마드리드', '아틀레티코', '아틀레티코 마드리드'],
+  531: ['아틀레틱', '아틀레틱 클럽'],
+  533: ['비야레알'],
+  536: ['세비야'],
+  538: ['셀타 비고', '셀타'],
+  540: ['에스파뇰'],
+  542: ['알라베스'],
+  543: ['레알 베티스', '베티스'],
+  546: ['헤타페'],
+  547: ['지로나'],
+  548: ['레알 소시에다드', '소시에다드'],
+  727: ['오사수나'],
+  728: ['라요 바예카노', '라요'],
+  798: ['마요르카'],
+  720: ['바야돌리드'],
+  534: ['라스 팔마스'],
+  537: ['레가네스'],
+  // 분데스리가 (쿠팡플레이) — Coupang 제목 기준
+  157: ['바이에른 뮌헨', '바이에른', '뮌헨'],
   165: ['도르트문트'],
-  // 세리에 A
+  168: ['레버쿠젠', '바이어 레버쿠젠'],
+  164: ['마인츠'],
+  172: ['슈투트가르트'],
+  173: ['라이프치히', 'RB 라이프치히'],
+  167: ['호펜하임'],
+  169: ['프랑크푸르트', '아인트라흐트'],
+  162: ['브레멘', '베르더 브레멘'],
+  163: ['묀헨글라트바흐', '글라드바흐'],
+  161: ['볼프스부르크'],
+  160: ['프라이부르크'],
+  182: ['우니온 베를린'],
+  170: ['아우크스부르크'],
+  176: ['보훔'],
+  180: ['하이덴하임'],
+  186: ['장크트 파울리', '파울리'],
+  191: ['홀슈타인 킬', '킬'],
+  192: ['쾰른'],
+  175: ['함부르크'],
+  // 세리에A (SPOTV) — SPOTV 제목 기준
   489: ['AC 밀란', '밀란'],
-  505: ['인터 밀란', '인터'],
+  505: ['인터 밀란', '인터', '인테르'],
   496: ['유벤투스', '유베'],
   497: ['AS 로마', '로마'],
   492: ['나폴리'],
-  // K리그
-  2761: ['울산'],
-  2763: ['전북'],
-  2760: ['수원'],
-  2762: ['포항'],
-  2766: ['대전'],
-  2767: ['인천'],
-  2769: ['제주'],
-  2764: ['강원'],
-  2765: ['서울'],
-  15498: ['김천'],
-  2768: ['성남'],
-  2770: ['광주'],
-  18855: ['안양'],
+  499: ['아탈란타'],
+  500: ['볼로냐'],
+  487: ['라치오'],
+  502: ['피오렌티나'],
+  503: ['토리노'],
+  495: ['제노아'],
+  494: ['우디네세'],
+  504: ['베로나'],
+  490: ['칼리아리'],
+  511: ['엠폴리'],
+  517: ['베네치아'],
+  523: ['파르마'],
+  867: ['레체'],
+  895: ['코모'],
+  1579: ['몬자'],
+  801: ['피사'],
+  488: ['사수올로'],
+  // 리그1 (쿠팡플레이) — Coupang 제목 기준
+  85: ['PSG', '파리 생제르맹', '파리'],
+  91: ['모나코'],
+  81: ['마르세유'],
+  79: ['릴'],
+  80: ['리옹'],
+  84: ['니스'],
+  95: ['스트라스부르'],
+  96: ['툴루즈'],
+  106: ['브레스트'],
+  116: ['랑스'],
+  93: ['랭스'],
+  94: ['렌'],
+  83: ['낭트'],
+  77: ['앙제'],
+  111: ['르 아브르'],
+  112: ['메스'],
+  114: ['파리 FC'],
+  97: ['로리앙'],
+  1063: ['생테티엔'],
+  82: ['몽펠리에'],
+  // K리그1
+  2767: ['울산', '울산HD'],
+  2762: ['전북', '전북현대'],
+  2763: ['인천', '인천유나이티드'],
+  2764: ['포항', '포항스틸러스'],
+  2766: ['서울', 'FC서울'],
+  2761: ['제주', '제주유나이티드'],
+  2768: ['김천', '김천상무'],
+  2746: ['강원', '강원FC'],
+  2750: ['대전', '대전하나'],
+  2759: ['광주', '광주FC'],
+  2748: ['안양', 'FC안양'],
+  2745: ['부천', '부천FC'],
+  // K리그2
+  2747: ['대구', '대구FC'],
+  2749: ['서울E', '서울이랜드', '이랜드'],
+  2751: ['경남', '경남FC'],
+  2752: ['부산', '부산아이파크'],
+  2753: ['충남아산', '아산'],
+  2756: ['수원FC'],
+  2757: ['성남', '성남FC'],
+  2758: ['안산', '안산그리너스'],
+  2760: ['전남', '전남드래곤즈'],
+  2765: ['수원삼성', '수원블루윙즈'],
+  7060: ['천안', '천안시티'],
+  7061: ['충북청주', '청주FC'],
+  7076: ['김해', '김해FC'],
+  7078: ['김포', '김포FC'],
+  7087: ['화성', '화성FC'],
+  7098: ['파주', '파주시민'],
+  9171: ['용인', '용인FC'],
 };
 
 /**
@@ -173,6 +265,8 @@ async function findHighlightInResults(
     return -1;
   }
 
+  const candidates: YouTubeSearchItem[] = [];
+
   for (const item of items) {
     const title = item.snippet.title;
     const titleLower = title.toLowerCase();
@@ -185,10 +279,19 @@ async function findHighlightInResults(
     const awayIdx = findNameIndex(title, titleLower, awayNames);
 
     // 양팀 모두 존재 + 홈팀이 어웨이팀보다 앞에 나와야 함
-    if (homeIdx !== -1 && awayIdx !== -1 && homeIdx < awayIdx) return item;
+    if (homeIdx !== -1 && awayIdx !== -1 && homeIdx < awayIdx) {
+      candidates.push(item);
+    }
   }
 
-  return null;
+  if (!candidates.length) return null;
+
+  // 짧은 하이라이트(2분/3분) 우선 — 풀 하이라이트보다 로딩 빠르고 UX 적합
+  const short = candidates.find(c =>
+    c.snippet.title.includes('2분 하이라이트') ||
+    c.snippet.title.includes('3분 하이라이트')
+  );
+  return short ?? candidates[0];
 }
 
 /**
@@ -235,7 +338,7 @@ export async function findHighlightForMatch(
 
   if (koreanChannelKey) {
     const channel = KOREAN_CHANNELS[koreanChannelKey];
-    const items = await searchYouTube(channel.channelId, query, 5, after, before);
+    const items = await searchYouTube(channel.channelId, query, 10, after, before);
 
     if (items) {
       const match = await findHighlightInResults(items, homeTeamId, awayTeamId);
@@ -252,17 +355,15 @@ export async function findHighlightForMatch(
     }
   }
 
-  // 2순위: 홈팀 공식 채널 (영어 검색)
+  // 2순위: 홈팀 공식 채널 — 홈경기 하이라이트는 홈팀 채널에 올라오므로 홈팀만 검색
+  const teamMap = await getTeamsByIds([homeTeamId, awayTeamId]);
+  const homeTeam = teamMap[homeTeamId];
+  const awayTeam = teamMap[awayTeamId];
+  const engQuery = `${homeTeam?.name_en || ''} ${awayTeam?.name_en || ''} highlights`;
+
   const homeTeamChannelId = OFFICIAL_TEAM_CHANNELS[homeTeamId];
-
   if (homeTeamChannelId) {
-    const teamMap = await getTeamsByIds([homeTeamId, awayTeamId]);
-    const homeTeam = teamMap[homeTeamId];
-    const awayTeam = teamMap[awayTeamId];
-    const engQuery = `${homeTeam?.name_en || ''} ${awayTeam?.name_en || ''} highlights`;
-
-    const items = await searchYouTube(homeTeamChannelId, engQuery, 5, after, before);
-
+    const items = await searchYouTube(homeTeamChannelId, engQuery, 10, after, before);
     if (items) {
       const match = await findHighlightInResults(items, homeTeamId, awayTeamId);
       if (match) {

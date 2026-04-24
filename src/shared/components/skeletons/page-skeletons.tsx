@@ -222,7 +222,7 @@ export function MatchContentSkeleton() {
 /** 매치 사이드바 스켈레톤 — 실제 사이드바 4섹션 매칭 */
 export function MatchSidebarSkeleton() {
   return (
-    <div className="h-full pt-4">
+    <div className="h-full">
       {/* 1. 경기 상세정보 — label:value 테이블 */}
       <div className={`${card} mb-4 animate-pulse`}>
         <div className={`${header} border-b border-black/5 dark:border-white/10 md:rounded-t-lg`}>
