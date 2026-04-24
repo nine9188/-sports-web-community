@@ -243,9 +243,29 @@ export async function GET(
       return sitemapResponse([]);
     }
 
-    // 매치 — 사이트맵 인덱스에서 제거됨 (API 호출 절감)
+    // 매치 (match_highlights 테이블 기반, API 호출 없음)
     if (id === 'matches') {
-      return sitemapResponse([]);
+      const supabase = getSupabaseAdmin();
+      const { data: highlights } = await supabase
+        .from('match_highlights')
+        .select('fixture_id, updated_at')
+        .order('published_at', { ascending: false });
+
+      if (!highlights?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+
+      const seen = new Set<number>();
+      const entries: SitemapEntry[] = [];
+      for (const h of highlights) {
+        if (seen.has(h.fixture_id)) continue;
+        seen.add(h.fixture_id);
+        entries.push({
+          loc: `${BASE_URL}/livescore/football/match/${h.fixture_id}/match`,
+          lastmod: h.updated_at || undefined,
+          changefreq: 'weekly',
+          priority: 0.6,
+        });
+      }
+      return sitemapResponse(entries);
     }
 
     // 샵 (unstable_cache 1시간)

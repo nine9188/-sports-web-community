@@ -297,10 +297,17 @@ async function fetchMatchFullDataCached(
   const finishedCodes = ['FT', 'AET', 'PEN'];
 
   if (finishedCodes.includes(statusCode)) {
-    // 종료 경기: Vercel Data Cache에 영구 캐싱 (revalidate: false)
+    // options를 캐시 키에 포함 — generateMetadata(all false)가 풀 데이터 캐시를 오염시키는 버그 방지
+    const optionsKey = [
+      options.fetchEvents ? '1' : '0',
+      options.fetchLineups ? '1' : '0',
+      options.fetchStats ? '1' : '0',
+      options.fetchStandings ? '1' : '0',
+    ].join('');
+
     return unstable_cache(
       () => fetchMatchFullData(matchId, options),
-      ['match-full', matchId],
+      ['match-full', matchId, optionsKey],
       { revalidate: false, tags: [`match-${matchId}`] }
     )();
   }

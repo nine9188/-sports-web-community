@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Team } from '@/domains/livescore/types/match';
@@ -590,9 +589,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                    </div>
+                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
@@ -619,9 +616,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                    </div>
+                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
@@ -666,9 +661,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                    </div>
+                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
@@ -695,9 +688,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                      <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                    </div>
+                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                     <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
                   </div>
                   <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
@@ -747,9 +738,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                        </div>
+                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
@@ -776,9 +765,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                        </div>
+                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
                       </div>
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
@@ -825,9 +812,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                        </div>
+                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                       </div>
                     </Link>
                   );
@@ -854,9 +839,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
                       <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                         <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center flex-shrink-0">
-                          <Image src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} className="w-full h-full object-cover" unoptimized />
-                        </div>
+                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
                       </div>
                     </Link>
                   );

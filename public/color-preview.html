@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4590 Brand Color Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F8F9FA; color: #111827; }
+
+  .header { text-align: center; padding: 40px 20px 20px; }
+  .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .header p { color: #6b7280; font-size: 14px; }
+
+  .mode-toggle { position: fixed; bottom: 24px; right: 24px; z-index: 999; }
+  .mode-toggle button {
+    padding: 12px 24px; border-radius: 50px; border: 1px solid #d1d5db;
+    background: white; cursor: pointer; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .mode-toggle button:hover { background: #f3f4f6; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; padding: 0 24px 60px; max-width: 1200px; margin: 0 auto; }
+
+  .card {
+    background: white; border-radius: 16px; padding: 28px;
+    border: 2px solid transparent; transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .card.selected { border-color: #111; }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .color-name { font-size: 16px; font-weight: 700; }
+  .color-hex { font-size: 12px; color: #9ca3af; font-family: monospace; }
+  .color-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Logo area */
+  .logo-area {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    padding: 16px; border-radius: 10px;
+  }
+  .logo-icon {
+    height: 28px; width: auto;
+    display: inline-block;
+    -webkit-mask-image: url('/logo/4590football-logo.png');
+    mask-image: url('/logo/4590football-logo.png');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    /* aspect ratio from original logo */
+    aspect-ratio: 889 / 382;
+  }
+  .logo-area .brand-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { color: white; }
+  .btn-outline { background: transparent; border: 1.5px solid; }
+  .btn-soft { }
+  .btn-ghost { background: transparent; }
+
+  /* Badges */
+  .badge-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600;
+  }
+
+  /* Tabs */
+  .tab-row { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #e5e7eb; }
+  .tab {
+    padding: 8px 16px; font-size: 13px; font-weight: 500; color: #9ca3af;
+    border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer;
+  }
+  .tab.active { font-weight: 700; }
+
+  /* Link */
+  .link-row { font-size: 13px; }
+  .link-row a { text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  /* Sample UI section */
+  .sample-ui { margin-top: 16px; padding: 14px; border-radius: 10px; background: #f9fafb; }
+  .sample-ui .label { font-size: 11px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .progress-bar { height: 6px; border-radius: 3px; background: #e5e7eb; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; width: 65%; }
+
+  .select-btn {
+    display: block; width: 100%; margin-top: 16px; padding: 10px;
+    border-radius: 8px; border: 1px solid #e5e7eb; background: white;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .select-btn:hover { background: #f9fafb; }
+
+  /* Dark mode */
+  body.dark { background: #000; color: #F0F0F0; }
+  body.dark .card { background: #1D1D1D; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  body.dark .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  body.dark .card.selected { border-color: #F0F0F0; }
+  body.dark .mode-toggle button { background: #1D1D1D; border-color: #333; color: #F0F0F0; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+  body.dark .mode-toggle button:hover { background: #262626; }
+  body.dark .tab-row { border-bottom-color: #333; }
+  body.dark .sample-ui { background: #262626; }
+  body.dark .progress-bar { background: #333; }
+  body.dark .select-btn { background: #262626; border-color: #333; color: #F0F0F0; }
+  body.dark .select-btn:hover { background: #333; }
+  body.dark .color-hex { color: #6b7280; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>4590 FOOTBALL Brand Color</h1>
+  <p>최종 후보 3가지 비교</p>
+</div>
+
+<div class="mode-toggle">
+  <button onclick="document.body.classList.toggle('dark'); updateCards();">
+    Light / Dark 전환
+  </button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const colors = [
+  { name:"Cobalt", hex:"#0047AB", light:"#0047AB", lightSoft:"#E5EDFA", lightSoftText:"#00307A", dark:"#3377DD", darkSoft:"rgba(0,71,171,0.18)", darkSoftText:"#66A0EE", desc:"코발트" },
+  { name:"Navy Ink", hex:"#3B5998", light:"#3B5998", lightSoft:"#ECF0F7", lightSoftText:"#2A4070", dark:"#6B89C0", darkSoft:"rgba(59,89,152,0.15)", darkSoftText:"#8BA5D0", desc:"네이비 잉크" },
+  { name:"Klein Blue", hex:"#002FA7", light:"#002FA7", lightSoft:"#E6EAFB", lightSoftText:"#001F78", dark:"#3366CC", darkSoft:"rgba(0,47,167,0.2)", darkSoftText:"#6690DD", desc:"클라인 블루" },
+];
+
+function createCard(c, i) {
+  const isDark = document.body.classList.contains('dark');
+  const main = isDark ? c.dark : c.light;
+  const soft = isDark ? c.darkSoft : c.lightSoft;
+  const softText = isDark ? c.darkSoftText : c.lightSoftText;
+  const logoBg = isDark ? c.darkSoft : c.lightSoft;
+  const logoSrc = isDark ? '/logo/4590football-logo-white.webp' : '/logo/4590football-logo.png';
+
+  return `
+    <div class="card" id="card-${i}">
+      <div class="card-header">
+        <div>
+          <div class="color-name">${c.name}</div>
+          <div class="color-hex">${c.hex} — ${c.desc}</div>
+        </div>
+        <div class="color-dot" style="background:${main}"></div>
+      </div>
+
+      <div class="logo-area" style="background:${logoBg}">
+        <div class="logo-icon" style="background:${main}; height:28px;"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" style="background:${main}"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          글쓰기
+        </button>
+        <button class="btn btn-outline" style="border-color:${main}; color:${main}">
+          로그인
+        </button>
+        <button class="btn btn-soft" style="background:${soft}; color:${softText}">
+          더보기
+        </button>
+      </div>
+
+      <div class="badge-row">
+        <span class="badge" style="background:${main}; color:white">LIVE</span>
+        <span class="badge" style="background:${soft}; color:${softText}">HOT</span>
+        <span class="badge" style="background:${soft}; color:${softText}">EPL</span>
+        <span style="font-size:13px; color:${main}; font-weight:600;">+12</span>
+      </div>
+
+      <div class="tab-row">
+        <div class="tab active" style="color:${main}; border-bottom-color:${main}">경기일정</div>
+        <div class="tab">순위</div>
+        <div class="tab">커뮤니티</div>
+      </div>
+
+      <div class="link-row">
+        <a style="color:${main}">전체 경기 보기 &rarr;</a>
+      </div>
+
+      <div class="sample-ui">
+        <div class="label" style="color:${softText}">경험치 레벨</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="background:${main}"></div>
+        </div>
+      </div>
+
+      <button class="select-btn" onclick="selectCard(${i})" style="border-color:${main}; color:${main}">
+        이 컬러 선택
+      </button>
+    </div>
+  `;
+}
+
+function updateCards() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = colors.map((c, i) => createCard(c, i)).join('');
+}
+
+function selectCard(i) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + i).classList.add('selected');
+  const c = colors[i];
+  alert(`"${c.name}" (${c.hex}) 선택!\n\n이 컬러로 가시려면 알려주세요.`);
+}
+
+updateCards();
+</script>
+</body>
+</html>

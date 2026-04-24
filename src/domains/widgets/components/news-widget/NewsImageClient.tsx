@@ -1,101 +1,97 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
 
-const IMAGE_TIMEOUT_MS = 5000;
+const IMAGE_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 1;
 const FALLBACK_LOGO = siteConfig.icon;
 
 /** 외부 이미지 URL을 Cloudflare CDN 프록시 경유 URL로 변환 */
 function toProxyUrl(url: string): string {
-  // 로컬 경로나 이미 프록시된 URL은 그대로
   if (url.startsWith('/') || url.includes('cdn.4590football.com')) return url;
-  // CDN 또는 Supabase Storage URL은 그대로
   if (url.includes('supabase.co')) return url;
   return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
 }
 
-type ImageLoadingState = 'idle' | 'loading' | 'loaded' | 'error' | 'timeout';
+/** 로컬/Supabase 이외 외부 URL 여부 */
+function isExternalUrl(url: string): boolean {
+  if (url.startsWith('/')) return false;
+  if (url.includes('supabase.co')) return false;
+  return true;
+}
 
 interface NewsImageClientProps {
   imageUrl?: string;
   alt: string;
   sizes: string;
   priority?: boolean;
-  spinnerSize?: 'sm' | 'md' | 'lg';
 }
 
-const sizeClasses = {
-  sm: 'h-4 w-4',
-  md: 'h-4 w-4 md:h-6 md:w-6',
-  lg: 'h-8 w-8'
-};
-
-/**
- * 뉴스 이미지 클라이언트 컴포넌트
- * - 이미지 로딩 상태만 관리
- * - 로딩 스피너 표시
- * - 에러/타임아웃 시 fallback 이미지 사용
- */
 export default function NewsImageClient({
   imageUrl,
   alt,
   sizes,
   priority = false,
-  spinnerSize = 'md'
 }: NewsImageClientProps) {
-  const [state, setState] = useState<ImageLoadingState>('idle');
-
   const hasValidUrl = !!(imageUrl && typeof imageUrl === 'string' && imageUrl.trim());
-  const useFallback = !hasValidUrl || state === 'error' || state === 'timeout';
-  const finalImageUrl = useFallback ? FALLBACK_LOGO : toProxyUrl(imageUrl!);
 
-  const handleLoadStart = useCallback(() => {
-    setState('loading');
-  }, []);
+  const [retryCount, setRetryCount] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
-  const handleLoad = useCallback(() => {
-    setState('loaded');
-  }, []);
-
-  const handleError = useCallback(() => {
-    setState('error');
-  }, []);
-
-  // 타임아웃 처리
   useEffect(() => {
-    if (state !== 'loading') return;
+    setRetryCount(0);
+    setFailed(false);
+    setLoaded(false);
+    setTimedOut(false);
+  }, [imageUrl]);
 
-    const timer = setTimeout(() => {
-      setState(prev => prev === 'loading' ? 'timeout' : prev);
-    }, IMAGE_TIMEOUT_MS);
+  const useFallback = !hasValidUrl || failed || timedOut;
 
+  const rawUrl = hasValidUrl ? toProxyUrl(imageUrl!) : FALLBACK_LOGO;
+  const finalImageUrl = useFallback
+    ? FALLBACK_LOGO
+    : retryCount > 0
+      ? `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}_r=${retryCount}`
+      : rawUrl;
+
+  const shouldUnoptimize = useFallback
+    ? false
+    : isExternalUrl(finalImageUrl) || finalImageUrl.includes('/proxy?url=');
+
+  useEffect(() => {
+    if (loaded || failed || timedOut || !hasValidUrl) return;
+    const timer = setTimeout(() => setTimedOut(true), IMAGE_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [state]);
+  }, [loaded, failed, timedOut, hasValidUrl, retryCount]);
+
+  const handleError = () => {
+    if (retryCount < MAX_RETRIES) {
+      setRetryCount(prev => prev + 1);
+      setTimedOut(false);
+    } else {
+      setFailed(true);
+    }
+  };
 
   return (
     <>
-      {/* 로딩 스피너 */}
-      {state === 'loading' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] z-10">
-          <div className={`animate-spin rounded-full border-b-2 border-gray-900 dark:border-[#F0F0F0] ${sizeClasses[spinnerSize]}`} />
-        </div>
-      )}
-
       <Image
+        key={finalImageUrl}
         src={finalImageUrl}
         alt={alt}
         fill
-        unoptimized={finalImageUrl.includes('/proxy?url=')}
+        unoptimized={shouldUnoptimize}
         className={useFallback
           ? "object-contain p-4 invert dark:invert-0 transition-all"
           : "object-cover transition-all"
         }
         sizes={sizes}
         priority={priority}
-        onLoad={handleLoad}
-        onLoadStart={handleLoadStart}
+        onLoad={() => setLoaded(true)}
         onError={handleError}
         data-nosnippet="true"
         data-pinterest-nopin="true"

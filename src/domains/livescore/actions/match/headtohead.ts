@@ -6,6 +6,7 @@ import { fetchTeamSquad } from '@/domains/livescore/actions/teams/squad'
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
 import { getPlayerPhotoUrls, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images'
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 
 // ── 유틸리티 ──
 
@@ -398,17 +399,16 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 	}
 }
 
-// Power 데이터 가져오기
-export async function fetchCachedPowerData(
+// Power 데이터 가져오기 (unstable_cache: 요청 간 서버 캐시 6시간)
+async function _fetchPowerDataImpl(
 	teamA: TeamId,
 	teamB: TeamId,
-	last: number = 5
+	last: number
 ): Promise<{ success: boolean; data?: HeadToHeadTestData; error?: string }> {
 	try {
 		if (!teamA || !teamB) {
 			return { success: false, error: '팀 ID가 필요합니다' }
 		}
-
 		const data = await getHeadToHeadTestData(teamA, teamB, last)
 		return { success: true, data }
 	} catch (error) {
@@ -420,7 +420,19 @@ export async function fetchCachedPowerData(
 	}
 }
 
-// React cache로 래핑된 버전 (동일 렌더링 사이클 내 중복 호출 방지)
+export async function fetchCachedPowerData(
+	teamA: TeamId,
+	teamB: TeamId,
+	last: number = 5
+): Promise<{ success: boolean; data?: HeadToHeadTestData; error?: string }> {
+	return unstable_cache(
+		() => _fetchPowerDataImpl(teamA, teamB, last),
+		['power-data', String(teamA), String(teamB), String(last)],
+		{ revalidate: 21600, tags: [`power-${teamA}-${teamB}`] }
+	)()
+}
+
+// React cache로 같은 렌더 사이클 내 중복 호출도 방지
 export const getCachedPowerData = cache(fetchCachedPowerData)
 
 

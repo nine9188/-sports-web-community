@@ -8,7 +8,7 @@ const SITEMAP_IDS = [
   'static',
   'boards-football', 'boards-kleague', 'boards-news', 'boards-community',
   'posts-football', 'posts-kleague', 'posts-news', 'posts-community',
-  'teams', 'shop',
+  'teams', 'matches', 'shop',
 ];
 
 export async function GET() {

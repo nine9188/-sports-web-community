@@ -32,7 +32,6 @@ export function MainCard({ item }: MainCardProps) {
             imageUrl={item.imageUrl}
             alt={String(item?.title || '뉴스 이미지')}
             sizes="(max-width: 768px) 100vw, 50vw"
-            spinnerSize="lg"
           />
         </div>
         <div className="p-3 bg-white dark:bg-[#1D1D1D]">
@@ -82,7 +81,6 @@ export function SideCard({ item }: SideCardProps) {
             imageUrl={item.imageUrl}
             alt={String(item?.title || '뉴스 이미지')}
             sizes="96px"
-            spinnerSize="sm"
           />
         </div>
       </div>

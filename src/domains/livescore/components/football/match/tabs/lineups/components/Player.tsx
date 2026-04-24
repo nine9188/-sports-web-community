@@ -76,36 +76,51 @@ interface SVGPlayerImageProps {
 }
 
 const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl, onImageLoad, onImageError }: SVGPlayerImageProps) {
+  const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
 
-  // playerId가 변경되면 에러 상태 리셋
+  // playerId가 변경되면 상태 리셋
   useEffect(() => {
     setHasError(false);
+    setRetryCount(0);
   }, [playerId]);
 
-  // 4590 표준: 상위에서 전달받은 Storage URL 사용
   const imageUrl = photoUrl || null;
 
-  // 에러 시 null 반환
+  // 에러 시 placeholder 원으로 대체 (null 대신)
   if (!imageUrl || hasError) {
-    return null;
+    return (
+      <circle
+        r="2.5"
+        fill="#d1d5db"
+        clipPath={`url(#clip-${teamId}-${playerId})`}
+      />
+    );
   }
 
-  // 이미지 렌더링
+  // 재시도용 캐시버스터
+  const src = retryCount > 0 ? `${imageUrl}?r=${retryCount}` : imageUrl;
+
   return (
     <image
       x="-2.5"
       y="-2.5"
       width="5"
       height="5"
-      href={imageUrl}
+      href={src}
+      crossOrigin="anonymous"
       clipPath={`url(#clip-${teamId}-${playerId})`}
       role="img"
       aria-labelledby={`player-name-${teamId}-${playerId}`}
       onLoad={onImageLoad}
       onError={() => {
-        setHasError(true);
-        onImageError();
+        if (retryCount < 2) {
+          // 최대 2회 재시도
+          setRetryCount(prev => prev + 1);
+        } else {
+          setHasError(true);
+          onImageError();
+        }
       }}
     />
   );
