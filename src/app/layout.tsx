@@ -38,20 +38,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [siteConfig.defaultOgImage],
   },
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/4590/favicon_no back/16-03.png', sizes: '16x16', type: 'image/png' },
-      { url: '/4590/favicon_no back/32-05.png', sizes: '32x32', type: 'image/png' },
-      { url: '/4590/favicon_no back/48-07.png', sizes: '48x48', type: 'image/png' },
-      { url: '/4590/favicon_no back/96-11.png', sizes: '96x96', type: 'image/png' },
-      { url: '/4590/favicon_no back/192-13.png', sizes: '192x192', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/4590/180-09.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: '/4590/favicon_no back/32-05.png',
-  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

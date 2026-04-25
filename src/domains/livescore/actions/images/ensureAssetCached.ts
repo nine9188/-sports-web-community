@@ -198,6 +198,7 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
 
     const response = await fetch(sourceUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {

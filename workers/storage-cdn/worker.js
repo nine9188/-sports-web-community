@@ -36,7 +36,7 @@ const ALLOWED_ORIGINS = [
   'localhost',
 ];
 
-export default {
+const worker = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
@@ -61,6 +61,8 @@ export default {
     return handleStorageProxy(request, url, ctx, pathname);
   },
 };
+
+export default worker;
 
 /**
  * Supabase Storage 프록시 (기존 기능)
@@ -121,7 +123,7 @@ async function handleStorageProxy(request, url, ctx, pathname) {
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
-  } catch (err) {
+  } catch {
     return new Response('Origin Error', { status: 502 });
   }
 }
@@ -174,8 +176,13 @@ async function handleExternalProxy(request, url, ctx) {
   try {
     const originResponse = await fetch(imageUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; 4590-CDN/1.0)',
-        'Accept': 'image/*',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': `https://${parsedUrl.hostname}/`,
+        'Sec-Fetch-Dest': 'image',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'same-site',
       },
     });
 
@@ -202,7 +209,7 @@ async function handleExternalProxy(request, url, ctx) {
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
-  } catch (err) {
+  } catch {
     return new Response('Origin Error', { status: 502 });
   }
 }

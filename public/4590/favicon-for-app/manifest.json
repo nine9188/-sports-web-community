@@ -1,12 +1,6 @@
 {
-  "name": "4590 Football",
+  "name": "4590football",
   "short_name": "4590",
-  "description": "축구 커뮤니티 4590 Football. 라이브스코어와 커뮤니티를 한 곳에서.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#002FA7",
-  "lang": "ko",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -20,5 +14,8 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
 }
