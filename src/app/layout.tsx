@@ -48,7 +48,7 @@ export const metadata: Metadata = {
       { url: '/4590/favicon_no back/192-13.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [
-      { url: '/4590/favicon_no back/180-09.png', sizes: '180x180', type: 'image/png' },
+      { url: '/4590/180-09.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: '/4590/favicon_no back/32-05.png',
   },
