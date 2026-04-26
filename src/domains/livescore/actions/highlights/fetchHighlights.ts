@@ -247,12 +247,17 @@ async function findHighlightInResults(
     homeTeam.name_ko,
     ...(TEAM_NAME_ALIASES[homeTeamId] || []),
     homeTeam.name_en,
-  ];
+  ].filter((n): n is string => !!n);
   const awayNames = [
     awayTeam.name_ko,
     ...(TEAM_NAME_ALIASES[awayTeamId] || []),
     awayTeam.name_en,
-  ];
+  ].filter((n): n is string => !!n);
+
+  if (!homeNames.length || !awayNames.length) {
+    console.warn(`[Highlights] 팀명 없음 home=${homeTeamId}(${homeNames.length}개) away=${awayTeamId}(${awayNames.length}개)`);
+    return null;
+  }
 
   // 제목에서 팀명의 위치(index) 반환
   function findNameIndex(title: string, titleLower: string, names: string[]): number {

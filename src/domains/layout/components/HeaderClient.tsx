@@ -258,21 +258,16 @@ export default function HeaderClient({
           <div className="flex h-20 items-center px-4">
             <div className="flex items-center space-x-2">
               <Link href="/" className="flex items-center space-x-2">
-                {/* 라이트모드: mask-image로 정확한 브랜드컬러 적용 */}
-                <div
-                  className="dark:hidden h-14 w-auto"
-                  style={{
-                    backgroundColor: '#002FA7',
-                    WebkitMaskImage: `url(${logoUrl})`,
-                    maskImage: `url(${logoUrl})`,
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'left center',
-                    maskPosition: 'left center',
-                    aspectRatio: '340 / 148',
-                  }}
+                {/* 라이트모드: 원본 로고 */}
+                <Image
+                  src={logoUrl}
+                  alt="4590football logo"
+                  width={340}
+                  height={148}
+                  priority
+                  fetchPriority="high"
+                  unoptimized
+                  className="h-14 w-auto dark:hidden"
                 />
                 {/* 다크모드: 흰색 로고 */}
                 <Image
@@ -323,26 +318,21 @@ export default function HeaderClient({
             <div className="flex h-16 items-center px-4">
               <div className="flex items-center space-x-2">
                 <Link href="/" className="flex items-center space-x-2">
-                  {/* 라이트모드: mask-image로 정확한 브랜드컬러 적용 */}
-                  <div
-                    className="dark:hidden h-10 w-auto"
-                    style={{
-                      backgroundColor: '#002FA7',
-                      WebkitMaskImage: `url(${logoUrl})`,
-                      maskImage: `url(${logoUrl})`,
-                      WebkitMaskSize: 'contain',
-                      maskSize: 'contain',
-                      WebkitMaskRepeat: 'no-repeat',
-                      maskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'left center',
-                      maskPosition: 'left center',
-                      aspectRatio: '340 / 148',
-                    }}
+                  {/* 라이트모드: 원본 로고 */}
+                  <Image
+                    src={logoUrl}
+                    alt="4590football logo"
+                    width={340}
+                    height={148}
+                    priority
+                    fetchPriority="high"
+                    unoptimized
+                    className="h-10 w-auto dark:hidden"
                   />
                   {/* 다크모드: 흰색 로고 */}
                   <Image
                     src="/logo/4590football-logo-white.webp"
-                    alt="SPORTS 로고"
+                    alt="4590football logo"
                     width={340}
                     height={148}
                     priority

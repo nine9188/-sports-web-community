@@ -243,28 +243,58 @@ export async function GET(
       return sitemapResponse([]);
     }
 
-    // 매치 (match_highlights 테이블 기반, API 호출 없음)
+    // 매치 (fixtures 테이블 기반 — 예정+종료 경기 모두 포함, API 호출 없음)
     if (id === 'matches') {
       const supabase = getSupabaseAdmin();
-      const { data: highlights } = await supabase
-        .from('match_highlights')
-        .select('fixture_id, updated_at')
-        .order('published_at', { ascending: false });
 
-      if (!highlights?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      // fixtures 테이블: 과거 90일 ~ 미래 30일
+      const now = new Date();
+      const pastDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      const futureDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [{ data: fixtures }, { data: highlights }] = await Promise.all([
+        supabase
+          .from('fixtures')
+          .select('fixture_id, match_date, updated_at')
+          .gte('match_date', pastDate)
+          .lte('match_date', futureDate)
+          .order('match_date', { ascending: false }),
+        supabase
+          .from('match_highlights')
+          .select('fixture_id, updated_at')
+          .neq('video_id', 'NOT_FOUND')
+          .order('published_at', { ascending: false }),
+      ]);
 
       const seen = new Set<number>();
       const entries: SitemapEntry[] = [];
-      for (const h of highlights) {
+
+      // 1순위: fixtures (예정 포함)
+      for (const f of fixtures || []) {
+        if (seen.has(f.fixture_id)) continue;
+        seen.add(f.fixture_id);
+        const isPast = new Date(f.match_date) < now;
+        entries.push({
+          loc: `${BASE_URL}/livescore/football/match/${f.fixture_id}/match`,
+          lastmod: f.updated_at || f.match_date || undefined,
+          changefreq: isPast ? 'weekly' : 'daily',
+          priority: isPast ? 0.6 : 0.7,
+        });
+      }
+
+      // 2순위: match_highlights에만 있는 오래된 경기
+      for (const h of highlights || []) {
         if (seen.has(h.fixture_id)) continue;
         seen.add(h.fixture_id);
         entries.push({
           loc: `${BASE_URL}/livescore/football/match/${h.fixture_id}/match`,
           lastmod: h.updated_at || undefined,
           changefreq: 'weekly',
-          priority: 0.6,
+          priority: 0.5,
         });
       }
+
+      if (!entries.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
       return sitemapResponse(entries);
     }
 

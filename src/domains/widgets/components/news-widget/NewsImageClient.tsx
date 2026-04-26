@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
 
-const IMAGE_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 1;
 const FALLBACK_LOGO = siteConfig.icon;
 
@@ -39,17 +38,13 @@ export default function NewsImageClient({
 
   const [retryCount, setRetryCount] = useState(0);
   const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     setRetryCount(0);
     setFailed(false);
-    setLoaded(false);
-    setTimedOut(false);
   }, [imageUrl]);
 
-  const useFallback = !hasValidUrl || failed || timedOut;
+  const useFallback = !hasValidUrl || failed;
 
   const rawUrl = hasValidUrl ? toProxyUrl(imageUrl!) : FALLBACK_LOGO;
   const finalImageUrl = useFallback
@@ -62,16 +57,9 @@ export default function NewsImageClient({
     ? false
     : isExternalUrl(finalImageUrl) || finalImageUrl.includes('/proxy?url=');
 
-  useEffect(() => {
-    if (loaded || failed || timedOut || !hasValidUrl) return;
-    const timer = setTimeout(() => setTimedOut(true), IMAGE_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [loaded, failed, timedOut, hasValidUrl, retryCount]);
-
   const handleError = () => {
     if (retryCount < MAX_RETRIES) {
       setRetryCount(prev => prev + 1);
-      setTimedOut(false);
     } else {
       setFailed(true);
     }
@@ -91,7 +79,6 @@ export default function NewsImageClient({
         }
         sizes={sizes}
         priority={priority}
-        onLoad={() => setLoaded(true)}
         onError={handleError}
         data-nosnippet="true"
         data-pinterest-nopin="true"

@@ -10,6 +10,7 @@ import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
+import { cacheThumbnailToStorage } from './cacheThumbnail';
 import type { PostActionResponse } from './utils';
 
 // 생성된 게시글 타입
@@ -92,11 +93,12 @@ async function createPostInternal(params: {
       : content;
 
     // 게시글 데이터 준비 (content는 posts_content 테이블에 분리 저장)
+    const thumbnailUrl = extractFirstImageUrl(content);
     const insertData: Record<string, unknown> = {
       title: title.trim(),
       user_id: userId,
       board_id: boardId,
-      thumbnail_url: extractFirstImageUrl(content),
+      thumbnail_url: thumbnailUrl,
       summary: extractSummary(content),
     };
 
@@ -177,6 +179,8 @@ async function createPostInternal(params: {
       getActivityTypeValues().then(types => rewardUserActivity(userId, types.POST_CREATION, postId)),
       // WebSub Hub 알림
       pingWebSubHub(),
+      // 썸네일 Storage 캐싱 (외부 URL → CDN URL로 교체)
+      cacheThumbnailToStorage(thumbnailUrl ?? '', postId),
       // 첫 게시글 마일스톤
       supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
         .then(({ count }) => { if (count === 1) return checkReferralMilestone(userId, 'first_post'); }),
