@@ -41,13 +41,13 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon-96-3.png', sizes: '96x96', type: 'image/png' },
-      { url: '/icon-192-3.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512-3.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon-new.ico', sizes: 'any' },
+      { url: '/favicon-16x16-new.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32-new.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-new.svg', type: 'image/svg+xml' },
     ],
     apple: [
-      { url: '/apple-touch-icon-3.png', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-touch-icon-new.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   appleWebApp: {
