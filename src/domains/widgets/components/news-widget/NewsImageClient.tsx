@@ -74,7 +74,7 @@ export default function NewsImageClient({
         fill
         unoptimized={shouldUnoptimize}
         className={useFallback
-          ? "object-contain p-4 invert dark:invert-0 transition-all"
+          ? "object-contain p-4 dark:invert transition-all"
           : "object-cover transition-all"
         }
         sizes={sizes}

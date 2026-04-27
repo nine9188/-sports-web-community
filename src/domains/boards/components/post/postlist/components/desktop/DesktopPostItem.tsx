@@ -103,7 +103,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
                 alt="사이트 로고"
                 fill
                 sizes="96px"
-                className="object-contain p-2 invert dark:invert-0"
+                className="object-contain p-2 dark:invert"
               />
             )}
           </div>

@@ -279,7 +279,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
             alt={displayBoardName}
             width={20}
             height={20}
-            className="object-contain w-5 h-5 invert dark:invert-0"
+            className="object-contain w-5 h-5 dark:invert"
             loading="lazy"
           />
         </div>

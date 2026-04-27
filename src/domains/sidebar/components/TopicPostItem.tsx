@@ -111,7 +111,7 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
               alt={post.board_name}
               width={20}
               height={20}
-              className={`object-contain w-5 h-5 ${isDefaultIcon ? 'invert dark:invert-0' : ''}`}
+              className={`object-contain w-5 h-5 ${isDefaultIcon ? 'dark:invert' : ''}`}
               loading="lazy"
             />
           </div>

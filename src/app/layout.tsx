@@ -39,6 +39,17 @@ export const metadata: Metadata = {
     images: [siteConfig.defaultOgImage],
   },
   manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-96-3.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-192-3.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512-3.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon-3.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

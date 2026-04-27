@@ -703,7 +703,7 @@ function CommunityDemo() {
                   <div className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden">
                     <div className="flex items-center text-xs gap-1">
                       <div className="relative w-5 h-5 shrink-0">
-                        <Image src={siteConfig.icon} alt="사이트 로고" width={20} height={20} className="object-contain w-5 h-5 invert dark:invert-0" />
+                        <Image src={siteConfig.icon} alt="사이트 로고" width={20} height={20} className="object-contain w-5 h-5 dark:invert" />
                       </div>
                       <span className="truncate flex-1 min-w-0">{p.title}</span>
                       <span className="text-gray-500 dark:text-gray-400 ml-auto shrink-0 flex items-center gap-2">

@@ -104,7 +104,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
               alt={notice.board?.name || notice.board_name || ''}
               width={20}
               height={20}
-              className="object-contain w-5 h-5 invert dark:invert-0"
+              className="object-contain w-5 h-5 dark:invert"
               loading="lazy"
             />
           </div>

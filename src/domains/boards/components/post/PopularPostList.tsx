@@ -111,7 +111,7 @@ export default function PopularPostList({
                     alt="사이트 로고"
                     fill
                     sizes="(max-width: 640px) 80px, 96px"
-                    className="object-contain p-2 invert dark:invert-0"
+                    className="object-contain p-2 dark:invert"
                   />
                 )}
               </div>

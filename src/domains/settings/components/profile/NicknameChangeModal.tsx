@@ -103,7 +103,7 @@ export default function NicknameChangeModal({
                 alt="변경권"
                 width={16}
                 height={16}
-                className="invert dark:invert-0"
+                className="dark:invert"
               />
               <span>보유 변경권: <strong className="text-gray-900 dark:text-[#F0F0F0]">{ticketCount}개</strong></span>
             </div>
