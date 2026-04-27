@@ -5,8 +5,12 @@ import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
 import { PlayerKoreanNames } from '../../../MatchPageClient';
 
-// 4590 표준: API-Sports URL 직접 생성 제거됨
-// 이제 lineupData.ts에서 Storage URL을 내려받음
+// 마지막 단어만 표시 (성 제외)
+// "프란시스코 바리도" → "바리도" / "박성수" → "박성수" / "Rashford" → "Rashford"
+function getShortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  return parts[parts.length - 1];
+}
 
 
 // 미디어 쿼리 커스텀 훅
@@ -112,6 +116,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl
       clipPath={`url(#clip-${teamId}-${playerId})`}
       role="img"
       aria-labelledby={`player-name-${teamId}-${playerId}`}
+      style={{ imageRendering: 'auto' }}
       onLoad={onImageLoad}
       onError={() => {
         if (retryCount < 2) {
@@ -134,9 +139,9 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
   
   // 진입 애니메이션 시작점: 경기장 중앙 하단 (뷰박스 기준)
   const startOrigin = useMemo(() => (
-    isMobile 
+    isMobile
       ? { x: 28, y: 100 }  // 모바일 viewBox: 0 0 56 100
-      : { x: 50, y: 56 }    // 데스크탑 viewBox: 0 0 100 56
+      : { x: 50, y: 67 }   // 데스크탑 viewBox: 0 0 100 67
   ), [isMobile]);
   
   // viewBox는 상위 Field에서만 사용하므로 제거
@@ -153,27 +158,27 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
     
     if (isMobileLayout) {
       // 모바일: 주축은 y (아래로 증가)
-      // 홈: 상단 골대 근처(4) → 중앙 쪽(44)
-      // 원정: 하단 골대 근처(93) → 중앙 쪽(54)
-      const start = isHomeTeam ? 4 : 93;
+      // 홈: 상단 골대 근처(7) → 중앙 쪽(44)
+      // 원정: 하단 골대 근처(90) → 중앙 쪽(54)
+      const start = isHomeTeam ? 7 : 90;
       const end = isHomeTeam ? 44 : 54;
       const step = (end - start) / (lines - 1);
       return Array.from({ length: lines }, (_, i) => start + step * i);
     } else {
       // 데스크탑: 주축은 x (오른쪽으로 증가)
-      // 홈: 좌측 골대 근처(5) → 중앙 쪽(45)
-      // 원정: 우측 골대 근처(95) → 중앙 쪽(55)
-      const start = isHomeTeam ? 5 : 95;
-      const end = isHomeTeam ? 45 : 55;
+      // 홈: 좌측 골대 근처(7) → 중앙 쪽(47)
+      // 원정: 우측 골대 근처(93) → 중앙 쪽(53)
+      const start = isHomeTeam ? 7 : 93;
+      const end = isHomeTeam ? 47 : 53;
       const step = (end - start) / (lines - 1);
       return Array.from({ length: lines }, (_, i) => start + step * i);
     }
   };
 
   // 포지션 계산 함수
-  const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string) => {
+  const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string): { x: number; y: number; totalInLine: number } => {
     // 기본 폴백 위치(센터 근처)
-    if (!grid) return isMobile ? { x: 28, y: 50 } : { x: 50, y: 28 };
+    if (!grid) return isMobile ? { x: 28, y: 50, totalInLine: 1 } : { x: 50, y: 28, totalInLine: 1 };
 
     // grid 파싱과 안전장치
     const parts = grid.split(':');
@@ -197,50 +202,54 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
 
     // 보조축 오프셋 계산
     const offset = calculateOffset(position, totalInLine);
-    const centerX = 28; // 모바일 기준 x 중앙
-    const centerY = 28; // 데스크탑 기준 y 중앙
+    const centerX = 28;   // 모바일 기준 x 중앙 (viewBox 56 절반)
+    const centerY = isMobile ? 28 : 33.5; // 데스크탑: viewBox 67 절반
 
     if (isMobile) {
-      // 모바일: y가 라인 앵커, x는 보조축 오프셋
-      return { x: centerX + offset, y: primary };
+      return { x: centerX + offset, y: primary, totalInLine };
     }
-    // 데스크탑: x가 라인 앵커, y는 보조축 오프셋
-    return { x: primary, y: centerY + offset };
+    return { x: primary, y: centerY + offset, totalInLine };
   };
 
   const calculateOffset = (position: number, totalInLine: number) => {
     if (totalInLine === 1) return 0;
-    
-    // 세로 분산(데스크탑 기준) 폭을 추가 확대
-    const totalSpace = 62;
+
+    const totalSpace = isMobile
+      ? (totalInLine >= 5 ? 56 : 62)
+      : (totalInLine >= 5 ? 70 : 78);
     const spacing = totalSpace / (totalInLine + 1);
     const centerPosition = (totalInLine + 1) / 2;
     const offset = (position - centerPosition) * spacing;
-    
+
     return offset;
   };
   
-  // 텍스트 크기에 맞게 배경 조정
+  // 이름 텍스트 bbox에 맞게 배경 pill rect 리사이즈
   useEffect(() => {
     Object.keys(textRefs.current).forEach(key => {
-      const textElement = textRefs.current[key];
-      const rectElement = rectRefs.current[key];
-      
-      if (textElement && rectElement) {
-        const bbox = textElement.getBBox();
-        const padding = 0.8;
-        rectElement.setAttribute('width', `${bbox.width + padding * 2}`);
-        rectElement.setAttribute('height', `${bbox.height}`);
-        rectElement.setAttribute('x', `${bbox.x - padding}`);
-        rectElement.setAttribute('y', `${bbox.y}`);
-      }
+      const textEl = textRefs.current[key];
+      const rectEl = rectRefs.current[key];
+      if (!textEl || !rectEl) return;
+      const bbox = textEl.getBBox();
+      const px = 0.7;
+      const py = 0.2;
+      rectEl.setAttribute('x', `${bbox.x - px}`);
+      rectEl.setAttribute('y', `${bbox.y - py}`);
+      rectEl.setAttribute('width', `${bbox.width + px * 2}`);
+      rectEl.setAttribute('height', `${bbox.height + py * 2}`);
+      const h = bbox.height + py * 2;
+      rectEl.setAttribute('rx', `${h / 2}`);
+      rectEl.setAttribute('ry', `${h / 2}`);
     });
   }, [homeTeamData, awayTeamData, isMobile]);
 
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
     return team.startXI.map((player, index) => {
-      const position = getPositionFromGrid(player.grid, isHome, team.formation);
+      const { totalInLine, ...position } = getPositionFromGrid(player.grid, isHome, team.formation);
+
+      const numberFontSize = isMobile ? 1.35 : 1.5;
+      const nameFontSize = isMobile ? 1.5 : 1.8;
       
       const teamId = team.team.id;
       const playerId = player.id;
@@ -319,23 +328,21 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           {/* 평점 배지 - 평점 데이터가 있으면 표시 */}
           {hasRating && playerRating && (
             <g className={styles.playerRating}>
-              {/* 평점 배경 사각형 (둥근 모서리) - 크기 증가 */}
               <rect
-                x="-2.1"
-                y="-3.6"
-                width="4.2"
-                height="1.6"
-                rx="0.8"
-                ry="0.8"
+                x="-2.4"
+                y="-3.9"
+                width="4.8"
+                height="1.8"
+                rx="0.9"
+                ry="0.9"
                 fill={getRatingColor(playerRating)}
                 opacity="0.9"
               />
-              {/* 평점 텍스트 */}
               <text
                 x="0"
-                y="-2.6"
+                y="-2.9"
                 fill="white"
-                fontSize="1.3"
+                fontSize="1.6"
                 fontWeight="bold"
                 textAnchor="middle"
                 dominantBaseline="middle"
@@ -344,59 +351,85 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
               </text>
             </g>
           )}
-          
+
           {/* 선수 번호와 이름 */}
-          <g className={styles.playerNameNumber}>
-            {/* 번호 배경 */}
-            <rect
-              ref={(el) => { rectRefs.current[numberKey] = el; }}
-              x="-2.5"
-              y="2.8"
-              width="5"
-              height="1.1"
-              rx="0.55"
-              ry="0.55"
-              fill="rgba(0, 100, 0, 0.7)"
-            />
-            {/* 번호 텍스트 */}
-            <text
-              ref={(el) => { textRefs.current[numberKey] = el; }}
-              x="0"
-              y="3.7"
-              fill="white"
-              fontSize="1.1"
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              #{player.number}
-            </text>
-            
-            {/* 이름 배경 */}
-            <rect
-              ref={(el) => { rectRefs.current[nameKey] = el; }}
-              x="-4"
-              y="4.6"
-              width="8"
-              height="1.1"
-              rx="0.55"
-              ry="0.55"
-              fill="rgba(0, 100, 0, 0.7)"
-            />
-            {/* 이름 텍스트 */}
-            <text
-              ref={(el) => { textRefs.current[nameKey] = el; }}
-              id={`player-name-${teamId}-${playerId}`}
-              x="0"
-              y="5.2"
-              fill="white"
-              fontSize="1.1"
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              {displayName.length > 10 ? displayName.substring(0, 10) + '...' : displayName}
-              {player.captain ? " (C)" : ""}
-            </text>
-          </g>
+          {isMobile ? (
+            /* 모바일: 번호+이름 단일 pill로 높이 절약 */
+            <g>
+              <rect
+                ref={(el) => { rectRefs.current[nameKey] = el; }}
+                x="-4"
+                y="3.3"
+                width="8"
+                height="1.2"
+                rx="0.6"
+                ry="0.6"
+                fill="rgba(0, 100, 0, 0.7)"
+              />
+              <text
+                ref={(el) => { textRefs.current[nameKey] = el; }}
+                id={`player-name-${teamId}-${playerId}`}
+                x="0"
+                y="3.9"
+                fill="white"
+                fontSize={numberFontSize}
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {`#${player.number} ${getShortName(displayName)}`}
+              </text>
+            </g>
+          ) : (
+            /* 데스크탑: 번호 pill + 이름 pill 분리 */
+            <g>
+              <rect
+                ref={(el) => { rectRefs.current[numberKey] = el; }}
+                x="-2.5"
+                y="3.2"
+                width="5"
+                height="1.1"
+                rx="0.55"
+                ry="0.55"
+                fill="rgba(0, 100, 0, 0.7)"
+              />
+              <text
+                ref={(el) => { textRefs.current[numberKey] = el; }}
+                x="0"
+                y="3.75"
+                fill="white"
+                fontSize={numberFontSize}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                #{player.number}
+              </text>
+
+              <rect
+                ref={(el) => { rectRefs.current[nameKey] = el; }}
+                x="-4"
+                y="5.6"
+                width="8"
+                height="1.1"
+                rx="0.55"
+                ry="0.55"
+                fill="rgba(0, 100, 0, 0.7)"
+              />
+              <text
+                ref={(el) => { textRefs.current[nameKey] = el; }}
+                id={`player-name-${teamId}-${playerId}`}
+                x="0"
+                y="6.15"
+                fill="white"
+                fontSize={nameFontSize}
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {getShortName(displayName)}
+              </text>
+            </g>
+          )}
           </motion.g>
         </g>
       );

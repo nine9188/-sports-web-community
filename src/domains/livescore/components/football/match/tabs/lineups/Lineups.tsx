@@ -229,6 +229,10 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             matchStatus={matchStatus}
             playersRatings={playersRatings}
             playerKoreanNames={playerKoreanNames}
+            homeTeamDisplayName={getTeamDisplayName(homeTeam.id, homeTeam.name)}
+            awayTeamDisplayName={getTeamDisplayName(awayTeam.id, awayTeam.name)}
+            homeTeamLogoUrl={getTeamLogo(homeTeam.id)}
+            awayTeamLogoUrl={getTeamLogo(awayTeam.id)}
           />
         </div>
       )}

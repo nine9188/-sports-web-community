@@ -266,12 +266,11 @@ async function MatchPageContent({ matchId, tab }: { matchId: string; tab?: strin
       location: {
         '@type': 'Place',
         name: venueName || homeTeamName + ' 홈구장',
-        ...(venueCity && {
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: venueCity,
-          },
-        }),
+        address: {
+          '@type': 'PostalAddress',
+          ...(venueCity && { addressLocality: venueCity }),
+          addressCountry: 'KR',
+        },
       },
       performer: [
         { '@type': 'SportsTeam', name: homeTeamName },

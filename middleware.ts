@@ -26,10 +26,6 @@ const BOT_USER_AGENTS = [
   'Twitterbot',
   'LinkedInBot',
   'bytespider',
-  'python-requests',
-  'Go-http-client',
-  'curl',
-  'wget',
   'Scrapy',
   'JEECRAWL',
   'Yeti',
@@ -53,16 +49,13 @@ const BLOCKED_BOTS = [
   'DotBot',
   'PetalBot',
   'bytespider',
-  'python-requests',
-  'Go-http-client',
-  'Scrapy',
   'SERankingBot',
   'SERankingBacklinksBot',
   'seranking',
 ]
 
 function detectBot(ua: string | null): { isBot: boolean; isBlocked: boolean } {
-  if (!ua) return { isBot: true, isBlocked: true } // UA 없으면 차단
+  if (!ua) return { isBot: false, isBlocked: false } // UA 없으면 일반 요청으로 허용
   const lowerUA = ua.toLowerCase()
   const isBot = BOT_USER_AGENTS.some(bot => lowerUA.includes(bot.toLowerCase()))
   const isBlocked = BLOCKED_BOTS.some(bot => lowerUA.includes(bot.toLowerCase()))

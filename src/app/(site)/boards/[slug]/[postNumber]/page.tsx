@@ -438,7 +438,7 @@ async function PostDetailContent({
       };
     } else {
       // community (기본값): DiscussionForumPosting
-      const topComments = processedComments.slice(0, 3).map((comment: { content?: string; profiles?: { nickname?: string }; created_at?: string }) => ({
+      const topComments = processedComments.slice(0, 3).map((comment: { content?: string; profiles?: { nickname?: string; public_id?: string | null }; created_at?: string }) => ({
         '@type': 'Comment',
         text: typeof comment.content === 'string'
           ? comment.content.replace(/<[^>]*>/g, '').slice(0, 200)
@@ -446,6 +446,9 @@ async function PostDetailContent({
         author: {
           '@type': 'Person',
           name: comment.profiles?.nickname || '익명',
+          ...(comment.profiles?.public_id && {
+            url: `${siteUrl}/user/${comment.profiles.public_id}`,
+          }),
         },
         datePublished: comment.created_at,
       }));

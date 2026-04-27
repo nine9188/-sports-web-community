@@ -60,12 +60,26 @@ export async function generateMetadata({
 
 // 서버 컴포넌트
 export default async function CreatePostPage({
-  params
+  params,
+  searchParams,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ imageUrl?: string }>;
 }) {
   try {
     const { slug } = await params;
+    const { imageUrl } = await searchParams;
+
+    // 라인업 이미지가 있으면 에디터 초기 콘텐츠로 삽입
+    const initialContent = imageUrl
+      ? JSON.stringify({
+          type: 'doc',
+          content: [
+            { type: 'image', attrs: { src: imageUrl, alt: '라인업', title: null } },
+            { type: 'paragraph' },
+          ],
+        })
+      : '';
 
     if (!slug) {
       return (
@@ -99,7 +113,7 @@ export default async function CreatePostPage({
         <PostEditForm
           boardId={result.board.id}
           initialTitle=""
-          initialContent=""
+          initialContent={initialContent}
           boardName={result.board.name}
           categoryId={result.board.id}
           allBoardsFlat={(result.allBoards || []).map(board => ({
