@@ -27,7 +27,7 @@ export const siteConfig = {
   logo: logoOptions[logoVariant],         // 풀로고용 (헤더, 정책 페이지 등)
   icon: '/logo/icon-04.png',              // 아이콘용 — 흰색 베이스 (기본은 invert 필요, 다크모드는 그대로)
   logoOptions,
-  defaultOgImage: `${siteUrl}/og-image-v2.png`,
+  defaultOgImage: `${siteUrl}/og-image-v3.png`,
 
   // URL 빌더
   getUrl: (path: string) => {
@@ -37,7 +37,7 @@ export const siteConfig = {
 
   // OG 이미지 URL 빌더 (절대 URL 처리)
   getOgImage: (path?: string | null) => {
-    if (!path) return `${siteUrl}/og-image-v2.png`;
+    if (!path) return `${siteUrl}/og-image-v3.png`;
     if (path.startsWith('http')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${siteUrl}${normalizedPath}`;
@@ -51,7 +51,7 @@ export const siteConfig = {
 
   // 기본 OG 이미지 설정 객체
   getDefaultOgImageObject: (alt?: string) => ({
-    url: `${siteUrl}/og-image-v2.png`,
+    url: `${siteUrl}/og-image-v3.png`,
     width: 1200,
     height: 630,
     alt: alt || '4590 Football',
