@@ -46,14 +46,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico?v=2', sizes: 'any' },
-      { url: '/favicon-16x16.png?v=2', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png?v=2', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-48x48.png?v=2', sizes: '48x48', type: 'image/png' },
-      { url: '/favicon-96x96.png?v=2', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon.svg?v=2', type: 'image/svg+xml' },
-      { url: '/android-chrome-192x192.png?v=2', sizes: '192x192', type: 'image/png' },
-      { url: '/android-chrome-512x512.png?v=2', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16-v2.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32-v2.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-48x48-v2.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-96x96-v2.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/android-chrome-192x192-v2.png', sizes: '192x192', type: 'image/png' },
+      { url: '/android-chrome-512x512-v2.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
       { url: '/apple-touch-icon-v2.png', sizes: '180x180', type: 'image/png' },
