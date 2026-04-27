@@ -41,7 +41,6 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   appleWebApp: {
     capable: true,
-    title: '4590 Football',
     statusBarStyle: 'default',
   },
   other: {
