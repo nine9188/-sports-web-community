@@ -38,11 +38,30 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [siteConfig.defaultOgImage],
   },
-  manifest: '/manifest.json',
+  manifest: '/site.webmanifest',
   appleWebApp: {
     capable: true,
     title: '4590 Football',
     statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  other: {
+    'msapplication-TileColor': '#002FA7',
+    'msapplication-TileImage': '/android-chrome-192x192.png',
+    'application-name': '4590 Football',
   },
   robots: {
     index: true,
@@ -70,7 +89,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={inter.className} suppressHydrationWarning>
-      <head />
+      <head>
+        <meta name="theme-color" content="#002FA7" />
+      </head>
 
       <body className="w-full h-full overflow-x-hidden">
         {/* Organization + WebSite JSON-LD (사이트 전체 공통) */}
