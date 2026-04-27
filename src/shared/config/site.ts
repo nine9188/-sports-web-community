@@ -17,7 +17,8 @@ export const siteConfig = {
   // 기본 설정
   url: siteUrl,
   name: '4590 Football',
-  description: '축구 커뮤니티 4590 Football. 해외축구, 국내축구 라이브스코어와 경기 일정, EPL·라리가·세리에A·K리그 팀·선수 정보를 확인하고 축구 커뮤니티에서 자유롭게 소통하세요.',
+  ogTitle: '4590 Football | EPL·라리가·세리에A·K리그 실시간 라이브스코어 & 커뮤니티',
+  description: '축구 커뮤니티 4590 Football. 해외축구, 국내축구 실시간 라이브스코어와 오늘 경기 일정, EPL·라리가·세리에A·분데스리가·K리그 팀·선수 정보를 확인하고 축구 팬들과 자유롭게 소통하세요.',
   keywords: ['축구 커뮤니티', '4590', '4590football', '4590 Football', '라이브스코어', '해외축구', '국내축구', '실시간 스코어', '축구 경기결과', '오늘 축구 경기', 'EPL 순위', '프리미어리그', '라리가', '세리에A', '분데스리가', 'K리그', '챔피언스리그', '축구 분석', '축구 이적', '해외축구 게시판', '국내축구 게시판', '축구 승부예측'],
   locale: 'ko_KR',
   twitterHandle: '@4590football',
@@ -26,7 +27,7 @@ export const siteConfig = {
   logo: logoOptions[logoVariant],         // 풀로고용 (헤더, 정책 페이지 등)
   icon: '/logo/icon-04.png',              // 아이콘용 — 흰색 베이스 (기본은 invert 필요, 다크모드는 그대로)
   logoOptions,
-  defaultOgImage: `${siteUrl}/og-image.png`,
+  defaultOgImage: `${siteUrl}/og-image-v2.png`,
 
   // URL 빌더
   getUrl: (path: string) => {
@@ -36,7 +37,7 @@ export const siteConfig = {
 
   // OG 이미지 URL 빌더 (절대 URL 처리)
   getOgImage: (path?: string | null) => {
-    if (!path) return `${siteUrl}/og-image.png`;
+    if (!path) return `${siteUrl}/og-image-v2.png`;
     if (path.startsWith('http')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${siteUrl}${normalizedPath}`;
@@ -50,7 +51,7 @@ export const siteConfig = {
 
   // 기본 OG 이미지 설정 객체
   getDefaultOgImageObject: (alt?: string) => ({
-    url: `${siteUrl}/og-image.png`,
+    url: `${siteUrl}/og-image-v2.png`,
     width: 1200,
     height: 630,
     alt: alt || '4590 Football',
