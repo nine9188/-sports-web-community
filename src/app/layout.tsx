@@ -43,7 +43,6 @@ export const metadata: Metadata = {
     capable: true,
     title: '4590 Football',
     statusBarStyle: 'default',
-    startupImage: '/apple-touch-icon.png?v=2',
   },
   icons: {
     icon: [
