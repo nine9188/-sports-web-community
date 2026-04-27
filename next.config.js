@@ -92,21 +92,6 @@ const nextConfig = {
   },
   // Next.js 16: eslint 설정은 더 이상 next.config.js에서 지원되지 않음
   // 대신 next lint 명령어 옵션을 사용하거나 package.json scripts에서 설정
-  async redirects() {
-    return [
-      // iOS legacy: /apple-touch-icon.png 직접 접근 → v2 파일로
-      {
-        source: '/apple-touch-icon.png',
-        destination: '/apple-touch-icon-v2.png',
-        permanent: false,
-      },
-      {
-        source: '/apple-touch-icon-precomposed.png',
-        destination: '/apple-touch-icon-v2.png',
-        permanent: false,
-      },
-    ];
-  },
   async headers() {
     const securityHeaders = [
       { key: 'X-Frame-Options', value: 'DENY' },

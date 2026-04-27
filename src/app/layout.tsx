@@ -38,30 +38,14 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [siteConfig.defaultOgImage],
   },
-  manifest: '/site.webmanifest?v=2',
+  manifest: '/site.webmanifest',
   appleWebApp: {
     capable: true,
     title: '4590 Football',
     statusBarStyle: 'default',
   },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon-16x16-v2.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32-v2.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-48x48-v2.png', sizes: '48x48', type: 'image/png' },
-      { url: '/favicon-96x96-v2.png', sizes: '96x96', type: 'image/png' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/android-chrome-192x192-v2.png', sizes: '192x192', type: 'image/png' },
-      { url: '/android-chrome-512x512-v2.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon-v2.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
   other: {
     'msapplication-TileColor': '#002FA7',
-    'msapplication-TileImage': '/android-chrome-192x192.png?v=2',
     'application-name': '4590 Football',
   },
   robots: {
@@ -92,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" className={inter.className} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#002FA7" />
+        <meta name="apple-mobile-web-app-title" content="4590" />
       </head>
 
       <body className="w-full h-full overflow-x-hidden">
