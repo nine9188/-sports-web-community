@@ -50,8 +50,7 @@ export default function RootLayoutProvider({ children }: { children: React.React
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="light"
         disableTransitionOnChange
       >
         <AuthProvider>

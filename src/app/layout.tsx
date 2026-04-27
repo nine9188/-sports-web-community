@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={inter.className} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#002FA7" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="4590" />
       </head>
 
