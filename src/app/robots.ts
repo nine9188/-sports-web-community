@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'Amzn-SearchBot', disallow: '/' },
       { userAgent: 'SERankingBot', disallow: '/' },
       { userAgent: 'Yeti', allow: '/' },
-      { userAgent: 'Googlebot-Image', disallow: '/' },
+      { userAgent: 'Googlebot-Image', allow: ['/favicon.ico', '/icon.svg', '/apple-icon.png'], disallow: '/' },
     ],
     host: siteConfig.url,
     sitemap: `${siteConfig.url}/sitemap.xml`,
