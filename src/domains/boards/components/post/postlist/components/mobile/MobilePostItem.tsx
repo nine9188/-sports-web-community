@@ -14,7 +14,6 @@ import { renderContentTypeIcons } from '../shared/PostRenderers';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
-import { siteConfig } from '@/shared/config';
 
 export const MobilePostItem = React.memo(function MobilePostItem({
   post,
@@ -81,13 +80,22 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 unoptimized={thumbnailUrl.includes('/proxy?url=')}
               />
             ) : (
-              <Image
-                src={siteConfig.icon}
-                alt="사이트 로고"
-                fill
-                sizes="80px"
-                className="object-contain p-2 dark:invert"
-              />
+              <>
+                <Image
+                  src="/logo/4590_logo_02-01.jpg"
+                  alt="4590 Football"
+                  fill
+                  sizes="80px"
+                  className="object-cover dark:hidden"
+                />
+                <Image
+                  src="/logo/4590_logo_02-02.jpg"
+                  alt="4590 Football"
+                  fill
+                  sizes="80px"
+                  className="object-cover hidden dark:block"
+                />
+              </>
             )}
           </div>
         </Link>
@@ -203,7 +211,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
               {post.is_must_read ? '필독' : '공지'}
             </span>
           )}
-          <span className={`${titleClassName} truncate`}>
+          <span className={`${titleClassName} line-clamp-2`}>
             {titleText}
           </span>
           {!post.is_deleted && !post.is_hidden && (

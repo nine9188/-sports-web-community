@@ -215,6 +215,22 @@ This project follows **Toss Frontend Guidelines** (see `.cursor/rules/toss-front
 
 This project uses a consistent color system across all components. Always follow these patterns:
 
+#### Brand Color — Klein Blue
+
+4590 Football의 브랜드 컬러는 **Klein Blue**입니다. UI 전반에 걸쳐 primary 액션, 링크, 강조 요소에 이 색상을 사용합니다.
+
+| 용도 | 라이트 모드 | 다크 모드 |
+|------|------------|----------|
+| **Primary (메인)** | `#002FA7` | `#3366CC` |
+| **Soft BG (배지·버튼 배경)** | `#E6EAFB` | `rgba(0,47,167,0.2)` |
+| **Soft Text (배지·보조 텍스트)** | `#001F78` | `#6690DD` |
+
+**Tailwind 적용 패턴**:
+- Primary 버튼: `bg-[#002FA7] dark:bg-[#3366CC] text-white`
+- Outline 버튼/링크: `text-[#002FA7] dark:text-[#3366CC] border-[#002FA7] dark:border-[#3366CC]`
+- Soft 배지: `bg-[#E6EAFB] dark:bg-[rgba(0,47,167,0.2)] text-[#001F78] dark:text-[#6690DD]`
+- 탭 활성 언더라인: `border-b-[#002FA7] dark:border-b-[#3366CC]`
+
 #### Dark Mode Support
 
 All UI components must support dark mode using Tailwind's `dark:` prefix:

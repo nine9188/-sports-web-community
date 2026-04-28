@@ -107,11 +107,28 @@ export async function getBoardPageAllData(
   fromParam?: string,
   store?: string
 ): Promise<BoardPageAllData | BoardPageError> {
-  return unstable_cache(
+  const cached = await unstable_cache(
     () => _getBoardPageAllDataImpl(slug, currentPage, fromParam, store),
     ['board-page', slug, String(currentPage), fromParam || '', store || ''],
     { revalidate: 30, tags: ['board-page', `board-${slug}`] }
   )();
+
+  if ('error' in cached) return cached;
+
+  // isAdmin은 사용자별 값이므로 캐시 밖에서 매 요청마다 체크
+  let isAdmin = false;
+  if (cached.isLoggedIn) {
+    try {
+      const supabase = await getSupabaseServer();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+        isAdmin = profile?.is_admin || false;
+      }
+    } catch { /* isAdmin = false */ }
+  }
+
+  return { ...cached, isAdmin };
 }
 
 async function _getBoardPageAllDataImpl(
@@ -219,16 +236,7 @@ async function _getBoardPageAllDataImpl(
     teamData: boardResult.teamData || null,
     leagueData: boardResult.leagueData || null,
     isLoggedIn: boardResult.isLoggedIn || false,
-    isAdmin: await (async () => {
-      if (!boardResult.isLoggedIn) return false;
-      try {
-        const supabase = await getSupabaseServer();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-        const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
-        return profile?.is_admin || false;
-      } catch { return false; }
-    })(),
+    isAdmin: false, // getBoardPageAllData에서 캐시 밖에서 덮어씀
     rootBoardId: boardResult.rootBoardId || '',
     rootBoardSlug: boardResult.rootBoardSlug || '',
     viewType,

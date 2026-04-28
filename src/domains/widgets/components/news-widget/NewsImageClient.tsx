@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { siteConfig } from '@/shared/config';
-
 const MAX_RETRIES = 1;
-const FALLBACK_LOGO = siteConfig.icon;
+const FALLBACK_LIGHT = '/logo/4590_logo_02-01.jpg';
+const FALLBACK_DARK = '/logo/4590_logo_02-02.jpg';
 
 /** 외부 이미지 URL을 Cloudflare CDN 프록시 경유 URL로 변환 */
 function toProxyUrl(url: string): string {
@@ -46,9 +45,9 @@ export default function NewsImageClient({
 
   const useFallback = !hasValidUrl || failed;
 
-  const rawUrl = hasValidUrl ? toProxyUrl(imageUrl!) : FALLBACK_LOGO;
+  const rawUrl = hasValidUrl ? toProxyUrl(imageUrl!) : FALLBACK_LIGHT;
   const finalImageUrl = useFallback
-    ? FALLBACK_LOGO
+    ? FALLBACK_LIGHT
     : retryCount > 0
       ? `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}_r=${retryCount}`
       : rawUrl;
@@ -67,23 +66,43 @@ export default function NewsImageClient({
 
   return (
     <>
-      <Image
-        key={finalImageUrl}
-        src={finalImageUrl}
-        alt={alt}
-        fill
-        unoptimized={shouldUnoptimize}
-        className={useFallback
-          ? "object-contain p-4 dark:invert transition-all"
-          : "object-cover transition-all"
-        }
-        sizes={sizes}
-        priority={priority}
-        onError={handleError}
-        data-nosnippet="true"
-        data-pinterest-nopin="true"
-        loading={priority ? undefined : "lazy"}
-      />
+      {useFallback ? (
+        <>
+          <Image
+            src={FALLBACK_LIGHT}
+            alt={alt}
+            fill
+            className="object-cover transition-all dark:hidden"
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? undefined : "lazy"}
+          />
+          <Image
+            src={FALLBACK_DARK}
+            alt={alt}
+            fill
+            className="object-cover transition-all hidden dark:block"
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? undefined : "lazy"}
+          />
+        </>
+      ) : (
+        <Image
+          key={finalImageUrl}
+          src={finalImageUrl}
+          alt={alt}
+          fill
+          unoptimized={shouldUnoptimize}
+          className="object-cover transition-all"
+          sizes={sizes}
+          priority={priority}
+          onError={handleError}
+          data-nosnippet="true"
+          data-pinterest-nopin="true"
+          loading={priority ? undefined : "lazy"}
+        />
+      )}
 
       {/* 호버 오버레이 */}
       <div className="absolute inset-0 bg-black/0 md:group-hover:bg-black/25 transition-all pointer-events-none" />

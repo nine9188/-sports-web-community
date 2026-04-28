@@ -11,7 +11,6 @@ import { renderContentTypeIcons } from './postlist/components/shared/PostRendere
 import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
 import { Container } from '@/shared/components/ui';
-import { siteConfig } from '@/shared/config';
 
 interface Post {
   id: string;
@@ -106,13 +105,22 @@ export default function PopularPostList({
                     unoptimized={thumbnailUrl.includes('/proxy?url=')}
                   />
                 ) : (
-                  <Image
-                    src={siteConfig.icon}
-                    alt="사이트 로고"
-                    fill
-                    sizes="(max-width: 640px) 80px, 96px"
-                    className="object-contain p-2 dark:invert"
-                  />
+                  <>
+                    <Image
+                      src="/logo/4590_logo_02-01.jpg"
+                      alt="4590 Football"
+                      fill
+                      sizes="(max-width: 640px) 80px, 96px"
+                      className="object-cover dark:hidden"
+                    />
+                    <Image
+                      src="/logo/4590_logo_02-02.jpg"
+                      alt="4590 Football"
+                      fill
+                      sizes="(max-width: 640px) 80px, 96px"
+                      className="object-cover hidden dark:block"
+                    />
+                  </>
                 )}
               </div>
             </Link>
@@ -122,7 +130,7 @@ export default function PopularPostList({
               {/* 제목 + 아이콘 + 댓글 수 */}
               <Link href={postUrl} prefetch={false} className="block overflow-hidden">
                 <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
+                  <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
                     {post.title}
                   </h3>
                   {renderContentTypeIcons(post)}
@@ -151,14 +159,13 @@ export default function PopularPostList({
                 </div>
               )}
 
-              {/* 메타 정보 - 모바일 3줄, 데스크톱 1줄 */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-gray-500 dark:text-gray-400">
-                {/* 줄 2 (모바일) / 그룹 1 (데스크톱): 카테고리 + 작성자 */}
-                <div className="flex items-center gap-2">
-                  <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300">
+              {/* 메타 정보 - 한 줄 */}
+              <div className="flex items-center justify-between gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+                <div className="flex items-center overflow-hidden whitespace-nowrap">
+                  <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300 truncate max-w-[80px]">
                     {post.board_name}
                   </Link>
-                  <span className="text-gray-300 dark:text-gray-600">|</span>
+                  <span className="mx-1 flex-shrink-0">|</span>
                   <AuthorLink
                     nickname={post.author_nickname}
                     publicId={post.author_public_id}
@@ -167,28 +174,14 @@ export default function PopularPostList({
                     level={post.author_level || 1}
                     exp={post.author_exp}
                     iconSize={20}
-                    hideIconOnMobile
+                    showIcon={false}
                   />
+                  <span className="mx-1 flex-shrink-0">|</span>
+                  <span className="flex-shrink-0">{post.formattedDate}</span>
                 </div>
-
-                {/* 데스크톱 구분선 */}
-                <span className="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
-
-                {/* 줄 3 (모바일) / 그룹 2 (데스크톱): 추천 + 조회 + 시간 */}
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1">
-                    <ThumbsUp className="w-3 h-3 sm:hidden" />
-                    <span className="sm:hidden">추천</span>
-                    {post.likes}
-                  </span>
-
-                  <span className="text-gray-300 dark:text-gray-600">|</span>
-
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span>조회 {post.views}</span>
-
-                  <span className="text-gray-300 dark:text-gray-600">|</span>
-
-                  <span>{post.formattedDate}</span>
+                  <span>추천 {post.likes}</span>
                 </div>
               </div>
             </div>

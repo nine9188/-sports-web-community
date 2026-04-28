@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
@@ -1125,6 +1125,10 @@ async function createPredictionPost(
     } catch (cardErr) {
       console.error('예측 게시글 카드 링크 저장 실패:', cardErr)
     }
+
+    // 캐시 무효화: BoardCollectionWidget (unstable_cache) 즉시 갱신
+    revalidateTag('board-collection')
+    revalidateTag('analysis-posts')
 
     return {
       success: true,

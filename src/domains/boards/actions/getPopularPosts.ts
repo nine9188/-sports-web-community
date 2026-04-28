@@ -65,8 +65,8 @@ export async function getBoardPopularPosts(boardId: string) {
     .eq('is_deleted', false)
     .eq('is_hidden', false)
     .gte('created_at', monthStart.toISOString())
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .order('likes', { ascending: false })
+    .limit(200);
 
   if (error || !allPosts || allPosts.length === 0) {
     if (error) console.error('Popular posts fetch error:', error);
