@@ -146,11 +146,19 @@ export default function Formation({
 
     let formationDataUrl: string;
     try {
-      formationDataUrl = await toPng(captureRef.current, {
-        pixelRatio: 3,
-        cacheBust: true,
-        backgroundColor: '#3d9735',
-      });
+      // 모바일은 pixelRatio 2로 제한 (메모리), cacheBust 제거 (CORS 캐시 우회 방지)
+      const pixelRatio = isMobile ? 2 : 3;
+      const TIMEOUT_MS = 15000;
+      formationDataUrl = await Promise.race([
+        toPng(captureRef.current, {
+          pixelRatio,
+          cacheBust: false,
+          backgroundColor: '#3d9735',
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('이미지 생성 시간 초과. 다시 시도해주세요.')), TIMEOUT_MS)
+        ),
+      ]);
     } finally {
       // 캡처 성공/실패 모두 반드시 복원
       ignoreEls.forEach(el => el.removeAttribute('visibility'));
@@ -356,6 +364,7 @@ export default function Formation({
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('라인업 카드 생성 실패:', err);
+        alert(err.message || '이미지 생성에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
       setCapturing(false);
@@ -401,6 +410,7 @@ export default function Formation({
       router.push(`/boards/${firstSlug}/create?imageUrl=${encodeURIComponent(urlData.publicUrl)}`);
     } catch (err) {
       console.error('게시글 작성 이동 실패:', err);
+      alert(err instanceof Error ? err.message : '게시글 작성 이동에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setPosting(false);
     }

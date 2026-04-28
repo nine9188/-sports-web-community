@@ -615,10 +615,41 @@ async function generateMatchPredictionPost(
     attrs: {
       fixtureId: match.id.toString(),
       chartData: {
-        predictions: predictionData.predictions,
+        predictions: {
+          ...predictionData.predictions,
+          winner: predictionData.predictions.winner
+            ? {
+                ...predictionData.predictions.winner,
+                name: predictionData.predictions.winner.id === predictionData.teams.home.id
+                  ? homeNameKo
+                  : predictionData.predictions.winner.id === predictionData.teams.away.id
+                    ? awayNameKo
+                    : predictionData.predictions.winner.name
+              }
+            : predictionData.predictions.winner
+        },
         comparison: predictionData.comparison,
-        teams: predictionData.teams,
-        h2h: predictionData.h2h
+        teams: {
+          home: { ...predictionData.teams.home, name: homeNameKo },
+          away: { ...predictionData.teams.away, name: awayNameKo }
+        },
+        h2h: predictionData.h2h?.map((m: { teams: { home: { id: number; name: string; winner: boolean | null }; away: { id: number; name: string; winner: boolean | null } }; fixture: { id: number; date: string }; goals: { home: number; away: number } }) => ({
+          ...m,
+          teams: {
+            home: {
+              ...m.teams.home,
+              name: m.teams.home.id === predictionData.teams.home.id ? homeNameKo
+                   : m.teams.home.id === predictionData.teams.away.id ? awayNameKo
+                   : m.teams.home.name
+            },
+            away: {
+              ...m.teams.away,
+              name: m.teams.away.id === predictionData.teams.home.id ? homeNameKo
+                   : m.teams.away.id === predictionData.teams.away.id ? awayNameKo
+                   : m.teams.away.name
+            }
+          }
+        })) ?? predictionData.h2h
       }
     }
   }] : []

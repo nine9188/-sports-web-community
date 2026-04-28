@@ -166,10 +166,10 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       return Array.from({ length: lines }, (_, i) => start + step * i);
     } else {
       // 데스크탑: 주축은 x (오른쪽으로 증가)
-      // 홈: 좌측 골대 근처(7) → 중앙 쪽(47)
-      // 원정: 우측 골대 근처(93) → 중앙 쪽(53)
+      // 홈: 좌측 골대 근처(7) → 중앙 쪽(44)
+      // 원정: 우측 골대 근처(93) → 중앙 쪽(56)
       const start = isHomeTeam ? 7 : 93;
-      const end = isHomeTeam ? 47 : 53;
+      const end = isHomeTeam ? 44 : 56;
       const step = (end - start) / (lines - 1);
       return Array.from({ length: lines }, (_, i) => start + step * i);
     }
