@@ -71,6 +71,49 @@ function loadImg(src: string, crossOrigin = false): Promise<HTMLImageElement> {
   });
 }
 
+// SVG <image> 요소를 base64 data URL로 교체 (html-to-image XHR hang 방지)
+// 반환값: 원래 href 복원 함수
+async function inlineImages(root: HTMLElement): Promise<() => void> {
+  const imageEls = Array.from(root.querySelectorAll<SVGImageElement>('image'));
+  const originals = new Map<SVGImageElement, string>();
+  const IMAGE_FETCH_TIMEOUT_MS = 10000;
+
+  await Promise.allSettled(
+    imageEls.map(async (el) => {
+      const href = el.getAttribute('href') || '';
+      if (!href || href.startsWith('data:') || href.startsWith('/')) return;
+      originals.set(el, href);
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT_MS);
+      try {
+        const res = await fetch(href, {
+          mode: 'cors',
+          cache: 'force-cache',
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
+        const blob = await res.blob();
+        const b64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        el.setAttribute('href', b64);
+      } catch {
+        // fetch 실패 시 placeholder로 대체 (원래 href 유지해서 복원 가능)
+        el.removeAttribute('href');
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    })
+  );
+
+  return () => {
+    originals.forEach((href, el) => el.setAttribute('href', href));
+  };
+}
+
 // canvas에 둥근 이미지 그리기
 function drawRoundedImage(
   ctx: CanvasRenderingContext2D,
@@ -140,19 +183,20 @@ export default function Formation({
   const composeCard = useCallback(async (): Promise<string> => {
     if (!captureRef.current) throw new Error('ref 없음');
 
-    // 1. 새로고침 버튼 숨기기 (SVG 내부는 filter가 동작 안 함 → 직접 DOM 조작)
+    // 1. 캡처 무시 요소 숨기기 + SVG <image> base64 주입 (XHR hang 방지)
     const ignoreEls = captureRef.current.querySelectorAll<SVGElement>('[data-capture-ignore="true"]');
     ignoreEls.forEach(el => el.setAttribute('visibility', 'hidden'));
+    const restoreImages = await inlineImages(captureRef.current);
 
     let formationDataUrl: string;
     try {
-      // 모바일은 pixelRatio 2로 제한 (메모리), cacheBust 제거 (CORS 캐시 우회 방지)
       const pixelRatio = isMobile ? 2 : 3;
       const TIMEOUT_MS = 15000;
       formationDataUrl = await Promise.race([
         toPng(captureRef.current, {
           pixelRatio,
           cacheBust: false,
+          skipFonts: true,
           backgroundColor: '#3d9735',
         }),
         new Promise<never>((_, reject) =>
@@ -160,7 +204,7 @@ export default function Formation({
         ),
       ]);
     } finally {
-      // 캡처 성공/실패 모두 반드시 복원
+      restoreImages();
       ignoreEls.forEach(el => el.removeAttribute('visibility'));
     }
 
@@ -345,8 +389,8 @@ export default function Formation({
       // 모바일만 Web Share API (iOS/Android 공유시트에 저장 옵션 있음)
       // 데스크탑은 Web Share가 있어도 저장이 없으므로 무조건 다운로드
       const isMobileShare = isMobile &&
-        navigator.share &&
-        navigator.canShare &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
         navigator.canShare({ files: [file] });
 
       if (isMobileShare) {
@@ -369,7 +413,7 @@ export default function Formation({
     } finally {
       setCapturing(false);
     }
-  }, [isMobile, capturing, composeCard]);
+  }, [isMobile, capturing, composeCard, homeName, awayName]);
 
   const handlePost = useCallback(async () => {
     if (!captureRef.current || posting) return;
