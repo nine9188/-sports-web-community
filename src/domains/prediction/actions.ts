@@ -1127,8 +1127,8 @@ async function createPredictionPost(
     }
 
     // 캐시 무효화: BoardCollectionWidget (unstable_cache) 즉시 갱신
-    revalidateTag('board-collection')
-    revalidateTag('analysis-posts')
+    revalidateTag('board-collection', 'default')
+    revalidateTag('analysis-posts', 'default')
 
     return {
       success: true,
