@@ -141,8 +141,11 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     ? (params.image.startsWith('http') ? params.image : `${config.siteUrl}${params.image}`)
     : config.defaultOgImage;
 
-  // 키워드 (readonly 배열을 일반 배열로 변환)
-  const keywords = params.keywords || [...config.siteKeywords];
+  // 페이지별 키워드가 있어도 공통 브랜드 키워드는 유지
+  const keywords = Array.from(new Set([
+    ...(params.keywords || []),
+    ...config.siteKeywords,
+  ]));
 
   // 이미지 타입
   const imageType = getImageType(ogImage);
