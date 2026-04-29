@@ -2,7 +2,15 @@
 
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { getMajorLeagueIds, getCurrentSeasonForLeague, isCalendarSeasonLeague } from './teamLeagueData';
+import {
+  getLeaguesByIds,
+  getMajorLeagueIds,
+  getTeamsByIds,
+  getCurrentSeasonForLeague,
+  isCalendarSeasonLeague,
+  type LeagueData,
+  type TeamData,
+} from './teamLeagueData';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
 
 // 매치 데이터 인터페이스
@@ -246,7 +254,6 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
     // Rate limit 헤더 확인
     const remainingDaily = response.headers.get('x-ratelimit-requests-remaining');
-    const remainingMinute = response.headers.get('X-RateLimit-Remaining');
 
     if (remainingDaily && parseInt(remainingDaily) < 100) {
       console.warn(`[API-Football] 일일 할당량 잔여: ${remainingDaily} (endpoint: ${endpoint})`);
@@ -355,6 +362,42 @@ function applyImageUrls(
 }
 
 /** 여러 날짜의 raw 매치 데이터에 배치로 이미지 URL 적용 (Supabase 쿼리 3회) */
+/** DB에 저장된 팀/리그 한글명을 경기 데이터에 일괄 반영 */
+async function applyLocalizedNames(matches: MatchData[]): Promise<MatchData[]> {
+  if (matches.length === 0) return matches;
+
+  const leagueIds = [...new Set(matches.map((match) => match.league.id).filter(Boolean))];
+  const teamIds = [
+    ...new Set(matches.flatMap((match) => [
+      match.teams.home.id,
+      match.teams.away.id,
+    ]).filter(Boolean)),
+  ];
+
+  const [leagueMap, teamMap] = await Promise.all([
+    leagueIds.length > 0 ? getLeaguesByIds(leagueIds) : Promise.resolve({} as Record<number, LeagueData>),
+    teamIds.length > 0 ? getTeamsByIds(teamIds) : Promise.resolve({} as Record<number, TeamData>),
+  ]);
+
+  return matches.map((match) => ({
+    ...match,
+    league: {
+      ...match.league,
+      name: leagueMap[match.league.id]?.name_ko || match.league.name,
+    },
+    teams: {
+      home: {
+        ...match.teams.home,
+        name: teamMap[match.teams.home.id]?.name_ko || match.teams.home.name,
+      },
+      away: {
+        ...match.teams.away,
+        name: teamMap[match.teams.away.id]?.name_ko || match.teams.away.name,
+      },
+    },
+  }));
+}
+
 async function resolveMatchImages(
   matchesByDay: { key: string; matches: MatchData[] }[],
   imageSize: 'sm' | 'md' = 'sm'
@@ -412,7 +455,8 @@ export async function fetchMatchesByDate(date: string): Promise<MatchData[]> {
     if (rawMatches.length === 0) return [];
 
     const resolved = await resolveMatchImages([{ key: date, matches: rawMatches }]);
-    return JSON.parse(JSON.stringify(resolved.get(date) || []));
+    const localized = await applyLocalizedNames(resolved.get(date) || []);
+    return JSON.parse(JSON.stringify(localized));
   } catch (error) {
     console.error(`[fetchMatchesByDate] ${date} 조회 실패:`, error);
     return [];
@@ -439,7 +483,7 @@ const _fetchTodayMatchesCached = unstable_cache(
         { key: 'today', matches: todayRaw }
       ]);
 
-      const todayMatches = resolved.get('today') || [];
+      const todayMatches = await applyLocalizedNames(resolved.get('today') || []);
 
       return {
         success: true,

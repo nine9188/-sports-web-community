@@ -27,9 +27,19 @@ export default function SuspensionPopup() {
     if (!user || hasChecked) return
 
     try {
+      const checkedKey = `suspension_checked_${user.id}`
+      if (sessionStorage.getItem(checkedKey) === '1') {
+        setHasChecked(true)
+        return
+      }
+
       const data = await checkSuspensionStatus()
 
-      if (!data) return
+      if (!data) {
+        sessionStorage.setItem(checkedKey, '1')
+        setHasChecked(true)
+        return
+      }
 
       // 정지된 경우에만 팝업 표시
       if (data.is_suspended) {
@@ -44,6 +54,7 @@ export default function SuspensionPopup() {
         }
       }
 
+      sessionStorage.setItem(checkedKey, '1')
       setHasChecked(true)
     } catch (error) {
       console.error('정지 상태 확인 오류:', error)

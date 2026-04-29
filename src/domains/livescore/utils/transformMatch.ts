@@ -1,15 +1,12 @@
 import { MatchData } from '../actions/footballApi';
 import { Match } from '../types/match';
-import { resolveMatchNames } from './resolveMatchNames';
 
 const PLACEHOLDER_TEAM = '/images/placeholder-team.svg';
 const PLACEHOLDER_LEAGUE = '/images/placeholder-league.svg';
 
 /** MatchData (서버) → Match (클라이언트 UI) 변환. 한국어 팀명/리그명 매핑 포함. */
 export async function transformMatches(matchesData: MatchData[]): Promise<Match[]> {
-  return Promise.all(matchesData.map(async (match) => {
-    const names = await resolveMatchNames(match);
-
+  return matchesData.map((match) => {
     return {
       id: match.id,
       status: {
@@ -23,7 +20,7 @@ export async function transformMatches(matchesData: MatchData[]): Promise<Match[
       },
       league: {
         id: match.league.id,
-        name: names.leagueName || match.league.name,
+        name: match.league.name,
         country: match.league.country,
         logo: match.league.logo || PLACEHOLDER_LEAGUE,
         logoDark: match.league.logoDark || '',
@@ -32,17 +29,17 @@ export async function transformMatches(matchesData: MatchData[]): Promise<Match[
       teams: {
         home: {
           id: match.teams.home.id,
-          name: names.homeName || match.teams.home.name,
+          name: match.teams.home.name,
           img: match.teams.home.logo || PLACEHOLDER_TEAM,
           score: match.goals.home,
         },
         away: {
           id: match.teams.away.id,
-          name: names.awayName || match.teams.away.name,
+          name: match.teams.away.name,
           img: match.teams.away.logo || PLACEHOLDER_TEAM,
           score: match.goals.away,
         },
       },
     };
-  }));
+  });
 }

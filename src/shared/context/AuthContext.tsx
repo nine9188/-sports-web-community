@@ -117,8 +117,7 @@ export function AuthProvider({
           if (!userError && currentUser) {
             setUser(currentUser);
             // session은 참고용으로만 보관 (user 검증은 위에서 끝남)
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            setSession(currentSession);
+            setSession(null);
           } else {
             setUser(null);
             setSession(null);

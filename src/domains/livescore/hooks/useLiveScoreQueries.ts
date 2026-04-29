@@ -46,6 +46,9 @@ export function useMatches(date: Date, options: UseMatchesOptions = {}) {
     gcTime: 1000 * 60 * 30, // 30분
     refetchInterval,
     refetchIntervalInBackground: false, // 탭 비활성화 시 폴링 중지
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // 라이브 경기 수 계산
@@ -80,6 +83,9 @@ export function useTodayLiveCount(enabled: boolean = true) {
     gcTime: 1000 * 60 * 10, // 10분
     refetchInterval: 120000, // 120초 (API cache 주기와 동일)
     refetchIntervalInBackground: false, // 탭 비활성화 시 폴링 중지
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   return {
@@ -115,10 +121,10 @@ export function useLiveScore(
   } = useMatches(selectedDate, { showLiveOnly });
 
   // 오늘이 아닌 날짜를 볼 때만 오늘의 라이브 카운트 별도 조회
-  const { liveCount: todayLiveCount } = useTodayLiveCount(!isToday);
+  // 과거/미래 날짜에서는 오늘 LIVE 카운트 별도 서버 액션을 생략한다.
 
   // 라이브 카운트: 오늘이면 현재 데이터에서, 아니면 별도 쿼리에서
-  const liveMatchCount = isToday ? currentDateLiveCount : todayLiveCount;
+  const liveMatchCount = isToday ? currentDateLiveCount : 0;
 
   return {
     matches,
