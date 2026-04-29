@@ -420,15 +420,16 @@ export default function Formation({
     setPosting(true);
 
     try {
-      const dataUrl = await composeCard();
-      const blob = await (await fetch(dataUrl)).blob();
-
       const supabase = getSupabaseBrowser();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        const redirect = `${window.location.pathname}${window.location.search}`;
+        router.push(`/signin?redirect=${encodeURIComponent(redirect)}&message=${encodeURIComponent('로그인이 필요한 기능입니다')}`);
         return;
       }
+
+      const dataUrl = await composeCard();
+      const blob = await (await fetch(dataUrl)).blob();
 
       const timestamp = Date.now();
       const fileName = `${user.id}/images/${timestamp}_lineup.png`;

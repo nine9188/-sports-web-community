@@ -7,6 +7,7 @@ import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles }
 import { cache } from 'react';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import Spinner from '@/shared/components/Spinner';
+import { authGuard } from '@/shared/guards/auth.guard';
 import '@/styles/post-content.css';
 
 // Dynamic import로 Tiptap 에디터 번들을 lazy load
@@ -47,6 +48,10 @@ export async function generateMetadata({
       }
     }
   } catch (error) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
+
     console.error('메타데이터 생성 오류:', error);
   }
 
@@ -69,6 +74,13 @@ export default async function CreatePostPage({
   try {
     const { slug } = await params;
     const { imageUrl } = await searchParams;
+    const redirectPath = imageUrl
+      ? `/boards/${slug}/create?imageUrl=${encodeURIComponent(imageUrl)}`
+      : `/boards/${slug}/create`;
+
+    await authGuard({
+      redirectTo: `/signin?redirect=${encodeURIComponent(redirectPath)}&message=${encodeURIComponent('로그인이 필요한 페이지입니다')}`,
+    });
 
     // 라인업 이미지가 있으면 에디터 초기 콘텐츠로 삽입
     const initialContent = imageUrl
@@ -131,6 +143,10 @@ export default async function CreatePostPage({
       </div>
     );
   } catch (error) {
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
+
     console.error('CreatePostPage 오류:', error);
     return (
       <div className="container mx-auto">
