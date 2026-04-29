@@ -69,6 +69,10 @@ interface MatchDataType {
   };
 }
 
+type HeaderGoalEvent = MatchEvent & {
+  goalKind: 'normal' | 'penalty' | 'ownGoal';
+};
+
 interface MatchHeaderProps {
   initialData: MatchFullDataResponse;
   playerKoreanNames?: PlayerKoreanNames;
@@ -222,18 +226,34 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
 
     const { fixture, league, homeTeam, awayTeam } = matchInfo;
 
-  // 득점자 목록 작성 - 일반 골만 필터링
-  const goalEvents = eventsData?.filter((event: MatchEvent) => {
-    // Goal cancelled나 VAR로 취소된 골은 제외
-    if (event.detail?.toLowerCase().includes('cancelled') || 
-        event.type?.toLowerCase() === 'var') {
-      return false;
-    }
-    
-    // 실제 골만 포함
-    return event.type?.toLowerCase() === 'goal' && 
-           event.detail?.toLowerCase().includes('goal');
-  }) || [];
+  const goalEvents = useMemo<HeaderGoalEvent[]>(() => {
+    return eventsData?.flatMap<HeaderGoalEvent>((event: MatchEvent) => {
+      const type = event.type?.toLowerCase() || '';
+      const detail = event.detail?.toLowerCase() || '';
+
+      if (type === 'var' || detail.includes('cancelled')) return [];
+      if (type !== 'goal') return [];
+      if (detail.includes('missed')) return [];
+      if (detail.includes('own goal')) return [{ ...event, goalKind: 'ownGoal' as const }];
+      if (detail.includes('penalty')) return [{ ...event, goalKind: 'penalty' as const }];
+      if (detail.includes('goal')) return [{ ...event, goalKind: 'normal' as const }];
+
+      return [];
+    }) || [];
+  }, [eventsData]);
+
+  const formatGoalMinute = (event: MatchEvent) => {
+    const elapsed = event.time?.elapsed;
+    const extra = event.time?.extra;
+    if (elapsed == null) return '';
+    return extra ? `${elapsed}+${extra}'` : `${elapsed}'`;
+  };
+
+  const getGoalSuffix = (event: HeaderGoalEvent) => {
+    if (event.goalKind === 'penalty') return ' (PK)';
+    if (event.goalKind === 'ownGoal') return ' (OG)';
+    return '';
+  };
 
   // 리그 및 팀 로고 스토리지 URL 생성
 
@@ -477,16 +497,20 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                 </div>
                 <div className="space-y-1">
                   {goalEvents
-                    .filter((event: MatchEvent) => event.team?.id === homeTeam?.id)
-                    .map((event: MatchEvent, index: number) => {
+                    .filter((event: HeaderGoalEvent) => event.team?.id === homeTeam?.id)
+                    .map((event: HeaderGoalEvent, index: number) => {
                       const koreanName = event.player?.id ? playerKoreanNames[event.player.id] : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
                       const assistKoreanName = event.assist?.id ? playerKoreanNames[event.assist.id] : null;
-                      const assistDisplayName = assistKoreanName || event.assist?.name;
+                      const assistDisplayName = event.goalKind === 'ownGoal'
+                        ? null
+                        : assistKoreanName || event.assist?.name;
                       return (
                         <div key={index} className="text-[13px] text-gray-700 dark:text-gray-300">
                           <span className="font-medium">{displayName}</span>
-                          <span className="text-gray-500 dark:text-gray-400 ml-1">{event.time?.elapsed}&apos;</span>
+                          <span className="text-gray-500 dark:text-gray-400 ml-1">
+                            {formatGoalMinute(event)}{getGoalSuffix(event)}
+                          </span>
                           {assistDisplayName && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 ml-4">
                               어시스트: {assistDisplayName}
@@ -521,16 +545,20 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, teamLogoUrls = 
                 </div>
                 <div className="space-y-1">
                   {goalEvents
-                    .filter((event: MatchEvent) => event.team?.id === awayTeam?.id)
-                    .map((event: MatchEvent, index: number) => {
+                    .filter((event: HeaderGoalEvent) => event.team?.id === awayTeam?.id)
+                    .map((event: HeaderGoalEvent, index: number) => {
                       const koreanName = event.player?.id ? playerKoreanNames[event.player.id] : null;
                       const displayName = koreanName || event.player?.name || '알 수 없음';
                       const assistKoreanName = event.assist?.id ? playerKoreanNames[event.assist.id] : null;
-                      const assistDisplayName = assistKoreanName || event.assist?.name;
+                      const assistDisplayName = event.goalKind === 'ownGoal'
+                        ? null
+                        : assistKoreanName || event.assist?.name;
                       return (
                         <div key={index} className="text-[13px] text-gray-700 dark:text-gray-300">
                           <span className="font-medium">{displayName}</span>
-                          <span className="text-gray-500 dark:text-gray-400 ml-1">{event.time?.elapsed}&apos;</span>
+                          <span className="text-gray-500 dark:text-gray-400 ml-1">
+                            {formatGoalMinute(event)}{getGoalSuffix(event)}
+                          </span>
                           {assistDisplayName && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 ml-4">
                               어시스트: {assistDisplayName}

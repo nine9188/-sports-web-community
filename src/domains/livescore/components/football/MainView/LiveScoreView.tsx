@@ -36,6 +36,10 @@ export default function LiveScoreView({
   const [showLiveOnly, setShowLiveOnly] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
 
+  useEffect(() => {
+    setSelectedDate(initialDate ? new Date(initialDate) : new Date());
+  }, [initialDate]);
+
   // React Query로 경기 데이터 및 라이브 카운트 관리
   // - 자동 폴링 (LIVE 모드: 30초, 오늘: 60초)
   // - 자동 캐싱 (5분)
@@ -88,7 +92,6 @@ export default function LiveScoreView({
 
   // 날짜 변경 핸들러 — URL도 함께 업데이트
   const handleDateChange = (newDate: Date) => {
-    setSelectedDate(newDate);
     if (showLiveOnly) {
       setShowLiveOnly(false);
     }
