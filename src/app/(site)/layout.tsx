@@ -47,6 +47,10 @@ export default async function SiteLayout({
 }) {
   // User-Agent로 모바일 감지 (RightSidebar는 xl:1280px+ 에서만 보이므로 모바일에서 fetch 스킵)
   const headersList = await headers();
+  if (headersList.get('x-skip-site-layout') === '1') {
+    return <>{children}</>;
+  }
+
   const userAgent = headersList.get('user-agent') || '';
   const isMobilePhone = /iPhone|Android.*Mobile|Windows Phone/i.test(userAgent);
   // 봇이면 RightSidebar 스킵 (API-Sports 쿼타 보호 - 미들웨어에서 설정)

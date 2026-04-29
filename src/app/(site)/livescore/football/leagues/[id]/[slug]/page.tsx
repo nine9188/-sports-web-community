@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
@@ -11,7 +10,6 @@ import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/i
 import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
 import { getBoardSlugByLeagueId } from '@/domains/boards/actions/getBoards';
 import AdBanner from '@/shared/components/AdBanner';
-import { LeagueDetailSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 interface LeaguePageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -187,9 +185,5 @@ async function LeaguePageContent({ id }: { id: string }) {
 export default async function LeaguePage({ params }: LeaguePageProps) {
   const { id } = await params;
 
-  return (
-    <Suspense fallback={<LeagueDetailSkeleton />}>
-      <LeaguePageContent id={id} />
-    </Suspense>
-  );
+  return await LeaguePageContent({ id });
 }

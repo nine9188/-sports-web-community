@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
@@ -7,7 +6,6 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { TeamPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { slugify } from '@/domains/livescore/utils/slugs';
 
 interface TeamPageProps {
@@ -216,9 +214,5 @@ export default async function TeamPage({ params, searchParams }: TeamPageProps) 
   const { id } = await params;
   const { tab = 'overview' } = await searchParams;
 
-  return (
-    <Suspense fallback={<TeamPageSkeleton />}>
-      <TeamPageContent id={id} tab={tab} />
-    </Suspense>
-  );
+  return await TeamPageContent({ id, tab });
 }

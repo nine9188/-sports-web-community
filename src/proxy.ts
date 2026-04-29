@@ -2,6 +2,58 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/shared/types/supabase'
 
+const CANONICAL_HOST = '4590football.com'
+const LEGACY_INDEXED_HOSTS = new Set(['sports-web-community.vercel.app'])
+
+function plainNotFoundResponse() {
+  return new NextResponse(
+    `<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>페이지를 찾을 수 없습니다 | 4590 Football</title>
+  <style>
+    body{margin:0;background:#f8fafc;color:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .wrap{min-height:100vh;display:flex;justify-content:center;padding:32px 16px;box-sizing:border-box}
+    .inner{width:100%;max-width:768px}
+    .card{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:8px;overflow:hidden}
+    .head{padding:24px;border-bottom:1px solid rgba(0,0,0,.05)}
+    h1{margin:0;font-size:18px;line-height:1.5}
+    .body{padding:48px;text-align:center}
+    .code{font-size:80px;font-weight:700;color:#e5e7eb;line-height:1}
+    h2{margin:24px 0 8px;font-size:20px}
+    p{margin:0;color:#6b7280;font-size:13px}
+    a{display:inline-flex;margin-top:32px;padding:10px 24px;border-radius:8px;background:#262626;color:#fff;text-decoration:none;font-size:13px;font-weight:500}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="inner">
+      <div class="card">
+        <div class="head"><h1>페이지를 찾을 수 없습니다</h1></div>
+        <div class="body">
+          <div class="code">404</div>
+          <h2>요청하신 페이지를 찾을 수 없습니다</h2>
+          <p>페이지가 삭제되었거나 주소가 변경되었을 수 있습니다.</p>
+          <a href="/">메인페이지로 돌아가기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`,
+    {
+      status: 404,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'x-robots-tag': 'noindex, nofollow',
+      },
+    }
+  )
+}
+
 // Supabase 세션 조회를 스킵할 봇 목록
 const BOT_USER_AGENTS = [
   'Amazonbot',
@@ -62,10 +114,18 @@ function detectBot(ua: string | null): { isBot: boolean; isBlocked: boolean } {
   return { isBot, isBlocked }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host')?.toLowerCase().split(':')[0]
   const userAgent = request.headers.get('user-agent')
   const { isBot, isBlocked } = detectBot(userAgent)
+
+  if (process.env.NODE_ENV === 'production' && host && LEGACY_INDEXED_HOSTS.has(host)) {
+    const canonicalUrl = request.nextUrl.clone()
+    canonicalUrl.protocol = 'https'
+    canonicalUrl.host = CANONICAL_HOST
+    return NextResponse.redirect(canonicalUrl, 308)
+  }
 
   // 차단 대상 봇 → 즉시 403 반환 (Supabase 호출 없음)
   if (isBlocked) {
@@ -75,6 +135,32 @@ export async function middleware(request: NextRequest) {
   // /test/* 경로는 프로덕션에서 차단 (API-Sports 쿼타 보호)
   if (pathname.startsWith('/test') && process.env.NODE_ENV === 'production') {
     return new NextResponse('Not Found', { status: 404 })
+  }
+
+  const worthlessPlayerMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)\/([^/]+)$/)
+  if (worthlessPlayerMatch) {
+    const playerId = Number(worthlessPlayerMatch[1])
+    const playerSlug = worthlessPlayerMatch[2]?.toLowerCase()
+    if (request.method !== 'GET' && playerSlug === 'player') {
+      return new NextResponse('Not Found', {
+        status: 404,
+        headers: {
+          'x-robots-tag': 'noindex, nofollow',
+        },
+      })
+    }
+    if (request.method === 'GET' && playerSlug === 'player') {
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-skip-site-layout', '1')
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      })
+    }
+    if (!Number.isFinite(playerId) || playerId <= 0 || playerSlug === String(playerId)) {
+      return plainNotFoundResponse()
+    }
   }
 
   // SEO slug 리다이렉트: /team/33 → /team/33/slug (slug 없는 기존 URL 호환)

@@ -277,7 +277,7 @@ export async function GET(
       if (!leagueTeamIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
       const players = (await _getCachedActivePlayersByTeam(leagueTeamIds))
-        .filter((p: PlayerRow) => !isWorthlessSitemapPlayer(p));
+        .filter((p: PlayerRow) => p.player_id > 0 && !isWorthlessSitemapPlayer(p));
 
       return sitemapResponse(players.map((p: PlayerRow) => ({
         loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,

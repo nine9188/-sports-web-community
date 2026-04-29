@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
@@ -10,7 +9,6 @@ import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { slugify } from '@/domains/livescore/utils/slugs';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
-import { PlayerPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 /**
  * ============================================
@@ -26,7 +24,11 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string; slug: string }>
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { id, slug } = await params;
+
+  if (isFallbackPlayerSlug(id, slug)) {
+    return buildMissingPlayerMetadata(id);
+  }
 
   // 선수 데이터 조회 (최소한의 옵션으로)
   const playerData = await fetchPlayerFullData(id, {
@@ -40,21 +42,11 @@ export async function generateMetadata({
   });
 
   if (!playerData.success || !playerData.playerData?.info) {
-    return buildMetadata({
-      title: '선수 정보를 찾을 수 없습니다',
-      description: '요청하신 선수 정보가 존재하지 않습니다.',
-      path: `/livescore/football/player/${id}`,
-      noindex: true,
-    });
+    return buildMissingPlayerMetadata(id);
   }
 
   if (getPlayerSeoQuality(playerData.playerData) === 'worthless') {
-    return buildMetadata({
-      title: '선수 정보를 찾을 수 없습니다',
-      description: '요청하신 선수 정보가 존재하지 않습니다.',
-      path: `/livescore/football/player/${id}`,
-      noindex: true,
-    });
+    return buildMissingPlayerMetadata(id);
   }
 
   const player = playerData.playerData.info;
@@ -79,6 +71,32 @@ export async function generateMetadata({
 
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
+
+function isFallbackPlayerSlug(id: string, slug?: string | null): boolean {
+  const normalizedSlug = String(slug ?? '').trim().toLowerCase();
+  const normalizedId = String(id ?? '').trim().toLowerCase();
+
+  return !normalizedSlug || normalizedSlug === 'player' || normalizedSlug === normalizedId;
+}
+
+function buildMissingPlayerMetadata(id: string): Promise<Metadata> {
+  return buildMetadata({
+    title: '선수 정보를 찾을 수 없습니다',
+    description: '요청하신 선수 정보가 존재하지 않습니다.',
+    path: `/livescore/football/player/${id}`,
+    noindex: true,
+  });
+}
+
+function isNextNotFoundError(error: unknown): boolean {
+  return Boolean(
+    error &&
+    typeof error === 'object' &&
+    'digest' in error &&
+    typeof error.digest === 'string' &&
+    error.digest.includes('NEXT_HTTP_ERROR_FALLBACK;404')
+  );
+}
 
 /** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
 async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: string }) {
@@ -217,6 +235,10 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
       </>
     );
   } catch (error) {
+    if (isNextNotFoundError(error)) {
+      throw error;
+    }
+
     console.error('플레이어 페이지 로딩 오류:', error);
     return notFound();
   }
@@ -229,12 +251,12 @@ export default async function PlayerPage({
   params: Promise<{ id: string; slug: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const { id: playerId } = await params;
+  const { id: playerId, slug } = await params;
   const { tab = 'stats' } = await searchParams;
 
-  return (
-    <Suspense fallback={<PlayerPageSkeleton />}>
-      <PlayerPageContent playerId={playerId} tab={tab} />
-    </Suspense>
-  );
+  if (isFallbackPlayerSlug(playerId, slug)) {
+    notFound();
+  }
+
+  return await PlayerPageContent({ playerId, tab });
 }

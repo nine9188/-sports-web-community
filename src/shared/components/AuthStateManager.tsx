@@ -54,7 +54,8 @@ const AuthStateManager = React.memo(function AuthStateManager({
   const isMatchPage = pathname?.includes('/livescore/football/match/');
   
   return (
-    <div className="flex flex-col min-h-screen w-full">
+    <div className="flex flex-col min-h-screen w-full" data-site-shell>
+      <div data-site-header>
       <HeaderClient
         onProfileClick={onProfileClick}
         isSidebarOpen={false}
@@ -63,7 +64,9 @@ const AuthStateManager = React.memo(function AuthStateManager({
         isAdmin={headerIsAdmin}
         totalPostCountSlot={headerTotalPostCountSlot}
       />
-      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent">
+      </div>
+      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent" data-site-content-row>
+        <div data-site-left-sidebar>
         <Sidebar
           isOpen={isOpen}
           onClose={onClose}
@@ -71,21 +74,26 @@ const AuthStateManager = React.memo(function AuthStateManager({
         >
           {boardNavigation}
         </Sidebar>
+        </div>
         <ProfileSidebar
           isOpen={isProfileOpen}
           onClose={onProfileClose}
           userData={fullUserData}
         />
-        <main className="flex-1 mt-4 mb-4 md:px-4 w-full min-w-0 box-border bg-transparent">
+        <main className="flex-1 mt-4 mb-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
           {children}
         </main>
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}
-        {!isMatchPage && rightSidebar}
+        {!isMatchPage && <div data-site-right-sidebar>{rightSidebar}</div>}
       </div>
-      <Footer />
+      <div data-site-footer>
+        <Footer />
+      </div>
 
       {/* 챗봇 - 모든 사용자에게 표시 (로그인/비로그인 자동 감지) */}
-      <UniversalChatbot />
+      <div data-site-chatbot>
+        <UniversalChatbot />
+      </div>
     </div>
   );
 });

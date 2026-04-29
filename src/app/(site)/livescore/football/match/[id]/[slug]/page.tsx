@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { MatchPageSkeleton, MatchHeaderSkeleton, MatchContentSkeleton, MatchSidebarSkeleton } from '@/shared/components/skeletons/page-skeletons';
+import { MatchHeaderSkeleton, MatchContentSkeleton, MatchSidebarSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
@@ -363,9 +363,5 @@ export default async function MatchPage({
   const { id: matchId } = await params;
   const { tab } = await searchParams;
 
-  return (
-    <Suspense fallback={<MatchPageSkeleton />}>
-      <MatchPageContent matchId={matchId} tab={tab} />
-    </Suspense>
-  );
+  return await MatchPageContent({ matchId, tab });
 }
