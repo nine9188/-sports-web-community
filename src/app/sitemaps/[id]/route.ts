@@ -5,10 +5,24 @@ import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQuality';
 
 type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null };
 type TeamRow = { team_id: number; slug: string | null; updated_at: string | null; league_id: number | null };
-type PlayerRow = { player_id: number; slug: string | null; updated_at: string | null };
+type PlayerRow = {
+  player_id: number;
+  slug: string | null;
+  updated_at: string | null;
+  name: string | null;
+  display_name: string | null;
+  korean_name: string | null;
+  team_id: number | null;
+  team_name: string | null;
+  position: string | null;
+  number: number | null;
+  age: number | null;
+  photo_url: string | null;
+};
 type ShopCategoryRow = { slug: string | null };
 
 // ISR: 1시간
@@ -42,11 +56,29 @@ const _getCachedActiveShopCategories = unstable_cache(
   { revalidate: 3600, tags: ['sitemap-shop'] }
 );
 
+const _getCachedActivePlayersByTeam = (teamIds: number[]) => unstable_cache(
+  async (): Promise<PlayerRow[]> => {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('football_players')
+      .select('player_id, slug, updated_at, name, display_name, korean_name, team_id, team_name, position, number, age, photo_url')
+      .in('team_id', teamIds)
+      .eq('is_active', true)
+      .not('slug', 'is', null)
+      .order('name', { ascending: true });
+    return (data || []) as PlayerRow[];
+  },
+  ['sitemap-active-players', teamIds.slice().sort((a, b) => a - b).join(',')],
+  { revalidate: 3600, tags: ['sitemap-players'] }
+)();
+
 const BASE_URL = siteConfig.url;
 
-// 사이트맵 대상 리그 (5대 리그만 — 봇 크롤링 비용 절감)
+// 사이트맵 대상 리그
 const SITEMAP_LEAGUES: Record<string, number> = {
   epl: 39, laliga: 140, bundesliga: 78, 'serie-a': 135, ligue1: 61,
+  eredivisie: 88, primeira: 94, danish: 119, kleague: 292, kleague2: 293, jleague: 98,
+  saudi: 307, mls: 253,
 };
 
 // 게시판 카테고리
@@ -232,15 +264,27 @@ export async function GET(
       })));
     }
 
-    // 선수 — 사이트맵 인덱스에서 제거됨 (봇 크롤링 비용 절감)
+    // 선수 (활성 선수만, 상한 10,000개)
     if (id.startsWith('players-')) {
-      return sitemapResponse([]);
       const leagueSlug = id.replace('players-', '');
       const leagueId = SITEMAP_LEAGUES[leagueSlug];
       if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
 
-      // 선수 사이트맵은 사이트맵 축소 정책에 의해 비활성화
-      return sitemapResponse([]);
+      const allTeams = await _getCachedActiveTeams();
+      const leagueTeamIds = allTeams
+        .filter((t: TeamRow) => t.league_id === leagueId)
+        .map((t: TeamRow) => t.team_id);
+      if (!leagueTeamIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+
+      const players = (await _getCachedActivePlayersByTeam(leagueTeamIds))
+        .filter((p: PlayerRow) => !isWorthlessSitemapPlayer(p));
+
+      return sitemapResponse(players.map((p: PlayerRow) => ({
+        loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
+        lastmod: p.updated_at || undefined,
+        changefreq: 'monthly',
+        priority: 0.4,
+      })));
     }
 
     // 매치 (fixtures 테이블 기반 — 예정+종료 경기 모두 포함, API 호출 없음)

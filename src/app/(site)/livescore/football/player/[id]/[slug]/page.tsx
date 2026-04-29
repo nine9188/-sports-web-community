@@ -9,6 +9,7 @@ import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { slugify } from '@/domains/livescore/utils/slugs';
+import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
 import { PlayerPageSkeleton } from '@/shared/components/skeletons/page-skeletons';
 
 /**
@@ -39,6 +40,15 @@ export async function generateMetadata({
   });
 
   if (!playerData.success || !playerData.playerData?.info) {
+    return buildMetadata({
+      title: '선수 정보를 찾을 수 없습니다',
+      description: '요청하신 선수 정보가 존재하지 않습니다.',
+      path: `/livescore/football/player/${id}`,
+      noindex: true,
+    });
+  }
+
+  if (getPlayerSeoQuality(playerData.playerData) === 'worthless') {
     return buildMetadata({
       title: '선수 정보를 찾을 수 없습니다',
       description: '요청하신 선수 정보가 존재하지 않습니다.',
@@ -114,6 +124,10 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
           </div>
         </div>
       );
+    }
+
+    if (getPlayerSeoQuality(initialData.playerData) === 'worthless') {
+      return notFound();
     }
 
     // 선수 한글명 조회 (DB)
