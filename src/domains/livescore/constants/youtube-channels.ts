@@ -20,6 +20,12 @@ export const KOREAN_CHANNELS = {
     name: 'SPOTV',
     leagueIds: [135, 2, 3] as const,
   },
+  UEFA: {
+    channelId: 'UCyGa1YEx9ST66rYrJTGIKOw',
+    uploadsPlaylistId: 'UUyGa1YEx9ST66rYrJTGIKOw',
+    name: 'UEFA',
+    leagueIds: [2, 3] as const,
+  },
 } as const;
 
 export type KoreanChannelKey = keyof typeof KOREAN_CHANNELS;

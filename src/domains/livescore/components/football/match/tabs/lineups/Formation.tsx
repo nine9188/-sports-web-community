@@ -9,6 +9,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import Field from './components/Field';
 import Player from './components/Player';
 import { PlayerKoreanNames } from '../../MatchPageClient';
@@ -399,16 +400,18 @@ export default function Formation({
           text: '4590football 라인업',
           files: [file],
         });
+        toast.success('라인업 이미지를 공유했습니다.');
       } else {
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = `${safeFileName}.png`;
         link.click();
+        toast.info(isMobile ? '공유를 지원하지 않아 이미지 다운로드를 시작했습니다.' : '라인업 이미지 다운로드를 시작했습니다.');
       }
     } catch (err) {
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('라인업 카드 생성 실패:', err);
-        alert(err.message || '이미지 생성에 실패했습니다. 다시 시도해주세요.');
+        toast.error(err.message || '이미지 생성에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
       setCapturing(false);

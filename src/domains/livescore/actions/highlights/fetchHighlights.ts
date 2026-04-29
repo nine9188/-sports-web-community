@@ -10,6 +10,12 @@ import type { HighlightMatchResult } from '@/domains/livescore/types/highlight';
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+const HIGHLIGHT_KO = '\uD558\uC774\uB77C\uC774\uD2B8';
+const TWO_MIN_HIGHLIGHT_KO = `2\uBD84 ${HIGHLIGHT_KO}`;
+const THREE_MIN_HIGHLIGHT_KO = `3\uBD84 ${HIGHLIGHT_KO}`;
+const QUOTA_COOLDOWN_MS = 60 * 60 * 1000;
+
+let youtubeQuotaExceededUntil = 0;
 
 /**
  * 한글 팀명 별칭 (쿠팡플레이/SPOTV 제목에서 사용하는 약칭)
@@ -178,8 +184,12 @@ async function searchYouTube(
   publishedAfter?: string,
   publishedBefore?: string
 ): Promise<YouTubeSearchItem[] | null> {
+  if (Date.now() < youtubeQuotaExceededUntil) {
+    return null;
+  }
+
   if (!YOUTUBE_API_KEY) {
-    console.error('[Highlights] YOUTUBE_API_KEY not set');
+    console.warn('[Highlights] YOUTUBE_API_KEY not set');
     return null;
   }
 
@@ -203,7 +213,13 @@ async function searchYouTube(
     });
 
     if (!res.ok) {
-      console.error('[Highlights] YouTube search error:', res.status);
+      const errorText = await res.text().catch(() => '');
+      if (res.status === 403 && errorText.includes('quotaExceeded')) {
+        youtubeQuotaExceededUntil = Date.now() + QUOTA_COOLDOWN_MS;
+        console.warn('[Highlights] YouTube quota exceeded. Skipping highlight searches for 1 hour.');
+      } else {
+        console.warn('[Highlights] YouTube search failed:', res.status, errorText);
+      }
       return null;
     }
 
@@ -216,7 +232,7 @@ async function searchYouTube(
   }
 }
 
-interface YouTubeSearchItem {
+export interface YouTubeSearchItem {
   id: { videoId: string };
   snippet: {
     publishedAt: string;
@@ -233,7 +249,7 @@ interface YouTubeSearchItem {
 /**
  * 검색 결과에서 하이라이트 영상 필터링
  */
-async function findHighlightInResults(
+export async function findHighlightInResults(
   items: YouTubeSearchItem[],
   homeTeamId: number,
   awayTeamId: number
@@ -277,14 +293,14 @@ async function findHighlightInResults(
     const titleLower = title.toLowerCase();
 
     // "하이라이트" or "highlight" 포함 필수
-    if (!title.includes('하이라이트') && !titleLower.includes('highlight'))
+    if (!title.includes(HIGHLIGHT_KO) && !titleLower.includes('highlight'))
       continue;
 
     const homeIdx = findNameIndex(title, titleLower, homeNames);
     const awayIdx = findNameIndex(title, titleLower, awayNames);
 
     // 양팀 모두 존재 + 홈팀이 어웨이팀보다 앞에 나와야 함
-    if (homeIdx !== -1 && awayIdx !== -1 && homeIdx < awayIdx) {
+    if (homeIdx !== -1 && awayIdx !== -1) {
       candidates.push(item);
     }
   }
@@ -293,8 +309,8 @@ async function findHighlightInResults(
 
   // 짧은 하이라이트(2분/3분) 우선 — 풀 하이라이트보다 로딩 빠르고 UX 적합
   const short = candidates.find(c =>
-    c.snippet.title.includes('2분 하이라이트') ||
-    c.snippet.title.includes('3분 하이라이트')
+    c.snippet.title.includes(TWO_MIN_HIGHLIGHT_KO) ||
+    c.snippet.title.includes(THREE_MIN_HIGHLIGHT_KO)
   );
   return short ?? candidates[0];
 }
@@ -335,7 +351,7 @@ export async function findHighlightForMatch(
 
   if (!homeName || !awayName) return null;
 
-  const query = `${homeName} ${awayName} 하이라이트`;
+  const query = `${homeName} ${awayName} ${HIGHLIGHT_KO}`;
   const { after, before } = getDateRange(matchDate);
 
   // 1순위: 한국 채널 (쿠팡플레이 / SPOTV)
@@ -355,6 +371,29 @@ export async function findHighlightForMatch(
           thumbnailUrl: match.snippet.thumbnails.high?.url || match.snippet.thumbnails.medium?.url,
           publishedAt: match.snippet.publishedAt,
           sourceType: 'korean',
+        };
+      }
+    }
+  }
+
+  // UEFA competitions: SPOTV may miss/rename clips, so fall back to UEFA official.
+  if ((leagueId === 2 || leagueId === 3) && KOREAN_CHANNELS.UEFA) {
+    const teamMap = await getTeamsByIds([homeTeamId, awayTeamId]);
+    const homeTeam = teamMap[homeTeamId];
+    const awayTeam = teamMap[awayTeamId];
+    const uefaQuery = `${homeTeam?.name_en || homeName} ${awayTeam?.name_en || awayName} highlights`;
+    const items = await searchYouTube(KOREAN_CHANNELS.UEFA.channelId, uefaQuery, 10, after, before);
+
+    if (items) {
+      const match = await findHighlightInResults(items, homeTeamId, awayTeamId);
+      if (match) {
+        return {
+          videoId: match.id.videoId,
+          videoTitle: match.snippet.title,
+          channelName: KOREAN_CHANNELS.UEFA.name,
+          thumbnailUrl: match.snippet.thumbnails.high?.url || match.snippet.thumbnails.medium?.url,
+          publishedAt: match.snippet.publishedAt,
+          sourceType: 'official',
         };
       }
     }
