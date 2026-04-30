@@ -9,6 +9,13 @@ import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQua
 
 type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null };
 type TeamRow = { team_id: number; slug: string | null; updated_at: string | null; league_id: number | null };
+type FixtureRow = {
+  fixture_id: number;
+  home_team_id: number | null;
+  away_team_id: number | null;
+  match_date: string | null;
+  updated_at: string | null;
+};
 type PlayerRow = {
   player_id: number;
   slug: string | null;
@@ -144,6 +151,14 @@ function sitemapResponse(entries: SitemapEntry[]) {
   return new NextResponse(toXml(entries), {
     headers: { 'Content-Type': 'application/xml; charset=utf-8' },
   });
+}
+
+function getFixtureSlug(fixture: FixtureRow, teamSlugById: Map<number, string>): string {
+  const homeSlug = fixture.home_team_id ? teamSlugById.get(fixture.home_team_id) : null;
+  const awaySlug = fixture.away_team_id ? teamSlugById.get(fixture.away_team_id) : null;
+
+  if (homeSlug && awaySlug) return `${homeSlug}-vs-${awaySlug}`;
+  return 'match';
 }
 
 // --- Supabase ---
@@ -296,10 +311,10 @@ export async function GET(
       const pastDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
       const futureDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [{ data: fixtures }, { data: highlights }] = await Promise.all([
+      const [{ data: fixtures }, { data: highlights }, allTeams] = await Promise.all([
         supabase
           .from('fixtures')
-          .select('fixture_id, match_date, updated_at')
+          .select('fixture_id, home_team_id, away_team_id, match_date, updated_at')
           .gte('match_date', pastDate)
           .lte('match_date', futureDate)
           .order('match_date', { ascending: false }),
@@ -308,18 +323,24 @@ export async function GET(
           .select('fixture_id, updated_at')
           .neq('video_id', 'NOT_FOUND')
           .order('published_at', { ascending: false }),
+        _getCachedActiveTeams(),
       ]);
 
       const seen = new Set<number>();
       const entries: SitemapEntry[] = [];
+      const teamSlugById = new Map(
+        allTeams
+          .filter((team: TeamRow) => team.team_id && team.slug)
+          .map((team: TeamRow) => [team.team_id, team.slug as string])
+      );
 
       // 1순위: fixtures (예정 포함)
-      for (const f of fixtures || []) {
+      for (const f of (fixtures || []) as FixtureRow[]) {
         if (seen.has(f.fixture_id)) continue;
         seen.add(f.fixture_id);
-        const isPast = new Date(f.match_date) < now;
+        const isPast = f.match_date ? new Date(f.match_date) < now : true;
         entries.push({
-          loc: `${BASE_URL}/livescore/football/match/${f.fixture_id}/match`,
+          loc: `${BASE_URL}/livescore/football/match/${f.fixture_id}/${getFixtureSlug(f, teamSlugById)}`,
           lastmod: f.updated_at || f.match_date || undefined,
           changefreq: isPast ? 'weekly' : 'daily',
           priority: isPast ? 0.6 : 0.7,
