@@ -19,7 +19,7 @@ export interface Match {
     date: string;
     status: {
       short: string;
-      long: string;
+      long?: string;
     };
   };
   league: {

@@ -93,11 +93,11 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const headersList = await perf.mark('headers', () => import('next/headers').then(m => m.headers()));
     const isBot = headersList.get('x-is-bot') === '1';
 
-    const needsMatches = !isBot && ['overview', 'fixtures'].includes(initialTab);
-    const needsSquad = !isBot && ['overview', 'squad'].includes(initialTab);
+    const needsMatches = !isBot && initialTab === 'fixtures';
+    const needsSquad = !isBot && initialTab === 'squad';
     const needsPlayerStats = !isBot && ['squad', 'stats'].includes(initialTab);
-    const needsStandings = !isBot && ['overview', 'standings'].includes(initialTab);
-    const needsTransfers = !isBot && (initialTab === 'overview');
+    const needsStandings = !isBot && initialTab === 'standings';
+    const needsTransfers = !isBot && initialTab === 'transfers';
 
     const initialData = await perf.mark('fetchTeamFullData', () => fetchTeamFullData(id, {
       fetchMatches: needsMatches,
@@ -105,6 +105,8 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       fetchPlayerStats: needsPlayerStats,
       fetchStandings: needsStandings,
       fetchTransfers: needsTransfers,
+      fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
+      matchLimit: 10,
     }));
 
     if (!initialData.success || !initialData.teamData?.team) {
@@ -115,7 +117,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const playerIds: Set<number> = new Set();
 
     // squad에서 선수 ID 추출
-    if (initialData.squad?.data) {
+    if (initialTab === 'squad' && initialData.squad?.data) {
       initialData.squad.data.forEach((member: { id?: number }) => {
         if (member.id) playerIds.add(member.id);
       });
@@ -124,11 +126,18 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     // transfers에서 선수 ID 추출 (in/out 구조)
     if (initialData.transfers?.data) {
       // 영입 선수
-      initialData.transfers.data.in?.forEach((transfer: { player?: { id?: number } }) => {
+      const transferInForNames = initialTab === 'transfers'
+        ? initialData.transfers.data.in
+        : initialData.transfers.data.in?.slice(0, 3);
+      const transferOutForNames = initialTab === 'transfers'
+        ? initialData.transfers.data.out
+        : initialData.transfers.data.out?.slice(0, 3);
+
+      transferInForNames?.forEach((transfer: { player?: { id?: number } }) => {
         if (transfer.player?.id) playerIds.add(transfer.player.id);
       });
       // 방출 선수
-      initialData.transfers.data.out?.forEach((transfer: { player?: { id?: number } }) => {
+      transferOutForNames?.forEach((transfer: { player?: { id?: number } }) => {
         if (transfer.player?.id) playerIds.add(transfer.player.id);
       });
     }

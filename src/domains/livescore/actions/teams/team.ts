@@ -131,6 +131,7 @@ import { fetchCachedTeamPlayerStats as getTeamPlayerStats, PlayerStats } from '.
 import { fetchCachedTeamStandings as getTeamStandings, Standing } from './standings';
 import { fetchCachedTeamTransfers as getTeamTransfers, TeamTransfersData } from './transfers';
 import { getPlayerPhotoUrls, getTeamLogoUrls, getCoachPhotoUrls, getLeagueLogoUrls, getVenueImageUrl } from '@/domains/livescore/actions/images';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 
 type TeamPerfStep = {
   label: string;
@@ -153,6 +154,135 @@ export type TeamFullDataOptions = {
   fetchMatchesMode?: 'season' | 'recent';
   matchLimit?: number;
 };
+
+type TeamDbRow = {
+  team_id: number;
+  name: string | null;
+  name_ko: string | null;
+  country: string | null;
+  country_ko: string | null;
+  code: string | null;
+  logo_url: string | null;
+  logo_cached_url: string | null;
+  league_id: number | null;
+  founded: number | null;
+  venue_id: number | null;
+  venue_name: string | null;
+  venue_address: string | null;
+  venue_city: string | null;
+  venue_capacity: number | null;
+  venue_surface: string | null;
+  current_season: number | null;
+  league_name: string | null;
+  league_name_ko: string | null;
+  league_logo_url: string | null;
+  api_data: {
+    team?: {
+      logo?: string;
+    };
+    venue?: {
+      image?: string;
+    };
+    standing?: {
+      all?: { played?: number; win?: number; draw?: number; lose?: number; goals?: { for?: number; against?: number } };
+      home?: { played?: number; win?: number; draw?: number; lose?: number; goals?: { for?: number; against?: number } };
+      away?: { played?: number; win?: number; draw?: number; lose?: number; goals?: { for?: number; against?: number } };
+      form?: string;
+    };
+  } | null;
+};
+
+function buildTeamInfoFromDb(row: TeamDbRow): TeamInfo {
+  return {
+    team: {
+      id: row.team_id,
+      name: row.name_ko || row.name || `Team ${row.team_id}`,
+      code: row.code || undefined,
+      country: row.country_ko || row.country || undefined,
+      founded: row.founded || undefined,
+      logo: row.logo_cached_url || row.logo_url || row.api_data?.team?.logo || '',
+    },
+    venue: row.venue_id || row.venue_name ? {
+      id: row.venue_id || undefined,
+      name: row.venue_name || '',
+      address: row.venue_address || '',
+      city: row.venue_city || '',
+      capacity: row.venue_capacity || 0,
+      surface: row.venue_surface || undefined,
+      image: row.api_data?.venue?.image || '',
+    } : undefined,
+  };
+}
+
+function buildTeamStatsFromDb(row: TeamDbRow): TeamStats | null {
+  const standing = row.api_data?.standing;
+  if (!standing?.all) return null;
+
+  const played = standing.all.played || 0;
+  const goalsFor = standing.all.goals?.for || 0;
+  const goalsAgainst = standing.all.goals?.against || 0;
+  const avg = (value: number) => played > 0 ? (value / played).toFixed(1) : '0';
+
+  return {
+    league: {
+      id: row.league_id || 0,
+      name: row.league_name_ko || row.league_name || '',
+      country: row.country_ko || row.country || '',
+      logo: row.league_logo_url || '',
+      flag: '',
+      season: row.current_season || new Date().getFullYear(),
+    },
+    fixtures: {
+      played: {
+        home: standing.home?.played || 0,
+        away: standing.away?.played || 0,
+        total: played,
+      },
+      wins: {
+        home: standing.home?.win || 0,
+        away: standing.away?.win || 0,
+        total: standing.all.win || 0,
+      },
+      draws: {
+        home: standing.home?.draw || 0,
+        away: standing.away?.draw || 0,
+        total: standing.all.draw || 0,
+      },
+      loses: {
+        home: standing.home?.lose || 0,
+        away: standing.away?.lose || 0,
+        total: standing.all.lose || 0,
+      },
+    },
+    goals: {
+      for: {
+        total: {
+          home: standing.home?.goals?.for || 0,
+          away: standing.away?.goals?.for || 0,
+          total: goalsFor,
+        },
+        average: {
+          home: avg(standing.home?.goals?.for || 0),
+          away: avg(standing.away?.goals?.for || 0),
+          total: avg(goalsFor),
+        },
+      },
+      against: {
+        total: {
+          home: standing.home?.goals?.against || 0,
+          away: standing.away?.goals?.against || 0,
+          total: goalsAgainst,
+        },
+        average: {
+          home: avg(standing.home?.goals?.against || 0),
+          away: avg(standing.away?.goals?.against || 0),
+          total: avg(goalsAgainst),
+        },
+      },
+    },
+    form: standing.form,
+  };
+}
 
 function createTeamPerfTrace(teamId: string, scope: string): TeamPerfTrace {
   const enabled = process.env.NODE_ENV === 'development' || process.env.TEAM_DETAIL_PERF === '1';
@@ -216,9 +346,45 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
     }
 
     // 팀 정보 API 요청
-    const teamData = await perf.mark('api:teams', () => fetchFromFootballApi('teams', { id: teamId }));
+    let teamInfo: TeamInfo | null = null;
+    let leagueId = 39;
+    let dbLeagueFound = false;
+    let currentSeason: number | null = null;
+    let statsData: TeamStats | null = null;
+    let teamInfoFromDb = false;
+
+    try {
+      const { data: teamRow } = await perf.mark('db:team-row', async () => {
+        const supabase = await getSupabaseServer();
+        return supabase
+          .from('football_teams')
+          .select('team_id, name, name_ko, country, country_ko, code, logo_url, logo_cached_url, league_id, league_name, league_name_ko, league_logo_url, founded, venue_id, venue_name, venue_address, venue_city, venue_capacity, venue_surface, current_season, api_data')
+          .eq('team_id', Number(teamId))
+          .maybeSingle();
+      });
+
+      const row = teamRow as TeamDbRow | null;
+      if (row) {
+        teamInfo = buildTeamInfoFromDb(row);
+        statsData = buildTeamStatsFromDb(row);
+        teamInfoFromDb = true;
+      }
+
+      if (typeof row?.league_id === 'number') {
+        leagueId = row.league_id;
+        dbLeagueFound = true;
+      }
+
+      if (typeof row?.current_season === 'number') {
+        currentSeason = row.current_season;
+      }
+    } catch {
+      // keep API fallback
+    }
+
+    const teamData = teamInfo ? null : await perf.mark('api:teams:fallback', () => fetchFromFootballApi('teams', { id: teamId }));
     
-    if (!teamData?.response?.[0]) {
+    if (!teamInfo && !teamData?.response?.[0]) {
       return { 
         success: false,
         message: '팀 데이터를 찾을 수 없습니다'
@@ -226,32 +392,33 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
     }
     
     // 팀 정보와 스탯 데이터 병합
-    const teamInfo = teamData.response[0] as TeamInfo;
+    if (!teamInfo) {
+      teamInfo = teamData!.response[0] as TeamInfo;
+    }
     
     // API에서 팀 스탯 가져오기 (현재 시즌)
     // DB에서 팀의 리그 ID를 먼저 조회하여 정확한 시즌 결정
-    let leagueId = 39; // 기본값으로 프리미어리그 설정
-    let dbLeagueFound = false;
-
-    try {
-      const { data: teamRow } = await perf.mark('db:team-league-id', async () => {
-        const supabase = await getSupabaseServer();
-        return supabase
-          .from('football_teams')
-          .select('league_id')
-          .eq('team_id', Number(teamId))
-          .single();
-      });
-      if (teamRow?.league_id) {
-        leagueId = teamRow.league_id;
-        dbLeagueFound = true;
+    if (!dbLeagueFound) {
+      try {
+        const { data: teamRow } = await perf.mark('db:team-league-id', async () => {
+          const supabase = await getSupabaseServer();
+          return supabase
+            .from('football_teams')
+            .select('league_id')
+            .eq('team_id', Number(teamId))
+            .single();
+        });
+        if (teamRow?.league_id) {
+          leagueId = teamRow.league_id;
+          dbLeagueFound = true;
+        }
+      } catch {
+        // DB 조회 실패 시 API로 fallback
       }
-    } catch {
-      // DB 조회 실패 시 API로 fallback
     }
 
     // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
-    let currentSeason = await perf.mark('db:current-season', () => getCurrentSeasonForLeague(leagueId));
+    currentSeason = currentSeason ?? await perf.mark('db:current-season', () => getCurrentSeasonForLeague(leagueId));
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
     if (!dbLeagueFound) {
@@ -296,20 +463,23 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
       }
     }
 
-    let statsData = null;
-    try {
-      const statsResult = await perf.mark('api:teams-statistics', () => fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId }));
-      if (statsResult?.response) {
-        statsData = statsResult.response as TeamStats;
+    if (!statsData) {
+      try {
+        const statsResult = await perf.mark('api:teams-statistics', () => fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId }));
+        if (statsResult?.response) {
+          statsData = statsResult.response as TeamStats;
+        }
+      } catch {
+        // stats 실패해도 팀 기본 정보는 반환
       }
-    } catch {
-      // stats 실패해도 팀 기본 정보는 반환
     }
     
     // 팀 매핑 정보 적용
-    const teamMapping = await perf.mark('db:team-name-mapping', () => getTeamById(Number(teamId)));
-    if (teamMapping && teamInfo.team) {
-      teamInfo.team.name = teamMapping.name_ko || teamInfo.team.name;
+    if (!teamInfoFromDb) {
+      const teamMapping = await perf.mark('db:team-name-mapping', () => getTeamById(Number(teamId)));
+      if (teamMapping && teamInfo.team) {
+        teamInfo.team.name = teamMapping.name_ko || teamInfo.team.name;
+      }
     }
     
     return { 
@@ -397,6 +567,105 @@ export const fetchTeamSeoData = cache(
  * @param teamId 팀 ID
  * @param options 가져올 데이터 타입을 지정하는 옵션
  */
+export const fetchTeamOverviewStandingsData = cache(
+  async (teamId: string) => {
+    const standings = await getTeamStandings(teamId);
+    const teamIds = new Set<number>();
+    const leagueIds = new Set<number>();
+
+    for (const standing of standings.data || []) {
+      if (standing.league?.id) leagueIds.add(standing.league.id);
+
+      for (const group of standing.league?.standings || []) {
+        for (const item of group || []) {
+          if (item.team?.id) teamIds.add(item.team.id);
+        }
+      }
+    }
+
+    const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+      teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : {},
+    ]);
+
+    return {
+      success: standings.success,
+      message: standings.message,
+      standings: standings.data,
+      teamLogoUrls,
+      leagueLogoUrls,
+      leagueLogoDarkUrls,
+    };
+  }
+);
+
+export const fetchTeamOverviewTransfersData = cache(
+  async (teamId: string) => {
+    const transfers = await getTeamTransfers(teamId);
+    const previewTransfers = [
+      ...(transfers.data?.in || []).slice(0, 3),
+      ...(transfers.data?.out || []).slice(0, 3),
+    ];
+    const playerIds = new Set<number>();
+    const teamIds = new Set<number>();
+
+    for (const transfer of previewTransfers) {
+      playerIds.add(transfer.player.id);
+      if ('fromTeam' in transfer && transfer.fromTeam?.id) {
+        teamIds.add(transfer.fromTeam.id);
+      }
+      if ('toTeam' in transfer && transfer.toTeam?.id) {
+        teamIds.add(transfer.toTeam.id);
+      }
+    }
+
+    const [playerKoreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
+      playerIds.size > 0 ? getPlayersKoreanNames([...playerIds]) : {},
+      playerIds.size > 0 ? getPlayerPhotoUrls([...playerIds]) : {},
+      teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : {},
+    ]);
+
+    return {
+      success: transfers.success,
+      message: transfers.message,
+      transfers: transfers.data,
+      playerKoreanNames,
+      playerPhotoUrls,
+      teamLogoUrls,
+    };
+  }
+);
+
+export const fetchTeamOverviewMatchesData = cache(
+  async (teamId: string, limit = 10) => {
+    const matches = await getTeamMatchesUnified(teamId, { mode: 'recent', limit });
+    const teamIds = new Set<number>();
+    const leagueIds = new Set<number>();
+
+    for (const match of matches.data || []) {
+      if (match.teams?.home?.id) teamIds.add(match.teams.home.id);
+      if (match.teams?.away?.id) teamIds.add(match.teams.away.id);
+      if (match.league?.id) leagueIds.add(match.league.id);
+    }
+
+    const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+      teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : {},
+    ]);
+
+    return {
+      success: matches.success,
+      message: matches.message,
+      matches: matches.data,
+      teamLogoUrls,
+      leagueLogoUrls,
+      leagueLogoDarkUrls,
+    };
+  }
+);
+
 export const fetchTeamFullData = cache(
   async (
     teamId: string, 
