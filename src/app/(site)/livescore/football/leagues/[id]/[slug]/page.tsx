@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: LeaguePageProps) {
 /** 리그 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
 async function LeaguePageContent({ id }: { id: string }) {
   const leagueId = parseInt(id, 10);
+  const leagueSlug = getLeagueSlug(leagueId);
 
   // 1단계: 리그 정보 먼저 조회 (타입에 따라 다른 데이터 병렬 fetch 결정)
   const league = await fetchLeagueDetails(id);
@@ -87,7 +88,7 @@ async function LeaguePageContent({ id }: { id: string }) {
     '@context': 'https://schema.org',
     '@type': 'SportsOrganization',
     name: league.name,
-    url: `${siteConfig.url}/livescore/football/leagues/${leagueId}`,
+    url: `${siteConfig.url}/livescore/football/leagues/${leagueId}/${leagueSlug}`,
     sport: 'Football',
     ...(league.country ? { location: { '@type': 'Country', name: league.country } } : {}),
   };
@@ -116,7 +117,7 @@ async function LeaguePageContent({ id }: { id: string }) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
       { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
-      { '@type': 'ListItem', position: 3, name: league.name, item: `${siteConfig.url}/livescore/football/leagues/${leagueId}` },
+      { '@type': 'ListItem', position: 3, name: league.name, item: `${siteConfig.url}/livescore/football/leagues/${leagueId}/${leagueSlug}` },
     ],
   };
 

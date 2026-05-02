@@ -64,7 +64,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: `${playerName} - 통계·기록·프로필`,
     description,
-    path: `/livescore/football/player/${id}/${slugify(player.name)}`,
+    path: `/livescore/football/player/${id}/${slug || slugify(player.name) || 'player'}`,
     keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
   });
 }
@@ -99,7 +99,7 @@ function isNextNotFoundError(error: unknown): boolean {
 }
 
 /** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
-async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: string }) {
+async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; slug: string; tab: string }) {
   try {
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as PlayerTabType)
@@ -197,6 +197,8 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
 
     // BreadcrumbList JSON-LD
     const playerDisplayName = playerKoreanName || playerInfo?.name || '';
+    const playerSlug = slug || (playerInfo?.name ? slugify(playerInfo.name) : '') || 'player';
+    const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
     const currentTeamMapping = currentTeam?.id ? await getTeamById(currentTeam.id) : null;
     const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
     const breadcrumbSchema = {
@@ -208,7 +210,7 @@ async function PlayerPageContent({ playerId, tab }: { playerId: string; tab: str
         ...(currentTeam?.id && teamDisplayName ? [{
           '@type': 'ListItem', position: 3, name: teamDisplayName, item: `${siteConfig.url}/livescore/football/team/${currentTeam.id}`,
         }] : []),
-        { '@type': 'ListItem', position: currentTeam?.id && teamDisplayName ? 4 : 3, name: playerDisplayName, item: `${siteConfig.url}/livescore/football/player/${playerId}` },
+        { '@type': 'ListItem', position: currentTeam?.id && teamDisplayName ? 4 : 3, name: playerDisplayName, item: playerUrl },
       ],
     };
 
@@ -258,5 +260,5 @@ export default async function PlayerPage({
     notFound();
   }
 
-  return await PlayerPageContent({ playerId, tab });
+  return await PlayerPageContent({ playerId, slug, tab });
 }

@@ -61,7 +61,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string; slug: string }>
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { id, slug } = await params;
 
   // 경기 데이터 조회 (최소한의 옵션으로)
   const matchData = await fetchCachedMatchFullData(id, {
@@ -111,7 +111,7 @@ export async function generateMetadata({
   return buildMetadata({
     title,
     description,
-    path: `/livescore/football/match/${id}/${getMatchSlug(match.teams.home.name, match.teams.away.name)}`,
+    path: `/livescore/football/match/${id}/${slug || getMatchSlug(match.teams.home.name, match.teams.away.name) || 'match'}`,
     keywords: [
       `${homeTeam} ${awayTeam}`,
       `${homeTeam} ${score} ${awayTeam}`,
@@ -201,7 +201,7 @@ async function MatchContentLoader({
 }
 
 /** 매치 전체 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
-async function MatchPageContent({ matchId, tab }: { matchId: string; tab?: string }) {
+async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug: string; tab?: string }) {
   try {
     const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
       ? (tab as MatchTabType)
@@ -250,7 +250,10 @@ async function MatchPageContent({ matchId, tab }: { matchId: string; tab?: strin
     const matchEndDate = matchStartDate
       ? new Date(new Date(matchStartDate).getTime() + 2 * 60 * 60 * 1000).toISOString()
       : undefined;
-    const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}`;
+    const matchSlug = slug || (
+      match ? getMatchSlug(match.teams.home.name, match.teams.away.name) : ''
+    ) || 'match';
+    const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}/${matchSlug}`;
 
     const sportsEventSchema = match ? {
       '@context': 'https://schema.org',
@@ -360,8 +363,8 @@ export default async function MatchPage({
   params: Promise<{ id: string; slug: string }>,
   searchParams: Promise<{ tab?: string }>
 }) {
-  const { id: matchId } = await params;
+  const { id: matchId, slug } = await params;
   const { tab } = await searchParams;
 
-  return await MatchPageContent({ matchId, tab });
+  return await MatchPageContent({ matchId, slug, tab });
 }

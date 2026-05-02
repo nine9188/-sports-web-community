@@ -1,12 +1,42 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
-import { fetchTeamFullData } from '@/domains/livescore/actions/teams/team';
+import { fetchTeamFullData, fetchTeamSeoData } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { slugify } from '@/domains/livescore/utils/slugs';
+
+type TeamPagePerfStep = {
+  label: string;
+  ms: number;
+};
+
+function createTeamPagePerfTrace(teamId: string, tab: string) {
+  const enabled = process.env.NODE_ENV === 'development' || process.env.TEAM_DETAIL_PERF === '1';
+  const startedAt = Date.now();
+  const steps: TeamPagePerfStep[] = [];
+
+  return {
+    mark: async <T,>(label: string, task: () => Promise<T>): Promise<T> => {
+      if (!enabled) return task();
+
+      const start = Date.now();
+      try {
+        return await task();
+      } finally {
+        steps.push({ label, ms: Date.now() - start });
+      }
+    },
+    log: (label: string) => {
+      if (!enabled) return;
+
+      const detail = steps.map((step) => `${step.label}=${step.ms}ms`).join(' | ');
+      console.info(`[team-page-perf] ${label} team=${teamId} tab=${tab} total=${Date.now() - startedAt}ms${detail ? ` | ${detail}` : ''}`);
+    },
+  };
+}
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -19,18 +49,12 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string; slug: string }>
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { id, slug } = await params;
 
   // 팀 데이터 조회 (최소한의 옵션으로)
-  const teamData = await fetchTeamFullData(id, {
-    fetchMatches: false,
-    fetchSquad: false,
-    fetchPlayerStats: false,
-    fetchStandings: false,
-    fetchTransfers: false,
-  });
+  const teamData = await fetchTeamSeoData(id);
 
-  if (!teamData.success || !teamData.teamData?.team?.team) {
+  if (!teamData.success || !teamData.team) {
     return buildMetadata({
       title: '팀 정보를 찾을 수 없습니다',
       description: '요청하신 팀 정보가 존재하지 않습니다.',
@@ -39,9 +63,9 @@ export async function generateMetadata({
     });
   }
 
-  const team = teamData.teamData.team.team;
+  const team = teamData.team;
   const teamName = team.name;
-  const teamSlug = slugify(teamName);
+  const teamSlug = slug || slugify(teamName) || 'team';
   const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
@@ -53,10 +77,12 @@ export async function generateMetadata({
 }
 
 // 유효한 탭 목록
-const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'stats'];
+const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
 /** 팀 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
-async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
+async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
+  const perf = createTeamPagePerfTrace(id, tab);
+
   try {
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as TeamTabType)
@@ -64,7 +90,7 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
       : 'overview';
 
     // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
-    const headersList = await import('next/headers').then(m => m.headers());
+    const headersList = await perf.mark('headers', () => import('next/headers').then(m => m.headers()));
     const isBot = headersList.get('x-is-bot') === '1';
 
     const needsMatches = !isBot && ['overview', 'fixtures'].includes(initialTab);
@@ -73,13 +99,13 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
     const needsStandings = !isBot && ['overview', 'standings'].includes(initialTab);
     const needsTransfers = !isBot && (initialTab === 'overview');
 
-    const initialData = await fetchTeamFullData(id, {
+    const initialData = await perf.mark('fetchTeamFullData', () => fetchTeamFullData(id, {
       fetchMatches: needsMatches,
       fetchSquad: needsSquad,
       fetchPlayerStats: needsPlayerStats,
       fetchStandings: needsStandings,
       fetchTransfers: needsTransfers,
-    });
+    }));
 
     if (!initialData.success || !initialData.teamData?.team) {
       notFound();
@@ -109,25 +135,26 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
 
     // 선수 한글명 일괄 조회 (DB)
     const playerKoreanNames = playerIds.size > 0
-      ? await getPlayersKoreanNames(Array.from(playerIds))
+      ? await perf.mark('db:player-korean-names', () => getPlayersKoreanNames(Array.from(playerIds)))
       : {};
 
     // SportsTeam JSON-LD 생성
     const team = initialData.teamData?.team?.team;
     const venue = initialData.teamData?.team?.venue;
-    const [teamMapping, leagueMapping] = await Promise.all([
+    const [teamMapping, leagueMapping] = await perf.mark('jsonld:mappings', () => Promise.all([
       team ? getTeamById(Number(id)) : Promise.resolve(null),
       initialData.standings?.data?.[0]?.league
         ? getLeagueById(initialData.standings.data[0].league.id)
         : Promise.resolve(null),
-    ]);
+    ]));
 
     // 코치 정보 추출
     const coach = initialData.squad?.data?.find(
       (member: { position?: string }) => member.position === 'Coach'
     ) as { id?: number; name?: string } | undefined;
 
-    const teamUrl = `${siteConfig.url}/livescore/football/team/${id}`;
+    const teamSlug = slug || (team?.name ? slugify(team.name) : '') || 'team';
+    const teamUrl = `${siteConfig.url}/livescore/football/team/${id}/${teamSlug}`;
 
     const sportsTeamSchema = team ? {
       '@context': 'https://schema.org',
@@ -184,6 +211,8 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
     };
 
     // 클라이언트 컴포넌트에 데이터 전달
+    perf.log('success');
+
     return (
       <>
         {sportsTeamSchema && (
@@ -205,14 +234,15 @@ async function TeamPageContent({ id, tab }: { id: string; tab: string }) {
       </>
     );
   } catch (error: unknown) {
+    perf.log('error');
     console.error('팀 페이지 로딩 오류:', error);
     notFound();
   }
 }
 
 export default async function TeamPage({ params, searchParams }: TeamPageProps) {
-  const { id } = await params;
+  const { id, slug } = await params;
   const { tab = 'overview' } = await searchParams;
 
-  return await TeamPageContent({ id, tab });
+  return await TeamPageContent({ id, slug, tab });
 }

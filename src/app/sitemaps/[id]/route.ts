@@ -100,10 +100,7 @@ const STATIC_PAGES = [
   { path: '/', changefreq: 'daily', priority: 1.0 },
   { path: '/about', changefreq: 'monthly', priority: 0.3 },
   { path: '/guide', changefreq: 'monthly', priority: 0.3 },
-  { path: '/privacy', changefreq: 'yearly', priority: 0.2 },
-  { path: '/terms', changefreq: 'yearly', priority: 0.2 },
   { path: '/contact', changefreq: 'monthly', priority: 0.3 },
-  { path: '/search', changefreq: 'daily', priority: 0.5 },
   { path: '/transfers', changefreq: 'daily', priority: 0.6 },
   { path: '/livescore/football', changefreq: 'always', priority: 0.9 },
   { path: '/livescore/football/leagues', changefreq: 'weekly', priority: 0.7 },
@@ -209,8 +206,12 @@ export async function GET(
       for (const p of STATIC_PAGES) {
         entries.push({ loc: `${BASE_URL}${p.path}`, changefreq: p.changefreq, priority: p.priority });
       }
+      const allBoards = (await getCachedAllBoards()) as BoardRow[];
+      const existingBoardSlugs = new Set(allBoards.map(board => board.slug).filter(Boolean));
       for (const slug of HOTDEAL_SLUGS) {
-        entries.push({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'hourly', priority: 0.6 });
+        if (existingBoardSlugs.has(slug)) {
+          entries.push({ loc: `${BASE_URL}/boards/${slug}`, changefreq: 'hourly', priority: 0.6 });
+        }
       }
       for (const leagueId of await getMajorLeagueIds()) {
         entries.push({ loc: `${BASE_URL}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}`, changefreq: 'daily', priority: 0.7 });
@@ -271,10 +272,11 @@ export async function GET(
       const allTeams = await _getCachedActiveTeams();
       const leagueIdSet = new Set(Object.values(SITEMAP_LEAGUES));
       const teams = allTeams.filter((t: TeamRow) => t.league_id !== null && leagueIdSet.has(t.league_id));
+      const generatedAt = new Date().toISOString();
 
       return sitemapResponse(teams.map((t: TeamRow) => ({
         loc: `${BASE_URL}/livescore/football/team/${t.team_id}/${t.slug || 'team'}`,
-        lastmod: t.updated_at || undefined,
+        lastmod: generatedAt,
         changefreq: 'weekly', priority: 0.6,
       })));
     }
@@ -293,10 +295,11 @@ export async function GET(
 
       const players = (await _getCachedActivePlayersByTeam(leagueTeamIds))
         .filter((p: PlayerRow) => p.player_id > 0 && !isWorthlessSitemapPlayer(p));
+      const generatedAt = new Date().toISOString();
 
       return sitemapResponse(players.map((p: PlayerRow) => ({
         loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
-        lastmod: p.updated_at || undefined,
+        lastmod: generatedAt,
         changefreq: 'monthly',
         priority: 0.4,
       })));
@@ -367,9 +370,11 @@ export async function GET(
     if (id === 'shop') {
       const categories = await _getCachedActiveShopCategories();
 
-      return sitemapResponse(categories.map((c: ShopCategoryRow) => ({
-        loc: `${BASE_URL}/shop/${c.slug}`, changefreq: 'weekly', priority: 0.3,
-      })));
+      return sitemapResponse(categories
+        .filter((c: ShopCategoryRow) => Boolean(c.slug))
+        .map((c: ShopCategoryRow) => ({
+          loc: `${BASE_URL}/shop/${c.slug}`, changefreq: 'weekly', priority: 0.3,
+        })));
     }
 
     return sitemapResponse([{ loc: `${BASE_URL}/` }]);
