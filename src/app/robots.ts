@@ -13,7 +13,6 @@ const SITEMAP_IDS = [
   'posts-community',
   'teams',
   'matches',
-  'shop',
   'players-epl',
   'players-laliga',
   'players-bundesliga',

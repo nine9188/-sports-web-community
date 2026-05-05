@@ -8,7 +8,7 @@ const SITEMAP_IDS = [
   'static',
   'boards-football', 'boards-kleague', 'boards-news', 'boards-community',
   'posts-football', 'posts-kleague', 'posts-news', 'posts-community',
-  'teams', 'matches', 'shop',
+  'teams', 'matches',
   'players-epl', 'players-laliga', 'players-bundesliga', 'players-serie-a',
   'players-ligue1', 'players-eredivisie', 'players-primeira', 'players-danish',
   'players-kleague', 'players-jleague', 'players-saudi', 'players-mls',
