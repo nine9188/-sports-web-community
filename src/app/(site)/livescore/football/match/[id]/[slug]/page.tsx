@@ -170,7 +170,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     if (!matchData.success) {
       return notFound();
     }
-    // JSON-LD ??밴쉐 (SEO)
+    // JSON-LD building (SEO)
     const match = matchData.match;
     const homeTeamId = matchData.homeTeam?.id;
     const awayTeamId = matchData.awayTeam?.id;
@@ -289,7 +289,6 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     // BreadcrumbList JSON-LD
     const matchDisplayName = `${homeTeamName} vs ${awayTeamName}`;
     const breadcrumbSchema = buildBreadcrumbJsonLd({
-      name: `${matchDisplayName || 'Match'} breadcrumb`,
       items: [
         { name: '홈', url: '/' },
         { name: '라이브스코어', url: '/livescore/football' },

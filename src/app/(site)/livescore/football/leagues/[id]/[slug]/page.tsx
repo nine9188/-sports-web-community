@@ -111,7 +111,6 @@ async function LeaguePageContent({ id }: { id: string }) {
   };
 
   const breadcrumbSchema = buildBreadcrumbJsonLd({
-    name: `${displayName || '리그'} breadcrumb`,
     items: [
       { name: '홈', url: '/' },
       { name: '라이브스코어', url: '/livescore/football' },

@@ -255,6 +255,8 @@ async function PostDetailContent({
     const firstImage = extractFirstImage(result.post.content);
     const postImage = firstImage || `${siteUrl}/og-image.png`;
     const contentType = (result.board as { content_type?: string }).content_type || 'community';
+    const postTitle = result.post.title?.trim() || `${result.board.name} 게시글`;
+    const boardName = result.board.name?.trim() || '게시판';
 
     // 공통 author 객체
     const authorSchema = {
@@ -281,8 +283,9 @@ async function PostDetailContent({
       postSchema = {
         '@context': 'https://schema.org',
         '@type': 'NewsArticle',
-        headline: result.post.title,
-        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        name: postTitle,
+        headline: postTitle,
+        description: articleDescription || `${boardName}의 게시글입니다.`,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -301,8 +304,9 @@ async function PostDetailContent({
       postSchema = {
         '@context': 'https://schema.org',
         '@type': 'Article',
-        headline: result.post.title,
-        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        name: postTitle,
+        headline: postTitle,
+        description: articleDescription || `${boardName}의 게시글입니다.`,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -321,8 +325,8 @@ async function PostDetailContent({
       postSchema = {
         '@context': 'https://schema.org',
         '@type': 'Review',
-        name: result.post.title,
-        reviewBody: articleDescription || `${result.board.name}의 게시글입니다.`,
+        name: postTitle,
+        reviewBody: articleDescription || `${boardName}의 게시글입니다.`,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -339,17 +343,19 @@ async function PostDetailContent({
       postSchema = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        name: result.post.title,
-        description: articleDescription || `${result.board.name}의 게시글입니다.`,
+        name: postTitle,
+        description: articleDescription || `${boardName}의 게시글입니다.`,
         image: postImage,
         offers: {
           '@type': 'Offer',
+          name: postTitle,
           url: postUrl,
           availability: 'https://schema.org/InStock',
           priceCurrency: 'KRW',
         },
         review: {
           '@type': 'Review',
+          name: `${postTitle} 리뷰`,
           author: authorSchema,
           datePublished: result.post.created_at,
           reviewBody: articleDescription,
@@ -359,6 +365,7 @@ async function PostDetailContent({
       // community (기본값): DiscussionForumPosting
       const topComments = processedComments.slice(0, 3).map((comment: { content?: string; profiles?: { nickname?: string; public_id?: string | null }; created_at?: string }) => ({
         '@type': 'Comment',
+        name: '게시글 댓글',
         text: typeof comment.content === 'string'
           ? comment.content.replace(/<[^>]*>/g, '').slice(0, 200)
           : '',
@@ -375,8 +382,9 @@ async function PostDetailContent({
       postSchema = {
         '@context': 'https://schema.org',
         '@type': 'DiscussionForumPosting',
-        headline: result.post.title,
-        text: articleDescription || `${result.board.name}의 게시글입니다.`,
+        name: postTitle,
+        headline: postTitle,
+        text: articleDescription || `${boardName}의 게시글입니다.`,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -404,48 +412,21 @@ async function PostDetailContent({
             ? (breadcrumb.slug.startsWith('/') ? breadcrumb.slug : `/boards/${breadcrumb.slug}`)
             : undefined;
 
-        return breadcrumbPath ? {
+        return breadcrumbPath && breadcrumb.name ? {
           name: breadcrumb.name,
           item: `${baseSiteUrl}${breadcrumbPath}`
         } : null;
       })
       .filter((item): item is { name: string; item: string } => item !== null);
 
-    const breadcrumbListItems = [
-      // 홈 (item 필수)
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: '홈',
-        item: baseSiteUrl
-      },
-      // 중간 게시판들 (item 필수)
-      ...validBreadcrumbs.map((breadcrumb, index) => ({
-        '@type': 'ListItem',
-        position: index + 2,
-        name: breadcrumb.name,
-        item: breadcrumb.item
-      })),
-      // 마지막: 현재 페이지
-      {
-        '@type': 'ListItem',
-        position: validBreadcrumbs.length + 2,
-        name: result.post.title,
-        item: postUrl
-      }
-    ];
-
-    void breadcrumbListItems;
-
     const breadcrumbSchema = buildBreadcrumbJsonLd({
-      name: `${result.post.title || 'Post'} breadcrumb`,
       items: [
         { name: '홈', url: baseSiteUrl },
         ...validBreadcrumbs.map((breadcrumb) => ({
           name: breadcrumb.name,
           url: breadcrumb.item,
         })),
-        { name: result.post.title, url: postUrl },
+        { name: postTitle, url: postUrl },
       ],
     });
 

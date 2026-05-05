@@ -166,7 +166,7 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
 
     // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)
     if (!initialData.success) {
-      console.error(`[PlayerPage] 데이터 로드 실패 - playerId: ${playerId}, message: ${initialData.message}`);
+      console.error(`[PlayerPage] Player data load failed - playerId: ${playerId}, message: ${initialData.message}`);
       return (
         <div className="min-h-[400px] flex flex-col items-center justify-center">
           <div className="text-center">
@@ -281,7 +281,6 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
 
     // BreadcrumbList JSON-LD
     const breadcrumbSchema = buildBreadcrumbJsonLd({
-      name: `${playerDisplayName || 'Player'} breadcrumb`,
       items: [
         { name: '홈', url: '/' },
         { name: '라이브스코어', url: '/livescore/football' },

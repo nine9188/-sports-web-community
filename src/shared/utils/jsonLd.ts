@@ -36,7 +36,6 @@ export function isUsableJsonLdImage(pathOrUrl?: string | null): pathOrUrl is str
 }
 
 export function buildBreadcrumbJsonLd({
-  name = 'Breadcrumb',
   items,
   includeLastItem = true,
 }: {
@@ -54,7 +53,6 @@ export function buildBreadcrumbJsonLd({
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    name,
     itemListElement: validItems.map((item, index) => {
       const listItem: JsonLdObject = {
         '@type': 'ListItem',

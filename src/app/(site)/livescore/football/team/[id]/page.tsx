@@ -1,5 +1,4 @@
 import { permanentRedirect } from 'next/navigation';
-import { slugify } from '@/domains/livescore/utils/slugs';
 
 /**
  * /team/[id] → /team/[id]/[slug] 리다이렉트 전용

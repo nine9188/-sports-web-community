@@ -193,7 +193,6 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const teamDisplayName = teamMapping?.name_ko || team?.name || '';
     const leagueDisplayName = leagueMapping?.name_ko || initialData.standings?.data?.[0]?.league?.name || '';
     const breadcrumbSchema = buildBreadcrumbJsonLd({
-      name: `${teamDisplayName || 'Team'} breadcrumb`,
       items: [
         { name: '홈', url: '/' },
         { name: '라이브스코어', url: '/livescore/football' },

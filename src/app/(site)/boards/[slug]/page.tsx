@@ -206,20 +206,22 @@ async function BoardDetailContent({
 
     // 5. 게시판 JSON-LD 구조화 데이터 (AI/검색엔진용)
     const childBoards = result.hoverChildBoardsMap[result.boardData.id] || [];
+    const namedChildBoards = childBoards.filter((child) => Boolean(child.name?.trim()));
     const boardUrl = `https://4590football.com/boards/${slug}`;
+    const boardName = result.boardData.name?.trim() || slug;
     const boardJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: result.boardData.name,
-      description: result.boardData.description || `${result.boardData.name} - 축구 커뮤니티 4590 Football 게시판`,
+      name: boardName,
+      description: result.boardData.description || `${boardName} - 축구 커뮤니티 4590 Football 게시판`,
       url: boardUrl,
       isPartOf: {
         '@type': 'WebSite',
         name: '4590 Football',
         url: 'https://4590football.com',
       },
-      ...(childBoards.length > 0 && {
-        hasPart: childBoards.map((child, index) => ({
+      ...(namedChildBoards.length > 0 && {
+        hasPart: namedChildBoards.map((child, index) => ({
           '@type': 'CollectionPage',
           name: child.name,
           url: `https://4590football.com/boards/${child.slug || ''}`,
@@ -229,13 +231,13 @@ async function BoardDetailContent({
       ...(result.boardData.team_id && {
         about: {
           '@type': 'SportsTeam',
-          name: result.boardData.name,
+          name: boardName,
         },
       }),
       ...(result.boardData.league_id && {
         about: {
           '@type': 'SportsOrganization',
-          name: result.boardData.name,
+          name: boardName,
         },
       }),
       provider: {
@@ -251,7 +253,7 @@ async function BoardDetailContent({
         const crumbPath = crumb.slug && crumb.slug !== '#'
           ? (crumb.slug.startsWith('/') ? crumb.slug : `/boards/${crumb.slug}`)
           : undefined;
-        return crumbPath ? { name: crumb.name, item: `https://4590football.com${crumbPath}` } : null;
+        return crumbPath && crumb.name ? { name: crumb.name, item: `https://4590football.com${crumbPath}` } : null;
       })
       .filter((item): item is { name: string; item: string } => item !== null);
 
@@ -264,7 +266,7 @@ async function BoardDetailContent({
           '@type': 'ListItem',
           position: index + 2,
           name: crumb.name,
-          ...(index < validBreadcrumbs.length - 1 ? { item: crumb.item } : {}),
+          item: crumb.item,
         })),
       ],
     };
