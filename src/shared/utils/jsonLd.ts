@@ -36,6 +36,7 @@ export function isUsableJsonLdImage(pathOrUrl?: string | null): pathOrUrl is str
 }
 
 export function buildBreadcrumbJsonLd({
+  name = '탐색경로',
   items,
   includeLastItem = true,
 }: {
@@ -49,10 +50,13 @@ export function buildBreadcrumbJsonLd({
       url: item.url?.trim(),
     }))
     .filter((item): item is { name: string; url: string } => Boolean(item.name && item.url));
+  const currentUrl = validItems.at(-1)?.url || '/';
 
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
+    '@id': buildJsonLdId(currentUrl, 'breadcrumb'),
+    name,
     itemListElement: validItems.map((item, index) => {
       const listItem: JsonLdObject = {
         '@type': 'ListItem',

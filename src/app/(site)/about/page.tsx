@@ -83,6 +83,8 @@ export default async function AboutPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': 'https://4590football.com/about#faq',
+    url: 'https://4590football.com/about',
     name: '4590 Football 소개 자주 묻는 질문',
     mainEntity: FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
