@@ -57,7 +57,6 @@ const DEMO_PLAYER_IDS = [
   20552, // Havertz (#14)
 ];
 
-// FAQPage JSON-LD 데이터
 const FAQ_ITEMS = [
   { q: '4590은 무슨 뜻인가요?', a: '축구 경기는 전반 45분, 후반 45분으로 이루어집니다. 4590은 그 90분의 모든 순간을 함께한다는 의미입니다.' },
   { q: '무료인가요?', a: '네. 주요 기능은 무료로 이용할 수 있습니다. 가입하면 다른 팬들과 바로 소통할 수 있습니다.' },
@@ -82,13 +81,16 @@ export default async function AboutPage() {
 
   const faqSchema = {
     '@context': 'https://schema.org',
-    '@type': 'FAQPage',
+    '@type': ['FAQPage', 'WebPage'],
     '@id': 'https://4590football.com/about#faq',
     url: 'https://4590football.com/about',
     name: '4590 Football 소개 자주 묻는 질문',
     headline: '4590 Football 소개 자주 묻는 질문',
     description: '4590 Football 서비스 소개, 무료 이용, AI 예측, 지원 리그와 커뮤니티 기능에 대한 자주 묻는 질문입니다.',
     inLanguage: 'ko-KR',
+    isPartOf: {
+      '@id': 'https://4590football.com/#website',
+    },
     mainEntity: FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.q,

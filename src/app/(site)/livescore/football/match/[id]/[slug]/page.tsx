@@ -261,6 +261,14 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       sport: 'Football',
       eventStatus,
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      offers: {
+        '@type': 'Offer',
+        name: `${homeTeamName} vs ${awayTeamName} 경기 정보 무료 보기`,
+        url: matchUrl,
+        price: '0',
+        priceCurrency: 'KRW',
+        availability: 'https://schema.org/InStock',
+      },
       ...((venueName || venueCity || venueCountry) && { location: {
         '@type': 'Place',
         ...(venueName && { name: venueName }),
