@@ -86,6 +86,9 @@ export default async function AboutPage() {
     '@id': 'https://4590football.com/about#faq',
     url: 'https://4590football.com/about',
     name: '4590 Football 소개 자주 묻는 질문',
+    headline: '4590 Football 소개 자주 묻는 질문',
+    description: '4590 Football 서비스 소개, 무료 이용, AI 예측, 지원 리그와 커뮤니티 기능에 대한 자주 묻는 질문입니다.',
+    inLanguage: 'ko-KR',
     mainEntity: FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.q,

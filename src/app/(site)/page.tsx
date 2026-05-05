@@ -94,6 +94,9 @@ const faqJsonLd = {
   '@id': 'https://4590football.com/#faq',
   url: 'https://4590football.com/',
   name: '4590 Football 자주 묻는 질문',
+  headline: '4590 Football 자주 묻는 질문',
+  description: '4590 Football 이용, 라이브스코어, AI 예측, 지원 리그와 축구 커뮤니티 기능에 대한 자주 묻는 질문입니다.',
+  inLanguage: 'ko-KR',
   mainEntity: [
     {
       '@type': 'Question',
