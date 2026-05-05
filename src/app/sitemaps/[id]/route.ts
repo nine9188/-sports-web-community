@@ -34,7 +34,8 @@ type PlayerRow = {
 type ShopCategoryRow = { slug: string | null };
 
 // ISR: 1시간
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // 거의 변하지 않는 참조 데이터는 1시간 캐시 (sitemap은 최신성 요구 낮음)
 const _getCachedActiveTeams = unstable_cache(
@@ -147,7 +148,10 @@ function toXml(entries: SitemapEntry[]): string {
 
 function sitemapResponse(entries: SitemapEntry[]) {
   return new NextResponse(toXml(entries), {
-    headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'no-store, max-age=0, must-revalidate',
+    },
   });
 }
 
@@ -273,11 +277,10 @@ export async function GET(
       const allTeams = await _getCachedActiveTeams();
       const leagueIdSet = new Set(Object.values(SITEMAP_LEAGUES));
       const teams = allTeams.filter((t: TeamRow) => t.league_id !== null && leagueIdSet.has(t.league_id));
-      const generatedAt = new Date().toISOString();
 
       return sitemapResponse(teams.map((t: TeamRow) => ({
         loc: `${BASE_URL}/livescore/football/team/${t.team_id}/${t.slug || 'team'}`,
-        lastmod: generatedAt,
+        lastmod: t.updated_at || undefined,
         changefreq: 'weekly', priority: 0.6,
       })));
     }
@@ -296,11 +299,10 @@ export async function GET(
 
       const players = (await _getCachedActivePlayersByTeam(leagueTeamIds))
         .filter((p: PlayerRow) => p.player_id > 0 && !isWorthlessSitemapPlayer(p));
-      const generatedAt = new Date().toISOString();
 
       return sitemapResponse(players.map((p: PlayerRow) => ({
         loc: `${BASE_URL}/livescore/football/player/${p.player_id}/${p.slug || 'player'}`,
-        lastmod: generatedAt,
+        lastmod: p.updated_at || undefined,
         changefreq: 'monthly',
         priority: 0.4,
       })));
