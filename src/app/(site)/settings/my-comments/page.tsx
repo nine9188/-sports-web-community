@@ -1,9 +1,7 @@
-import { Suspense } from 'react';
 import { authGuard } from '@/shared/guards/auth.guard';
 import { getMyComments } from '@/domains/settings/actions/my-comments';
 import MyCommentsContent from '@/domains/settings/components/my-comments/MyCommentsContent';
 import { Container, ContainerContent, Pagination } from '@/shared/components/ui';
-import Spinner from '@/shared/components/Spinner';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -64,13 +62,11 @@ export default async function MyCommentsPage({
           </ContainerContent>
         </Container>
 
-        <Suspense fallback={<div className="flex justify-center py-8"><Spinner size="xl" /></div>}>
-          <MyCommentsContent
-            key={`my-comments-content-page-${page}`}
-            initialComments={data || []}
-            initialTotalCount={totalCount || 0}
-          />
-        </Suspense>
+        <MyCommentsContent
+          key={`my-comments-content-page-${page}`}
+          initialComments={data || []}
+          initialTotalCount={totalCount || 0}
+        />
 
         <div className="px-4 sm:px-6">
           <Pagination

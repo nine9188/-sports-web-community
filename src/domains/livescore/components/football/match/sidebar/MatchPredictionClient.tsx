@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -144,29 +143,30 @@ interface MatchDataType {
 
 // 승무패 예측 섹션 컴포넌트
 export default function MatchPredictionClient({
+  matchId,
   matchData,
   initialPrediction,
   initialStats,
   teamLogoUrls = {}
 }: {
+  matchId: string;
   matchData: MatchDataType;
   initialPrediction?: MatchPrediction | null;
   initialStats?: PredictionStats | null;
   // 4590 표준: 이미지 Storage URL
   teamLogoUrls?: Record<number, string>;
 }) {
-  const pathname = usePathname();
-  const matchId = pathname?.split('/').pop() || '';
   const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // 4590 표준: URL 헬퍼 함수
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-
   const homeTeam = matchData.teams?.home;
   const awayTeam = matchData.teams?.away;
   const fixture = matchData.fixture;
+  const getTeamLogo = (id: number) => {
+    const apiLogo = id === homeTeam?.id ? homeTeam.logo : id === awayTeam?.id ? awayTeam.logo : undefined;
+    return teamLogoUrls[id] || apiLogo || TEAM_PLACEHOLDER;
+  };
 
   // React Query로 사용자 예측 로드
   const { data: userPredictionData } = useQuery({

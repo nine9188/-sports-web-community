@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -15,15 +15,13 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, N
 import { useEditorHandlers } from './post-edit-form/hooks';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
-
-// 폼 컴포넌트들 지연 로딩 (EditorToolbar에서 이동)
-const ImageUploadForm = lazy(() => import('@/domains/boards/components/form/ImageUploadForm'));
-const LinkForm = lazy(() => import('@/domains/boards/components/form/LinkForm'));
-const YoutubeForm = lazy(() => import('@/domains/boards/components/form/YoutubeForm'));
-const VideoForm = lazy(() => import('@/domains/boards/components/form/VideoForm'));
-const MatchResultForm = lazy(() => import('@/domains/boards/components/form/MatchResultForm'));
-const SocialEmbedForm = lazy(() => import('@/domains/boards/components/form/SocialEmbedForm'));
-const EntityPickerForm = lazy(() => import('@/domains/boards/components/entity/EntityPickerForm').then(mod => ({ default: mod.EntityPickerForm })));
+import ImageUploadForm from '@/domains/boards/components/form/ImageUploadForm';
+import LinkForm from '@/domains/boards/components/form/LinkForm';
+import YoutubeForm from '@/domains/boards/components/form/YoutubeForm';
+import VideoForm from '@/domains/boards/components/form/VideoForm';
+import MatchResultForm from '@/domains/boards/components/form/MatchResultForm';
+import SocialEmbedForm from '@/domains/boards/components/form/SocialEmbedForm';
+import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPickerForm';
 
 // 핫딜 옵션
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
@@ -629,68 +627,54 @@ export default function PostEditForm({
 
             {/* 인라인 패널 영역 - 툴바와 에디터 사이에 표시 */}
             {showImageModal && (
-              <Suspense fallback={null}>
                 <ImageUploadForm
                   onCancel={() => handleToggleDropdown('image')}
                   onImageUrlAdd={handleAddImage}
                   isOpen={showImageModal}
                 />
-              </Suspense>
             )}
             {showLinkModal && (
-              <Suspense fallback={null}>
                 <LinkForm
                   onCancel={() => handleToggleDropdown('link')}
                   onLinkAdd={handleAddLink}
                   isOpen={showLinkModal}
                 />
-              </Suspense>
             )}
             {showYoutubeModal && (
-              <Suspense fallback={null}>
                 <YoutubeForm
                   onCancel={() => handleToggleDropdown('youtube')}
                   onYoutubeAdd={handleAddYoutube}
                   isOpen={showYoutubeModal}
                 />
-              </Suspense>
             )}
             {showVideoModal && (
-              <Suspense fallback={null}>
                 <VideoForm
                   onCancel={() => handleToggleDropdown('video')}
                   onVideoAdd={handleAddVideo}
                   isOpen={showVideoModal}
                 />
-              </Suspense>
             )}
             {showSocialModal && (
-              <Suspense fallback={null}>
                 <SocialEmbedForm
                   isOpen={showSocialModal}
                   onCancel={() => handleToggleDropdown('social')}
                   onSocialEmbedAdd={handleAddSocialEmbed}
                 />
-              </Suspense>
             )}
             {showMatchModal && (
-              <Suspense fallback={null}>
                 <MatchResultForm
                   isOpen={showMatchModal}
                   onCancel={() => handleToggleDropdown('match')}
                   onMatchAdd={handleAddMatch}
                 />
-              </Suspense>
             )}
             {showEntityModal && (
-              <Suspense fallback={null}>
                 <EntityPickerForm
                   isOpen={showEntityModal}
                   onClose={() => handleToggleDropdown('entity')}
                   onSelectTeam={handleAddTeam}
                   onSelectPlayer={handleAddPlayer}
                 />
-              </Suspense>
             )}
 
             {/* 에디터 컨텐츠 영역 - 스타일은 globals.css에서 관리 */}

@@ -12,6 +12,8 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { formatDateDot } from '@/shared/utils/dateUtils';
 import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
 import { PlayerKoreanNames } from '../../../TeamPageClient';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 interface RecentTransfersProps {
   transfers: TeamTransfersData;
@@ -76,7 +78,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
               recentIn.map((transfer, index) => (
                 <Link
                   key={`in-${transfer.player.id}-${index}`}
-                  href={`/livescore/football/player/${transfer.player.id}`}
+                  href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   {/* 데스크톱: 가로 레이아웃 */}
@@ -170,7 +172,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
               recentOut.map((transfer, index) => (
                 <Link
                   key={`out-${transfer.player.id}-${index}`}
-                  href={`/livescore/football/player/${transfer.player.id}`}
+                  href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   {/* 데스크톱: 가로 레이아웃 */}

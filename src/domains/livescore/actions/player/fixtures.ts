@@ -1,21 +1,37 @@
 'use server';
 
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getSupabaseServer } from '@/shared/lib/supabase/server';
 
-// ============================================
-// 타입 정의
-// ============================================
+interface ApiPlayerFixtureStats {
+  games?: {
+    minutes?: number;
+    rating?: string;
+  };
+  goals?: {
+    total?: number;
+    assists?: number;
+  };
+  shots?: {
+    total?: number;
+    on?: number;
+  };
+  passes?: {
+    total?: number;
+    key?: number;
+  };
+}
 
 interface ApiFixture {
   fixture: {
     id: number;
     date: string;
     timestamp: number;
-    status: {
-      short: string;
-      [key: string]: string | number | boolean;
+    status?: {
+      short?: string;
     };
   };
   league: {
@@ -29,41 +45,25 @@ interface ApiFixture {
       id: number;
       name: string;
       logo: string;
-      winner: boolean | null;
     };
     away: {
       id: number;
       name: string;
       logo: string;
-      winner: boolean | null;
     };
   };
   goals: {
     home: number | null;
     away: number | null;
   };
-  score: {
-    [key: string]: { home: number | null; away: number | null };
-  };
-}
-
-interface FixtureWithStats extends Omit<FixtureData, 'statistics'> {
-  fixture: {
-    id: number;
-    date: string;
-    status: {
-      short: string;
-      [key: string]: string | number | boolean;
-    };
-    timestamp: number;
-  };
-  statistics: {
-    games: { minutes: number; rating: number | null; position: string | null; number: number | null };
-    shots: { total: number; on: number };
-    goals: { total: number; assists: number; conceded: number; saves: number | null };
-    passes: { total: number; key: number; accuracy: string };
-    cards: { yellow: number; red: number };
-  };
+  players?: Array<{
+    players?: Array<{
+      player: {
+        id: number;
+      };
+      statistics?: ApiPlayerFixtureStats[];
+    }>;
+  }>;
 }
 
 export interface FixturesResponse {
@@ -79,192 +79,361 @@ export interface FixturesResponse {
   };
 }
 
-// ============================================
-// 메인 함수
-// ============================================
+interface PlayerFixtureContext {
+  teamId: number;
+  fixtureIds: number[];
+}
 
-/**
- * 선수 경기 기록 가져오기
- *
- * 흐름:
- * 1. 선수 정보 조회 → 팀 ID 획득
- * 2. 팀 경기 목록 조회 → FT 경기 필터링
- * 3. 경기 상세 배치 조회 (20개씩) → 선수 통계 추출
- */
-export async function fetchPlayerFixtures(
-  playerId: number,
-  limit: number = 0
-): Promise<FixturesResponse> {
-  if (!playerId) {
-    return { data: [], status: 'error', message: '선수 ID가 필요합니다' };
+type MemoryCacheEntry<T> = {
+  expiresAt: number;
+  value: T;
+};
+
+const PLAYER_FIXTURES_CACHE_VERSION = 'v3';
+const MEMORY_CACHE_TTL_MS = 1000 * 60 * 60;
+const EMPTY_RESULT_MEMORY_CACHE_TTL_MS = 1000 * 30;
+const globalFixtureCache = globalThis as typeof globalThis & {
+  __playerFixturesMemoryCache?: Map<string, MemoryCacheEntry<unknown>>;
+};
+const memoryCache = globalFixtureCache.__playerFixturesMemoryCache ?? new Map<string, MemoryCacheEntry<unknown>>();
+globalFixtureCache.__playerFixturesMemoryCache = memoryCache;
+
+function getMemoryCacheTtl(value: unknown): number {
+  const response = value as Partial<FixturesResponse>;
+  if (Array.isArray(response.data) && response.data.length === 0 && (response.completeness?.total || 0) > 0) {
+    return EMPTY_RESULT_MEMORY_CACHE_TTL_MS;
   }
 
-  // 현재 시즌 계산
+  return MEMORY_CACHE_TTL_MS;
+}
+
+async function memoryCached<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const cached = memoryCache.get(key) as MemoryCacheEntry<T> | undefined;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const value = await task();
+  memoryCache.set(key, {
+    value,
+    expiresAt: Date.now() + getMemoryCacheTtl(value),
+  });
+  return value;
+}
+
+function getCurrentSeason(): number {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
-  const currentSeason = month >= 6 ? year : year - 1;
+  return month >= 6 ? year : year - 1;
+}
+
+async function fetchPlayerFixtureContextFromDb(
+  playerId: number,
+  season: number
+): Promise<PlayerFixtureContext | null> {
+  try {
+    const supabase = await getSupabaseServer();
+    const { data: playerRow } = await supabase
+      .from('football_players')
+      .select('team_id')
+      .eq('player_id', playerId)
+      .maybeSingle();
+
+    const teamId = playerRow?.team_id;
+    if (!teamId) return null;
+
+    const { data: fixtureRows, error } = await supabase
+      .from('fixtures' as never)
+      .select('fixture_id,match_date')
+      .eq('season', season)
+      .eq('status_short', 'FT')
+      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+      .order('match_date', { ascending: false });
+
+    if (error || !fixtureRows?.length) {
+      return { teamId, fixtureIds: [] };
+    }
+
+    return {
+      teamId,
+      fixtureIds: (fixtureRows as Array<{ fixture_id: number }>).map(row => row.fixture_id).filter(Boolean),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchPlayerTeamIdFromApi(playerId: number, season: number): Promise<number | null> {
+  const currentData = await fetchFromFootballApi('players', { id: playerId, season });
+  const currentTeamId = getBestPlayerTeamIdFromStats(currentData.response?.[0]?.statistics);
+  if (currentTeamId) return currentTeamId;
+
+  if (season < 2023) return null;
 
   try {
-    // 1. 선수 정보 조회 (팀 ID 획득)
-    const playerData = await fetchFromFootballApi('players', { id: playerId, season: currentSeason });
-    let teamId = playerData.response?.[0]?.statistics?.[0]?.team?.id;
+    const previousData = await fetchFromFootballApi('players', { id: playerId, season: season - 1 });
+    return getBestPlayerTeamIdFromStats(previousData.response?.[0]?.statistics);
+  } catch {
+    return null;
+  }
+}
 
-    // 현재 시즌에 데이터 없으면 이전 시즌 시도
-    if (!teamId && currentSeason >= 2023) {
-      try {
-        const prevData = await fetchFromFootballApi('players', { id: playerId, season: currentSeason - 1 });
-        teamId = prevData.response?.[0]?.statistics?.[0]?.team?.id;
-      } catch {
-        // 이전 시즌 조회 실패는 무시
+function getBestPlayerTeamIdFromStats(statistics: unknown): number | null {
+  if (!Array.isArray(statistics)) return null;
+
+  const ranked = statistics
+    .map((stat) => {
+      const item = stat as {
+        team?: { id?: number };
+        league?: { type?: string; id?: number };
+        games?: { appearences?: number | null; appearances?: number | null; minutes?: number | null };
+      };
+      const appearances = Number(item.games?.appearences ?? item.games?.appearances ?? 0);
+      const minutes = Number(item.games?.minutes ?? 0);
+      const leagueTypeBoost = item.league?.type === 'League' ? 1_000_000 : 0;
+
+      return {
+        teamId: item.team?.id,
+        score: leagueTypeBoost + minutes * 100 + appearances,
+      };
+    })
+    .filter((item): item is { teamId: number; score: number } => typeof item.teamId === 'number')
+    .sort((a, b) => b.score - a.score);
+
+  return ranked[0]?.teamId || null;
+}
+
+async function fetchTeamFixtureIdsFromApi(teamId: number, season: number): Promise<number[]> {
+  const fixturesData = await fetchFromFootballApi('fixtures', {
+    team: teamId,
+    season,
+    from: `${season}-07-01`,
+    to: `${season + 1}-06-30`,
+  });
+
+  const fixtures: ApiFixture[] = fixturesData.response || [];
+  return fixtures
+    .filter(item => item.fixture.status?.short === 'FT')
+    .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
+    .map(item => item.fixture.id)
+    .filter(Boolean);
+}
+
+const fetchCachedTeamFixtureIdsFromApi = unstable_cache(
+  fetchTeamFixtureIdsFromApi,
+  ['player-team-fixture-ids', PLAYER_FIXTURES_CACHE_VERSION],
+  { revalidate: 3600 }
+);
+
+const fetchCachedFixtureDetailsBatch = unstable_cache(
+  async (idsParam: string) => fetchFromFootballApi('fixtures', { ids: idsParam }),
+  ['player-fixture-details-batch', PLAYER_FIXTURES_CACHE_VERSION],
+  { revalidate: 3600 }
+);
+
+function findPlayerStats(fixtureData: ApiFixture, playerId: number): ApiPlayerFixtureStats | null {
+  for (const teamPlayers of fixtureData.players || []) {
+    for (const item of teamPlayers.players || []) {
+      if (item.player.id === playerId) {
+        return item.statistics?.[0] || null;
+      }
+    }
+  }
+
+  return null;
+}
+
+function formatFixtureWithPlayerStats(
+  fixtureData: ApiFixture,
+  playerStats: ApiPlayerFixtureStats | null,
+  playerTeamId: number
+): FixtureData | null {
+  const minutes = playerStats?.games?.minutes || 0;
+  if (minutes <= 0) return null;
+
+  return {
+    fixture: {
+      id: fixtureData.fixture.id,
+      date: fixtureData.fixture.date,
+      timestamp: fixtureData.fixture.timestamp,
+    },
+    league: {
+      id: fixtureData.league.id,
+      name: fixtureData.league.name,
+      logo: fixtureData.league.logo,
+      country: fixtureData.league.country || '',
+    },
+    teams: {
+      home: {
+        id: fixtureData.teams.home.id,
+        name: fixtureData.teams.home.name,
+        logo: fixtureData.teams.home.logo,
+      },
+      away: {
+        id: fixtureData.teams.away.id,
+        name: fixtureData.teams.away.name,
+        logo: fixtureData.teams.away.logo,
+      },
+      playerTeamId,
+    },
+    goals: {
+      home: String(fixtureData.goals.home ?? 0),
+      away: String(fixtureData.goals.away ?? 0),
+    },
+    statistics: {
+      games: {
+        minutes,
+        rating: playerStats?.games?.rating,
+      },
+      goals: {
+        total: playerStats?.goals?.total || 0,
+        assists: playerStats?.goals?.assists || 0,
+      },
+      shots: {
+        total: playerStats?.shots?.total || 0,
+        on: playerStats?.shots?.on || 0,
+      },
+      passes: {
+        total: playerStats?.passes?.total || 0,
+        key: playerStats?.passes?.key || 0,
+      },
+    },
+  };
+}
+
+function formatFixtureWithStats(
+  fixtureData: ApiFixture,
+  playerId: number,
+  playerTeamId: number
+): FixtureData | null {
+  return formatFixtureWithPlayerStats(
+    fixtureData,
+    findPlayerStats(fixtureData, playerId),
+    playerTeamId
+  );
+}
+
+export async function fetchPlayerFixtures(
+  playerId: number,
+  limit: number = 0,
+  offset: number = 0
+): Promise<FixturesResponse> {
+  return memoryCached(
+    `player-fixtures:${PLAYER_FIXTURES_CACHE_VERSION}:${playerId}:${limit}:${offset}`,
+    () => fetchPlayerFixturesInternal(playerId, limit, offset)
+  );
+}
+
+const fetchPlayerFixturesInternal = unstable_cache(
+  fetchPlayerFixturesUncached,
+  ['player-fixtures-page', PLAYER_FIXTURES_CACHE_VERSION],
+  { revalidate: 3600 }
+);
+
+async function fetchPlayerFixturesUncached(
+  playerId: number,
+  limit: number = 0,
+  offset: number = 0
+): Promise<FixturesResponse> {
+  if (!playerId) {
+    return { data: [], status: 'error', message: '선수 ID가 필요합니다.' };
+  }
+
+  const currentSeason = getCurrentSeason();
+
+  try {
+    const dbContext = await fetchPlayerFixtureContextFromDb(playerId, currentSeason);
+    const apiTeamId = await fetchPlayerTeamIdFromApi(playerId, currentSeason);
+    const teamId = apiTeamId || dbContext?.teamId;
+
+    if (!teamId) {
+      return { data: [], status: 'error', message: '선수의 팀 정보를 찾을 수 없습니다.' };
+    }
+
+    let fixtureIds = apiTeamId && apiTeamId !== dbContext?.teamId ? [] : (dbContext?.fixtureIds || []);
+
+    // The local fixtures table can be incomplete during the season. If it looks
+    // too sparse, or the API player team differs from the DB team, use the API
+    // fixture list so the tab does not silently truncate or search the wrong team.
+    if (fixtureIds.length < 15) {
+      const apiFixtureIds = await fetchCachedTeamFixtureIdsFromApi(teamId, currentSeason);
+
+      if (apiFixtureIds.length > fixtureIds.length) {
+        fixtureIds = apiFixtureIds;
       }
     }
 
-    if (!teamId) {
-      return { data: [], status: 'error', message: '선수의 팀 정보를 찾을 수 없습니다' };
-    }
-
-    // 2. 팀 경기 목록 조회
-    const fixturesData = await fetchFromFootballApi('fixtures', {
-      team: teamId,
-      season: currentSeason,
-      from: `${currentSeason}-07-01`,
-      to: `${currentSeason + 1}-06-30`,
-    });
-
-    const allFixtures: ApiFixture[] = fixturesData.response || [];
-
-    if (allFixtures.length === 0) {
+    if (fixtureIds.length === 0) {
       return {
         data: [],
         status: 'success',
-        message: `${currentSeason} 시즌 경기 기록이 없습니다`,
-        seasonUsed: currentSeason
+        message: `${currentSeason} 시즌 경기 기록이 없습니다.`,
+        seasonUsed: currentSeason,
       };
     }
 
-    // FT 상태인 경기만 필터링
-    const completedFixtures = allFixtures.filter(f => f.fixture.status.short === 'FT');
-    const totalFixtures = completedFixtures.length;
-
-    // 3. 선수 통계 가져오기 (ids 파라미터로 한 번에 20개씩 요청)
-    const fixturesWithStats: Array<FixtureWithStats | null> = [];
+    const fixturesWithStats: FixtureData[] = [];
     const failedFixtureIds: number[] = [];
+    const batchSize = 20;
+    const selectedFixtureIds = fixtureIds;
+    let skippedPlayedFixtures = 0;
 
-    // fixture ID 목록 추출
-    const fixtureIds = completedFixtures.map(f => f.fixture.id);
-
-    // 20개씩 청크로 나눠서 요청 (API 제한)
-    const BATCH_SIZE = 20;
-
-    for (let i = 0; i < fixtureIds.length; i += BATCH_SIZE) {
-      const batchIds = fixtureIds.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < selectedFixtureIds.length; i += batchSize) {
+      const batchIds = selectedFixtureIds.slice(i, i + batchSize);
       const idsParam = batchIds.join('-');
 
       try {
-        // 한 번에 여러 경기 데이터 요청 (players 통계 포함)
-        const batchData = await fetchFromFootballApi('fixtures', { ids: idsParam });
+        const batchData = await fetchCachedFixtureDetailsBatch(idsParam);
 
-        // 각 경기에서 선수 통계 추출
         for (const fixtureData of batchData.response || []) {
-          // 선수 통계 찾기
-          let playerStats = null;
-
-          if (fixtureData.players) {
-            for (const teamPlayers of fixtureData.players) {
-              const found = teamPlayers.players.find((p: { player: { id: number } }) => p.player.id === playerId);
-              if (found) {
-                playerStats = found.statistics[0];
-                break;
-              }
+          const fixture = formatFixtureWithStats(fixtureData, playerId, teamId);
+          if (fixture) {
+            if (skippedPlayedFixtures < offset) {
+              skippedPlayedFixtures += 1;
+            } else if (limit <= 0 || fixturesWithStats.length < limit) {
+              fixturesWithStats.push(fixture);
             }
           }
+        }
 
-          // 선수가 참여하지 않은 경기는 건너뛰기 (실패 아님)
-          if (!playerStats) continue;
-
-          const defaultStats = {
-            games: { minutes: 0, rating: null, position: null, number: null },
-            shots: { total: 0, on: 0 },
-            goals: { total: 0, assists: 0, conceded: 0, saves: null },
-            passes: { total: 0, key: 0, accuracy: "0" },
-            cards: { yellow: 0, red: 0 }
-          };
-
-          fixturesWithStats.push({
-            fixture: {
-              id: fixtureData.fixture.id,
-              date: fixtureData.fixture.date,
-              status: fixtureData.fixture.status,
-              timestamp: fixtureData.fixture.timestamp
-            },
-            league: {
-              id: fixtureData.league.id,
-              name: fixtureData.league.name,
-              logo: fixtureData.league.logo,
-              country: fixtureData.league.country || ''
-            },
-            teams: {
-              home: { id: fixtureData.teams.home.id, name: fixtureData.teams.home.name, logo: fixtureData.teams.home.logo },
-              away: { id: fixtureData.teams.away.id, name: fixtureData.teams.away.name, logo: fixtureData.teams.away.logo },
-              playerTeamId: teamId
-            },
-            goals: {
-              home: fixtureData.goals.home?.toString() || '0',
-              away: fixtureData.goals.away?.toString() || '0'
-            },
-            statistics: {
-              games: { ...defaultStats.games, ...(playerStats?.games || {}) },
-              shots: { ...defaultStats.shots, ...(playerStats?.shots || {}) },
-              goals: { ...defaultStats.goals, ...(playerStats?.goals || {}) },
-              passes: { ...defaultStats.passes, ...(playerStats?.passes || {}) },
-              cards: { ...defaultStats.cards, ...(playerStats?.cards || {}) }
-            }
-          } as FixtureWithStats);
+        if (limit > 0 && fixturesWithStats.length >= limit) {
+          break;
         }
       } catch (error) {
-        console.error(`[fetchPlayerFixtures] Batch request failed:`, error);
+        console.error('[fetchPlayerFixtures] Batch request failed:', error);
         failedFixtureIds.push(...batchIds);
       }
     }
 
-    // 유효한 경기 필터링 (출전 시간 > 0)
-    const validFixtures = fixturesWithStats
-      .filter((f): f is FixtureWithStats => f !== null && (f.statistics?.games?.minutes || 0) > 0)
-      .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime());
-
+    const sortedFixtures = fixturesWithStats.sort(
+      (a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime()
+    );
+    const limitedFixtures = sortedFixtures;
     const isComplete = failedFixtureIds.length === 0;
 
-    // 결과 반환
-    const limitedFixtures = limit > 0 ? validFixtures.slice(0, limit) : validFixtures;
-
     return {
-      data: limitedFixtures as unknown as FixtureData[],
+      data: sortedFixtures,
       status: isComplete ? 'success' : 'partial',
       message: isComplete
-        ? (limitedFixtures.length > 0 ? '경기 기록을 찾았습니다' : `${currentSeason} 시즌 경기 기록이 없습니다`)
+        ? (limitedFixtures.length > 0 ? '경기 기록을 찾았습니다.' : `${currentSeason} 시즌 경기 기록이 없습니다.`)
         : `일부 경기 데이터 로딩 실패 (${failedFixtureIds.length}건)`,
       seasonUsed: currentSeason,
       completeness: {
-        total: totalFixtures,
-        success: validFixtures.length,
+        total: fixtureIds.length,
+        success: limitedFixtures.length,
         failed: failedFixtureIds.length,
-        failedFixtureIds: failedFixtureIds.length > 0 ? failedFixtureIds : undefined
-      }
+        failedFixtureIds: failedFixtureIds.length > 0 ? failedFixtureIds : undefined,
+      },
     };
-
   } catch (error) {
     console.error('[fetchPlayerFixtures] Fatal error:', error);
-
     return {
       data: [],
       status: 'error',
-      message: error instanceof Error ? error.message : '알 수 없는 오류'
+      message: error instanceof Error ? error.message : '알 수 없는 오류',
     };
   }
 }
 
-/**
- * 캐싱을 적용한 선수 경기 기록 가져오기
- */
 export const fetchCachedPlayerFixtures = cache(fetchPlayerFixtures);

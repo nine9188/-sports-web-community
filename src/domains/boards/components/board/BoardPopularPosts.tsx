@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { renderContentTypeIcons } from '../post/postlist/components/shared/PostRenderers';
-import { skeletonText } from '@/shared/styles';
 import type { PopularPost } from '@/domains/boards/types/post';
 
 interface BoardPopularPostsProps {
@@ -23,13 +22,17 @@ const ROW_CLS = 'flex items-center py-3 md:py-1.5';
 const BORDER_CLS = 'border-b border-black/5 dark:border-white/10';
 const NUM_CLS = 'w-10 flex-shrink-0 px-3 text-xs font-bold text-gray-500 dark:text-gray-400';
 
-function SkeletonRows() {
+function LoadingRows() {
   return (
     <>
       {Array(4).fill(0).map((_, i) => (
         <div key={`sk-${i}`} className={`${ROW_CLS} ${i !== 3 ? BORDER_CLS : ''}`}>
           <span className={NUM_CLS}>{i + 1}</span>
-          <div className={`${skeletonText} h-3 flex-1 max-w-[200px] mr-3`} />
+          {i === 0 ? (
+            <span className="text-[13px] text-gray-500 dark:text-gray-400 pr-3">불러오는 중...</span>
+          ) : (
+            <span className="text-[13px] text-gray-400 dark:text-gray-500 pr-3">-</span>
+          )}
         </div>
       ))}
     </>
@@ -122,7 +125,7 @@ export default function BoardPopularPosts({
           </div>
         </div>
         <div className="flex flex-col">
-          {isLoading ? <SkeletonRows /> : <PostRows posts={currentPosts} />}
+          {isLoading ? <LoadingRows /> : <PostRows posts={currentPosts} />}
         </div>
       </div>
 
@@ -136,7 +139,7 @@ export default function BoardPopularPosts({
               <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이번주 BEST</h3>
             </div>
             <div className="flex flex-col">
-              {isLoading ? <SkeletonRows /> : <PostRows posts={weekPosts} />}
+              {isLoading ? <LoadingRows /> : <PostRows posts={weekPosts} />}
             </div>
           </div>
 
@@ -147,7 +150,7 @@ export default function BoardPopularPosts({
               <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이번달 BEST</h3>
             </div>
             <div className="flex flex-col">
-              {isLoading ? <SkeletonRows /> : <PostRows posts={monthPosts} />}
+              {isLoading ? <LoadingRows /> : <PostRows posts={monthPosts} />}
             </div>
           </div>
         </div>

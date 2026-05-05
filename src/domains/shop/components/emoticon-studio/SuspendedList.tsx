@@ -3,7 +3,6 @@
 import React from 'react'
 import Image from 'next/image'
 import { Container, ContainerContent } from '@/shared/components/ui'
-import Spinner from '@/shared/components/Spinner'
 import { useMySuspendedSubmissions } from '@/domains/shop/hooks/useEmoticonStudio'
 
 export default function SuspendedList() {
@@ -12,7 +11,7 @@ export default function SuspendedList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Spinner size="md" />
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
       </div>
     )
   }

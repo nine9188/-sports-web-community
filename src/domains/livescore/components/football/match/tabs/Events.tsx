@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchEvent } from '@/domains/livescore/types/match';
@@ -8,9 +9,14 @@ import { MatchEvent } from '@/domains/livescore/types/match';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import { useTeamLeague, type TeamData } from '@/shared/context/TeamLeagueContext';
 import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappings';
-import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { PlayerKoreanNames } from '../MatchPageClient';
+import { getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl, teamUrl } from '@/domains/livescore/utils/urls';
+import MatchTabState from './MatchTabState';
+import { fetchCachedMatchEvents } from '@/domains/livescore/actions/match/eventData';
+import { matchKeys } from '@/shared/constants/queryKeys';
 
 // 이벤트 타입에 따른 아이콘 반환
 const getEventIcon = (type: string, detail: string) => {
@@ -64,9 +70,16 @@ interface EventsProps {
 }
 
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
-function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {} }: EventsProps) {
+function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {} }: EventsProps) {
   const { getTeamById } = useTeamLeague();
-  const [events, setEvents] = useState<MatchEvent[]>(propsEvents || []);
+  const eventsQuery = useQuery({
+    queryKey: matchId ? matchKeys.events(matchId) : ['match', 'events', 'missing-id'],
+    queryFn: () => fetchCachedMatchEvents(matchId || ''),
+    enabled: !!matchId && propsEvents === undefined,
+    staleTime: 15 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+  const [events, setEvents] = useState<MatchEvent[]>(propsEvents || eventsQuery.data?.data || []);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
   const [teamCache, setTeamCache] = useState<Record<number, TeamData>>({});
@@ -93,7 +106,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
               newElements.push(
                 <Link
                   key={`player-link-${event.player.id}-${i}-${idx}`} // 고유한 key 추가
-                  href={`/livescore/football/player/${event.player.id}`}
+                  href={playerUrl(event.player.id, getPlayerSlugFromName(event.player.name))}
                   className="hover:underline transition-all"
                 >
                   {koreanPlayerName}
@@ -125,7 +138,7 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
               newElements.push(
                 <Link
                   key={`assist-link-${assistId}-${i}-${idx}`}
-                  href={`/livescore/football/player/${assistId}`}
+                  href={playerUrl(assistId, getPlayerSlugFromName(englishAssistName))}
                   className="hover:underline transition-all"
                 >
                   {koreanAssistName}
@@ -152,6 +165,13 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
       setLoading(false);
     }
   }, [propsEvents]);
+
+  useEffect(() => {
+    if (propsEvents === undefined && eventsQuery.data?.success) {
+      setEvents(eventsQuery.data.data || []);
+      setLoading(false);
+    }
+  }, [eventsQuery.data, propsEvents]);
 
   // 팀 정보 캐싱을 위한 hook
   useEffect(() => {
@@ -211,17 +231,17 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
   };
 
   // 로딩 상태 표시
-  if (loading) {
-    return <LoadingState message="이벤트 데이터를 불러오는 중..." />;
+  if (loading || (propsEvents === undefined && eventsQuery.isLoading)) {
+    return <MatchTabState title="경기 이벤트" message="불러오는 중..." />;
   }
   
   // 에러 상태 표시
-  if (error) {
-    return <ErrorState message={error} />;
+  if (error || eventsQuery.isError || (eventsQuery.data && !eventsQuery.data.success)) {
+    return <ErrorState message={error || eventsQuery.data?.error || '이벤트 데이터를 불러올 수 없습니다.'} />;
   }
 
   if (!events.length) {
-    return <EmptyState title="이벤트 데이터가 없습니다" message="현재 이 경기에 대한 이벤트 정보를 제공할 수 없습니다." />;
+    return <MatchTabState title="경기 이벤트" message="이벤트 데이터가 없습니다." />;
   }
 
   // 이벤트를 시간 순으로 정렬
@@ -262,7 +282,10 @@ function Events({ events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {}
                   <div className="flex-shrink-0">
                     {getEventIcon(event.type, event.detail)}
                   </div>
-                  <Link href={`/livescore/football/team/${event.team?.id}`} className="flex items-center gap-1.5 group min-w-0">
+                  <Link
+                    href={teamUrl(event.team?.id || 0, getTeamSlugFromName(event.team?.name || ''))}
+                    className="flex items-center gap-1.5 group min-w-0"
+                  >
                     <TeamLogo
                       name={event.team?.name || ''}
                       teamId={event.team?.id}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronsDown, ChevronsUp, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronsDown, ChevronsUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Calendar from '@/shared/components/Calendar';
 import { Button, Container } from '@/shared/components/ui';
 
@@ -15,6 +15,7 @@ interface NavigationBarProps {
   allExpanded: boolean;
   onToggleExpandAll: () => void;
   selectedDate: Date;
+  isNavigating?: boolean;
 }
 
 export default function NavigationBar({
@@ -27,12 +28,9 @@ export default function NavigationBar({
   allExpanded,
   onToggleExpandAll,
   selectedDate,
+  isNavigating = false,
 }: NavigationBarProps) {
   const [showCalendar, setShowCalendar] = useState(false);
-
-  const handleLiveClick = () => {
-    onLiveClick();
-  };
 
   const handlePrevDay = () => {
     const prevDay = new Date(selectedDate);
@@ -51,68 +49,58 @@ export default function NavigationBar({
   };
 
   const formatDate = (date: Date) => {
-    // KST 기준으로 오늘/내일/어제 판단
     const now = new Date();
     const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
     const kstSelected = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-
-    // 날짜만 비교 (시간 제거)
     const todayStr = kstNow.toISOString().split('T')[0];
     const selectedStr = kstSelected.toISOString().split('T')[0];
-
     const today = new Date(todayStr);
     const selected = new Date(selectedStr);
+    const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    const diffTime = selected.getTime() - today.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '내일';
+    if (diffDays === -1) return '어제';
 
-    if (diffDays === 0) {
-      return '오늘';
-    } else if (diffDays === 1) {
-      return '내일';
-    } else if (diffDays === -1) {
-      return '어제';
-    }
-
-    // 그 외의 날짜는 기존 포맷
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      timeZone: 'Asia/Seoul'
+      timeZone: 'Asia/Seoul',
     });
   };
 
-  // 현재 연도 기준 동적 설정 (과거 2년 ~ 미래 1년)
   const currentYear = new Date().getFullYear();
   const minDate = new Date(currentYear - 2, 0, 1);
   const maxDate = new Date(currentYear + 1, 11, 31);
 
   return (
     <Container className="bg-white dark:bg-[#1D1D1D]">
-      {/* 헤더: 날짜 네비게이션 */}
       <div className="h-12 bg-[#F5F5F5] dark:bg-[#262626] px-4 flex items-center justify-between border-b border-black/5 dark:border-white/10">
         <Button
           variant="ghost"
           size="icon"
           onClick={handlePrevDay}
+          disabled={isNavigating}
           className="h-8 w-8"
         >
           <ChevronLeft className="w-5 h-5" />
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-[130px] items-center justify-center gap-2">
           <Button
             variant="ghost"
             onClick={handleToday}
-            className="text-[13px] font-semibold h-auto px-2 py-1"
+            disabled={isNavigating}
+            className="h-auto min-w-[92px] px-2 py-1 text-[13px] font-semibold"
           >
-            {formatDate(selectedDate)}
+            {isNavigating ? '불러오는 중...' : formatDate(selectedDate)}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setShowCalendar(true)}
+            disabled={isNavigating}
             className="h-8 w-8"
           >
             <ChevronDown className="w-4 h-4" />
@@ -123,20 +111,23 @@ export default function NavigationBar({
           variant="ghost"
           size="icon"
           onClick={handleNextDay}
+          disabled={isNavigating}
           className="h-8 w-8"
         >
           <ChevronRight className="w-5 h-5" />
         </Button>
       </div>
 
-      {/* 캘린더 모달 */}
       {showCalendar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowCalendar(false)} />
           <div className="relative z-10">
             <Calendar
               selectedDate={selectedDate}
-              onDateSelect={onDateChange}
+              onDateSelect={(date) => {
+                setShowCalendar(false);
+                onDateChange(date);
+              }}
               onClose={() => setShowCalendar(false)}
               minDate={minDate}
               maxDate={maxDate}
@@ -145,12 +136,12 @@ export default function NavigationBar({
         </div>
       )}
 
-      {/* 본문: 검색 및 필터 */}
       <div className="p-4">
         <div className="flex items-center gap-2 md:gap-4">
           <Button
             variant={showLiveOnly ? 'primary' : 'secondary'}
-            onClick={handleLiveClick}
+            onClick={onLiveClick}
+            disabled={isNavigating}
             className="h-10 px-3 md:px-4 font-medium text-[13px] md:text-base"
           >
             <div className="flex items-center gap-2">
@@ -180,7 +171,7 @@ export default function NavigationBar({
             variant="secondary"
             size="icon"
             onClick={onToggleExpandAll}
-            title={allExpanded ? '모두 닫기' : '모두 열기'}
+            title={allExpanded ? '모두 접기' : '모두 펼치기'}
           >
             {allExpanded ? (
               <ChevronsUp className="w-5 h-5" />
@@ -192,4 +183,4 @@ export default function NavigationBar({
       </div>
     </Container>
   );
-} 
+}

@@ -12,7 +12,6 @@
 
 import React from 'react';
 import { PostListProps } from './types';
-import { PostListSkeleton } from './components/shared/PostListSkeleton';
 import { PostListEmpty } from './components/shared/PostListEmpty';
 import { MobilePostListServer } from './components/mobile/MobilePostListServer';
 import { DesktopPostListServer } from './components/desktop/DesktopPostListServer';
@@ -83,7 +82,9 @@ export default function PostList({
         style={getMaxHeightStyle()}
       >
         {loading ? (
-          <PostListSkeleton />
+          <div className="py-8 text-center text-[13px] text-gray-500 dark:text-gray-400">
+            불러오는 중...
+          </div>
         ) : posts.length === 0 ? (
           <PostListEmpty message={emptyMessage} />
         ) : useVirtualization ? (

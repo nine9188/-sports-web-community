@@ -8,8 +8,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect } from 'react';
 import { FixtureData } from '@/domains/livescore/types/player';
-import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
+import { fetchPlayerFixtures } from '@/domains/livescore/actions/player/fixtures';
+import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -17,10 +20,17 @@ const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 // Props 타입 정의
 interface PlayerFixturesProps {
+  playerId: number;
   fixturesData?: {
     data: FixtureData[];
     status?: string;
     message?: string;
+    completeness?: {
+      total: number;
+      success: number;
+      failed: number;
+      failedFixtureIds?: number[];
+    };
   };
   // 4590 표준: 이미지 Storage URL
   teamLogoUrls?: Record<number, string>;
@@ -58,6 +68,7 @@ const getMatchResultStyle = (result: '승' | '무' | '패') => {
 };
 
 export default function PlayerFixtures({
+  playerId,
   fixturesData: initialFixturesData = { data: [], status: 'error', message: '데이터가 없습니다' },
   teamLogoUrls = {},
   leagueLogoUrls = {},
@@ -65,9 +76,15 @@ export default function PlayerFixtures({
 }: PlayerFixturesProps) {
   const router = useRouter();
   const { getTeamById, getLeagueKoreanName } = useTeamLeague();
+  const [pageFixturesData, setPageFixturesData] = useState(initialFixturesData);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setPageFixturesData(initialFixturesData);
+    setCurrentPage(1);
+  }, [initialFixturesData]);
 
   useEffect(() => {
     // 초기 다크모드 상태 확인
@@ -90,33 +107,59 @@ export default function PlayerFixtures({
   }, []);
 
   // 4590 표준: 헬퍼 함수
-  const getTeamLogo = (teamId: number) => teamLogoUrls[teamId] || TEAM_PLACEHOLDER;
-  const getLeagueLogo = (leagueId: number) => {
+  const getTeamLogo = (teamId: number, fallback?: string) => teamLogoUrls[teamId] || fallback || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (leagueId: number, fallback?: string) => {
     if (isDark && leagueLogoDarkUrls[leagueId]) {
       return leagueLogoDarkUrls[leagueId];
     }
-    return leagueLogoUrls[leagueId] || LEAGUE_PLACEHOLDER;
+    return leagueLogoUrls[leagueId] || fallback || LEAGUE_PLACEHOLDER;
   };
   
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 15; // 페이지당 15개 항목
+  useEffect(() => {
+    if (currentPage === 1) {
+      setPageFixturesData(initialFixturesData);
+      return;
+    }
+
+    let cancelled = false;
+    setIsPageLoading(true);
+
+    fetchPlayerFixtures(playerId, itemsPerPage, (currentPage - 1) * itemsPerPage)
+      .then((response) => {
+        if (!cancelled) {
+          setPageFixturesData(response);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsPageLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, initialFixturesData, playerId, itemsPerPage]);
 
   // 안전하게 데이터 추출 및 확인
   const fixturesData = useMemo(() => {
     // 데이터가 객체이고 data 속성이 배열인지 확인
     const isValidData = 
-      initialFixturesData && 
-      typeof initialFixturesData === 'object' && 
-      Array.isArray(initialFixturesData.data);
+      pageFixturesData && 
+      typeof pageFixturesData === 'object' && 
+      Array.isArray(pageFixturesData.data);
     
     // 유효한 데이터인 경우 사용, 아니면 빈 배열로 초기화
     const data = isValidData ? initialFixturesData.data : [];
-    const status = initialFixturesData?.status || 'error';
+    void data;
+    const status = pageFixturesData?.status || 'error';
     const message = initialFixturesData?.message || '데이터를 불러올 수 없습니다';
     
     // 데이터 무결성 확인 - 필요한 속성이 모두 있는지 확인
-    const validatedData = data.map(fixture => {
+    const validatedData = (isValidData ? pageFixturesData.data : []).map(fixture => {
       // 안전한 goals 속성 확인
       const safeGoals = {
         home: typeof fixture.goals?.home === 'string' ? fixture.goals.home : String(fixture.goals?.home || 0),
@@ -144,9 +187,10 @@ export default function PlayerFixtures({
     return {
       data: validatedData,
       status,
-      message
+      message,
+      completeness: pageFixturesData?.completeness,
     };
-  }, [initialFixturesData]);
+  }, [pageFixturesData, initialFixturesData.data, initialFixturesData?.message]);
 
 
   // 소속팀의 승/무/패 상태를 계산하는 함수
@@ -185,16 +229,16 @@ export default function PlayerFixtures({
 
   // 페이지네이션 적용 - 메모이제이션
   const { paginatedData, totalPages } = useMemo(() => {
-    const allData = fixturesData.data || [];
+    const allData = [...(fixturesData.data || [])].sort(
+      (a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime()
+    );
     
     // 총 페이지 수 계산
-    const total = allData.length;
+    const total = fixturesData.completeness?.total || allData.length;
     const pages = Math.ceil(total / itemsPerPage);
     
     // 현재 페이지에 해당하는 데이터 추출
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, total);
-    const currentItems = allData.slice(startIndex, endIndex);
+    const currentItems = allData;
     
     // 현재 페이지 데이터를 리그별로 그룹화
     const grouped = new Map<number, { league: { id: number; name: string; logo: string }; fixtures: FixtureData[] }>();
@@ -215,27 +259,28 @@ export default function PlayerFixtures({
     });
     
     return { 
-      paginatedData: Array.from(grouped.values()), 
+      paginatedData: Array.from(grouped.values()).map(group => ({
+        ...group,
+        fixtures: group.fixtures.sort(
+          (a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime()
+        )
+      })), 
       totalPages: pages
     };
-  }, [fixturesData.data, currentPage, itemsPerPage]);
+  }, [fixturesData, itemsPerPage]);
 
   // 데이터가 없을 때 표시
   if (!fixturesData.data || !Array.isArray(fixturesData.data) || fixturesData.data.length === 0) {
     return (
-      <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
-        <ContainerContent className="text-center py-8">
-          <EmptyState 
-            title="경기 기록이 없습니다" 
-            message={fixturesData.message || "API에서 이 선수의 경기 기록을 불러올 수 없습니다."} 
-          />
-        </ContainerContent>
-      </Container>
+      <PlayerTabEmptyState
+        title="경기별 통계"
+        message={fixturesData.message || '경기 기록이 없습니다.'}
+      />
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isPageLoading ? 'opacity-60 pointer-events-none' : ''}`}>
 
       {/* 리그별 경기 목록 */}
       {paginatedData.map((leagueGroup) => (
@@ -245,7 +290,7 @@ export default function PlayerFixtures({
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 flex items-center justify-center">
                 <UnifiedSportsImageClient
-                  src={getLeagueLogo(leagueGroup.league.id)}
+                  src={getLeagueLogo(leagueGroup.league.id, leagueGroup.league.logo)}
                   alt={leagueGroup.league.name}
                   width={20}
                   height={20}
@@ -283,15 +328,19 @@ export default function PlayerFixtures({
                 const playerTeamId = fixture.teams.playerTeamId;
                 const matchResult = getMatchResult(fixture);
                 const resultStyle = getMatchResultStyle(matchResult);
+                const href = matchUrl(
+                  fixture.fixture.id,
+                  getMatchSlug(fixture.teams.home.name, fixture.teams.away.name)
+                );
 
                     return (
                     <tr
                       key={fixture.fixture.id}
                       className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors"
-                      onClick={() => router.push(`/livescore/football/match/${fixture.fixture.id}`)}
+                      onClick={() => router.push(href)}
                     >
                       <td className="px-2 py-3 text-left whitespace-nowrap text-xs text-gray-900 dark:text-[#F0F0F0]">
-                        <Link href={`/livescore/football/match/${fixture.fixture.id}`}>
+                        <Link href={href}>
                           {format(new Date(fixture.fixture.date), 'yy/MM/dd', { locale: ko })}
                         </Link>
                       </td>
@@ -302,12 +351,12 @@ export default function PlayerFixtures({
                           </span>
                           <TeamLogo
                             name={fixture.teams.home.name}
-                            logoUrl={getTeamLogo(fixture.teams.home.id)}
+                            logoUrl={getTeamLogo(fixture.teams.home.id, fixture.teams.home.logo)}
                           />
                         </div>
                       </td>
                       <td className="py-3 px-1 text-center text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
-                        <Link href={`/livescore/football/match/${fixture.fixture.id}`}>
+                        <Link href={href}>
                           {fixture.goals.home} - {fixture.goals.away}
                         </Link>
                       </td>
@@ -315,7 +364,7 @@ export default function PlayerFixtures({
                         <div className="flex items-center space-x-1">
                           <TeamLogo
                             name={fixture.teams.away.name}
-                            logoUrl={getTeamLogo(fixture.teams.away.id)}
+                            logoUrl={getTeamLogo(fixture.teams.away.id, fixture.teams.away.logo)}
                           />
                           <span className={`max-w-[100px] truncate text-xs text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                             {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}
@@ -365,11 +414,15 @@ export default function PlayerFixtures({
             const playerTeamId = fixture.teams.playerTeamId;
             const matchResult = getMatchResult(fixture);
             const resultStyle = getMatchResultStyle(matchResult);
+            const href = matchUrl(
+              fixture.fixture.id,
+              getMatchSlug(fixture.teams.home.name, fixture.teams.away.name)
+            );
 
                 return (
                   <Link
                     key={fixture.fixture.id}
-                    href={`/livescore/football/match/${fixture.fixture.id}`}
+                    href={href}
                     className={`block hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors${idx > 0 ? ' border-t-4 border-[#E0E0E0] dark:border-[#111111]' : ''}`}
                   >
                     {/* 첫 번째 줄: 날짜, 홈팀, 스코어, 원정팀, 결과 */}
@@ -386,7 +439,7 @@ export default function PlayerFixtures({
                         </span>
                         <TeamLogo
                           name={fixture.teams.home.name}
-                          logoUrl={getTeamLogo(fixture.teams.home.id)}
+                          logoUrl={getTeamLogo(fixture.teams.home.id, fixture.teams.home.logo)}
                         />
                       </div>
 
@@ -399,7 +452,7 @@ export default function PlayerFixtures({
                       <div className="flex-1 flex items-center space-x-1 overflow-hidden">
                         <TeamLogo
                           name={fixture.teams.away.name}
-                          logoUrl={getTeamLogo(fixture.teams.away.id)}
+                          logoUrl={getTeamLogo(fixture.teams.away.id, fixture.teams.away.logo)}
                         />
                         <span className={`text-xs truncate text-gray-900 dark:text-[#F0F0F0] ${playerTeamId === fixture.teams.away.id ? 'font-bold' : ''}`}>
                           {getTeamById(fixture.teams.away.id)?.name_ko || fixture.teams.away.name}

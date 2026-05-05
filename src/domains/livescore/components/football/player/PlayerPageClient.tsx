@@ -6,11 +6,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import PlayerHeader from './PlayerHeader';
 import PlayerTabNavigation from './TabNavigation';
 import TabContent from './TabContent';
-import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
+import { fetchPlayerFullData, PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
+import { fetchSingleRanking } from '@/domains/livescore/actions/player/rankings';
 import AdBanner from '@/shared/components/AdBanner';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
-import { playerKeys } from '@/shared/constants/queryKeys';
 import { scrollToTop } from '@/shared/utils/scroll';
+import { playerKeys } from '@/shared/constants/queryKeys';
+import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
 
 /**
  * ============================================
@@ -72,6 +74,7 @@ interface PlayerPageClientProps {
   initialData: PlayerFullDataResponse;
   playerKoreanName?: string | null;
   rankingsKoreanNames?: Record<number, string | null>;
+  prefetchEnabled?: boolean;
 }
 
 export default function PlayerPageClient({
@@ -80,6 +83,7 @@ export default function PlayerPageClient({
   initialData,
   playerKoreanName,
   rankingsKoreanNames = {},
+  prefetchEnabled = true,
 }: PlayerPageClientProps) {
   // 클라이언트에서 탭 상태 관리
   const [currentTab, setCurrentTab] = useState<PlayerTabType>(initialTab);
@@ -87,8 +91,9 @@ export default function PlayerPageClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const currentLeagueId = initialData.playerData?.statistics?.[0]?.league?.id || 39;
 
-  // 서버에서 모든 탭 데이터를 미리 로드하므로 클라이언트 프리페치 불필요
+  // Heavy secondary tabs are prefetched selectively to keep tab transitions fast.
 
   /**
    * 탭 변경 핸들러
@@ -102,13 +107,6 @@ export default function PlayerPageClient({
 
     // 같은 탭이면 무시
     if (newTab === currentTab) return;
-
-    // 캐시 상태 확인 (디버깅용)
-    const cacheKey = playerKeys[newTab as keyof typeof playerKeys];
-    if (typeof cacheKey === 'function') {
-      const cached = queryClient.getQueryData(cacheKey(playerId));
-      console.log(`[TabChange] ${newTab} 캐시 상태:`, cached ? '있음' : '없음');
-    }
 
     // 1. 클라이언트 상태 즉시 업데이트
     setCurrentTab(newTab);
@@ -128,6 +126,61 @@ export default function PlayerPageClient({
     // router.push는 서버 컴포넌트 리렌더링을 트리거할 수 있음
     window.history.replaceState(null, '', newUrl);
   }, [currentTab, pathname, searchParams]);
+
+  const prefetchFixturesTab = useCallback(() => {
+    if (!prefetchEnabled) return;
+
+    const queryKey = playerKeys.fixtures(playerId);
+    if (queryClient.getQueryData(queryKey)) return;
+
+    void queryClient.prefetchQuery({
+      queryKey,
+      queryFn: async () => {
+        const response = await fetchPlayerFullData(playerId, {
+          fetchSeasons: false,
+          fetchStats: false,
+          fetchFixtures: true,
+          fixtureLimit: 15,
+          fixtureOffset: 0,
+        });
+
+        if (!response.success) return null;
+        return response.fixtures || { data: [] };
+      },
+      ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
+    });
+  }, [playerId, prefetchEnabled, queryClient]);
+
+  const handleTabIntent = useCallback((tabId: string) => {
+    if (!prefetchEnabled) return;
+
+    if (tabId === 'fixtures') {
+      prefetchFixturesTab();
+      return;
+    }
+
+    if (tabId === 'rankings') {
+      const queryKey = ['player-ranking', currentLeagueId, 'topscorers'] as const;
+      if (queryClient.getQueryData(queryKey)) return;
+
+      void queryClient.prefetchQuery({
+        queryKey,
+        queryFn: () => fetchSingleRanking(currentLeagueId, 'topscorers'),
+        ...CACHE_STRATEGIES.STATIC_DATA,
+      });
+    }
+  }, [currentLeagueId, prefetchEnabled, prefetchFixturesTab, queryClient]);
+
+  useEffect(() => {
+    if (!prefetchEnabled) return;
+    if (currentTab === 'fixtures') return;
+
+    const timer = window.setTimeout(() => {
+      prefetchFixturesTab();
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [currentTab, prefetchEnabled, prefetchFixturesTab]);
 
   // 탭 변경 후 스크롤 (useEffect로 DOM 업데이트 완료 후 실행)
   useEffect(() => {
@@ -154,6 +207,7 @@ export default function PlayerPageClient({
       <PlayerTabNavigation
         activeTab={currentTab}
         onTabChange={handleTabChange}
+        onTabIntent={handleTabIntent}
       />
 
       {/* 탭 컨텐츠 - initialData가 서버에서 이미 로드됨 */}

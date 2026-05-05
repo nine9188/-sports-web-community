@@ -6,6 +6,8 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerRanking } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -42,17 +44,15 @@ const PlayerRow = memo(({
 
   return (
     <Link
-      href={`/livescore/football/player/${ranking.player.id}`}
+      href={playerUrl(ranking.player.id, getPlayerSlugFromName(ranking.player.name))}
       className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
     >
-      {/* 순위 */}
       <span className={`w-5 text-center text-xs font-bold flex-shrink-0 ${
         index < 3 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
       }`}>
         {index + 1}
       </span>
 
-      {/* 선수 사진 */}
       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#333]">
         <UnifiedSportsImageClient
           src={playerPhotoUrl || PLAYER_PLACEHOLDER}
@@ -63,13 +63,11 @@ const PlayerRow = memo(({
         />
       </div>
 
-      {/* 선수명 + 팀 */}
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
           {displayName}
         </p>
         <div className="flex items-center gap-1">
-          {/* 팀 로고: 모바일 숨김 */}
           <div className="w-3.5 h-3.5 flex-shrink-0 hidden md:block">
             <UnifiedSportsImageClient
               src={teamLogoUrl || TEAM_PLACEHOLDER}
@@ -85,12 +83,10 @@ const PlayerRow = memo(({
         </div>
       </div>
 
-      {/* 경기수 */}
       <span className="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
         {stat.games?.appearences || 0}경기
       </span>
 
-      {/* 스탯 */}
       <span className="w-8 text-right text-sm font-bold text-gray-900 dark:text-gray-100 flex-shrink-0">
         {value}
       </span>
@@ -114,36 +110,40 @@ const RankingTable = memo(({
   teamLogoUrls: Record<number, string>;
   playerKoreanNames: Record<number, string | null>;
 }) => {
-  if (rankings.length === 0) return null;
-
   return (
     <Container>
       <ContainerHeader>
         <ContainerTitle>{title}</ContainerTitle>
       </ContainerHeader>
       <ContainerContent className="p-0">
-        {/* 헤더 */}
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-100 dark:border-gray-700/50 text-[11px] text-gray-400 dark:text-gray-500">
-          <span className="w-5 text-center">#</span>
-          <span className="w-8" />
-          <span className="flex-1">선수</span>
-          <span className="flex-shrink-0">경기</span>
-          <span className="w-8 text-right">{type === 'goals' ? '골' : '도움'}</span>
-        </div>
-        {/* 리스트 */}
-        <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
-          {rankings.map((ranking, index) => (
-            <PlayerRow
-              key={ranking.player.id}
-              ranking={ranking}
-              index={index}
-              type={type}
-              playerPhotoUrl={playerPhotoUrls[ranking.player.id]}
-              teamLogoUrl={teamLogoUrls[ranking.statistics[0]?.team?.id || 0]}
-              koreanName={playerKoreanNames[ranking.player.id]}
-            />
-          ))}
-        </div>
+        {rankings.length === 0 ? (
+          <div className="px-3 py-10 text-center text-[13px] text-gray-500 dark:text-gray-400">
+            데이터가 없습니다
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-100 dark:border-gray-700/50 text-[11px] text-gray-400 dark:text-gray-500">
+              <span className="w-5 text-center">#</span>
+              <span className="w-8" />
+              <span className="flex-1">선수</span>
+              <span className="flex-shrink-0">경기</span>
+              <span className="w-8 text-right">{type === 'goals' ? '골' : '도움'}</span>
+            </div>
+            <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
+              {rankings.map((ranking, index) => (
+                <PlayerRow
+                  key={ranking.player.id}
+                  ranking={ranking}
+                  index={index}
+                  type={type}
+                  playerPhotoUrl={playerPhotoUrls[ranking.player.id]}
+                  teamLogoUrl={teamLogoUrls[ranking.statistics[0]?.team?.id || 0]}
+                  koreanName={playerKoreanNames[ranking.player.id]}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </ContainerContent>
     </Container>
   );
@@ -157,8 +157,6 @@ export default function LeagueRankingsSection({
   teamLogoUrls,
   playerKoreanNames,
 }: LeagueRankingsSectionProps) {
-  if (topScorers.length === 0 && topAssists.length === 0) return null;
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <RankingTable

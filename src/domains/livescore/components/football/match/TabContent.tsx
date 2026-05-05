@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import Events from './tabs/Events';
 import Standings from './tabs/Standings';
+import Power from './tabs/Power';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import RelatedPosts from './sidebar/RelatedPosts';
@@ -14,11 +15,7 @@ import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matc
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import Spinner from '@/shared/components/Spinner';
 
-/**
- * AllPlayerStatsResponse를 Stats 컴포넌트가 사용하는 MatchPlayerStatsResponse 형식으로 변환
- */
 function convertToMatchPlayerStats(
   allPlayerStats: AllPlayerStatsResponse | null | undefined,
   homeTeamId?: number,
@@ -28,7 +25,6 @@ function convertToMatchPlayerStats(
     return undefined;
   }
 
-  // 팀별로 선수 그룹화
   const homePlayersData: PlayerStatsData[] = [];
   const awayPlayersData: PlayerStatsData[] = [];
 
@@ -41,7 +37,6 @@ function convertToMatchPlayerStats(
     }
   }
 
-  // 첫 번째 선수의 팀 정보 추출
   const homeTeamInfo = homePlayersData[0]?.statistics?.[0]?.team;
   const awayTeamInfo = awayPlayersData[0]?.statistics?.[0]?.team;
 
@@ -87,85 +82,59 @@ function convertToMatchPlayerStats(
         players: awayPlayersData.map(convertPlayer),
       } : null,
     },
-    message: '선수 통계를 성공적으로 변환했습니다',
+    message: '선수 통계 변환이 성공적으로 완료되었습니다.',
   };
 }
 
-// Dynamic imports로 Framer Motion을 사용하는 컴포넌트 lazy load
-const Lineups = dynamic(() => import('./tabs/lineups/Lineups'), {
-  loading: () => (
-    <div className="flex items-center justify-center py-12">
-      <Spinner size="lg" />
-    </div>
-  ),
-});
-
-const Stats = dynamic(() => import('./tabs/Stats'), {
-  loading: () => (
-    <div className="flex items-center justify-center py-12">
-      <Spinner size="lg" />
-    </div>
-  ),
-});
-
-const Power = dynamic(() => import('./tabs/Power'), {
-  loading: () => (
-    <div className="flex items-center justify-center py-12">
-      <Spinner size="lg" />
-    </div>
-  ),
-});
+const Lineups = dynamic(() => import('./tabs/lineups/Lineups'), { ssr: false });
+const Stats = dynamic(() => import('./tabs/Stats'), { ssr: false });
 
 interface TabContentProps {
   matchId: string;
   currentTab: MatchTabType;
   initialData: MatchFullDataResponse;
   initialPowerData?: HeadToHeadTestData;
-  // 통합된 선수 통계 데이터 (평점, 주장, 전체 통계 포함)
+  powerMode?: 'all' | 'summary' | 'comparison' | 'recent' | 'comparisonRecent' | 'h2h' | 'topPlayers';
   allPlayerStats?: AllPlayerStatsResponse | null;
   relatedPosts?: RelatedPost[];
   homeBoardSlug?: string | null;
   awayBoardSlug?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
-  // 컵 대회면 순위 탭에서 사용할 라운드별 경기 목록
   cupRoundsData?: import('@/domains/livescore/actions/match/cupFixtures').CupRound[];
 }
 
-/**
- * 매치 탭 컨텐츠 컴포넌트
- *
- * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
- * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
- */
-export default function TabContent({ matchId, currentTab, initialData, initialPowerData, allPlayerStats, relatedPosts, homeBoardSlug, awayBoardSlug, playerKoreanNames = {}, cupRoundsData }: TabContentProps) {
+export default function TabContent({
+  matchId,
+  currentTab,
+  initialData,
+  initialPowerData,
+  powerMode = 'all',
+  allPlayerStats,
+  relatedPosts,
+  homeBoardSlug,
+  awayBoardSlug,
+  playerKoreanNames = {},
+  cupRoundsData,
+}: TabContentProps) {
   const { getTeamById } = useTeamLeague();
-  // initialData에서 데이터 추출
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData, teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl } = initialData;
 
   if (!matchId) {
     return <EmptyState title="경기 정보 없음" message="경기 정보가 없습니다." />;
   }
 
-  // 탭별 렌더링
   switch (currentTab) {
     case 'events':
-      return events && events.length > 0
-        ? <Events events={events} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />
-        : <EmptyState title="이벤트 없음" message="이 경기의 이벤트 데이터를 찾을 수 없습니다." />;
+      return <Events matchId={matchId} events={events} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />;
 
-    case 'lineups':
-      if (!lineups?.response) {
-        return <EmptyState title="라인업 없음" message="이 경기의 라인업 정보를 찾을 수 없습니다." />;
-      }
-
+    case 'lineups': {
       const fixture = matchData && typeof matchData === 'object' && 'fixture' in matchData
         ? (matchData as { fixture?: { status?: { short?: string } } }).fixture
         : undefined;
 
-      // lineupData의 타입을 변환 (grid: string | null -> string)
-      const convertedLineups = {
+      const convertedLineups = lineups?.response ? {
         ...lineups,
-        response: lineups.response ? {
+        response: {
           home: {
             ...lineups.response.home,
             startXI: lineups.response.home.startXI.map(item => ({
@@ -184,8 +153,8 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
               player: { ...item.player, grid: item.player.grid || '' }
             }))
           }
-        } : null
-      };
+        }
+      } : lineups ? { ...lineups, response: null } : undefined;
 
       return (
         <Lineups
@@ -194,7 +163,7 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
             homeTeam: homeTeam || undefined,
             awayTeam: awayTeam || undefined,
             events: events || undefined,
-            fixture
+            fixture,
           }}
           matchId={matchId}
           allPlayerStats={allPlayerStats}
@@ -202,45 +171,48 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
           teamLogoUrls={teamLogoUrls}
         />
       );
+    }
 
-    case 'stats':
-      // AllPlayerStatsResponse를 Stats 컴포넌트 형식으로 변환
+    case 'stats': {
       const matchPlayerStats = convertToMatchPlayerStats(allPlayerStats, homeTeam?.id, awayTeam?.id);
-      return stats && stats.length > 0
-        ? <Stats matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} initialMatchPlayerStats={matchPlayerStats} playerKoreanNames={playerKoreanNames} teamLogoUrls={teamLogoUrls} />
-        : <EmptyState title="통계 없음" message="이 경기의 통계 데이터를 찾을 수 없습니다." />;
+      return (
+        <Stats
+          matchId={matchId}
+          matchData={{ stats, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }}
+          initialMatchPlayerStats={matchPlayerStats}
+          playerKoreanNames={playerKoreanNames}
+          teamLogoUrls={teamLogoUrls}
+        />
+      );
+    }
 
     case 'standings': {
-      // 컵 대회면 순위표 대신 라운드별 경기 뷰 렌더
-      if (cupRoundsData && cupRoundsData.length > 0) {
-        return (
-          <Standings
-            matchData={{ standings: null, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }}
-            matchId={matchId}
-            cupRoundsData={cupRoundsData}
-          />
-        );
-      }
-
-      // 리그 로고 URL을 Record 형식으로 변환 (standings에서 리그 ID로 조회)
-      const leagueId = standings?.standings?.league?.id;
+      const leagueId = initialData.match?.league?.id;
       const leagueLogoUrls = leagueId && leagueLogoUrl ? { [leagueId]: leagueLogoUrl } : {};
       const leagueLogoDarkUrls = leagueId && leagueLogoDarkUrl ? { [leagueId]: leagueLogoDarkUrl } : {};
-      return standings
-        ? <Standings matchData={{ standings, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }} matchId={matchId} teamLogoUrls={teamLogoUrls} leagueLogoUrls={leagueLogoUrls} leagueLogoDarkUrls={leagueLogoDarkUrls} />
-        : <EmptyState title="순위 없음" message="이 리그의 순위 정보를 찾을 수 없습니다." />;
+
+      return (
+        <Standings
+          matchData={{ standings: standings ?? null, homeTeam: homeTeam || undefined, awayTeam: awayTeam || undefined }}
+          matchId={matchId}
+          teamLogoUrls={teamLogoUrls}
+          leagueLogoUrls={leagueLogoUrls}
+          leagueLogoDarkUrls={leagueLogoDarkUrls}
+          cupRoundsData={cupRoundsData}
+        />
+      );
     }
 
     case 'power':
       return initialPowerData && homeTeam && awayTeam
-        ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={{ ...initialPowerData, standings }} playerKoreanNames={playerKoreanNames} />
+        ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={{ ...initialPowerData, standings }} playerKoreanNames={playerKoreanNames} mode={powerMode} />
         : <EmptyState title="전력 분석 없음" message="이 경기의 전력 데이터를 찾을 수 없습니다." />;
 
     case 'support':
       return (
         <div className="space-y-4">
-          <MatchPredictionClient matchData={matchData || {}} teamLogoUrls={teamLogoUrls} />
-          <SupportCommentsSection matchData={matchData || {}} />
+          <MatchPredictionClient matchId={matchId} matchData={matchData || {}} teamLogoUrls={teamLogoUrls} />
+          <SupportCommentsSection matchId={matchId} matchData={matchData || {}} />
           <RelatedPosts
             posts={relatedPosts ?? []}
             teams={{
@@ -254,4 +226,4 @@ export default function TabContent({ matchId, currentTab, initialData, initialPo
     default:
       return <EmptyState title="알 수 없는 탭" message="존재하지 않는 탭입니다." />;
   }
-} 
+}

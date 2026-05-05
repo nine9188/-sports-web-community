@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { LoadingState, ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import StatsCards from './components/StatsCards';
 import SeasonHighlights from './components/SeasonHighlights';
 import StandingsPreview from './components/StandingsPreview';
@@ -15,15 +15,20 @@ import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 import { PlayerKoreanNames } from '../../TeamPageClient';
-import { fetchTeamOverviewMatchesData, fetchTeamOverviewStandingsData, fetchTeamOverviewTransfersData } from '@/domains/livescore/actions/teams/team';
+import {
+  fetchTeamOverviewRecentMatchesData,
+  fetchTeamOverviewStandingsData,
+  fetchTeamOverviewTransfersData,
+  fetchTeamOverviewUpcomingMatchesData
+} from '@/domains/livescore/actions/teams/team';
 import { teamKeys } from '@/shared/constants/queryKeys';
 import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { convertStandingsData } from '../../../../../utils/teamDataUtils';
+import TeamTabEmptyState from '../TeamTabEmptyState';
 
-type OverviewMatchesData = Awaited<ReturnType<typeof fetchTeamOverviewMatchesData>>;
+type OverviewMatchesData = Awaited<ReturnType<typeof fetchTeamOverviewRecentMatchesData>>;
 
-// 팀 정보 타입
 interface Team {
   team: {
     id: number;
@@ -39,7 +44,6 @@ interface Team {
   };
 }
 
-// 리그 정보 타입
 interface LeagueInfo {
   id?: number;
   name: string;
@@ -48,14 +52,12 @@ interface LeagueInfo {
   season: number;
 }
 
-// 경기 결과 타입
 interface FixturesInfo {
   wins: { total: number };
   draws: { total: number };
   loses: { total: number };
 }
 
-// 득점 관련 타입
 interface GoalStats {
   total?: {
     home: number;
@@ -70,12 +72,10 @@ interface GoalStats {
   minute?: Record<string, { total: number; percentage: string }>;
 }
 
-// 클린시트 타입
 interface CleanSheetInfo {
   total: number;
 }
 
-// 통계 정보 타입
 interface Stats {
   league?: LeagueInfo;
   fixtures?: FixturesInfo;
@@ -87,7 +87,6 @@ interface Stats {
   form?: string;
 }
 
-// Overview 컴포넌트 props 타입
 interface OverviewProps {
   team?: Team;
   stats?: Stats;
@@ -101,18 +100,20 @@ interface OverviewProps {
   isLoading?: boolean;
   error?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
-  // 4590 표준: 이미지 Storage URL
+  // 4590 storage image URLs.
   playerPhotoUrls?: Record<number, string>;
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
-  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
+  leagueLogoDarkUrls?: Record<number, string>;  // Dark mode league logos.
 }
-
 function OverviewSectionLoading({ title }: { title: string }) {
   return (
     <Container className="bg-white dark:bg-[#1D1D1D]">
-      <div className="px-3 py-3 text-[13px] text-gray-500 dark:text-gray-400">
-        {title} 불러오는 중...
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
       </div>
     </Container>
   );
@@ -121,41 +122,23 @@ function OverviewSectionLoading({ title }: { title: string }) {
 function MatchSectionsLoading() {
   return (
     <div className="space-y-4">
-      {['최근 경기', '예정된 경기'].map((title) => (
-        <Container key={title} className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader>
-            <ContainerTitle>{title}</ContainerTitle>
-          </ContainerHeader>
-          <div className="overflow-hidden">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-20 md:w-28" />
-                <col className="w-8 md:w-32" />
-                <col />
-                {title === '최근 경기' && <col className="w-12 md:w-20" />}
-              </colgroup>
-              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">리그</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">경기</th>
-                  {title === '최근 경기' && (
-                    <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">결과</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={title === '최근 경기' ? 4 : 3} className="h-12 text-center text-xs text-gray-500 dark:text-gray-400">
-                    불러오는 중...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Container>
-      ))}
+      <MatchSectionLoading title="최근 경기" footerLabel="최근 경기 전체보기" />
+      <MatchSectionLoading title="예정된 경기" footerLabel="예정된 경기 전체보기" />
     </div>
+  );
+}
+
+function MatchSectionLoading({ title, footerLabel }: { title: string; footerLabel: string }) {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
+      </div>
+      <OverviewLoadingFooter label={footerLabel} />
+    </Container>
   );
 }
 
@@ -165,20 +148,61 @@ function RecentTransfersLoading() {
       <ContainerHeader>
         <ContainerTitle>최근 이적</ContainerTitle>
       </ContainerHeader>
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-black/5 dark:divide-white/10">
+      <div className="grid grid-cols-1 divide-y divide-black/5 dark:divide-white/10 md:grid-cols-2 md:divide-x md:divide-y-0">
         {[
           { label: 'IN', text: '영입', className: 'text-blue-600 dark:text-blue-400' },
           { label: 'OUT', text: '방출', className: 'text-red-600 dark:text-red-400' },
         ].map((section) => (
           <div key={section.label}>
-            <div className="bg-[#F5F5F5] dark:bg-[#262626] py-2 text-center text-[10px] font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10">
+            <div className="border-b border-black/5 bg-[#F5F5F5] py-2 text-center text-[10px] font-medium text-gray-500 dark:border-white/10 dark:bg-[#262626] dark:text-gray-400">
               <span className={section.className}>{section.label}</span> {section.text}
             </div>
-            <div className="h-12 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex h-12 items-center justify-center text-xs text-gray-500 dark:text-gray-400">
               불러오는 중...
             </div>
           </div>
         ))}
+      </div>
+      <OverviewLoadingFooter label="전체 이적 보기" />
+    </Container>
+  );
+}
+
+function OverviewLoadingFooter({ label }: { label: string }) {
+  return (
+    <Button
+      variant="secondary"
+      disabled
+      className="w-full rounded-none border-t border-black/5 opacity-100 md:rounded-b-lg dark:border-white/10"
+    >
+      <div className="flex items-center justify-center gap-1">
+        <span className="text-[13px] font-medium">{label}</span>
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </div>
+    </Button>
+  );
+}
+
+function OverviewSectionEmpty({ title, message }: { title: string; message: string }) {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        {message}
       </div>
     </Container>
   );
@@ -203,7 +227,7 @@ export default function Overview({
   leagueLogoDarkUrls = {}
 }: OverviewProps) {
   const { getLeagueKoreanName } = useTeamLeague();
-  // 탭 변경 핸들러 (메모이제이션으로 불필요한 렌더링 방지)
+  // Overview uses limited section data to keep the first tab fast.
   const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
     if (onTabChange) {
       onTabChange(tab, subTab);
@@ -222,15 +246,25 @@ export default function Overview({
     enabled: canFetchSupplemental && !transfers,
     ...CACHE_STRATEGIES.STATIC_DATA,
   });
-  const matchesQuery = useQuery<OverviewMatchesData>({
+  const recentMatchesQuery = useQuery<OverviewMatchesData>({
     queryKey: [...teamKeys.matches(String(teamId)), 'overview-recent'],
-    queryFn: () => fetchTeamOverviewMatchesData(String(teamId), 10),
+    queryFn: () => fetchTeamOverviewRecentMatchesData(String(teamId), 5),
+    enabled: canFetchSupplemental && !matches,
+    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
+  });
+  const upcomingMatchesQuery = useQuery<OverviewMatchesData>({
+    queryKey: [...teamKeys.matches(String(teamId)), 'overview-upcoming'],
+    queryFn: () => fetchTeamOverviewUpcomingMatchesData(String(teamId), 5),
     enabled: canFetchSupplemental && !matches,
     ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
   });
   const displayStandings = standings || convertStandingsData(standingsQuery.data?.standings);
   const displayTransfers = transfers || transfersQuery.data?.transfers;
-  const displayMatches = matches || matchesQuery.data?.matches;
+  const fetchedMatches = [
+    ...(recentMatchesQuery.data?.matches || []),
+    ...(upcomingMatchesQuery.data?.matches || []),
+  ];
+  const displayMatches = matches || (fetchedMatches.length > 0 ? fetchedMatches : undefined);
   const displayPlayerKoreanNames: PlayerKoreanNames = {
     ...playerKoreanNames,
     ...(transfersQuery.data?.playerKoreanNames || {}),
@@ -243,35 +277,37 @@ export default function Overview({
     ...teamLogoUrls,
     ...(standingsQuery.data?.teamLogoUrls || {}),
     ...(transfersQuery.data?.teamLogoUrls || {}),
-    ...(matchesQuery.data?.teamLogoUrls || {}),
+    ...(recentMatchesQuery.data?.teamLogoUrls || {}),
+    ...(upcomingMatchesQuery.data?.teamLogoUrls || {}),
   };
   const displayLeagueLogoUrls: Record<number, string> = {
     ...leagueLogoUrls,
     ...(standingsQuery.data?.leagueLogoUrls || {}),
-    ...(matchesQuery.data?.leagueLogoUrls || {}),
+    ...(recentMatchesQuery.data?.leagueLogoUrls || {}),
+    ...(upcomingMatchesQuery.data?.leagueLogoUrls || {}),
   };
   const displayLeagueLogoDarkUrls: Record<number, string> = {
     ...leagueLogoDarkUrls,
     ...(standingsQuery.data?.leagueLogoDarkUrls || {}),
-    ...(matchesQuery.data?.leagueLogoDarkUrls || {}),
+    ...(recentMatchesQuery.data?.leagueLogoDarkUrls || {}),
+    ...(upcomingMatchesQuery.data?.leagueLogoDarkUrls || {}),
   };
+  const matchesLoading = recentMatchesQuery.isLoading || upcomingMatchesQuery.isLoading;
+  const matchesError = recentMatchesQuery.isError && upcomingMatchesQuery.isError;
   
-  // 로딩 상태 처리
   if (isLoading) {
     return <LoadingState message="팀 개요 데이터를 불러오는 중..." />;
   }
 
-  // 에러 상태 처리
   if (error) {
     return <ErrorState message={error || ''} />;
   }
 
-  // 데이터가 없는 경우 처리
   if (!team || !team.team) {
-    return <EmptyState title="팀 정보가 없습니다" message="현재 이 팀에 대한 정보를 제공할 수 없습니다." />;
+    return <TeamTabEmptyState title="팀 정보" message="팀 정보가 없습니다." />;
   }
 
-  // 안전한 리그 정보 설정
+  // Build a safe league object for child components.
   const safeLeague = {
     name: getLeagueKoreanName(stats?.league?.name) || '',
     logo: stats?.league?.logo || ''
@@ -279,7 +315,7 @@ export default function Overview({
 
   return (
     <div className="space-y-4">
-      {/* 1. 리그 정보 + 기본 통계 */}
+      {/* 1. League summary and rankings */}
       {stats && (
         <StatsCards
           stats={stats}
@@ -289,7 +325,7 @@ export default function Overview({
         />
       )}
 
-      {/* 2. 최근 경기와 예정된 경기 */}
+      {/* 2. Recent and upcoming matches */}
       {displayMatches ? (
         <MatchItems
           matches={displayMatches}
@@ -298,12 +334,16 @@ export default function Overview({
           teamLogoUrls={displayTeamLogoUrls}
           leagueLogoUrls={displayLeagueLogoUrls}
           leagueLogoDarkUrls={displayLeagueLogoDarkUrls}
+          recentLoading={!matches && recentMatchesQuery.isLoading}
+          upcomingLoading={!matches && upcomingMatchesQuery.isLoading}
         />
-      ) : matchesQuery.isLoading ? (
+      ) : matchesLoading ? (
         <MatchSectionsLoading />
+      ) : matchesError ? (
+        <OverviewSectionEmpty title="경기 정보" message="경기 정보를 불러오지 못했습니다." />
       ) : null}
 
-      {/* 3. 리그 순위 */}
+      {/* 3. League standings */}
       {displayStandings ? (
         <StandingsPreview
           standings={displayStandings}
@@ -316,9 +356,11 @@ export default function Overview({
         />
       ) : standingsQuery.isLoading ? (
         <OverviewSectionLoading title="리그 순위" />
+      ) : standingsQuery.isError ? (
+        <OverviewSectionEmpty title="리그 순위" message="순위 정보를 불러오지 못했습니다." />
       ) : null}
 
-      {/* 4. 시즌 하이라이트 (최다 득점/어시스트) */}
+      {/* 4. Season highlights */}
       {playerStats && squad && (
         <SeasonHighlights
           playerStats={playerStats}
@@ -329,7 +371,7 @@ export default function Overview({
         />
       )}
 
-      {/* 5. 최근 이적 */}
+      {/* 5. Recent transfers */}
       {displayTransfers ? (
         <RecentTransfers
           transfers={displayTransfers}
@@ -340,7 +382,10 @@ export default function Overview({
         />
       ) : transfersQuery.isLoading ? (
         <RecentTransfersLoading />
+      ) : transfersQuery.isError ? (
+        <OverviewSectionEmpty title="최근 이적" message="이적 정보를 불러오지 못했습니다." />
       ) : null}
     </div>
   );
 } 
+

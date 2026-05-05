@@ -1,19 +1,18 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ChatMessage } from '../types';
+import { ChatMessage, ChipButton } from '../types';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { ChatTypingBubble } from './ChatTypingBubble';
 import { scrollToBottom } from '../utils';
-import Spinner from '@/shared/components/Spinner';
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
   isTyping?: boolean;
   isLoading?: boolean;
   onMessageRead?: (messageId: string) => void;
-  onFormSubmit?: (formData: Record<string, any>) => void;
-  onChipClick?: (chip: any) => void;
+  onFormSubmit?: (formData: Record<string, unknown>) => void;
+  onChipClick?: (chip: ChipButton) => void;
   isFormSubmitting?: boolean;
 }
 
@@ -93,7 +92,7 @@ export function ChatMessageList({
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <Spinner size="lg" />
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
       </div>
     );
   }

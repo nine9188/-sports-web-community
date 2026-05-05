@@ -46,7 +46,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       cachedBoardStructure,
       prevPostResult,
       nextPostResult
-    ] = await Promise.all([
+    ] = await (async () => {
+      const result = await Promise.all([
       // 게시글 상세 정보 — posts 메타만 조회 (content는 아래에서 별도 조회)
       supabase
         .from('posts')
@@ -77,7 +78,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         .order('post_number', { ascending: true })
         .limit(1)
         .maybeSingle()
-    ]);
+      ]);
+      return result;
+    })();
     
     const { data: postRaw, error: postError } = postResult;
     if (postError || !postRaw) {
@@ -196,7 +199,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       teamsResult,
       leaguesResult,
       iconResult
-    ] = await Promise.all([
+    ] = await (async () => {
+      const result = await Promise.all([
       // 게시글 목록 — 모든 view_type에서 thumbnail_url + summary 사용
       // posts.content 컬럼 제거 후 thumbnail_url/summary로 egress 절감
       supabase
@@ -236,7 +240,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
 
       // 작성자 아이콘 (캐시 7일)
       getCachedShopItemIconUrl(iconId).then(url => ({ data: url ? { image_url: url } : null }))
-    ]);
+      ]);
+      return result;
+    })();
     
     const { data: postsData, count } = postsResult;
     const filesData = filesResult.data;

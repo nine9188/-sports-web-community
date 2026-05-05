@@ -4,10 +4,19 @@ import PlayerPageClient from '@/domains/livescore/components/football/player/Pla
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
+import {
+  SITE_ORGANIZATION_ID,
+  SITE_WEBSITE_ID,
+  absoluteSiteUrl,
+  buildBreadcrumbJsonLd,
+  buildJsonLdId,
+  isUsableJsonLdImage,
+  jsonLdScriptProps,
+} from '@/shared/utils/jsonLd';
 import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
-import { slugify } from '@/domains/livescore/utils/slugs';
+import { getTeamSlugFromName, slugify } from '@/domains/livescore/utils/slugs';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
 
 /**
@@ -53,9 +62,9 @@ export async function generateMetadata({
   const statistics = playerData.playerData.statistics;
 
   // 한글 매핑 (서버 액션으로 DB 조회)
-  const playerName = await getPlayerKoreanName(player.id) || player.name;
+  const playerName = await getSafePlayerKoreanName(player.id) || player.name;
   const teamId = statistics?.[0]?.team?.id;
-  const teamMapping = teamId ? await getTeamById(teamId) : null;
+  const teamMapping = teamId ? await getSafeTeamById(teamId) : null;
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
   const position = statistics?.[0]?.games?.position || '';
 
@@ -76,7 +85,12 @@ function isFallbackPlayerSlug(id: string, slug?: string | null): boolean {
   const normalizedSlug = String(slug ?? '').trim().toLowerCase();
   const normalizedId = String(id ?? '').trim().toLowerCase();
 
-  return !normalizedSlug || normalizedSlug === 'player' || normalizedSlug === normalizedId;
+  return (
+    !normalizedSlug ||
+    normalizedSlug === 'player' ||
+    normalizedSlug === normalizedId ||
+    normalizedSlug === `player-${normalizedId}`
+  );
 }
 
 function buildMissingPlayerMetadata(id: string): Promise<Metadata> {
@@ -86,6 +100,33 @@ function buildMissingPlayerMetadata(id: string): Promise<Metadata> {
     path: `/livescore/football/player/${id}`,
     noindex: true,
   });
+}
+
+async function getSafePlayerKoreanName(playerId: number): Promise<string | null> {
+  try {
+    return await getPlayerKoreanName(playerId);
+  } catch (error) {
+    console.error(`[PlayerPage] Korean name lookup failed - playerId: ${playerId}`, error);
+    return null;
+  }
+}
+
+async function getSafePlayersKoreanNames(playerIds: number[]): Promise<Record<number, string | null>> {
+  try {
+    return await getPlayersKoreanNames(playerIds);
+  } catch (error) {
+    console.error('[PlayerPage] Ranking Korean names lookup failed:', error);
+    return {};
+  }
+}
+
+async function getSafeTeamById(teamId: number) {
+  try {
+    return await getTeamById(teamId);
+  } catch (error) {
+    console.error(`[PlayerPage] Team lookup failed - teamId: ${teamId}`, error);
+    return null;
+  }
 }
 
 function isNextNotFoundError(error: unknown): boolean {
@@ -98,27 +139,29 @@ function isNextNotFoundError(error: unknown): boolean {
   );
 }
 
-/** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+/** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
 async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; slug: string; tab: string }) {
   try {
+    if (isFallbackPlayerSlug(playerId, slug)) {
+      return notFound();
+    }
+
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as PlayerTabType)
       ? (tab as PlayerTabType)
       : 'stats';
 
     // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
-    // 봇 감지: x-is-bot 헤더가 있으면 기본 정보만 (API 호출 최소화)
-    const headersList = await import('next/headers').then(m => m.headers());
-    const isBot = headersList.get('x-is-bot') === '1';
-
     const initialData = await fetchPlayerFullData(playerId, {
-      fetchSeasons: !isBot && (initialTab === 'stats'),
-      fetchStats: !isBot && (initialTab === 'stats'),
-      fetchFixtures: !isBot && (initialTab === 'fixtures'),
-      fetchTrophies: !isBot && (initialTab === 'trophies'),
-      fetchTransfers: !isBot && (initialTab === 'transfers'),
-      fetchInjuries: !isBot && (initialTab === 'injuries'),
-      fetchRankings: !isBot && (initialTab === 'rankings'),
+      fetchSeasons: false,
+      fetchStats: initialTab === 'stats',
+      fetchFixtures: initialTab === 'fixtures',
+      fixtureLimit: 15,
+      fixtureOffset: 0,
+      fetchTrophies: initialTab === 'trophies',
+      fetchTransfers: initialTab === 'transfers',
+      fetchInjuries: initialTab === 'injuries',
+      fetchRankings: initialTab === 'rankings',
     });
 
     // 데이터 로드 실패 시 에러 페이지 표시 (404 대신)
@@ -150,7 +193,10 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
 
     // 선수 한글명 조회 (DB)
     const playerNumericId = parseInt(playerId, 10);
-    const playerKoreanName = !isNaN(playerNumericId) ? await getPlayerKoreanName(playerNumericId) : null;
+    const initialPlayerName = initialData.playerData?.info?.name || null;
+    const playerKoreanName = !isNaN(playerNumericId)
+      ? await getSafePlayerKoreanName(playerNumericId)
+      : initialPlayerName;
 
     // Rankings 데이터에서 선수 ID 추출 및 한글명 일괄 조회
     const rankingsPlayerIds: Set<number> = new Set();
@@ -171,48 +217,78 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
       });
     }
     const rankingsKoreanNames = rankingsPlayerIds.size > 0
-      ? await getPlayersKoreanNames(Array.from(rankingsPlayerIds))
+      ? await getSafePlayersKoreanNames(Array.from(rankingsPlayerIds))
       : {};
 
     // Person JSON-LD 생성
     const playerInfo = initialData.playerData?.info;
     const playerStats = initialData.playerData?.statistics;
     const currentTeam = playerStats?.[0]?.team;
+    const currentTeamMapping = currentTeam?.id
+      ? await getSafeTeamById(currentTeam.id)
+      : null;
+    const playerDisplayName = playerKoreanName || playerInfo?.name || '';
+    const playerSlug = slug || (playerInfo?.name ? slugify(playerInfo.name) : '') || 'player';
+    const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
+    const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
+    const teamSlugSource = currentTeamMapping?.name_en || currentTeam?.name || '';
+    const teamUrl = currentTeam?.id && currentTeam?.name
+      ? `${siteConfig.url}/livescore/football/team/${currentTeam.id}/${getTeamSlugFromName(teamSlugSource) || 'team'}`
+      : undefined;
+    const playerPhotoUrl = initialData.playerPhotoUrl || playerInfo?.photo;
+    const playerPhotoJsonLdUrl = isUsableJsonLdImage(playerPhotoUrl)
+      ? absoluteSiteUrl(playerPhotoUrl)
+      : undefined;
+    const teamLogoUrl = currentTeam?.id
+      ? initialData.teamLogoUrl || initialData.statisticsTeamLogoUrls?.[currentTeam.id] || currentTeam.logo
+      : undefined;
+    const teamLogoJsonLdUrl = isUsableJsonLdImage(teamLogoUrl)
+      ? absoluteSiteUrl(teamLogoUrl)
+      : undefined;
+    const currentPosition = playerStats?.[0]?.games?.position;
     const personSchema = playerInfo ? {
       '@context': 'https://schema.org',
       '@type': 'Person',
-      name: playerKoreanName || playerInfo.name,
+      '@id': buildJsonLdId(playerUrl, 'person'),
+      name: playerDisplayName || playerInfo.name,
+      url: playerUrl,
+      isPartOf: { '@id': SITE_WEBSITE_ID },
+      publisher: { '@id': SITE_ORGANIZATION_ID },
       ...(playerInfo.nationality ? { nationality: { '@type': 'Country', name: playerInfo.nationality } } : {}),
       ...(playerInfo.birth?.date ? { birthDate: playerInfo.birth.date } : {}),
       ...(playerInfo.height ? { height: playerInfo.height } : {}),
       ...(playerInfo.weight ? { weight: playerInfo.weight } : {}),
+      ...(playerPhotoJsonLdUrl ? { image: playerPhotoJsonLdUrl } : {}),
       jobTitle: '축구 선수',
-      ...(currentTeam ? {
+      ...(currentPosition ? { athletePosition: currentPosition } : {}),
+      ...(currentTeam && teamUrl ? {
         memberOf: {
           '@type': 'SportsTeam',
-          name: currentTeam.name,
+          '@id': buildJsonLdId(teamUrl, 'sports-team'),
+          name: teamDisplayName || currentTeam.name,
+          url: teamUrl,
+          sport: 'Football',
+          ...(teamLogoJsonLdUrl ? { logo: teamLogoJsonLdUrl } : {}),
+        },
+        affiliation: {
+          '@type': 'SportsTeam',
+          '@id': buildJsonLdId(teamUrl, 'sports-team'),
+          name: teamDisplayName || currentTeam.name,
+          url: teamUrl,
         },
       } : {}),
     } : null;
 
     // BreadcrumbList JSON-LD
-    const playerDisplayName = playerKoreanName || playerInfo?.name || '';
-    const playerSlug = slug || (playerInfo?.name ? slugify(playerInfo.name) : '') || 'player';
-    const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
-    const currentTeamMapping = currentTeam?.id ? await getTeamById(currentTeam.id) : null;
-    const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
-    const breadcrumbSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
-        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
-        ...(currentTeam?.id && teamDisplayName ? [{
-          '@type': 'ListItem', position: 3, name: teamDisplayName, item: `${siteConfig.url}/livescore/football/team/${currentTeam.id}`,
-        }] : []),
-        { '@type': 'ListItem', position: currentTeam?.id && teamDisplayName ? 4 : 3, name: playerDisplayName, item: playerUrl },
+    const breadcrumbSchema = buildBreadcrumbJsonLd({
+      name: `${playerDisplayName || 'Player'} breadcrumb`,
+      items: [
+        { name: '홈', url: '/' },
+        { name: '라이브스코어', url: '/livescore/football' },
+        ...(currentTeam?.id && teamDisplayName && teamUrl ? [{ name: teamDisplayName, url: teamUrl }] : []),
+        { name: playerDisplayName, url: playerUrl },
       ],
-    };
+    });
 
     // 클라이언트 컴포넌트에 데이터 전달
     return (
@@ -220,12 +296,12 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
         {personSchema && (
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+            {...jsonLdScriptProps(personSchema)}
           />
         )}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+          {...jsonLdScriptProps(breadcrumbSchema)}
         />
         <PlayerPageClient
           playerId={playerId}
@@ -233,6 +309,7 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
           initialData={initialData}
           playerKoreanName={playerKoreanName}
           rankingsKoreanNames={rankingsKoreanNames}
+          prefetchEnabled
         />
       </>
     );
@@ -242,7 +319,7 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
     }
 
     console.error('플레이어 페이지 로딩 오류:', error);
-    return notFound();
+    throw error;
   }
 }
 

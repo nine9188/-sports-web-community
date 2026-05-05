@@ -4,6 +4,8 @@ import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -22,7 +24,7 @@ export default function TeamCard({ team, teamLogoUrl }: TeamCardProps) {
 
   return (
     <Link
-      href={`/livescore/football/team/${team.id}`}
+      href={teamUrl(team.id, getTeamSlugFromName(team.name))}
       className={`group flex flex-col items-center bg-[#F5F5F5] dark:bg-[#262626] rounded-lg transition-colors p-2 lg:p-3 relative ${
         team.isWinner
           ? 'ring-2 ring-yellow-400 dark:ring-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'

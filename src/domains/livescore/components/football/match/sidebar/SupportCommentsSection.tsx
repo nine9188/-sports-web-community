@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import {
@@ -129,15 +129,15 @@ function CommentItem({
 
 // 메인 응원 댓글 섹션 컴포넌트
 export default function SupportCommentsSection({
+  matchId,
   matchData,
   initialComments
 }: {
+  matchId: string;
   matchData: MatchDataType;
   initialComments?: SupportComment[];
 }) {
-  const pathname = usePathname();
   const router = useRouter();
-  const matchId = pathname?.split('/').pop() || '';
   const queryClient = useQueryClient();
 
   const [newComment, setNewComment] = useState('');

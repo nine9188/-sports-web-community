@@ -26,18 +26,8 @@ export function ChatConversationList({
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="flex items-center space-x-3 p-3 rounded-none bg-[#F5F5F5] dark:bg-[#262626]">
-                <div className="w-10 h-10 bg-[#EAEAEA] dark:bg-[#333333] rounded-none" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded-none w-3/4" />
-                  <div className="h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded-none w-1/2" />
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-center py-8">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
         </div>
       </div>
     );

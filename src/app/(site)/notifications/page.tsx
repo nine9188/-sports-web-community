@@ -9,7 +9,6 @@ import {
 import { deleteNotifications } from "@/domains/notifications/actions/delete";
 import { NotificationType } from "@/domains/notifications/types/notification";
 import NotificationItem from "@/domains/notifications/components/NotificationItem";
-import Spinner from "@/shared/components/Spinner";
 import { Button, Pagination } from "@/shared/components/ui";
 import {
   useNotifications,
@@ -310,9 +309,8 @@ export default function NotificationsPage() {
         {/* 알림 목록 */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Spinner size="lg" className="mb-3" />
             <p className="text-[13px] text-gray-500 dark:text-gray-400">
-              알림을 불러오는 중...
+              불러오는 중...
             </p>
           </div>
         ) : filteredNotifications.length > 0 ? (

@@ -7,9 +7,7 @@ import { toast } from 'sonner';
 import { IconItem } from '../../types';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
-import { getLevelIconUrl } from '@/shared/utils/level-icons';
 import LevelList from '../exp/LevelList';
-import Spinner from '@/shared/components/Spinner';
 import { Button, Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 interface IconFormProps {
@@ -216,8 +214,7 @@ export default function IconForm({
               disabled={isLoading || selectedIconId === currentIconId}
               className="gap-2"
             >
-              {isLoading && <Spinner size="xs" />}
-              <span className="text-[13px]">아이콘 저장</span>
+              <span className="text-[13px]">{isLoading ? '저장 중...' : '아이콘 저장'}</span>
             </Button>
           </div>
         </ContainerContent>

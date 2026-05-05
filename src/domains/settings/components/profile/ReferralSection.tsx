@@ -39,10 +39,7 @@ export default function ReferralSection({ userId, initialStats }: ReferralSectio
     return (
       <div className="space-y-3 border-t border-black/5 dark:border-white/10 pt-4">
         <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">친구 추천</h3>
-        <div className="animate-pulse space-y-3">
-          <div className="h-16 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg"></div>
-          <div className="h-20 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg"></div>
-        </div>
+        <div className="rounded-lg bg-[#F5F5F5] p-4 text-center text-[13px] text-gray-500 dark:bg-[#262626] dark:text-gray-400">불러오는 중...</div>
       </div>
     );
   }

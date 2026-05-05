@@ -1,52 +1,34 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import NavigationBar from './NavigationBar/index';
-import LeagueMatchList from './LeagueMatchList/index';
-import LiveScoreSkeleton from './LiveScoreSkeleton';
-import { useLiveScore } from '../../../hooks/useLiveScoreQueries';
+import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { isLiveMatch } from '../../../constants/match-status';
+import { useLiveScore } from '../../../hooks/useLiveScoreQueries';
+import LeagueMatchList from './LeagueMatchList';
+import NavigationBar from './NavigationBar';
 
 interface LiveScoreViewProps {
   initialDate: string;
 }
 
-/**
- * LiveScoreView - React Query 기반 라이브스코어 뷰
- *
- * 개선사항:
- * - useState + setInterval 수동 폴링 → React Query refetchInterval 자동 폴링
- * - 수동 캐싱 → React Query 자동 캐싱
- * - 서버 프리로드 → 클라이언트 자동 프리페치 제거 (봇 안전)
- *
- * 폴링 정책:
- * - LIVE 모드: 30초마다 갱신
- * - 오늘 날짜: 60초마다 갱신
- * - 과거/미래 날짜: 폴링 없음 (캐시 사용)
- */
-export default function LiveScoreView({
-  initialDate,
-}: LiveScoreViewProps) {
-  // UI 상태 관리
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    return initialDate ? new Date(initialDate) : new Date();
-  });
+export default function LiveScoreView({ initialDate }: LiveScoreViewProps) {
+  const router = useRouter();
+  const [selectedDate, setSelectedDate] = useState<Date>(() => (
+    initialDate ? new Date(initialDate) : new Date()
+  ));
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showLiveOnly, setShowLiveOnly] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     setSelectedDate(initialDate ? new Date(initialDate) : new Date());
+    setIsNavigating(false);
   }, [initialDate]);
 
-  // React Query로 경기 데이터 및 라이브 카운트 관리
-  // - 자동 폴링 (LIVE 모드: 30초, 오늘: 60초)
-  // - 자동 캐싱 (5분)
-  // - 서버 프리로드 (봇 안전)
   const { matches, isLoading, liveMatchCount } = useLiveScore(selectedDate, { showLiveOnly });
 
-  // KST 자정 롤오버: 자정(KST) 도달 시 자동으로 오늘로 갱신
   useEffect(() => {
     const scheduleNextKstMidnight = () => {
       const nowUtc = new Date();
@@ -55,7 +37,7 @@ export default function LiveScoreView({
       nextKstMidnight.setHours(24, 0, 0, 0);
       const msUntilNext = nextKstMidnight.getTime() - kstNow.getTime();
 
-      const timeoutId = setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         setSelectedDate(new Date());
         scheduleNextKstMidnight();
       }, msUntilNext);
@@ -64,77 +46,83 @@ export default function LiveScoreView({
     };
 
     const id = scheduleNextKstMidnight();
-    return () => {
-      clearTimeout(id);
-    };
+    return () => window.clearTimeout(id);
   }, []);
 
-  // 필터링된 매치 목록 (검색어 + LIVE 필터)
   const filteredMatches = useMemo(() => {
     return matches.filter(match => {
-      // LIVE 필터
       if (showLiveOnly && !isLiveMatch(match.status.code)) {
         return false;
       }
 
-      // 검색어 필터
       if (searchKeyword) {
         const searchLower = searchKeyword.toLowerCase();
-        return match.league.name.toLowerCase().includes(searchLower) ||
-               match.teams.home.name.toLowerCase().includes(searchLower) ||
-               match.teams.away.name.toLowerCase().includes(searchLower);
+        return (
+          match.league.name.toLowerCase().includes(searchLower) ||
+          match.teams.home.name.toLowerCase().includes(searchLower) ||
+          match.teams.away.name.toLowerCase().includes(searchLower)
+        );
       }
+
       return true;
     });
-  }, [matches, showLiveOnly, searchKeyword]);
+  }, [matches, searchKeyword, showLiveOnly]);
 
-  const router = useRouter();
-
-  // 날짜 변경 핸들러 — URL도 함께 업데이트
   const handleDateChange = (newDate: Date) => {
     if (showLiveOnly) {
       setShowLiveOnly(false);
     }
-    // KST 기준 날짜 문자열 생성 후 URL 업데이트
+
     const kst = new Date(newDate.getTime() + 9 * 60 * 60 * 1000);
     const dateStr = kst.toISOString().split('T')[0];
+    setIsNavigating(true);
+    router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
+  };
+
+  const handleLiveClick = () => {
+    const nextLive = !showLiveOnly;
+    setShowLiveOnly(nextLive);
+
+    if (nextLive) {
+      setSelectedDate(new Date());
+      setIsNavigating(true);
+      router.push('/livescore/football?filter=live', { scroll: false });
+      return;
+    }
+
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const dateStr = kst.toISOString().split('T')[0];
+    setIsNavigating(true);
     router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
   };
 
   return (
     <div className="min-h-screen space-y-4">
-      <div>
-        <NavigationBar
-          searchKeyword={searchKeyword}
-          showLiveOnly={showLiveOnly}
-          liveMatchCount={liveMatchCount}
-          onSearchChange={setSearchKeyword}
-          onLiveClick={() => {
-            const nextLive = !showLiveOnly;
-            setShowLiveOnly(nextLive);
-            if (nextLive) {
-              setSelectedDate(new Date());
-              router.push('/livescore/football?filter=live', { scroll: false });
-            } else {
-              const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-              const dateStr = kst.toISOString().split('T')[0];
-              router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
-            }
-          }}
-          onDateChange={handleDateChange}
-          allExpanded={allExpanded}
-          onToggleExpandAll={() => setAllExpanded(!allExpanded)}
-          selectedDate={selectedDate}
-        />
-      </div>
+      <NavigationBar
+        searchKeyword={searchKeyword}
+        showLiveOnly={showLiveOnly}
+        liveMatchCount={liveMatchCount}
+        onSearchChange={setSearchKeyword}
+        onLiveClick={handleLiveClick}
+        onDateChange={handleDateChange}
+        allExpanded={allExpanded}
+        onToggleExpandAll={() => setAllExpanded(!allExpanded)}
+        selectedDate={selectedDate}
+        isNavigating={isNavigating || isLoading}
+      />
 
-      <div>
-        {isLoading ? (
-          <LiveScoreSkeleton />
-        ) : (
-          <LeagueMatchList matches={filteredMatches} allExpanded={allExpanded} />
-        )}
-      </div>
+      {isLoading ? (
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader>
+            <ContainerTitle>경기 일정</ContainerTitle>
+          </ContainerHeader>
+          <ContainerContent className="min-h-[160px] flex items-center justify-center">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+          </ContainerContent>
+        </Container>
+      ) : (
+        <LeagueMatchList matches={filteredMatches} allExpanded={allExpanded} />
+      )}
     </div>
   );
 }

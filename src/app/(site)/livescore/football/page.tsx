@@ -87,7 +87,10 @@ export default async function FootballLiveScorePage({
   // 선택된 날짜만 prefetch (어제/내일은 날짜 전환 시 SSR에서 로드)
   await queryClient.prefetchQuery({
     queryKey: liveScoreKeys.matches(dateParam),
-    queryFn: async () => transformMatches(await fetchMatchesByDateCached(dateParam)),
+    queryFn: async () => {
+      const rawMatches = await fetchMatchesByDateCached(dateParam);
+      return transformMatches(rawMatches);
+    },
   });
 
   const pageUrl = `${siteConfig.url}/livescore/football`;
@@ -111,7 +114,7 @@ export default async function FootballLiveScorePage({
         }}
       />
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <LiveScoreView initialDate={dateParam} />
+        <LiveScoreView key={dateParam} initialDate={dateParam} />
       </HydrationBoundary>
     </>
   );

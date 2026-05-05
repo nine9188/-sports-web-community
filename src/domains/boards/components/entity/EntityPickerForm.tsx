@@ -13,7 +13,6 @@ import { type TeamMapping } from '@/domains/boards/hooks/useEntityQueries'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
 import { ChevronLeft, Users, User } from 'lucide-react'
 import { Button, TabList, type TabItem } from '@/shared/components/ui'
-import Spinner from '@/shared/components/Spinner';
 import { useLeagueTeams, useTeamPlayers } from '@/domains/boards/hooks/useEntityQueries';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 
@@ -271,8 +270,7 @@ export function EntityPickerForm({
             <>
               {isLoadingTeams ? (
                 <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
-                  <Spinner size="md" className="mb-2" />
-                  <span>팀 목록을 불러오는 중...</span>
+                  <span>불러오는 중...</span>
                 </div>
               ) : teamError ? (
                 <div className="flex items-center justify-center h-40 text-red-500 dark:text-red-400 text-xs">
@@ -313,7 +311,7 @@ export function EntityPickerForm({
             <>
               {isLoadingPlayers ? (
                 <div className="flex items-center justify-center h-40">
-                  <Spinner size="md" />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">불러오는 중...</span>
                 </div>
               ) : playerError ? (
                 <div className="flex flex-col items-center justify-center h-40 text-center px-4">

@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TransferData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
+import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -59,7 +61,7 @@ export default function PlayerTransfers({
   };
   
   if (transfersData.length === 0) {
-    return <EmptyState title="이적 기록이 없습니다" message="이 선수의 이적 기록 정보를 찾을 수 없습니다." />;
+    return <PlayerTabEmptyState title="이적 기록" message="이적 기록이 없습니다." />;
   }
 
   return (
@@ -82,7 +84,7 @@ export default function PlayerTransfers({
                 {/* 이전 팀 */}
                 <div className="flex-1 flex flex-col items-center">
                   <Link
-                    href={`/livescore/football/team/${transfer.teams.from.id}`}
+                    href={teamUrl(transfer.teams.from.id, getTeamSlugFromName(transfer.teams.from.name))}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
                   >
                     <TeamLogo
@@ -122,7 +124,7 @@ export default function PlayerTransfers({
                 {/* 새로운 팀 */}
                 <div className="flex-1 flex flex-col items-center">
                   <Link
-                    href={`/livescore/football/team/${transfer.teams.to.id}`}
+                    href={teamUrl(transfer.teams.to.id, getTeamSlugFromName(transfer.teams.to.name))}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
                   >
                     <TeamLogo

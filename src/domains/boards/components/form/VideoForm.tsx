@@ -145,14 +145,12 @@ export default function VideoForm({
         if (bucketError) {
           console.error('버킷 조회 오류:', bucketError);
         } else {
-          console.log('사용 가능한 버킷들:', buckets);
           const postVideosBucket = buckets.find((bucket: { name: string }) => bucket.name === 'post-videos');
           
           if (!postVideosBucket) {
             throw new Error('post-videos 스토리지 버킷이 존재하지 않습니다. 관리자에게 문의해주세요.');
           }
           
-          console.log('post-videos 버킷 정보:', postVideosBucket);
         }
       } catch (bucketCheckError) {
         console.warn('버킷 상태 확인 실패:', bucketCheckError);
@@ -186,11 +184,6 @@ export default function VideoForm({
       // 이 형식은 "user_id/폴더명/파일명" 형태여야 함
       const fileName = `${userData.user.id}/videos/${timestamp}_${randomString}_${safeFileName}`;
       
-      console.log('업로드 시작:', {
-        fileName,
-        fileSize: selectedFile.size,
-        fileType: selectedFile.type
-      });
       
       // Supabase Storage에 업로드
       setUploadProgress(30);
@@ -236,7 +229,6 @@ export default function VideoForm({
         throw new Error('파일 URL을 가져올 수 없습니다.');
       }
       
-      console.log('업로드 완료:', urlData.publicUrl);
       
       setUploadProgress(100);
       

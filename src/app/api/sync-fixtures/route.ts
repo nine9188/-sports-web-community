@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { getCurrentSeasonForLeague, isCalendarSeasonLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 // 동기화 대상 리그 (하이라이트 지원 리그 + 5대 리그 전체)
 const SYNC_LEAGUE_IDS = [39, 140, 78, 135, 61, 292, 293, 2, 3];
@@ -129,7 +129,6 @@ export async function GET(request: Request) {
   }
 
   const total = Object.values(results).reduce((s, r) => s + r.upserted, 0);
-  console.log(`[sync-fixtures] 완료: ${total}개 upserted`, results);
 
   return NextResponse.json({ ok: true, from, to, total, results });
 }

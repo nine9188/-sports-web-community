@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getAllTopicPosts } from '../actions/getAllTopicPosts';
 import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import TopicTabsServer from './TopicTabsServer';
@@ -8,23 +7,19 @@ import ServerLeagueStandings from './league/ServerLeagueStandings';
 import AdSense from '@/shared/components/AdSense';
 import { ADSENSE } from '@/shared/constants/ad-constants';
 
-
 export default async function RightSidebar() {
   try {
-    // 서버에서 데이터 가져오기
-    // 최적화: views, likes, comments, hot을 한 번의 쿼리로 통합
     const [topicData, hotdealData] = await Promise.all([
       getAllTopicPosts(20),
-      getHotdealBestPosts(10, 3) // 10개, 최근 3일
+      getHotdealBestPosts(10, 3),
     ]);
 
-    // 모든 탭 데이터 구성
     const postsData = {
       views: topicData.views,
       likes: topicData.likes,
       comments: topicData.comments,
       hot: topicData.hot,
-      windowDays: topicData.windowDays
+      windowDays: topicData.windowDays,
     };
 
     return (
@@ -34,23 +29,21 @@ export default async function RightSidebar() {
           <div className="my-4">
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
-          <Suspense fallback={<div className="min-h-[200px]" />}>
-            <ServerLeagueStandings initialLeague="premier" />
-          </Suspense>
+          <ServerLeagueStandings initialLeague="premier" />
           <SidebarRelatedPosts />
           <HotdealTabsServer postsData={hotdealData} />
         </div>
       </aside>
     );
   } catch (error) {
-    // 에러 발생 시 빈 데이터로 렌더링
     console.error('[RightSidebar ERROR]', error);
+
     const emptyData = {
       views: [],
       likes: [],
       comments: [],
       hot: [],
-      windowDays: 1
+      windowDays: 1,
     };
 
     const emptyHotdealData = {
@@ -58,7 +51,7 @@ export default async function RightSidebar() {
       discount: [],
       likes: [],
       comments: [],
-      windowDays: 3
+      windowDays: 3,
     };
 
     return (
@@ -68,13 +61,11 @@ export default async function RightSidebar() {
           <div className="my-4">
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
-          <Suspense fallback={<div className="min-h-[200px]" />}>
-            <ServerLeagueStandings initialLeague="premier" />
-          </Suspense>
+          <ServerLeagueStandings initialLeague="premier" />
           <SidebarRelatedPosts />
           <HotdealTabsServer postsData={emptyHotdealData} />
         </div>
       </aside>
     );
   }
-} 
+}

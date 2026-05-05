@@ -6,7 +6,6 @@ import { Metadata } from 'next';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { cache } from 'react';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import Spinner from '@/shared/components/Spinner';
 import { authGuard } from '@/shared/guards/auth.guard';
 import '@/styles/post-content.css';
 
@@ -15,8 +14,8 @@ const PostEditForm = dynamicImport(
   () => import('@/domains/boards/components/post/PostEditForm'),
   {
     loading: () => (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
+      <div className="py-20 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
       </div>
     )
   }

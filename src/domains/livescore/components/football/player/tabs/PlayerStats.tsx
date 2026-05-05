@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { PlayerStatistic } from '@/domains/livescore/types/player';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerHeader, ContainerContent } from '@/shared/components/ui';
-import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
+import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -129,14 +131,10 @@ export default function PlayerStats({
 
   if (!initialStatistics || initialStatistics.length === 0) {
     return (
-      <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
-        <ContainerContent className="text-center py-8">
-          <EmptyState
-            title="통계 데이터가 없습니다"
-            message="통계 데이터가 없습니다."
-          />
-        </ContainerContent>
-      </Container>
+      <PlayerTabEmptyState
+        title="선수 통계"
+        message="통계 데이터가 없습니다."
+      />
     );
   }
 
@@ -164,7 +162,7 @@ export default function PlayerStats({
                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
                       </div>
                       <Link
-                        href={`/livescore/football/team/${stat.team.id}`}
+                        href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       >
                         <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />
@@ -378,7 +376,7 @@ export default function PlayerStats({
                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
                       </div>
                       <Link
-                        href={`/livescore/football/team/${stat.team.id}`}
+                        href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       >
                         <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />

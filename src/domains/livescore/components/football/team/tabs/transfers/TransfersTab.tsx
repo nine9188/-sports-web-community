@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -9,7 +10,6 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui/container';
-import { Button } from '@/shared/components/ui';
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { TeamTransfersData, TransferInRecord, TransferOutRecord } from '@/domains/livescore/actions/teams/transfers';
@@ -17,6 +17,10 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { formatDateDot } from '@/shared/utils/dateUtils';
 import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
 import { PlayerKoreanNames } from '../../TeamPageClient';
+import { fetchTeamTransfersTabData } from '@/domains/livescore/actions/teams/team';
+import { teamKeys } from '@/shared/constants/queryKeys';
+import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
+import TeamTabEmptyState from '../TeamTabEmptyState';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -26,6 +30,7 @@ const TRANSFER_TABS = [
 ];
 
 interface TransfersTabProps {
+  teamId: number;
   transfers: TeamTransfersData | undefined;
   playerKoreanNames?: PlayerKoreanNames;
   // 4590 표준: Storage URL 맵
@@ -33,21 +38,56 @@ interface TransfersTabProps {
   teamLogoUrls?: Record<number, string>;
 }
 
+type TransfersTabData = Awaited<ReturnType<typeof fetchTeamTransfersTabData>>;
 
-export default function TransfersTab({ transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
+function TransfersLoading() {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>이적 내역</ContainerTitle>
+      </ContainerHeader>
+      <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
+      </div>
+    </Container>
+  );
+}
+
+
+export default function TransfersTab({ teamId, transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
   const { getTeamDisplayName } = useTeamLeague();
+  const transfersQuery = useQuery<TransfersTabData>({
+    queryKey: [...teamKeys.detail(String(teamId)), 'transfers-tab'],
+    queryFn: () => fetchTeamTransfersTabData(String(teamId)),
+    enabled: !transfers || Object.keys(playerKoreanNames).length === 0,
+    ...CACHE_STRATEGIES.STATIC_DATA,
+  });
   /** 팀 한글명 (매핑 없으면 원본 반환) */
   const teamName = (id: number, fallback: string): string => {
     const display = getTeamDisplayName(id);
     return display.startsWith('팀 ') ? fallback : display;
   };
   // 4590 표준: URL 조회 헬퍼
-  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const displayTransfers = transfers || transfersQuery.data?.transfers;
+  const displayPlayerKoreanNames: PlayerKoreanNames = {
+    ...playerKoreanNames,
+    ...(transfersQuery.data?.playerKoreanNames || {}),
+  };
+  const displayPlayerPhotoUrls: Record<number, string> = {
+    ...playerPhotoUrls,
+    ...(transfersQuery.data?.playerPhotoUrls || {}),
+  };
+  const displayTeamLogoUrls: Record<number, string> = {
+    ...teamLogoUrls,
+    ...(transfersQuery.data?.teamLogoUrls || {}),
+  };
+
+  const getPlayerPhoto = (id: number) => displayPlayerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  const getTeamLogo = (id: number, fallback?: string) => displayTeamLogoUrls[id] || fallback || TEAM_PLACEHOLDER;
   const searchParams = useSearchParams();
 
   // URL의 subTab 파라미터에서 초기 탭 가져오기
-  const initialTab = searchParams?.get('subTab') || 'in';
+  const initialTab = searchParams?.get('subTab') === 'out' ? 'out' : 'in';
 
   // 탭 상태
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -55,6 +95,11 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   // 페이지네이션 상태
   const [inPage, setInPage] = useState(1);
   const [outPage, setOutPage] = useState(1);
+
+  useEffect(() => {
+    setInPage(1);
+    setOutPage(1);
+  }, [teamId]);
 
   // URL의 subTab이 변경되면 activeTab 업데이트
   useEffect(() => {
@@ -65,10 +110,18 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   }, [searchParams]);
 
   // 현재 탭에 따른 데이터
-  const currentTransfers: (TransferInRecord | TransferOutRecord)[] = activeTab === 'in' ? (transfers?.in || []) : (transfers?.out || []);
+  const currentTransfers: (TransferInRecord | TransferOutRecord)[] = useMemo(() => {
+    return activeTab === 'in' ? (displayTransfers?.in || []) : (displayTransfers?.out || []);
+  }, [activeTab, displayTransfers]);
   const currentPage = activeTab === 'in' ? inPage : outPage;
   const setCurrentPage = activeTab === 'in' ? setInPage : setOutPage;
   const totalPages = Math.ceil(currentTransfers.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, setCurrentPage, totalPages]);
 
   // 페이지네이션된 데이터
   const paginatedTransfers = useMemo(() => {
@@ -77,14 +130,12 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
   }, [currentTransfers, currentPage]);
 
   // 데이터가 없으면 null 반환
-  if (!transfers || (transfers.in.length === 0 && transfers.out.length === 0)) {
-    return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-          이적 정보가 없습니다
-        </div>
-      </Container>
-    );
+  if (!displayTransfers && (transfersQuery.isLoading || !transfersQuery.isError)) {
+    return <TransfersLoading />;
+  }
+
+  if (!displayTransfers || (displayTransfers.in.length === 0 && displayTransfers.out.length === 0)) {
+    return <TeamTabEmptyState title="이적 내역" message="이적 정보가 없습니다." />;
   }
 
   const isInTab = activeTab === 'in';
@@ -122,7 +173,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                   <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
-                        {playerKoreanNames[transfer.player.id] || transfer.player.name}
+                        {displayPlayerKoreanNames[transfer.player.id] || transfer.player.name}
                       </p>
                       <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
                         {teamName(otherTeam.id, otherTeam.name)}
@@ -185,7 +236,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                           />
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
-                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
+                          {displayPlayerKoreanNames[transfer.player.id] || transfer.player.name}
                         </span>
                       </div>
                     </td>
@@ -193,7 +244,7 @@ export default function TransfersTab({ transfers, playerKoreanNames = {}, player
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 flex-shrink-0">
                           <UnifiedSportsImageClient
-                            src={getTeamLogo(otherTeam.id)}
+                            src={getTeamLogo(otherTeam.id, otherTeam.logo)}
                             alt={otherTeam.name}
                             width={20}
                             height={20}

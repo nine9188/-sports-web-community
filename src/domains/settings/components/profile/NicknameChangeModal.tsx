@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { AlertCircle, Check } from 'lucide-react';
-import { useNicknameTicket } from '@/domains/shop/actions/consumables';
+import { useNicknameTicket as changeNicknameWithTicket } from '@/domains/shop/actions/consumables';
 import { toast } from 'sonner';
-import Spinner from '@/shared/components/Spinner';
 import { siteConfig } from '@/shared/config';
 import {
   Button,
@@ -61,7 +60,7 @@ export default function NicknameChangeModal({
     setIsSubmitting(true);
 
     try {
-      const result = await useNicknameTicket(trimmed);
+      const result = await changeNicknameWithTicket(trimmed);
 
       if (result.success && result.newNickname) {
         toast.success('닉네임이 변경되었습니다!');
@@ -172,10 +171,7 @@ export default function NicknameChangeModal({
                 className="flex-1 gap-2"
               >
                 {isSubmitting ? (
-                  <>
-                    <Spinner size="xs" />
-                    변경 중...
-                  </>
+                  '변경 중...'
                 ) : (
                   <>
                     <Check className="h-4 w-4" />

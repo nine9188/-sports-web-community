@@ -6,7 +6,6 @@ import { X } from 'lucide-react';
 import { Notification } from '../types/notification';
 import NotificationItem from './NotificationItem';
 import { filterOldReadNotifications } from '../utils/filterNotifications';
-import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
 
 interface MobileNotificationModalProps {
@@ -107,7 +106,7 @@ export default function MobileNotificationModal({
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Spinner size="lg" />
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
             </div>
           ) : visibleNotifications.length > 0 ? (
             <div className="divide-y divide-black/5 dark:divide-white/10">
@@ -147,7 +146,6 @@ export default function MobileNotificationModal({
     </>
   );
 }
-
 
 
 

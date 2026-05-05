@@ -13,6 +13,8 @@ import { Trophy, Users } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -127,11 +129,12 @@ const MatchItem = React.memo(function MatchItem({
 
   const homeTeamName = homeTeam?.name_ko || match.teams?.home?.name || '홈팀';
   const awayTeamName = awayTeam?.name_ko || match.teams?.away?.name || '원정팀';
+  const matchHref = matchUrl(match.id, getMatchSlug(match.teams?.home?.name || homeTeamName, match.teams?.away?.name || awayTeamName));
 
   // 경기 클릭 핸들러
   const handleMatchClick = () => {
     onClose();
-    window.location.href = `/livescore/football/match/${match.id}`;
+    window.location.href = matchHref;
   };
 
   return (
@@ -140,7 +143,7 @@ const MatchItem = React.memo(function MatchItem({
       onClick={handleMatchClick}
     >
       {/* SEO: 크롤러가 매치 URL을 발견할 수 있도록 숨겨진 Link */}
-      <Link href={`/livescore/football/match/${match.id}`} className="absolute inset-0 z-0" aria-hidden="true" tabIndex={-1} />
+      <Link href={matchHref} className="absolute inset-0 z-0" aria-hidden="true" tabIndex={-1} />
       {/* 리그 정보 */}
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
@@ -148,9 +151,9 @@ const MatchItem = React.memo(function MatchItem({
             <UnifiedSportsImageClient
               src={effectiveLeagueLogoUrl || LEAGUE_PLACEHOLDER}
               alt={match.league.name || '리그'}
-              width={20}
-              height={20}
-              className="object-contain"
+              width={24}
+              height={24}
+              className="object-contain w-6 h-6"
             />
           ) : (
             <Trophy className="w-4 h-4 text-gray-400" />
@@ -173,12 +176,12 @@ const MatchItem = React.memo(function MatchItem({
             <UnifiedSportsImageClient
               src={homeTeamLogoUrl || TEAM_PLACEHOLDER}
               alt={match.teams?.home?.name || '홈팀'}
-              width={20}
-              height={20}
-              className="object-contain"
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8 flex-shrink-0"
             />
           ) : (
-            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
+            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-8 h-8 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
             </div>
           )}
@@ -223,12 +226,12 @@ const MatchItem = React.memo(function MatchItem({
             <UnifiedSportsImageClient
               src={awayTeamLogoUrl || TEAM_PLACEHOLDER}
               alt={match.teams?.away?.name || '원정팀'}
-              width={20}
-              height={20}
-              className="object-contain"
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8 flex-shrink-0"
             />
           ) : (
-            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-6 h-6 flex-shrink-0">
+            <div className="flex items-center justify-center bg-[#F5F5F5] dark:bg-[#262626] rounded w-8 h-8 flex-shrink-0">
               <Users className="w-3 h-3 text-gray-400" />
             </div>
           )}

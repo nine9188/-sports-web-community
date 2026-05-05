@@ -69,7 +69,6 @@ export async function rewardUserActivity(
     if (cachedCount >= DAILY_LIMITS[activityType].count) {
       // 이미 캐시에서 제한에 도달한 것으로 확인됨
       if (process.env.NODE_ENV === 'development') {
-        console.debug(`캐시: 사용자(${userId})가 ${activityType} 활동 제한에 도달했습니다.`);
       }
       return { success: false, error: '오늘 이 활동으로 받을 수 있는 보상을 모두 받았습니다.' };
     }
@@ -78,7 +77,6 @@ export async function rewardUserActivity(
     
     // 관련 ID 로깅 (미사용 변수 경고 방지)
     if (relatedId && process.env.NODE_ENV === 'development') {
-      console.debug(`활동 관련 ID: ${relatedId}`);
     }
     
     // 오늘 날짜 계산 (KST 기준, 자정부터 자정까지)

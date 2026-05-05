@@ -8,11 +8,13 @@ import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
-// 매치 타입 정의
+// Match item types.
 export interface Match {
   fixture: {
     id: number;
@@ -51,19 +53,30 @@ interface MatchItemsProps {
   matches: Match[] | undefined;
   teamId: number;
   onTabChange?: (tab: string, subTab?: string) => void;
-  // 4590 표준: 서버에서 전달받은 이미지 URL
+  // 4590 storage image URLs passed from the server.
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
-  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
+  recentLoading?: boolean;
+  upcomingLoading?: boolean;
+  leagueLogoDarkUrls?: Record<number, string>;  // Dark mode league logos.
 }
 
 const DISPLAY_LIMIT = 5;
 
-export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: MatchItemsProps) {
+export default function MatchItems({
+  matches,
+  teamId,
+  onTabChange,
+  teamLogoUrls = {},
+  leagueLogoUrls = {},
+  leagueLogoDarkUrls = {},
+  recentLoading = false,
+  upcomingLoading = false
+}: MatchItemsProps) {
   const router = useRouter();
   const { getLeagueKoreanName } = useTeamLeague();
 
-  // 다크모드 감지
+  // Track dark mode so league logos can switch variants.
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -79,14 +92,15 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
     return () => observer.disconnect();
   }, []);
 
-  // 4590 표준: URL 헬퍼 함수
+  // 4590 storage URL mapping.
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getLeagueLogo = (id: number) => {
     if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
     return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
   };
+  const getMatchHref = (match: Match) => matchUrl(match.fixture.id, getMatchSlug(match.teams.home.name, match.teams.away.name));
 
-  // 경기 필터링 로직 - 종료된 경기 (최신순) - 5개만
+  // Recent finished matches, newest first.
   const recentMatches = useMemo(() => {
     if (!matches) return [];
     return matches
@@ -103,7 +117,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
       .slice(0, DISPLAY_LIMIT);
   }, [matches]);
 
-  // 예정된 경기 필터링 (날짜순) - 5개만
+  // Upcoming matches, soonest first.
   const upcomingMatches = useMemo(() => {
     if (!matches) return [];
     return matches
@@ -125,14 +139,14 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
       .slice(0, DISPLAY_LIMIT);
   }, [matches]);
 
-  // 매치 데이터가 없으면 null 반환
-  if (!matches || matches.length === 0) {
+  // Use null when match data is unavailable.
+  if ((!matches || matches.length === 0) && !recentLoading && !upcomingLoading) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {/* 최근 경기 결과 */}
+      {/* Recent match results */}
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader>
           <ContainerTitle>최근 경기</ContainerTitle>
@@ -158,10 +172,10 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                   <tr
                     key={match.fixture.id}
                     className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                    onClick={() => router.push(`/livescore/football/match/${match.fixture.id}`)}
+                    onClick={() => router.push(getMatchHref(match))}
                   >
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                      <Link href={`/livescore/football/match/${match.fixture.id}`}>
+                      <Link href={getMatchHref(match)}>
                         {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
                       </Link>
                     </td>
@@ -182,7 +196,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                       </div>
                     </td>
                     <td className="p-0 md:px-2">
-                      <Link href={`/livescore/football/match/${match.fixture.id}`} className="flex items-center justify-between">
+                      <Link href={getMatchHref(match)} className="flex items-center justify-between">
                         <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
@@ -234,7 +248,11 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                       </span>
                     </td>
                   </tr>
-                )) : (
+                )) : recentLoading ? (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-gray-500 dark:text-gray-400">불러오는 중...</td>
+                  </tr>
+                ) : (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-gray-500 dark:text-gray-400">최근 경기 정보가 없습니다</td>
                   </tr>
@@ -243,7 +261,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
             </table>
           </div>
 
-      {/* 최근 경기 전체보기 버튼 */}
+      {/* Recent matches link */}
       {onTabChange && (
         <Button
           variant="secondary"
@@ -270,7 +288,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
       )}
       </Container>
 
-      {/* 예정된 경기 */}
+      {/* Upcoming matches */}
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader>
           <ContainerTitle>예정된 경기</ContainerTitle>
@@ -294,10 +312,10 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                   <tr
                     key={match.fixture.id}
                     className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                    onClick={() => router.push(`/livescore/football/match/${match.fixture.id}`)}
+                    onClick={() => router.push(getMatchHref(match))}
                   >
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                      <Link href={`/livescore/football/match/${match.fixture.id}`}>
+                      <Link href={getMatchHref(match)}>
                         {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
                       </Link>
                     </td>
@@ -318,7 +336,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                       </div>
                     </td>
                     <td className="p-0 md:px-2">
-                      <Link href={`/livescore/football/match/${match.fixture.id}`} className="flex items-center justify-between">
+                      <Link href={getMatchHref(match)} className="flex items-center justify-between">
                         <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
                           <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                             {match.teams.home.name}
@@ -351,7 +369,11 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
                       </Link>
                     </td>
                   </tr>
-                )) : (
+                )) : upcomingLoading ? (
+                  <tr>
+                    <td colSpan={3} className="py-4 text-center text-gray-500 dark:text-gray-400">불러오는 중...</td>
+                  </tr>
+                ) : (
                   <tr>
                     <td colSpan={3} className="py-4 text-center text-gray-500 dark:text-gray-400">예정된 경기 정보가 없습니다</td>
                   </tr>
@@ -360,7 +382,7 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
             </table>
           </div>
 
-      {/* 예정된 경기 전체보기 버튼 */}
+      {/* Upcoming matches link */}
       {onTabChange && (
         <Button
           variant="secondary"
@@ -389,3 +411,4 @@ export default function MatchItems({ matches, teamId, onTabChange, teamLogoUrls 
     </div>
   );
 } 
+

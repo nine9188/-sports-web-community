@@ -82,7 +82,6 @@ async function sendEmail({ to, subject, html }: EmailTemplate) {
       html: html,
     });
 
-    console.log('이메일 발송 성공:', info.messageId);
     return { success: true, data: { messageId: info.messageId } };
   } catch (error) {
     console.error('이메일 발송 오류:', error);

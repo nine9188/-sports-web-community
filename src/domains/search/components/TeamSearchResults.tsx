@@ -1,22 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { TeamSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
-// 통합된 함수 사용 (search/actions/teamMatches.ts 대신)
 import { getTeamMatchesRecent, type Match } from '@/domains/livescore/actions/teams/matches'
 import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
-import Spinner from '@/shared/components/Spinner';
-import { Button } from '@/shared/components/ui';
+import { Button } from '@/shared/components/ui'
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs'
+import { teamUrl } from '@/domains/livescore/utils/urls'
 
-// 캐시 유효성 검사 (5분)
-const CACHE_DURATION = 5 * 60 * 1000 // 5분
+const CACHE_DURATION = 5 * 60 * 1000
 
-// 팀 매치 캐시 타입
 interface TeamMatchCache {
   [teamId: number]: {
     data: Match[]
@@ -32,7 +30,7 @@ interface TeamSearchResultsProps {
   isLoading?: boolean
   onLoadMore?: () => void
   onTeamSelect?: (team: TeamSearchResult) => void
-  showMoreButton?: boolean // 더보기 버튼 표시 여부
+  showMoreButton?: boolean
   currentType?: 'all' | 'posts' | 'comments' | 'teams'
   query?: string
   totalCount?: number
@@ -50,24 +48,18 @@ export default function TeamSearchResults({
   onLoadMore,
   onTeamSelect,
   showMoreButton = true,
-  currentType: propCurrentType = 'teams',
-  query: propQuery = '',
+  currentType = 'teams',
+  query = '',
   totalCount = 0,
   pagination
 }: TeamSearchResultsProps) {
-  const query = propQuery
-  const currentType = propCurrentType
-  
-  // 확장된 팀 상태 관리
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null)
-  // 팀 매치 캐시 (5분간 유효)
   const [teamMatchCache, setTeamMatchCache] = useState<TeamMatchCache>({})
-  
+
   const isCacheValid = useCallback((timestamp: number) => {
     return Date.now() - timestamp < CACHE_DURATION
   }, [])
 
-  // 캐시된 데이터 가져오기
   const getCachedMatches = useCallback((teamId: number) => {
     const cached = teamMatchCache[teamId]
     if (cached && isCacheValid(cached.timestamp)) {
@@ -76,40 +68,27 @@ export default function TeamSearchResults({
     return null
   }, [teamMatchCache, isCacheValid])
 
-  // 로딩 상태 확인
   const isTeamLoading = useCallback((teamId: number) => {
     return teamMatchCache[teamId]?.loading || false
   }, [teamMatchCache])
 
   const handleTeamToggle = useCallback(async (team: TeamSearchResult) => {
-    // onTeamSelect가 있으면 (모달이나 선택 용도) 콜백 실행
     if (onTeamSelect) {
       onTeamSelect(team)
       return
     }
 
-    // 드롭다운 토글 (로그 기록 없음)
-    // 이미 확장된 팀을 다시 클릭하면 접기
     if (expandedTeamId === team.team_id) {
       setExpandedTeamId(null)
       return
     }
 
-    // 새로운 팀 확장
     setExpandedTeamId(team.team_id)
 
-    // 캐시된 데이터가 있으면 사용
-    const cachedData = getCachedMatches(team.team_id)
-    if (cachedData) {
-      return // 캐시된 데이터 사용, API 호출 없음
-    }
-
-    // 이미 로딩 중이면 중복 호출 방지
-    if (isTeamLoading(team.team_id)) {
+    if (getCachedMatches(team.team_id) || isTeamLoading(team.team_id)) {
       return
     }
 
-    // 로딩 상태 설정
     setTeamMatchCache(prev => ({
       ...prev,
       [team.team_id]: {
@@ -121,19 +100,21 @@ export default function TeamSearchResults({
     }))
 
     try {
-      const result = await getTeamMatchesRecent(team.team_id, 5) // 최근 5경기만
+      const result = await getTeamMatchesRecent(team.team_id, 5)
 
       if (result.success && result.data) {
-        const matchData: Match[] = result.data
-        // 4590 표준: 매치 팀 로고 Storage URL 배치 조회
+        const matchData = result.data
         const matchTeamIds = new Set<number>()
+
         matchData.forEach(match => {
           if (match.teams.home.id) matchTeamIds.add(match.teams.home.id)
           if (match.teams.away.id) matchTeamIds.add(match.teams.away.id)
         })
-        const logoUrls = matchTeamIds.size > 0 ? await getTeamLogoUrls([...matchTeamIds]) : {} as Record<number, string>
 
-        // 캐시에 데이터 저장
+        const logoUrls = matchTeamIds.size > 0
+          ? await getTeamLogoUrls([...matchTeamIds])
+          : {}
+
         setTeamMatchCache(prev => ({
           ...prev,
           [team.team_id]: {
@@ -144,7 +125,6 @@ export default function TeamSearchResults({
           }
         }))
       } else {
-        // 에러 시 로딩 상태만 해제
         setTeamMatchCache(prev => ({
           ...prev,
           [team.team_id]: {
@@ -157,7 +137,6 @@ export default function TeamSearchResults({
       }
     } catch (error) {
       console.error('매치 정보 로딩 실패:', error)
-      // 에러 시 로딩 상태만 해제
       setTeamMatchCache(prev => ({
         ...prev,
         [team.team_id]: {
@@ -168,31 +147,27 @@ export default function TeamSearchResults({
         }
       }))
     }
-  }, [onTeamSelect, expandedTeamId, getCachedMatches, isTeamLoading])
+  }, [expandedTeamId, getCachedMatches, isTeamLoading, onTeamSelect])
 
-  // 현재 확장된 팀의 매치 데이터
   const currentTeamMatches = useMemo(() => {
     if (!expandedTeamId) return []
     return getCachedMatches(expandedTeamId) || []
   }, [expandedTeamId, getCachedMatches])
 
-  // 4590 표준: 현재 확장된 팀의 매치 로고 URL
   const currentTeamLogoUrls = useMemo(() => {
     if (!expandedTeamId) return {}
     return teamMatchCache[expandedTeamId]?.logoUrls || {}
   }, [expandedTeamId, teamMatchCache])
 
-  // 현재 확장된 팀의 로딩 상태
   const currentTeamLoading = useMemo(() => {
     if (!expandedTeamId) return false
     return isTeamLoading(expandedTeamId)
   }, [expandedTeamId, isTeamLoading])
-  
+
   if (isLoading && teams.length === 0) {
     return (
-      <div className="text-center py-8">
-        <Spinner size="lg" />
-        <p className="mt-2 text-gray-500 dark:text-gray-400">팀 정보 로딩 중...</p>
+      <div className="py-8 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
       </div>
     )
   }
@@ -208,9 +183,7 @@ export default function TeamSearchResults({
 
   return (
     <div className="space-y-4">
-      {/* 팀 테이블: 외부 카드 래퍼가 테두리/그림자를 가지므로 내부는 overflow만 처리 */}
       <div className="overflow-hidden">
-        {/* 헤더 */}
         <div className="px-4 py-3 bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10">
           <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
             팀 ({pagination?.totalItems || totalCount || teams.length}개)
@@ -231,10 +204,11 @@ export default function TeamSearchResults({
                   국가
                 </th>
                 <th className="hidden lg:table-cell px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  홈구장
+                  경기장
                 </th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-black/5 dark:divide-white/10">
               {teams.map((team) => (
                 <TeamRowWithMatches
@@ -248,46 +222,28 @@ export default function TeamSearchResults({
                 />
               ))}
             </tbody>
-          {/* 요약 문구 (teams 탭 전용) */}
-          {pagination && (propCurrentType === 'teams' || currentType === 'teams') && (
-            <tfoot>
-              <tr>
-                <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
-                  <p className="text-[13px] text-gray-700 dark:text-gray-300">
-                    총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
-                    <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
-                    <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
-                  </p>
-                </td>
-                <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-                  <p className="text-[13px] text-gray-700 dark:text-gray-300">
-                    총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
-                    <span className="font-medium">{(pagination.currentPage - 1) * pagination.itemsPerPage + 1}</span>-
-                    <span className="font-medium">{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}</span>개 표시
-                  </p>
-                </td>
-              </tr>
-            </tfoot>
-          )}
-          {/* 더보기 버튼을 테이블 푸터로 추가 */}
+
+            {pagination && currentType === 'teams' && (
+              <tfoot>
+                <tr>
+                  <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
+                    <PaginationSummary pagination={pagination} />
+                  </td>
+                  <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
+                    <PaginationSummary pagination={pagination} />
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+
             {showMoreButton && currentType === 'all' && teams.length >= 5 && (
               <tfoot>
                 <tr>
                   <td colSpan={1} className="px-4 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] sm:hidden">
-                    <Link
-                      href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
-                    >
-                      더 많은 팀 보기 ({totalCount}개) →
-                    </Link>
+                    <MoreTeamsLink query={query} totalCount={totalCount} />
                   </td>
                   <td colSpan={4} className="hidden sm:table-cell px-6 py-3 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626]">
-                    <Link
-                      href={`/search?q=${encodeURIComponent(query)}&type=teams`}
-                      className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
-                    >
-                      더 많은 팀 보기 ({totalCount}개) →
-                    </Link>
+                    <MoreTeamsLink query={query} totalCount={totalCount} />
                   </td>
                 </tr>
               </tfoot>
@@ -296,7 +252,6 @@ export default function TeamSearchResults({
         </div>
       </div>
 
-      {/* 기존 더보기 버튼 (팀 탭에서만 사용) */}
       {currentType === 'teams' && hasMore && (
         <div className="text-center pt-6">
           <Button
@@ -311,7 +266,7 @@ export default function TeamSearchResults({
               }
             `}
           >
-            {isLoading ? '로딩중...' : '더보기'}
+            {isLoading ? '불러오는 중...' : '더보기'}
           </Button>
         </div>
       )}
@@ -319,7 +274,34 @@ export default function TeamSearchResults({
   )
 }
 
-// 매치 정보를 포함한 팀 행 컴포넌트
+function PaginationSummary({
+  pagination
+}: {
+  pagination: NonNullable<TeamSearchResultsProps['pagination']>
+}) {
+  const start = (pagination.currentPage - 1) * pagination.itemsPerPage + 1
+  const end = Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)
+
+  return (
+    <p className="text-[13px] text-gray-700 dark:text-gray-300">
+      총 <span className="font-medium">{pagination.totalItems}</span>개 중{' '}
+      <span className="font-medium">{start}</span>-
+      <span className="font-medium">{end}</span>개 표시
+    </p>
+  )
+}
+
+function MoreTeamsLink({ query, totalCount }: { query: string; totalCount: number }) {
+  return (
+    <Link
+      href={`/search?q=${encodeURIComponent(query)}&type=teams`}
+      className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+    >
+      더 많은 팀 보기 ({totalCount}개)
+    </Link>
+  )
+}
+
 function TeamRowWithMatches({
   team,
   onToggle,
@@ -336,13 +318,12 @@ function TeamRowWithMatches({
   matchTeamLogoUrls: Record<number, string>
 }) {
   const router = useRouter()
+  const teamHref = teamUrl(team.team_id, getTeamSlugFromName(team.name || team.display_name))
 
-  // 팀 페이지로 이동 (로그 기록)
   const handleTeamPageClick = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    // 팀 페이지 이동 로그 기록
+
     try {
       await trackSearchResultClick({
         search_query: new URLSearchParams(window.location.search).get('q') || '',
@@ -352,21 +333,18 @@ function TeamRowWithMatches({
     } catch (error) {
       console.error('팀 페이지 이동 추적 실패:', error)
     }
-    
-    // 팀 페이지로 이동 - Next.js router 사용
-    router.push(`/livescore/football/team/${team.team_id}`)
-  }, [team, router])
+
+    router.push(teamHref)
+  }, [team, teamHref, router])
 
   return (
     <>
-      {/* 팀 정보 행 */}
       <tr
         className={`
           hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors
           ${isExpanded ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''}
         `}
       >
-        {/* 팀 정보 */}
         <td className="px-2 sm:px-4 py-4">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <UnifiedSportsImageClient
@@ -379,7 +357,7 @@ function TeamRowWithMatches({
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-[13px]">
                 <Link
-                  href={`/livescore/football/team/${team.team_id}`}
+                  href={teamHref}
                   onClick={handleTeamPageClick}
                   className="truncate hover:underline transition-colors text-left p-0 h-auto font-medium min-w-0"
                 >
@@ -387,14 +365,13 @@ function TeamRowWithMatches({
                 </Link>
               </div>
 
-              {/* 모바일에서 추가 정보 표시 */}
               <div className="sm:hidden mt-0.5">
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {team.league_name_ko} · {team.country_ko ?? team.country}
                 </span>
               </div>
             </div>
-            {/* 드롭다운 토글 버튼 */}
+
             <div className="flex-shrink-0">
               <TeamMatchDropdownButton
                 team={team}
@@ -405,19 +382,16 @@ function TeamRowWithMatches({
           </div>
         </td>
 
-        {/* 리그 */}
         <td className="hidden sm:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] w-28 md:w-36">
           <div className="truncate" title={team.league_name_ko}>
             {team.league_name_ko}
           </div>
         </td>
 
-        {/* 국가 */}
         <td className="hidden md:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] w-24 whitespace-nowrap">
           {team.country_ko ?? team.country}
         </td>
 
-        {/* 홈구장 */}
         <td className="hidden lg:table-cell px-4 py-4 text-[13px] text-gray-900 dark:text-[#F0F0F0] text-right">
           <div>
             {team.venue_name && (
@@ -433,8 +407,7 @@ function TeamRowWithMatches({
           </div>
         </td>
       </tr>
-      
-      {/* 매치 정보 확장 행 */}
+
       <TeamMatchExpandedRow
         team={team}
         isExpanded={isExpanded}

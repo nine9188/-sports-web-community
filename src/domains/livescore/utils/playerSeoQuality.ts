@@ -26,7 +26,7 @@ function isFallbackPlayerName(name: string, id?: number): boolean {
   const normalized = name.trim();
   if (!normalized) return true;
 
-  if (/^player\s*\d+$/i.test(normalized)) return true;
+  if (/^player[-_\s]*\d+$/i.test(normalized)) return true;
   if (/^선수\s*\d+$/.test(normalized)) return true;
   if (id && (normalized === String(id) || normalized === `#${id}`)) return true;
 
@@ -80,7 +80,13 @@ export function isWorthlessSitemapPlayer(player: {
 }): boolean {
   const name = normalizeValue(player.korean_name || player.display_name || player.name);
   const fallbackName = isFallbackPlayerName(name, player.player_id ?? undefined);
-  const fallbackSlug = !player.slug || player.slug === 'player' || player.slug === String(player.player_id ?? '');
+  const normalizedSlug = normalizeValue(player.slug).toLowerCase();
+  const playerId = String(player.player_id ?? '');
+  const fallbackSlug =
+    !normalizedSlug ||
+    normalizedSlug === 'player' ||
+    normalizedSlug === playerId ||
+    (Boolean(playerId) && normalizedSlug === `player-${playerId}`);
 
   const hasTeam = Boolean(player.team_id && normalizeValue(player.team_name));
   const hasProfile = Boolean(
@@ -90,5 +96,5 @@ export function isWorthlessSitemapPlayer(player: {
     !isUnknownValue(player.photo_url)
   );
 
-  return fallbackName || (fallbackSlug && !hasTeam && !hasProfile);
+  return fallbackName || fallbackSlug;
 }

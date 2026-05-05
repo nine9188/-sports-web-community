@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import type { WidgetMatch } from './types';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
 
 // 경기 상태 한글 매핑
 const STATUS_MAP: Record<string, { label: string; isLive: boolean }> = {
@@ -99,10 +101,11 @@ export default function MatchCardServer({ match, isLast, eager }: MatchCardServe
 
   // SEO: 구글봇이 링크 내용을 파악할 수 있도록 aria-label 추가
   const ariaLabel = `${match.homeTeam.name} ${match.score.home} - ${match.score.away} ${match.awayTeam.name}, ${statusInfo.label}${statusInfo.subLabel ? ` (${statusInfo.subLabel})` : ''}`;
+  const href = matchUrl(Number(match.id), getMatchSlug(match.homeTeam.name, match.awayTeam.name));
 
   return (
     <Link
-      href={`/livescore/football/match/${match.id}`}
+      href={href}
       prefetch={false}
       aria-label={ariaLabel}
       className={`

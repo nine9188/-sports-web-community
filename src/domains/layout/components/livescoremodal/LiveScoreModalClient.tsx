@@ -8,7 +8,6 @@ import { useTodayMatches, useDateMatches } from '@/domains/livescore/hooks/useLi
 import LiveScoreContent from './LiveScoreContent';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
-import Spinner from '@/shared/components/Spinner';
 
 
 interface LiveScoreModalProps {
@@ -22,7 +21,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
 
   // 오늘 데이터: CacheSeeder로 주입된 캐시에서 사용
-  const { data: todayData } = useTodayMatches();
+  const { data: todayData, isLoading: isLoadingToday } = useTodayMatches();
 
   // 어제/내일 데이터: 탭 클릭 시 lazy fetch
   const { data: yesterdayMatches, isLoading: isLoadingYesterday } = useDateMatches(
@@ -49,7 +48,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
       case 'yesterday':
         return { matches: yesterdayMatches || [], isLoading: isLoadingYesterday };
       case 'today':
-        return { matches: todayData?.data?.today?.matches || [], isLoading: false };
+        return { matches: todayData?.data?.today?.matches || [], isLoading: isLoadingToday };
       case 'tomorrow':
         return { matches: tomorrowMatches || [], isLoading: isLoadingTomorrow };
     }
@@ -126,8 +125,12 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
           )}
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner size="md" />
+            <div className="p-4">
+              <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg">
+                <div className="px-4 py-8 text-center text-[13px] text-gray-500 dark:text-gray-400">
+                  불러오는 중...
+                </div>
+              </div>
             </div>
           ) : (
             <LiveScoreContent

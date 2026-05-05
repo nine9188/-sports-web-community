@@ -214,101 +214,15 @@ function buildTeamInfoFromDb(row: TeamDbRow): TeamInfo {
   };
 }
 
-function buildTeamStatsFromDb(row: TeamDbRow): TeamStats | null {
-  const standing = row.api_data?.standing;
-  if (!standing?.all) return null;
-
-  const played = standing.all.played || 0;
-  const goalsFor = standing.all.goals?.for || 0;
-  const goalsAgainst = standing.all.goals?.against || 0;
-  const avg = (value: number) => played > 0 ? (value / played).toFixed(1) : '0';
+function createTeamPerfTrace(_teamId?: string, _scope?: string): TeamPerfTrace {
+  void _teamId;
+  void _scope;
 
   return {
-    league: {
-      id: row.league_id || 0,
-      name: row.league_name_ko || row.league_name || '',
-      country: row.country_ko || row.country || '',
-      logo: row.league_logo_url || '',
-      flag: '',
-      season: row.current_season || new Date().getFullYear(),
-    },
-    fixtures: {
-      played: {
-        home: standing.home?.played || 0,
-        away: standing.away?.played || 0,
-        total: played,
-      },
-      wins: {
-        home: standing.home?.win || 0,
-        away: standing.away?.win || 0,
-        total: standing.all.win || 0,
-      },
-      draws: {
-        home: standing.home?.draw || 0,
-        away: standing.away?.draw || 0,
-        total: standing.all.draw || 0,
-      },
-      loses: {
-        home: standing.home?.lose || 0,
-        away: standing.away?.lose || 0,
-        total: standing.all.lose || 0,
-      },
-    },
-    goals: {
-      for: {
-        total: {
-          home: standing.home?.goals?.for || 0,
-          away: standing.away?.goals?.for || 0,
-          total: goalsFor,
-        },
-        average: {
-          home: avg(standing.home?.goals?.for || 0),
-          away: avg(standing.away?.goals?.for || 0),
-          total: avg(goalsFor),
-        },
-      },
-      against: {
-        total: {
-          home: standing.home?.goals?.against || 0,
-          away: standing.away?.goals?.against || 0,
-          total: goalsAgainst,
-        },
-        average: {
-          home: avg(standing.home?.goals?.against || 0),
-          away: avg(standing.away?.goals?.against || 0),
-          total: avg(goalsAgainst),
-        },
-      },
-    },
-    form: standing.form,
-  };
-}
-
-function createTeamPerfTrace(teamId: string, scope: string): TeamPerfTrace {
-  const enabled = process.env.NODE_ENV === 'development' || process.env.TEAM_DETAIL_PERF === '1';
-  const startedAt = Date.now();
-  const steps: TeamPerfStep[] = [];
-
-  return {
-    enabled,
-    mark: async <T,>(label: string, task: () => Promise<T>): Promise<T> => {
-      if (!enabled) return task();
-
-      const start = Date.now();
-      try {
-        return await task();
-      } finally {
-        steps.push({ label, ms: Date.now() - start });
-      }
-    },
-    snapshot: () => [...steps],
-    log: (label: string) => {
-      if (!enabled) return;
-
-      const totalMs = Date.now() - startedAt;
-      const detail = steps.map((step) => `${step.label}=${step.ms}ms`).join(' | ');
-      console.info(`[team-detail-perf] ${scope}:${label} team=${teamId} total=${totalMs}ms${detail ? ` | ${detail}` : ''}`);
-    },
+    enabled: false,
+    mark: async <T,>(_label: string, task: () => Promise<T>): Promise<T> => task(),
+    snapshot: () => [],
+    log: () => undefined,
   };
 }
 
@@ -336,10 +250,10 @@ export interface TeamFullDataResponse {
   [key: string]: unknown; // 인덱스 시그니처
 }
 
-/**
- * 특정 팀의 기본 정보를 가져오는 내부 함수
- */
-async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 'team-data')): Promise<TeamResponse> {
+async function fetchTeamData(
+  teamId: string,
+  perf = createTeamPerfTrace(teamId, 'team-data'),
+): Promise<TeamResponse> {
   try {
     if (!teamId) {
       throw new Error('팀 ID는 필수입니다');
@@ -366,7 +280,6 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
       const row = teamRow as TeamDbRow | null;
       if (row) {
         teamInfo = buildTeamInfoFromDb(row);
-        statsData = buildTeamStatsFromDb(row);
         teamInfoFromDb = true;
       }
 
@@ -463,15 +376,13 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
       }
     }
 
-    if (!statsData) {
-      try {
-        const statsResult = await perf.mark('api:teams-statistics', () => fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId }));
-        if (statsResult?.response) {
-          statsData = statsResult.response as TeamStats;
-        }
-      } catch {
-        // stats 실패해도 팀 기본 정보는 반환
+    try {
+      const statsResult = await perf.mark('api:teams-statistics', () => fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId }));
+      if (statsResult?.response) {
+        statsData = statsResult.response as TeamStats;
       }
+    } catch {
+      // stats 실패해도 팀 기본 정보는 반환
     }
     
     // 팀 매핑 정보 적용
@@ -504,6 +415,12 @@ async function fetchTeamData(teamId: string, perf = createTeamPerfTrace(teamId, 
 export const fetchCachedTeamData = cache(
   async (teamId: string): Promise<TeamResponse> => {
     return fetchTeamData(teamId);
+  }
+);
+
+export const fetchTeamStatsTabData = cache(
+  async (teamId: string): Promise<TeamResponse> => {
+    return fetchTeamData(teamId, createTeamPerfTrace(teamId, 'team-stats-tab'));
   }
 );
 
@@ -637,9 +554,157 @@ export const fetchTeamOverviewTransfersData = cache(
   }
 );
 
+async function withTransferEnhancementTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    promise.catch(() => fallback),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), 1500)),
+  ]);
+}
+
+export const fetchTeamTransfersTabData = cache(
+  async (teamId: string) => {
+    const transfers = await getTeamTransfers(teamId);
+    const playerIds = new Set<number>();
+    const teamIds = new Set<number>();
+
+    for (const transfer of [...(transfers.data?.in || []), ...(transfers.data?.out || [])]) {
+      playerIds.add(transfer.player.id);
+      if ('fromTeam' in transfer && transfer.fromTeam?.id) {
+        teamIds.add(transfer.fromTeam.id);
+      }
+      if ('toTeam' in transfer && transfer.toTeam?.id) {
+        teamIds.add(transfer.toTeam.id);
+      }
+    }
+
+    const [playerKoreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
+      playerIds.size > 0 ? getPlayersKoreanNames([...playerIds]) : {},
+      playerIds.size > 0 ? withTransferEnhancementTimeout(getPlayerPhotoUrls([...playerIds]), {}) : {},
+      teamIds.size > 0 ? withTransferEnhancementTimeout(getTeamLogoUrls([...teamIds]), {}) : {},
+    ]);
+
+    return {
+      success: transfers.success,
+      message: transfers.message,
+      transfers: transfers.data,
+      playerKoreanNames,
+      playerPhotoUrls,
+      teamLogoUrls,
+    };
+  }
+);
+
+export const fetchTeamSquadTabData = cache(
+  async (teamId: string) => {
+    const [squad, playerStats] = await Promise.all([
+      getTeamSquad(teamId),
+      getTeamPlayerStats(teamId),
+    ]);
+
+    const playerIds = new Set<number>();
+    const coachIds = new Set<number>();
+
+    for (const member of squad.data || []) {
+      if (member.position === 'Coach') {
+        coachIds.add(member.id);
+      } else {
+        playerIds.add(member.id);
+      }
+    }
+
+    for (const id of Object.keys(playerStats.data || {})) {
+      playerIds.add(Number(id));
+    }
+
+    const [playerKoreanNames, playerPhotoUrls, coachPhotoUrls] = await Promise.all([
+      playerIds.size > 0 ? getPlayersKoreanNames([...playerIds]) : {},
+      playerIds.size > 0 ? getPlayerPhotoUrls([...playerIds]) : {},
+      coachIds.size > 0 ? getCoachPhotoUrls([...coachIds]) : {},
+    ]);
+
+    return {
+      success: squad.success && playerStats.success,
+      message: squad.message || playerStats.message,
+      squad: squad.data,
+      playerStats: playerStats.data,
+      playerKoreanNames,
+      playerPhotoUrls,
+      coachPhotoUrls,
+    };
+  }
+);
+
 export const fetchTeamOverviewMatchesData = cache(
   async (teamId: string, limit = 10) => {
     const matches = await getTeamMatchesUnified(teamId, { mode: 'recent', limit });
+    const teamIds = new Set<number>();
+    const leagueIds = new Set<number>();
+
+    for (const match of matches.data || []) {
+      if (match.teams?.home?.id) teamIds.add(match.teams.home.id);
+      if (match.teams?.away?.id) teamIds.add(match.teams.away.id);
+      if (match.league?.id) leagueIds.add(match.league.id);
+    }
+
+    const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+      teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : {},
+      leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : {},
+    ]);
+
+    return {
+      success: matches.success,
+      message: matches.message,
+      matches: matches.data,
+      teamLogoUrls,
+      leagueLogoUrls,
+      leagueLogoDarkUrls,
+    };
+  }
+);
+
+async function buildTeamOverviewMatchesData(
+  teamId: string,
+  mode: 'last' | 'next',
+  limit = 5
+) {
+  const matches = await getTeamMatchesUnified(teamId, { mode, limit });
+  const teamIds = new Set<number>();
+  const leagueIds = new Set<number>();
+
+  for (const match of matches.data || []) {
+    if (match.teams?.home?.id) teamIds.add(match.teams.home.id);
+    if (match.teams?.away?.id) teamIds.add(match.teams.away.id);
+    if (match.league?.id) leagueIds.add(match.league.id);
+  }
+
+  const [teamLogoUrls, leagueLogoUrls, leagueLogoDarkUrls] = await Promise.all([
+    teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : {},
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds]) : {},
+    leagueIds.size > 0 ? getLeagueLogoUrls([...leagueIds], true) : {},
+  ]);
+
+  return {
+    success: matches.success,
+    message: matches.message,
+    matches: matches.data,
+    teamLogoUrls,
+    leagueLogoUrls,
+    leagueLogoDarkUrls,
+  };
+}
+
+export const fetchTeamOverviewRecentMatchesData = cache(
+  async (teamId: string, limit = 5) => buildTeamOverviewMatchesData(teamId, 'last', limit)
+);
+
+export const fetchTeamOverviewUpcomingMatchesData = cache(
+  async (teamId: string, limit = 5) => buildTeamOverviewMatchesData(teamId, 'next', limit)
+);
+
+export const fetchTeamFixturesTabData = cache(
+  async (teamId: string) => {
+    const matches = await getTeamMatchesUnified(teamId, { mode: 'season' });
     const teamIds = new Set<number>();
     const leagueIds = new Set<number>();
 
@@ -842,17 +907,11 @@ export const fetchTeamFullData = cache(
         response.venueImageUrl = await perf.mark('images:venue', () => getVenueImageUrl(venueId));
       }
 
-      response.perf = { steps: perf.snapshot() };
-      perf.log(`success options=${JSON.stringify(options)}`);
-
       return response;
     } catch (error) {
-      perf.log('error');
-
       return {
         success: false,
         message: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
-        perf: { steps: perf.snapshot() },
       };
     }
   }

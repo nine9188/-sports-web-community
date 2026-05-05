@@ -43,9 +43,7 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
 
     // 병렬로 데이터 요청 처리
     const [userResult, cachedMaps] = await Promise.all([
-      // 1. 사용자 인증 확인 (로그인 상태)
       supabase.auth.getUser(),
-      // 2. 캐시된 게시판 맵 데이터 조회 (중복 DB 조회 제거)
       getCachedBoardMaps()
     ]);
 

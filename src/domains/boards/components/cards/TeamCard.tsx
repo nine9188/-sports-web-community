@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { TeamCardProps } from '@/shared/types/teamCard';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 및 CDN URL (CDN은 /leagues/md/... 직접 경로)
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -45,6 +47,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
 
   const leagueLogo = getLeagueLogo();
   const teamLogo = logo ? getTeamLogo() : TEAM_PLACEHOLDER;
+  const href = teamUrl(numericTeamId, getTeamSlugFromName(name));
 
   const CardContent = () => (
     <>
@@ -97,7 +100,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
 
   return (
     <div className="team-card">
-      <Link href={`/livescore/football/team/${numericTeamId}`} prefetch={false}>
+      <Link href={href} prefetch={false}>
         <CardContent />
       </Link>
     </div>

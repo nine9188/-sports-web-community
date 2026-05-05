@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
-import { fetchPlayerFullData, PlayerFullDataResponse } from '../actions/player/data';
+import { fetchPlayerFullData, fetchPlayerStatsTabData, PlayerFullDataResponse } from '../actions/player/data';
 import { playerKeys } from '@/shared/constants/queryKeys';
 import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
 import {
@@ -33,6 +33,12 @@ interface PlayerFixturesData {
   data: FixtureData[];
   status?: string;
   message?: string;
+  completeness?: {
+    total: number;
+    success: number;
+    failed: number;
+    failedFixtureIds?: number[];
+  };
   // 4590 표준: 이미지 Storage URL
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
@@ -173,17 +179,14 @@ export function usePlayerTabData({
         queryKey: playerKeys.stats(playerId || ''),
         queryFn: async (): Promise<PlayerStatsData | null> => {
           if (!playerId) return null;
-          const response = await fetchPlayerFullData(playerId, {
-            fetchSeasons: true,
-            fetchStats: true,
-          });
+          const response = await fetchPlayerStatsTabData(playerId);
           if (!response.success) return null;
           return {
-            seasons: response.seasons || [],
+            seasons: [],
             statistics: response.statistics || [],
-            teamLogoUrls: response.statisticsTeamLogoUrls || {},
-            leagueLogoUrls: response.statisticsLeagueLogoUrls || {},
-            leagueLogoDarkUrls: response.statisticsLeagueLogoDarkUrls || {},
+            teamLogoUrls: response.teamLogoUrls || {},
+            leagueLogoUrls: response.leagueLogoUrls || {},
+            leagueLogoDarkUrls: response.leagueLogoDarkUrls || {},
           };
         },
         enabled: !!playerId && currentTab === 'stats',
@@ -208,6 +211,8 @@ export function usePlayerTabData({
             fetchSeasons: false,
             fetchStats: false,
             fetchFixtures: true,
+            fixtureLimit: 15,
+            fixtureOffset: 0,
           });
           if (!response.success) return null;
           return response.fixtures || { data: [] };
@@ -292,16 +297,8 @@ export function usePlayerTabData({
       // Rankings
       {
         queryKey: playerKeys.rankings(playerId || ''),
-        queryFn: async (): Promise<RankingsData | null> => {
-          if (!playerId) return null;
-          const response = await fetchPlayerFullData(playerId, {
-            fetchSeasons: false,
-            fetchStats: false,
-            fetchRankings: true,
-          });
-          return response.success ? response.rankings || null : null;
-        },
-        enabled: !!playerId && currentTab === 'rankings',
+        queryFn: async (): Promise<RankingsData | null> => null,
+        enabled: false,
         initialData: initialData?.rankings,
         initialDataUpdatedAt: initialData?.rankings ? initialDataUpdatedAt : undefined,
         ...CACHE_STRATEGIES.STABLE_DATA,
@@ -358,4 +355,3 @@ export function usePlayerTabData({
     refetchCurrentTab: () => currentTabQuery?.refetch(),
   };
 }
-

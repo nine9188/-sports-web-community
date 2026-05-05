@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { leagueUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -41,7 +43,7 @@ export default function LeagueCard({ leagueId, name, leagueLogoUrl, leagueLogoDa
 
   return (
     <Link
-      href={`/livescore/football/leagues/${leagueId}`}
+      href={leagueUrl(leagueId, getLeagueSlug(leagueId))}
       className="group flex flex-col items-center rounded-md hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors p-2 pb-2.5 border-b border-dashed border-gray-300 dark:border-gray-600"
     >
       <UnifiedSportsImageClient

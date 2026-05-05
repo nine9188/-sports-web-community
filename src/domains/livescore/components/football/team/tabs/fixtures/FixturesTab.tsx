@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -11,6 +12,13 @@ import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { Match } from '../overview/components/MatchItems';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
+import { fetchTeamFixturesTabData } from '@/domains/livescore/actions/teams/team';
+import { teamKeys } from '@/shared/constants/queryKeys';
+import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
+import { Match as ApiMatch } from '@/domains/livescore/actions/teams/matches';
+import TeamTabEmptyState from '../TeamTabEmptyState';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -31,10 +39,40 @@ interface FixturesTabProps {
   leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
 
+type FixturesTabData = Awaited<ReturnType<typeof fetchTeamFixturesTabData>>;
+
+function convertMatchesForFixtures(matchesArray: ApiMatch[] | undefined | null): Match[] | undefined {
+  if (!matchesArray) return undefined;
+
+  return matchesArray.map(match => ({
+    fixture: {
+      id: match.fixture.id,
+      date: match.fixture.date,
+      status: {
+        short: match.fixture.status.short,
+        long: match.fixture.status.short
+      }
+    },
+    league: {
+      id: (match.league as { id?: number; name: string; logo: string }).id || 0,
+      name: match.league.name,
+      logo: match.league.logo
+    },
+    teams: match.teams,
+    goals: match.goals
+  }));
+}
+
 export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: FixturesTabProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { getLeagueKoreanName } = useTeamLeague();
+  const fixturesQuery = useQuery<FixturesTabData>({
+    queryKey: [...teamKeys.matches(String(teamId)), 'fixtures-tab'],
+    queryFn: () => fetchTeamFixturesTabData(String(teamId)),
+    enabled: !matches,
+    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
+  });
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
@@ -53,10 +91,24 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
   }, []);
 
   // 4590 표준: URL 헬퍼 함수
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getTeamLogo = (id: number) => displayTeamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getLeagueLogo = (id: number) => {
-    if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
-    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+    if (isDark && displayLeagueLogoDarkUrls[id]) return displayLeagueLogoDarkUrls[id];
+    return displayLeagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+  };
+  const getMatchHref = (match: Match) => matchUrl(match.fixture.id, getMatchSlug(match.teams.home.name, match.teams.away.name));
+  const displayMatches = matches || convertMatchesForFixtures(fixturesQuery.data?.matches);
+  const displayTeamLogoUrls: Record<number, string> = {
+    ...teamLogoUrls,
+    ...(fixturesQuery.data?.teamLogoUrls || {}),
+  };
+  const displayLeagueLogoUrls: Record<number, string> = {
+    ...leagueLogoUrls,
+    ...(fixturesQuery.data?.leagueLogoUrls || {}),
+  };
+  const displayLeagueLogoDarkUrls: Record<number, string> = {
+    ...leagueLogoDarkUrls,
+    ...(fixturesQuery.data?.leagueLogoDarkUrls || {}),
   };
 
   // URL의 subTab 파라미터에서 초기 탭 가져오기
@@ -79,8 +131,8 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
 
   // 종료된 경기 (최신순)
   const recentMatches = useMemo(() => {
-    if (!matches) return [];
-    return matches
+    if (!displayMatches) return [];
+    return displayMatches
       .filter(match =>
         match.fixture.status.short === 'FT' ||
         match.fixture.status.short === 'AET' ||
@@ -91,12 +143,12 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
         match.fixture.status.short === 'CANC'
       )
       .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime());
-  }, [matches]);
+  }, [displayMatches]);
 
   // 예정된 경기 (날짜순)
   const upcomingMatches = useMemo(() => {
-    if (!matches) return [];
-    return matches
+    if (!displayMatches) return [];
+    return displayMatches
       .filter(match =>
         match.fixture.status.short === 'NS' ||
         match.fixture.status.short === 'TBD' ||
@@ -112,7 +164,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
         match.fixture.status.short === 'LIVE'
       )
       .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
-  }, [matches]);
+  }, [displayMatches]);
 
   // 현재 탭에 따른 데이터
   const currentMatches = activeTab === 'recent' ? recentMatches : upcomingMatches;
@@ -127,8 +179,8 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
   }, [currentMatches, currentPage]);
 
   // 매치 데이터가 없으면 null 반환
-  if (!matches || matches.length === 0) {
-    return null;
+  if ((!displayMatches || displayMatches.length === 0) && !fixturesQuery.isLoading) {
+    return <TeamTabEmptyState title="경기 일정" message="경기 일정 데이터가 없습니다." />;
   }
 
   const isRecentTab = activeTab === 'recent';
@@ -181,10 +233,10 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                 <tr
                   key={match.fixture.id}
                   className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                  onClick={() => router.push(`/livescore/football/match/${match.fixture.id}`)}
+                  onClick={() => router.push(getMatchHref(match))}
                 >
                   <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                    <Link href={`/livescore/football/match/${match.fixture.id}`}>
+                    <Link href={getMatchHref(match)}>
                       {format(new Date(match.fixture.date), isRecentTab ? 'MM.dd' : 'MM.dd HH:mm', { locale: ko })}
                     </Link>
                   </td>
@@ -205,7 +257,7 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                     </div>
                   </td>
                   <td className="p-0 md:px-2">
-                    <Link href={`/livescore/football/match/${match.fixture.id}`} className="flex items-center justify-between">
+                    <Link href={getMatchHref(match)} className="flex items-center justify-between">
                       <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
                         <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
                           {match.teams.home.name}
@@ -261,8 +313,14 @@ export default function FixturesTab({ matches, teamId, teamLogoUrls = {}, league
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={isRecentTab ? 4 : 3} className="py-4 text-center text-gray-500 dark:text-gray-400">
-                    {isRecentTab ? '최근 경기 정보가 없습니다' : '예정된 경기 정보가 없습니다'}
+                  <td colSpan={isRecentTab ? 4 : 3} className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+                    {fixturesQuery.isLoading
+                      ? '불러오는 중...'
+                      : fixturesQuery.isError
+                        ? '경기 정보를 불러오지 못했습니다.'
+                        : isRecentTab
+                          ? '최근 경기 정보가 없습니다'
+                          : '예정된 경기 정보가 없습니다'}
                   </td>
                 </tr>
               )}

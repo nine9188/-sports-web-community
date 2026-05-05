@@ -1,22 +1,19 @@
 'use client';
 
-import { memo, useCallback, useState, useEffect } from 'react';
+import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { STANDINGS_LEGENDS, LEAGUE_IDS } from './constants/standings';
-import Spinner from '@/shared/components/Spinner';
+import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { LEAGUE_IDS } from './constants/standings';
 import CupRoundsView from '@/domains/livescore/components/football/leagues/CupRoundsView';
 import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
 
-// 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
-// Props 타입 정의
 interface StandingsProps {
   matchId: string;
   matchData: {
@@ -24,47 +21,116 @@ interface StandingsProps {
     homeTeam?: Team;
     awayTeam?: Team;
   };
-  // 4590 표준: 이미지 Storage URL
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
-  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
-  // 컵 대회인 경우 라운드별 경기 데이터 (있으면 CupRoundsView 우선 렌더)
+  leagueLogoDarkUrls?: Record<number, string>;
   cupRoundsData?: CupRound[];
 }
 
-// 4590 표준: 팀 로고 컴포넌트 - 메모이제이션
-const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => {
-  return (
-    <div className="w-6 h-6 flex-shrink-0 relative transform-gpu">
-      <UnifiedSportsImageClient
-        src={logoUrl}
-        alt={teamName || '팀'}
-        width={24}
-        height={24}
-        className="object-contain w-6 h-6"
-      />
-    </div>
-  );
-});
+const headerCell = 'px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap';
+const bodyCell = 'px-2 py-2 text-center text-[13px] text-gray-900 dark:text-gray-100 whitespace-nowrap';
 
+const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => (
+  <div className="w-6 h-6 flex-shrink-0 relative">
+    <UnifiedSportsImageClient
+      src={logoUrl}
+      alt={teamName || '팀'}
+      width={24}
+      height={24}
+      className="object-contain w-6 h-6"
+    />
+  </div>
+));
 TeamLogo.displayName = 'TeamLogo';
 
-// 테이블 스타일 정의 개선
-const tableStyles = {
-  header: "px-1 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
-  cell: "px-1 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center",
-  smallCol: "w-8",
-  mediumCol: "w-10",
-  formBadgeWin: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
-  formBadgeDraw: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400",
-  formBadgeLoss: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-};
+function getFormStyle(result: string) {
+  switch (result) {
+    case 'W':
+      return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
+    case 'D':
+      return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
+    case 'L':
+      return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
+    default:
+      return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300';
+  }
+}
 
-const Standings = memo(({ matchId, matchData: propsMatchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData }: StandingsProps) => {
+function getStatusColor(leagueId: number, rank: number, description?: string) {
+  switch (leagueId) {
+    case LEAGUE_IDS.PREMIER_LEAGUE:
+      if (rank >= 1 && rank <= 4) return 'bg-green-600';
+      if (rank === 5) return 'bg-blue-500';
+      if (rank >= 6 && rank <= 7) return 'bg-cyan-500';
+      if (rank >= 18) return 'bg-red-500';
+      break;
+    case LEAGUE_IDS.LA_LIGA:
+    case LEAGUE_IDS.SERIE_A:
+      if (rank >= 1 && rank <= 4) return 'bg-green-600';
+      if (rank === 5) return 'bg-blue-500';
+      if (rank === 6) return 'bg-cyan-500';
+      if (rank >= 18) return 'bg-red-500';
+      break;
+    case LEAGUE_IDS.BUNDESLIGA:
+      if (rank >= 1 && rank <= 4) return 'bg-green-600';
+      if (rank === 5) return 'bg-blue-500';
+      if (rank === 6) return 'bg-cyan-500';
+      if (rank >= 16) return 'bg-red-500';
+      break;
+    case LEAGUE_IDS.LIGUE_1:
+      if (rank >= 1 && rank <= 3) return 'bg-green-600';
+      if (rank === 4) return 'bg-blue-500';
+      if (rank === 5) return 'bg-cyan-500';
+      if (rank >= 16) return 'bg-red-500';
+      break;
+    default:
+      break;
+  }
+
+  const desc = description?.toLowerCase() || '';
+  if (desc.includes('champions')) return 'bg-green-600';
+  if (desc.includes('europa')) return 'bg-blue-500';
+  if (desc.includes('conference')) return 'bg-cyan-500';
+  if (desc.includes('relegation')) return 'bg-red-500';
+  if (desc.includes('play-off') || desc.includes('playoff')) return 'bg-yellow-500';
+  return 'bg-transparent';
+}
+
+function getLegend(leagueId: number) {
+  switch (leagueId) {
+    case LEAGUE_IDS.PREMIER_LEAGUE:
+      return [
+        ['bg-green-600', '챔피언스리그 (1~4위)'],
+        ['bg-blue-500', '유로파리그 (5위)'],
+        ['bg-cyan-500', '컨퍼런스리그 (6~7위)'],
+        ['bg-red-500', '강등권 (18~20위)'],
+      ];
+    case LEAGUE_IDS.LIGUE_1:
+      return [
+        ['bg-green-600', '챔피언스리그 (1~3위)'],
+        ['bg-blue-500', '유로파리그 (4위)'],
+        ['bg-cyan-500', '컨퍼런스리그 (5위)'],
+        ['bg-red-500', '강등권 (16~18위)'],
+      ];
+    default:
+      return [
+        ['bg-green-600', '상위권'],
+        ['bg-blue-500', '대륙 대회'],
+        ['bg-red-500', '강등권'],
+      ];
+  }
+}
+
+const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData }: StandingsProps) => {
+  const router = useRouter();
   const { getTeamDisplayName, getLeagueName } = useTeamLeague();
-  // 컵 대회면 순위표 대신 라운드별 경기 뷰 표시 (현재 경기 기준 ±1 펼침)
+
+  const handleRowClick = useCallback((teamId: number) => {
+    router.push(`/livescore/football/team/${teamId}`);
+  }, [router]);
+
   if (cupRoundsData && cupRoundsData.length > 0) {
-    const numericMatchId = parseInt(matchId, 10);
+    const numericMatchId = Number.parseInt(matchId, 10);
     return (
       <CupRoundsView
         rounds={cupRoundsData}
@@ -73,457 +139,144 @@ const Standings = memo(({ matchId, matchData: propsMatchData, teamLogoUrls = {},
     );
   }
 
-  const router = useRouter();
-
-  // 다크모드 감지
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    // 초기 다크모드 상태 확인
-    setIsDark(document.documentElement.classList.contains('dark'));
-
-    // 다크모드 변경 감지
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDark(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
-
-  // 4590 표준: URL 헬퍼 함수
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const getLeagueLogo = (id: number) => {
-    // 다크모드일 때 다크 로고 우선 사용
-    if (isDark && leagueLogoDarkUrls[id]) {
-      return leagueLogoDarkUrls[id];
-    }
-    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
-  };
-
-  // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
-  const standings = propsMatchData?.standings || null;
-  const homeTeamId = propsMatchData?.homeTeam?.id || null;
-  const awayTeamId = propsMatchData?.awayTeam?.id || null;
-
-  // 로딩 상태는 더 이상 필요 없음 (서버에서 미리 로드)
-  const loading = false;
-  const error = null;
-  
-  // getStatusColor 함수를 useCallback으로 감싸기
-  const getStatusColor = useCallback((description: string) => {
-    if (!description) return 'bg-transparent';
-    
-    const desc = description.toLowerCase();
-    
-    // 챔피언스리그 관련 (UEFA & AFC)
-    if (desc.includes('champions league') || desc.includes('afc champions')) {
-      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-green-600';
-      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
-      return 'bg-green-600';
-    }
-    
-    // 유로파리그 관련
-    if (desc.includes('europa league')) {
-      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-blue-600';
-      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
-      if (desc.includes('qualification')) return 'bg-blue-400';
-      return 'bg-blue-500';
-    }
-    
-    // 컨퍼런스리그 관련
-    if (desc.includes('conference league')) {
-      if (desc.includes('1/8-finals') || desc.includes('16강')) return 'bg-cyan-600';
-      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-yellow-500';
-      return 'bg-cyan-500';
-    }
-    
-    // 남미 대항전
-    if (desc.includes('copa libertadores') || desc.includes('libertadores')) return 'bg-green-600';
-    if (desc.includes('copa sudamericana') || desc.includes('sudamericana')) return 'bg-blue-500';
-    
-    // 승격 관련
-    if (desc.includes('promotion')) {
-      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-green-400';
-      return 'bg-green-600';
-    }
-    
-    // 강등 관련
-    if (desc.includes('relegation')) {
-      if (desc.includes('play-off') || desc.includes('플레이오프')) return 'bg-orange-500';
-      return 'bg-red-500';
-    }
-    
-    // MLS 컨퍼런스
-    if (desc.includes('eastern conference')) return 'bg-blue-500';
-    if (desc.includes('western conference')) return 'bg-red-500';
-    
-    // 플레이오프 (일반)
-    if (desc.includes('playoff')) return 'bg-green-500';
-    
-    // 탈락
-    if (desc.includes('elimination') || desc.includes('탈락')) return 'bg-gray-400';
-    
-    // 우승 관련
-    if (desc.includes('winner') || desc.includes('champion')) return 'bg-gold-500';
-    
-    return 'bg-transparent';
-  }, []);
-  
-  // getFormStyle 함수를 useCallback으로 감싸기
-  const getFormStyle = useCallback((result: string) => {
-    switch(result) {
-      case 'W': return tableStyles.formBadgeWin;
-      case 'D': return tableStyles.formBadgeDraw;
-      case 'L': return tableStyles.formBadgeLoss;
-      default: return 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-700 dark:text-gray-300';
-    }
-  }, []);
-  
-  // 행 클릭 핸들러를 useCallback으로 감싸기
-  const handleRowClick = useCallback((teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
-  }, [router]);
-
-  // 리그 ID에 따라 적절한 범례 가져오기
-  const getLegendForLeague = useCallback((leagueId: number) => {
-    switch (leagueId) {
-      // 유럽 TOP 5 리그
-      case LEAGUE_IDS.PREMIER_LEAGUE:
-        return STANDINGS_LEGENDS.premierLeague;
-      case LEAGUE_IDS.LA_LIGA:
-        return STANDINGS_LEGENDS.laLiga;
-      case LEAGUE_IDS.BUNDESLIGA:
-        return STANDINGS_LEGENDS.bundesliga;
-      case LEAGUE_IDS.SERIE_A:
-        return STANDINGS_LEGENDS.serieA;
-      case LEAGUE_IDS.LIGUE_1:
-        return STANDINGS_LEGENDS.ligue1;
-      
-      // 유럽 기타 리그
-      case LEAGUE_IDS.SCOTTISH_PREMIERSHIP:
-        return STANDINGS_LEGENDS.scottishPremiership;
-      case LEAGUE_IDS.EREDIVISIE:
-        return STANDINGS_LEGENDS.eredivisie;
-      case LEAGUE_IDS.PRIMEIRA_LIGA:
-        return STANDINGS_LEGENDS.primeiraLiga;
-      
-      // 아시아 리그
-      case LEAGUE_IDS.K_LEAGUE_1:
-        return STANDINGS_LEGENDS.kLeague1;
-      case LEAGUE_IDS.J_LEAGUE_1:
-        return STANDINGS_LEGENDS.jLeague1;
-      case LEAGUE_IDS.CHINESE_SUPER_LEAGUE:
-        return STANDINGS_LEGENDS.chineseSuperLeague;
-      case LEAGUE_IDS.SAUDI_PRO_LEAGUE:
-        return STANDINGS_LEGENDS.saudiProLeague;
-      
-      // 미주 & 중남미
-      case LEAGUE_IDS.MLS:
-        return STANDINGS_LEGENDS.mls;
-      case LEAGUE_IDS.BRASILEIRAO:
-        return STANDINGS_LEGENDS.brasileirao;
-      case LEAGUE_IDS.LIGA_MX:
-        return STANDINGS_LEGENDS.ligaMX;
-      
-      // 하위리그
-      case LEAGUE_IDS.CHAMPIONSHIP:
-        return STANDINGS_LEGENDS.championship;
-      
-      // UEFA 클럽 대항전
-      case LEAGUE_IDS.CHAMPIONS_LEAGUE:
-        return STANDINGS_LEGENDS.championsLeague;
-      case LEAGUE_IDS.EUROPA_LEAGUE:
-        return STANDINGS_LEGENDS.europaLeague;
-      case LEAGUE_IDS.CONFERENCE_LEAGUE:
-        return STANDINGS_LEGENDS.conferenceLeague;
-      
-      // 국내 컵 대회
-      case LEAGUE_IDS.FA_CUP:
-        return STANDINGS_LEGENDS.faCup;
-      case LEAGUE_IDS.EFL_CUP:
-        return STANDINGS_LEGENDS.eflCup;
-      case LEAGUE_IDS.COPA_DEL_REY:
-        return STANDINGS_LEGENDS.copaDelRey;
-      case LEAGUE_IDS.COPPA_ITALIA:
-        return STANDINGS_LEGENDS.coppaItalia;
-      case LEAGUE_IDS.COUPE_DE_FRANCE:
-        return STANDINGS_LEGENDS.coupeDeFrance;
-      case LEAGUE_IDS.DFB_POKAL:
-        return STANDINGS_LEGENDS.dfbPokal;
-      
-      default:
-        // 기본 범례
-        return STANDINGS_LEGENDS.default;
-    }
-  }, []);
-  
-  // 로딩 상태 표시
-  if (loading) {
+  const standings = matchData.standings?.standings?.league;
+  if (!standings?.standings?.length) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-center">
-          <Spinner size="xl" className="mx-auto mb-2" />
-          <p className="text-[13px] text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // 에러 상태 표시
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-red-500 dark:text-red-400 mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p className="text-[13px] text-gray-700 dark:text-gray-300">순위표 데이터를 불러오는 중 오류가 발생했습니다.</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{error}</p>
-      </div>
-    );
-  }
-  
-  // 데이터 없음 상태
-  if (!standings || !standings.standings || !standings.standings.league ||
-      !standings.standings.league.standings || standings.standings.league.standings.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-[13px] text-gray-700 dark:text-gray-300">현재 리그 순위 데이터가 없습니다.</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">시즌이 시작되지 않았거나 종료되었을 수 있습니다.</p>
-      </div>
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader>
+          <ContainerTitle>순위</ContainerTitle>
+        </ContainerHeader>
+        <ContainerContent>
+          <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">순위 데이터가 없습니다.</p>
+        </ContainerContent>
+      </Container>
     );
   }
 
-  // 리그 데이터 준비
-  const leagueData = standings.standings.league;
-  
+  const leagueId = standings.id;
+  const leagueName = getLeagueName(leagueId) || standings.name;
+  const leagueLogo = leagueLogoDarkUrls[leagueId] || leagueLogoUrls[leagueId] || standings.logo || LEAGUE_PLACEHOLDER;
+  const homeTeamId = matchData.homeTeam?.id;
+  const awayTeamId = matchData.awayTeam?.id;
+
   return (
     <div className="w-full space-y-4">
-      {/* 그룹별 순위표 */}
-      {leagueData.standings.map((standingsGroup, groupIndex) => (
-        <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D]">
+      {standings.standings.map((group, groupIndex) => (
+        <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D] overflow-hidden">
           <ContainerHeader>
-            {groupIndex === 0 ? (
-              <div className="flex items-center gap-3 w-full">
-                <div className="w-6 h-6 relative flex-shrink-0">
-                  <UnifiedSportsImageClient
-                    src={getLeagueLogo(leagueData.id)}
-                    alt={leagueData.name}
-                    width={24}
-                    height={24}
-                    className="object-contain w-6 h-6"
-                  />
-                </div>
-                <ContainerTitle>
-                  {(() => {
-                    const koreanName = getLeagueName(leagueData.id);
-                    return koreanName === '알 수 없는 리그' ? (leagueData.name || '리그 정보') : koreanName;
-                  })()}
-                </ContainerTitle>
-              </div>
-            ) : (
-              leagueData.standings.length > 1 && (
-                <ContainerTitle>{`Group ${groupIndex + 1}`}</ContainerTitle>
-              )
-            )}
+            <div className="flex items-center gap-3">
+              <UnifiedSportsImageClient
+                src={leagueLogo}
+                alt={leagueName}
+                width={24}
+                height={24}
+                className="object-contain w-6 h-6"
+              />
+              <ContainerTitle>{leagueName}</ContainerTitle>
+            </div>
           </ContainerHeader>
-
           <ContainerContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full w-full border-collapse" style={{ tableLayout: 'fixed' }}>
-                <colgroup>
-                  <col className="md:hidden w-8" />
-                  <col className="hidden md:table-column w-12" />
-                  <col className="w-[140px] md:w-[180px]" />
-                  <col className="hidden md:table-column w-12" />
-                  <col className="w-8" />
-                  <col className="w-8" />
-                  <col className="w-8" />
-                  <col className="hidden md:table-column w-12" />
-                  <col className="hidden md:table-column w-12" />
-                  <col className="hidden md:table-column w-14" />
-                  <col className="w-10" />
-                  <col className="hidden md:table-column w-32" />
-                </colgroup>
-
-                <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-                  <tr>
-                    <th className="md:hidden px-1 py-1 text-center text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">순위</th>
-
-                    <th className="px-2 py-2 md:px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">팀</th>
-
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">경기</th>
-
-                    <th className={`${tableStyles.header}`}>승</th>
-                    <th className={`${tableStyles.header}`}>무</th>
-                    <th className={`${tableStyles.header}`}>패</th>
-
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득점</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">실점</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득실차</th>
-
-                    <th className={`${tableStyles.header}`}>승점</th>
-
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">최근 5경기</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {standingsGroup.map((standing: Standing, standingIndex: number) => {
-                    // 홈팀 또는 원정팀인지 확인하여 하이라이트 처리
-                    const isHomeTeam = String(standing.team.id) === String(homeTeamId);
-                    const isAwayTeam = String(standing.team.id) === String(awayTeamId);
-                    const isLast = standingIndex === standingsGroup.length - 1;
-
-                    // 팀 행 스타일 설정
-                    let rowClass = `cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`;
-                    if (isHomeTeam) {
-                      rowClass += ' bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50';
-                    } else if (isAwayTeam) {
-                      rowClass += ' bg-red-50 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50';
-                    } else {
-                      rowClass += ' hover:bg-[#EAEAEA] dark:hover:bg-[#333333]';
-                    }
-
-                  // 강등권, 유로파, 챔스 등 구분
-                  const statusColor = getStatusColor(standing.description || '');
+            <table className="w-full table-fixed border-collapse">
+              <colgroup>
+                <col className="w-12" />
+                <col />
+                <col className="w-12" />
+                <col className="w-10" />
+                <col className="w-10" />
+                <col className="w-10" />
+                <col className="w-12" />
+                <col className="w-12" />
+                <col className="w-14" />
+                <col className="w-12" />
+                <col className="w-32" />
+              </colgroup>
+              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
+                <tr>
+                  <th className={headerCell}>순위</th>
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">팀</th>
+                  <th className={headerCell}>경기</th>
+                  <th className={headerCell}>승</th>
+                  <th className={headerCell}>무</th>
+                  <th className={headerCell}>패</th>
+                  <th className={headerCell}>득점</th>
+                  <th className={headerCell}>실점</th>
+                  <th className={headerCell}>득실차</th>
+                  <th className={headerCell}>승점</th>
+                  <th className={headerCell}>최근 5경기</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.map((standing: Standing) => {
+                  const isHomeTeam = standing.team.id === homeTeamId;
+                  const isAwayTeam = standing.team.id === awayTeamId;
+                  const statusColor = getStatusColor(leagueId, standing.rank, standing.description);
+                  const teamName = getTeamDisplayName(standing.team.id, { language: 'ko' }) || standing.team.name;
+                  const logoUrl = teamLogoUrls[standing.team.id] || standing.team.logo || TEAM_PLACEHOLDER;
 
                   return (
                     <tr
                       key={standing.team.id}
-                      className={rowClass}
+                      className={`cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
+                        isHomeTeam ? 'bg-blue-50 dark:bg-blue-900/30' : isAwayTeam ? 'bg-red-50 dark:bg-red-900/30' : ''
+                      }`}
                       onClick={() => handleRowClick(standing.team.id)}
                     >
-                      {/* 모바일용 축약된 순위 */}
-                      <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
-                        <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
-                        <span className="pl-1 text-gray-900 dark:text-gray-100">{standing.rank}</span>
+                      <td className={`${bodyCell} relative`}>
+                        <span className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
+                        {standing.rank}
                       </td>
-
-                      {/* 데스크톱용 순위 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 relative">
-                        <div className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
-                        <span className="pl-2">{standing.rank}</span>
-                      </td>
-
-                      {/* 팀 정보 - 고정 너비 사용 */}
-                      <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100">
-                        <Link href={`/livescore/football/team/${standing.team.id}`} className="flex items-center gap-1 md:gap-2">
-                          <TeamLogo
-                            teamName={standing.team.name || ''}
-                            logoUrl={getTeamLogo(standing.team.id)}
-                          />
-                          <div className="flex items-center max-w-[calc(100%-30px)]">
-                            <span className="block truncate text-ellipsis overflow-hidden max-w-full pr-1">
-                              {(() => {
-                                const koreanName = getTeamDisplayName(standing.team.id, { language: 'ko' });
-                                // 매핑이 없으면 (팀 {id} 형식) 원래 영어 이름 사용
-                                return koreanName.startsWith('팀 ') ? (standing.team.name || '팀 이름 없음') : koreanName;
-                              })()}
+                      <td className="px-2 py-2 text-[13px] text-gray-900 dark:text-gray-100">
+                        <Link href={`/livescore/football/team/${standing.team.id}`} className="flex min-w-0 items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                          <TeamLogo teamName={teamName} logoUrl={logoUrl} />
+                          <span className="truncate">{teamName}</span>
+                          {(isHomeTeam || isAwayTeam) && (
+                            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${isHomeTeam ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
+                              {isHomeTeam ? '홈' : '원정'}
                             </span>
-                            {(isHomeTeam || isAwayTeam) && (
-                              <span className={`text-[10px] md:text-xs font-bold px-0.5 md:px-1.5 md:py-0.5 ml-0.5 md:ml-2 rounded inline-block flex-shrink-0 ${
-                                isHomeTeam
-                                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                              }`}>
-                                {isHomeTeam ? '홈' : '원정'}
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </Link>
                       </td>
-
-                      {/* 경기 수 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
-                        {standing.all?.played || 0}
-                      </td>
-                      
-                      {/* 승/무/패 - 고정 너비 사용 */}
-                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.win || 0}</td>
-                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.draw || 0}</td>
-                      <td className={`${tableStyles.cell} text-xs md:text-[13px] px-0 md:px-1`}>{standing.all?.lose || 0}</td>
-
-
-                      {/* 득점, 실점, 득실차 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
-                        {standing.all?.goals?.for || 0}
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
-                        {standing.all?.goals?.against || 0}
-                      </td>
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
-                        {standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff || 0}
-                      </td>
-
-                      {/* 승점 - 모바일에서도 표시 */}
-                      <td className={`${tableStyles.cell} text-xs md:text-[13px] font-semibold`}>{standing.points || 0}</td>
-
-
-                      {/* 최근 5경기 - 모바일에서는 숨김 */}
-                      <td className="hidden md:table-cell px-3 py-2 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100 text-center">
+                      <td className={bodyCell}>{standing.all.played}</td>
+                      <td className={bodyCell}>{standing.all.win}</td>
+                      <td className={bodyCell}>{standing.all.draw}</td>
+                      <td className={bodyCell}>{standing.all.lose}</td>
+                      <td className={bodyCell}>{standing.all.goals.for}</td>
+                      <td className={bodyCell}>{standing.all.goals.against}</td>
+                      <td className={bodyCell}>{standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff}</td>
+                      <td className={`${bodyCell} font-bold`}>{standing.points}</td>
+                      <td className={bodyCell}>
                         <div className="flex justify-center gap-1">
-                          {standing.form?.split('').map((result, idx) => (
-                            <div
-                              key={idx}
-                              className={`w-6 h-6 flex items-center justify-center ${getFormStyle(result)} text-xs font-medium rounded`}
-                              title={result === 'W' ? '승리' : result === 'D' ? '무승부' : '패배'}
-                            >
+                          {standing.form?.split('').slice(-5).map((result, index) => (
+                            <span key={`${standing.team.id}-${index}`} className={`flex h-6 w-6 items-center justify-center rounded text-xs font-medium ${getFormStyle(result)}`}>
                               {result}
-                            </div>
+                            </span>
                           ))}
                         </div>
                       </td>
                     </tr>
                   );
                 })}
-                </tbody>
-              </table>
-            </div>
+              </tbody>
+            </table>
           </ContainerContent>
         </Container>
       ))}
 
-
-      {/* 범례 */}
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader>
           <ContainerTitle>범례</ContainerTitle>
         </ContainerHeader>
         <ContainerContent>
-          <div className="flex flex-col space-y-2">
-            {/* 순위 관련 범례 (리그 ID 기반) */}
-            {standings?.standings?.league && (() => {
-              const leagueId = standings.standings.league.id;
-              if (!leagueId) return null;
-              
-              const legend = getLegendForLeague(leagueId);
-              return legend.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
-                  <span className="text-[13px] text-gray-900 dark:text-gray-100">{item.label}</span>
-                </div>
-              ));
-            })()}
-
-            {/* 구분선 */}
-            <div className="border-t border-black/5 dark:border-white/10 my-1"></div>
-
-            {/* 팀 하이라이트 범례 */}
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-sm"></div>
-              <span className="text-[13px] text-gray-900 dark:text-gray-100">홈 팀</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-sm"></div>
-              <span className="text-[13px] text-gray-900 dark:text-gray-100">원정 팀</span>
+          <div className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
+            {getLegend(leagueId).map(([color, label]) => (
+              <div key={label} className="flex items-center gap-2">
+                <span className={`h-4 w-4 rounded-sm ${color}`} />
+                <span>{label}</span>
+              </div>
+            ))}
+            <div className="border-t border-black/5 pt-2 dark:border-white/10">
+              <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-sm border border-blue-200 bg-blue-50" />홈 팀</div>
+              <div className="mt-2 flex items-center gap-2"><span className="h-4 w-4 rounded-sm border border-red-200 bg-red-50" />원정 팀</div>
             </div>
           </div>
         </ContainerContent>

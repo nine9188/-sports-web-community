@@ -2,7 +2,6 @@
 
 import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import type { Json } from '@/shared/types/supabase';
 import { getCachedBoardById } from './getCachedBoards';
 import {
   createFallbackPost,

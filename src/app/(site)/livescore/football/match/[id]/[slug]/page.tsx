@@ -1,61 +1,41 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { MatchHeaderSkeleton, MatchContentSkeleton, MatchSidebarSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
-import { getCachedSidebarData } from '@/domains/livescore/actions/match/sidebarData';
-import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
-import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
-import type { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
+import { getCachedSidebarExtrasData } from '@/domains/livescore/actions/match/sidebarData';
+import { getCachedPowerSummaryData } from '@/domains/livescore/actions/match/headtohead';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
-import { notFound } from 'next/navigation';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { getLeagueSlug, getMatchSlug, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
+import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
+import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
 import { getTeamsByIds, getLeagueById, isCupLeague, getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
-import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
 import type { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
-import { getPlayerPhotoUrls, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
+import MatchHeader from '@/domains/livescore/components/football/match/MatchHeader';
+import MatchSidebar from '@/domains/livescore/components/football/match/sidebar/MatchSidebar';
+import HighlightBanner from '@/domains/livescore/components/football/match/HighlightBanner';
 
-// matchData에서 모든 선수 ID 추출
-function extractPlayerIds(matchData: MatchFullDataResponse): number[] {
-  const playerIds: Set<number> = new Set();
+function addHoursToIsoDate(isoDate: string, hours: number): string {
+  const date = new Date(isoDate);
+  date.setHours(date.getHours() + hours);
 
-  // lineups에서 선수 ID 추출
-  if (matchData.lineups?.response) {
-    const { home, away } = matchData.lineups.response;
+  const offsetMatch = isoDate.match(/([+-]\d{2}:\d{2})$/);
+  if (!offsetMatch) return date.toISOString();
 
-    // 홈팀 선발 + 교체
-    home?.startXI?.forEach(p => p.player?.id && playerIds.add(p.player.id));
-    home?.substitutes?.forEach(p => p.player?.id && playerIds.add(p.player.id));
+  const offset = offsetMatch[1];
+  const sign = offset[0] === '-' ? -1 : 1;
+  const [offsetHours, offsetMinutes] = offset.slice(1).split(':').map(Number);
+  const offsetMs = sign * ((offsetHours * 60 + offsetMinutes) * 60 * 1000);
+  const localDate = new Date(date.getTime() + offsetMs);
 
-    // 원정팀 선발 + 교체
-    away?.startXI?.forEach(p => p.player?.id && playerIds.add(p.player.id));
-    away?.substitutes?.forEach(p => p.player?.id && playerIds.add(p.player.id));
-  }
-
-  // events에서 선수 ID 추출
-  if (matchData.events) {
-    matchData.events.forEach(event => {
-      if (event.player?.id) playerIds.add(event.player.id);
-      if (event.assist?.id) playerIds.add(event.assist.id);
-    });
-  }
-
-  // match 정보에서 득점자 ID 추출
-  if (matchData.match?.goals) {
-    // goals 객체에 선수 정보가 있을 수 있음
-  }
-
-  return Array.from(playerIds);
+  return `${localDate.toISOString().slice(0, 19)}${offset}`;
 }
 
-// 유효한 탭 목록
 const VALID_TABS: MatchTabType[] = ['power', 'events', 'lineups', 'stats', 'standings', 'support'];
 const DEFAULT_TAB: MatchTabType = 'power';
 
-// 경기 메타데이터 생성
 export async function generateMetadata({
   params
 }: {
@@ -63,7 +43,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id, slug } = await params;
 
-  // 경기 데이터 조회 (최소한의 옵션으로)
   const matchData = await fetchCachedMatchFullData(id, {
     fetchEvents: false,
     fetchLineups: false,
@@ -82,7 +61,6 @@ export async function generateMetadata({
 
   const { match } = matchData;
 
-  // 매핑 파일에서 한글 이름 조회
   const [teamMap, leagueMapping] = await Promise.all([
     getTeamsByIds([match.teams.home.id, match.teams.away.id]),
     getLeagueById(match.league.id),
@@ -93,11 +71,9 @@ export async function generateMetadata({
   const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
   const leagueName = leagueMapping?.name_ko || match.league.name;
 
-  // 스코어 표시 (경기 시작 전이면 'vs', 아니면 실제 스코어)
   const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
   const score = isNotStarted ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
 
-  // 경기 날짜 포맷 (예: "2026년 4월 10일")
   const matchDate = match.time?.date ? new Date(match.time.date) : null;
   const dateStr = matchDate
     ? `${matchDate.getFullYear()}년 ${matchDate.getMonth() + 1}월 ${matchDate.getDate()}일`
@@ -105,122 +81,113 @@ export async function generateMetadata({
 
   const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
   const description = dateStr
-    ? `${dateStr} ${leagueName} ${homeTeam} ${score} ${awayTeam} 경기결과, 라인업, 통계, 하이라이트. 축구 커뮤니티 4590 Football.`
-    : `${leagueName} ${homeTeam} ${score} ${awayTeam} 경기결과, 라인업, 통계, 하이라이트. 축구 커뮤니티 4590 Football.`;
+    ? `${dateStr} ${leagueName} ${homeTeam} ${score} ${awayTeam} 경기 결과, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`
+    : `${leagueName} ${homeTeam} ${score} ${awayTeam} 경기 결과, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`;
+
+  const canonicalSlug = await resolveCanonicalMatchSlug(id);
 
   return buildMetadata({
     title,
     description,
-    path: `/livescore/football/match/${id}/${slug || getMatchSlug(match.teams.home.name, match.teams.away.name) || 'match'}`,
+    path: `/livescore/football/match/${id}/${canonicalSlug || slug || getMatchSlug(match.teams.home.name, match.teams.away.name)}`,
     keywords: [
       `${homeTeam} ${awayTeam}`,
       `${homeTeam} ${score} ${awayTeam}`,
-      `${homeTeam} 라인업`, `${awayTeam} 라인업`,
-      `${leagueName} 경기결과`, `${leagueName} 스코어`,
+      `${homeTeam} 라인업`,
+      `${awayTeam} 라인업`,
+      `${leagueName} 경기 결과`,
+      `${leagueName} 스코어`,
       ...(dateStr ? [`${dateStr} 축구`, `${dateStr} ${leagueName}`] : []),
-      '축구 경기결과', '실시간 스코어',
+      '축구 경기 결과',
+      '실시간 스코어',
     ],
   });
 }
 
-
-/**
- * ============================================
- * Suspense 스트리밍 패턴 (메인 페이지와 동일)
- * ============================================
- *
- * 1. page.tsx에서 matchData만 await (헤더 + JSON-LD용)
- * 2. 나머지(sidebar, power, playerStats, 한글명, 하이라이트)는
- *    별도 async 서버 컴포넌트(MatchContentLoader)에서 병렬 처리
- * 3. Suspense fallback으로 스켈레톤 즉시 표시
- * 4. MatchContentLoader 준비되면 스트리밍으로 교체
- */
-
-/**
- * 별도 async 서버 컴포넌트 — Suspense 스트리밍용
- * 무거운 데이터(sidebar, power, playerStats, 한글명, 하이라이트)를 병렬로 로드
- * page.tsx와 분리되어 있으므로 쿠키 충돌 없음
- */
-async function MatchContentLoader({
+async function MatchSidebarLoader({
   matchId,
   matchData,
-  initialTab,
 }: {
   matchId: string;
   matchData: MatchFullDataResponse;
-  initialTab: MatchTabType;
 }) {
+  const numericMatchId = parseInt(matchId, 10);
   const homeTeamId = matchData.homeTeam?.id;
   const awayTeamId = matchData.awayTeam?.id;
-  const numericMatchId = parseInt(matchId, 10);
-  const statusCode = matchData.match?.status?.code ?? '';
-  const finishedCodes = ['FT', 'AET', 'PEN'];
-  const isFinished = finishedCodes.includes(statusCode);
-  const playerIds = extractPlayerIds(matchData);
   const leagueId = matchData.match?.league?.id;
+  const statusCode = matchData.match?.status?.code ?? '';
+  const isFinished = ['FT', 'AET', 'PEN'].includes(statusCode);
 
-  // 컵 대회 여부 판정 (순위 탭에서 라운드별 경기 뷰 사용)
-  const [leagueIsCup, cupSeason] = await Promise.all([
-    isCupLeague(leagueId),
-    leagueId ? getCurrentSeasonForLeague(leagueId) : Promise.resolve(undefined),
-  ]);
-
-  // 나머지 전부 병렬 호출
-  const [sidebarDataResult, powerDataResult, playerStatsResult, playerKoreanNames, highlightData, cupRoundsResult] = await Promise.all([
-    getCachedSidebarData(matchId),
-    (homeTeamId && awayTeamId)
-      ? getCachedPowerData(homeTeamId, awayTeamId, 5)
-      : Promise.resolve({ success: false, data: undefined }),
-    fetchAllPlayerStats(matchId, matchData.match?.status?.code),
-    getPlayersKoreanNames(playerIds),
+  const [sidebarDataResult, highlightData] = await Promise.all([
+    getCachedSidebarExtrasData(matchId, homeTeamId, awayTeamId, matchData.matchData as Record<string, unknown> | undefined),
     isFinished && homeTeamId && awayTeamId && leagueId
       ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.time?.date).catch(() => null)
       : Promise.resolve(null),
-    leagueIsCup && leagueId
-      ? fetchCupFixturesByRound(leagueId, cupSeason).catch(() => ({ success: false as const, rounds: [] }))
-      : Promise.resolve({ success: true as const, rounds: [] }),
   ]);
-
   const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-  const powerResult = powerDataResult as { success?: boolean; data?: HeadToHeadTestData };
-  const powerData = powerResult.success ? powerResult.data : undefined;
 
   return (
-    <MatchPageClient
-      matchId={matchId}
-      initialTab={initialTab}
-      playerKoreanNames={playerKoreanNames}
-      initialData={matchData}
-      initialPowerData={powerData}
-      allPlayerStats={playerStatsResult}
-      sidebarData={sidebarData}
-      highlightData={highlightData}
-      cupRoundsData={cupRoundsResult.rounds}
-    />
+    <>
+      {highlightData && <HighlightBanner highlight={highlightData} mode="modal" />}
+      <MatchSidebar
+        matchId={matchId}
+        initialData={matchData.matchData}
+        sidebarData={sidebarData}
+        teamLogoUrls={matchData.teamLogoUrls}
+      />
+    </>
   );
 }
 
-/** 매치 전체 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
 async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug: string; tab?: string }) {
   try {
     const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
       ? (tab as MatchTabType)
       : DEFAULT_TAB;
+    const canonicalSlug = await resolveCanonicalMatchSlug(matchId);
 
-    // Stage 1: 경기 기본 데이터만 await (헤더 + JSON-LD 표시용)
+    if (!canonicalSlug) {
+      return notFound();
+    }
+
+    if (slug !== canonicalSlug) {
+      const tabParam = initialTab !== DEFAULT_TAB ? `?tab=${initialTab}` : '';
+      permanentRedirect(`/livescore/football/match/${matchId}/${canonicalSlug}${tabParam}`);
+    }
+
+    // Stage 1: load base match data first so the header and JSON-LD can render early.
+    const fetchEvents = initialTab === 'events' || initialTab === 'lineups';
+    const fetchLineups = initialTab === 'lineups';
+    const fetchStats = initialTab === 'stats';
+    const fetchStandings = initialTab === 'standings';
     const matchData = await fetchCachedMatchFullData(matchId, {
-      fetchEvents: true,
-      fetchLineups: true,
-      fetchStats: true,
-      fetchStandings: true,
+      fetchEvents,
+      fetchLineups,
+      fetchStats,
+      fetchStandings,
     });
 
     if (!matchData.success) {
       return notFound();
     }
-
-    // JSON-LD 생성 (SEO)
+    // JSON-LD ??밴쉐 (SEO)
     const match = matchData.match;
+    const homeTeamId = matchData.homeTeam?.id;
+    const awayTeamId = matchData.awayTeam?.id;
+    const leagueId = match?.league?.id;
+    const needsCupRounds = initialTab === 'standings';
+    const [powerDataResult, leagueIsCup, cupSeason] = await Promise.all([
+      homeTeamId && awayTeamId
+        ? getCachedPowerSummaryData(homeTeamId, awayTeamId, 5)
+        : Promise.resolve({ success: false, data: undefined }),
+      needsCupRounds ? isCupLeague(leagueId) : Promise.resolve(false),
+      needsCupRounds && leagueId ? getCurrentSeasonForLeague(leagueId) : Promise.resolve(undefined),
+    ]);
+    const powerResult = powerDataResult as { success?: boolean; data?: HeadToHeadTestData };
+    const powerData = powerResult.success ? powerResult.data : undefined;
+    const cupRoundsResult = needsCupRounds && leagueIsCup && leagueId
+      ? await fetchCupFixturesByRound(leagueId, cupSeason).catch(() => ({ success: false as const, rounds: [] }))
+      : { success: true as const, rounds: [] };
     const rawData = matchData.matchData as Record<string, unknown> | undefined;
     const rawFixture = rawData?.fixture as { venue?: { name?: string; city?: string } } | undefined;
     const venueName = rawFixture?.venue?.name;
@@ -239,6 +206,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const homeTeamName = homeTeamMapping?.name_ko || match?.teams.home.name || '';
     const awayTeamName = awayTeamMapping?.name_ko || match?.teams.away.name || '';
     const leagueName = leagueMapping?.name_ko || match?.league.name || '';
+    const venueCountry = match?.league.country || leagueMapping?.country || undefined;
 
     const eventStatus = ['CANC', 'ABD'].includes(statusCode)
         ? 'https://schema.org/EventCancelled'
@@ -248,69 +216,87 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
 
     const matchStartDate = match?.time?.date;
     const matchEndDate = matchStartDate
-      ? new Date(new Date(matchStartDate).getTime() + 2 * 60 * 60 * 1000).toISOString()
+      ? addHoursToIsoDate(matchStartDate, 2)
       : undefined;
-    const matchSlug = slug || (
-      match ? getMatchSlug(match.teams.home.name, match.teams.away.name) : ''
-    ) || 'match';
+    const matchSlug = canonicalSlug;
     const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}/${matchSlug}`;
+    const leagueUrl = match?.league?.id
+      ? `${siteConfig.url}/livescore/football/leagues/${match.league.id}/${getLeagueSlug(match.league.id)}`
+      : undefined;
+    const homeTeamUrl = match?.teams.home.id && match.teams.home.name
+      ? `${siteConfig.url}/livescore/football/team/${match.teams.home.id}/${getTeamSlugFromName(match.teams.home.name)}`
+      : undefined;
+    const awayTeamUrl = match?.teams.away.id && match.teams.away.name
+      ? `${siteConfig.url}/livescore/football/team/${match.teams.away.id}/${getTeamSlugFromName(match.teams.away.name)}`
+      : undefined;
+    const homeTeamSchema = {
+      '@type': 'SportsTeam',
+      name: homeTeamName,
+      ...(homeTeamUrl && {
+        '@id': `${homeTeamUrl}#sports-team`,
+        url: homeTeamUrl,
+      }),
+    };
+    const awayTeamSchema = {
+      '@type': 'SportsTeam',
+      name: awayTeamName,
+      ...(awayTeamUrl && {
+        '@id': `${awayTeamUrl}#sports-team`,
+        url: awayTeamUrl,
+      }),
+    };
 
     const sportsEventSchema = match ? {
       '@context': 'https://schema.org',
       '@type': 'SportsEvent',
+      '@id': `${matchUrl}#sports-event`,
       name: `${homeTeamName} vs ${awayTeamName}`,
       url: matchUrl,
+      isPartOf: { '@id': `${siteConfig.url}#website` },
+      publisher: { '@id': `${siteConfig.url}#organization` },
       startDate: matchStartDate,
       ...(matchEndDate && { endDate: matchEndDate }),
       description: `${leagueName} - ${homeTeamName} vs ${awayTeamName}`,
       image: `${siteConfig.url}/og-image.png`,
+      sport: 'Football',
       eventStatus,
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      location: {
+      ...((venueName || venueCity || venueCountry) && { location: {
         '@type': 'Place',
-        name: venueName || homeTeamName + ' 홈구장',
+        ...(venueName && { name: venueName }),
         address: {
           '@type': 'PostalAddress',
           ...(venueCity && { addressLocality: venueCity }),
-          addressCountry: 'KR',
+          ...(venueCountry && { addressCountry: venueCountry }),
         },
-      },
+      } }),
       performer: [
-        { '@type': 'SportsTeam', name: homeTeamName },
-        { '@type': 'SportsTeam', name: awayTeamName },
+        homeTeamSchema,
+        awayTeamSchema,
       ],
-      homeTeam: { '@type': 'SportsTeam', name: homeTeamName },
-      awayTeam: { '@type': 'SportsTeam', name: awayTeamName },
+      homeTeam: homeTeamSchema,
+      awayTeam: awayTeamSchema,
       organizer: {
         '@type': 'SportsOrganization',
         name: leagueName,
         ...(match.league?.id && {
-          url: `${siteConfig.url}/livescore/football/leagues/${match.league.id}`,
+          '@id': leagueUrl ? `${leagueUrl}#sports-organization` : undefined,
+          url: leagueUrl,
         }),
-      },
-      offers: {
-        '@type': 'Offer',
-        url: matchUrl,
-        price: '0',
-        priceCurrency: 'KRW',
-        availability: 'https://schema.org/InStock',
-        validFrom: matchStartDate,
       },
     } : null;
 
     // BreadcrumbList JSON-LD
-    const breadcrumbSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
-        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
-        ...(leagueName && match?.league?.id ? [{
-          '@type': 'ListItem', position: 3, name: leagueName, item: `${siteConfig.url}/livescore/football/leagues/${match.league.id}`,
-        }] : []),
-        { '@type': 'ListItem', position: leagueName && match?.league?.id ? 4 : 3, name: `${homeTeamName} vs ${awayTeamName}`, item: matchUrl },
+    const matchDisplayName = `${homeTeamName} vs ${awayTeamName}`;
+    const breadcrumbSchema = buildBreadcrumbJsonLd({
+      name: `${matchDisplayName || 'Match'} breadcrumb`,
+      items: [
+        { name: '홈', url: '/' },
+        { name: '라이브스코어', url: '/livescore/football' },
+        ...(leagueName && match?.league?.id && leagueUrl ? [{ name: leagueName, url: leagueUrl }] : []),
+        { name: matchDisplayName, url: matchUrl },
       ],
-    };
+    });
 
     return (
       <div className="container">
@@ -322,30 +308,46 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
         )}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+          {...jsonLdScriptProps(breadcrumbSchema)}
         />
-        {/* Suspense 스트리밍: matchData는 이미 로드됨, 나머지(sidebar/power/playerStats)를 병렬 로드 */}
-        <Suspense fallback={
-          <div className="flex gap-4">
-            <div className="flex-1 min-w-0">
-              <MatchHeaderSkeleton />
-              <MatchContentSkeleton />
-            </div>
-            <aside className="hidden xl:block w-[300px] shrink-0">
-              <MatchSidebarSkeleton />
-            </aside>
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0">
+            <MatchHeader
+              matchId={matchId}
+              initialData={matchData}
+              teamLogoUrls={matchData.teamLogoUrls}
+              leagueLogoUrl={matchData.leagueLogoUrl}
+              leagueLogoDarkUrl={matchData.leagueLogoDarkUrl}
+            />
+            <MatchPageClient
+              matchId={matchId}
+              initialTab={initialTab}
+              initialData={matchData}
+              initialPowerData={powerData}
+              powerMode="all"
+              cupRoundsData={cupRoundsResult.rounds}
+            />
           </div>
-        }>
-          <MatchContentLoader
-            matchId={matchId}
-            matchData={matchData}
-            initialTab={initialTab}
-          />
-        </Suspense>
+          <aside className="hidden xl:block w-[300px] shrink-0">
+            <MatchSidebarLoader
+              matchId={matchId}
+              matchData={matchData}
+            />
+          </aside>
+        </div>
       </div>
     );
   } catch (error) {
-    console.error('매치 페이지 로딩 오류:', error);
+    if (
+      error &&
+      typeof error === 'object' &&
+      'digest' in error &&
+      typeof error.digest === 'string' &&
+      error.digest.startsWith('NEXT_REDIRECT')
+    ) {
+      throw error;
+    }
+    console.error('Match page loading error:', error);
     return (
       <div className="container py-8">
         <div className="bg-white rounded-lg border p-4 text-center">
@@ -368,3 +370,4 @@ export default async function MatchPage({
 
   return await MatchPageContent({ matchId, slug, tab });
 }
+

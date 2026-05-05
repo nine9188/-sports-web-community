@@ -4,8 +4,8 @@ import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetStreaming } from '@/domains/widgets/components/live-score-widget/index';
-import LiveScoreSkeleton from '@/domains/livescore/components/football/MainView/LiveScoreSkeleton';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -63,8 +63,30 @@ const homeJsonLd = {
   },
 };
 
-// 메인 페이지 컴포넌트 - 모든 데이터를 Suspense 스트리밍으로 처리
-// blocking await 없음 → 즉시 HTML 스트리밍 시작 (TTFB 최적화)
+
+function HomeWidgetLoading({
+  title,
+  minHeight = 96,
+}: {
+  title: string;
+  minHeight?: number;
+}) {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent
+        className="flex items-center justify-center"
+        style={{ minHeight }}
+      >
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+      </ContainerContent>
+    </Container>
+  );
+}
+
+// 메인 페이지 컴포넌트
 export default function HomePage() {
   return (
     <>
@@ -96,17 +118,17 @@ export default function HomePage() {
       </div>
       {/* 배너 광고 */}
       <AdBanner />
-      {/* LiveScore 위젯 - Suspense 스트리밍 (오늘 경기만 SSR, 어제/내일은 클라이언트) */}
-      <Suspense fallback={<LiveScoreSkeleton />}>
+      {/* LiveScore 위젯 */}
+      <Suspense fallback={<HomeWidgetLoading title="라이브스코어" minHeight={120} />}>
         <LiveScoreWidgetStreaming />
       </Suspense>
-      {/* 게시판 모음 위젯 - Suspense 스트리밍 */}
-      <Suspense>
+      {/* 게시판 모음 위젯 */}
+      <Suspense fallback={<HomeWidgetLoading title="데이터분석" minHeight={164} />}>
         <BoardCollectionWidget />
       </Suspense>
 
-      {/* 게시글 리스트 위젯 - Suspense 스트리밍 (below fold) */}
-      <Suspense>
+      {/* 게시글 리스트 위젯 */}
+      <Suspense fallback={<HomeWidgetLoading title="최신 게시글" minHeight={220} />}>
         <AllPostsWidget />
       </Suspense>
 
@@ -118,8 +140,8 @@ export default function HomePage() {
         <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
       </div>
 
-      {/* 뉴스 위젯 - Suspense 스트리밍 (below fold) */}
-      <Suspense>
+      {/* 뉴스 위젯 */}
+      <Suspense fallback={<HomeWidgetLoading title="축구 소식" minHeight={260} />}>
         <NewsWidget />
       </Suspense>
     </main>

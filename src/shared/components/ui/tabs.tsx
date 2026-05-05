@@ -103,6 +103,7 @@ export interface TabListProps {
   tabs: TabItem[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  onTabIntent?: (tabId: string) => void;
   isChangingTab?: boolean;
   className?: string;
   showCount?: boolean;
@@ -127,6 +128,7 @@ function TabList({
   tabs,
   activeTab,
   onTabChange,
+  onTabIntent,
   isChangingTab = false,
   className = '',
   showCount = false,
@@ -138,6 +140,12 @@ function TabList({
     if (tab?.disabled || isChangingTab) return;
     onTabChange(tabId);
   }, [tabs, isChangingTab, onTabChange]);
+
+  const handleTabIntent = useCallback((tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab?.disabled || activeTab === tabId) return;
+    onTabIntent?.(tabId);
+  }, [activeTab, tabs, onTabIntent]);
 
   // variant별 컨테이너 스타일
   const containerClasses = {
@@ -197,6 +205,9 @@ function TabList({
               key={tab.id}
               type="button"
               onClick={() => handleTabChange(tab.id)}
+              onMouseEnter={() => handleTabIntent(tab.id)}
+              onFocus={() => handleTabIntent(tab.id)}
+              onPointerDown={() => handleTabIntent(tab.id)}
               className={buttonClasses}
               aria-current={isActive ? 'page' : undefined}
               disabled={tab.disabled || isChangingTab}

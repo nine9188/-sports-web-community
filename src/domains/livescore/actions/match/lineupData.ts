@@ -155,14 +155,18 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
       };
     };
 
-    return {
+    const response = {
+      home: enhanceTeamLineup(homeTeamData, homeCaptainId),
+      away: enhanceTeamLineup(awayTeamData, awayCaptainId)
+    };
+
+    const result: LineupsResponse = {
       success: true,
-      response: {
-        home: enhanceTeamLineup(homeTeamData, homeCaptainId),
-        away: enhanceTeamLineup(awayTeamData, awayCaptainId)
-      },
+      response,
       message: '라인업 데이터를 성공적으로 가져왔습니다'
     };
+
+    return result;
 
   } catch (error) {
     return {

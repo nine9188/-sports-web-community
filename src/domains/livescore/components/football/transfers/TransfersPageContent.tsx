@@ -7,6 +7,8 @@ import { formatTransferType } from '@/domains/livescore/types/transfers';
 import { Container, ContainerHeader, ContainerTitle, Pagination } from '@/shared/components/ui';
 import { TransferFilters as TransferFiltersComponent } from '@/domains/livescore/components/football/transfers';
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
+import { getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl, teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: Placeholder URL
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -179,7 +181,7 @@ export default async function TransfersPageContent({
                         </div>
                         <div className="min-w-0">
                           <Link
-                            href={`/livescore/football/player/${transfer.player.id}`}
+                            href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                             className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate block"
                           >
                             {playerKoreanNames[transfer.player.id] || transfer.player.name}
@@ -198,7 +200,10 @@ export default async function TransfersPageContent({
                             size={20}
                           />
                           <Link
-                            href={`/livescore/football/team/${transfer.transfers[0]?.teams?.out?.id}`}
+                            href={teamUrl(
+                              transfer.transfers[0]?.teams?.out?.id || 0,
+                              getTeamSlugFromName(transfer.transfers[0]?.teams?.out?.name || '')
+                            )}
                             className="text-[13px] text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
                           >
                             {(() => {
@@ -222,7 +227,10 @@ export default async function TransfersPageContent({
                             size={20}
                           />
                           <Link
-                            href={`/livescore/football/team/${transfer.transfers[0]?.teams?.in?.id}`}
+                            href={teamUrl(
+                              transfer.transfers[0]?.teams?.in?.id || 0,
+                              getTeamSlugFromName(transfer.transfers[0]?.teams?.in?.name || '')
+                            )}
                             className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate font-medium"
                           >
                             {(() => {
@@ -276,7 +284,7 @@ export default async function TransfersPageContent({
                       </div>
 
                       <Link
-                        href={`/livescore/football/player/${transfer.player.id}`}
+                        href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                         className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-[13px]'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
                       >
                         {playerKoreanNames[transfer.player.id] || transfer.player.name}
@@ -300,7 +308,7 @@ export default async function TransfersPageContent({
                       <div className="col-span-3 flex items-center space-x-1 min-w-0">
                         <TeamLogo teamName={latestTransfer.teams.out.name} logoUrl={teamLogoUrls[latestTransfer.teams.out.id]} size={16} />
                         <Link
-                          href={`/livescore/football/team/${latestTransfer.teams.out.id}`}
+                          href={teamUrl(latestTransfer.teams.out.id, getTeamSlugFromName(latestTransfer.teams.out.name))}
                           className="text-xs text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
                           title={latestTransfer.teams.out.name}
                         >
@@ -320,7 +328,7 @@ export default async function TransfersPageContent({
                       <div className="col-span-3 flex items-center space-x-1 min-w-0">
                         <TeamLogo teamName={latestTransfer.teams.in.name} logoUrl={teamLogoUrls[latestTransfer.teams.in.id]} size={16} />
                         <Link
-                          href={`/livescore/football/team/${latestTransfer.teams.in.id}`}
+                          href={teamUrl(latestTransfer.teams.in.id, getTeamSlugFromName(latestTransfer.teams.in.name))}
                           className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate"
                           title={latestTransfer.teams.in.name}
                         >

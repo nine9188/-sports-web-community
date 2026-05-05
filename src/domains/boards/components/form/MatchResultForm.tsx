@@ -8,7 +8,6 @@ import { CalendarIcon, Search } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Calendar from '@/shared/components/Calendar';
 import type { MatchData } from '@/domains/livescore/actions/footballApi';
-import Spinner from '@/shared/components/Spinner';
 import { Button } from '@/shared/components/ui';
 import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
@@ -218,7 +217,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         <div className="max-h-[300px] overflow-y-auto px-4">
           {loading ? (
             <div className="flex justify-center items-center h-40">
-              <Spinner size="md" />
+              <p className="text-xs text-gray-500 dark:text-gray-400">불러오는 중...</p>
             </div>
           ) : Object.keys(groupedMatches).length === 0 ? (
             <div className="text-center py-6 text-gray-500 text-xs">

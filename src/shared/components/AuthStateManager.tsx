@@ -30,7 +30,6 @@ const AuthStateManager = React.memo(function AuthStateManager({
   isProfileOpen,
   onProfileClose,
   onProfileClick,
-  isMobilePhone,
 }: {
   children: React.ReactNode,
   authSection: React.ReactNode,

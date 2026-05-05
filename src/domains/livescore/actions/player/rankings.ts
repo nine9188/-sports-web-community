@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
 import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getPlayersKoreanNames } from './getKoreanName';
 
 /**
  * API 응답의 랭킹 항목 타입
@@ -185,11 +186,17 @@ export const fetchCachedPlayerRankings = cache(fetchPlayerRankings);
  * 클라이언트에서 서브탭 클릭 시 해당 타입만 호출
  */
 type RankingApiType = 'topscorers' | 'topassists' | 'topyellowcards' | 'topredcards';
+type SingleRankingResponse = {
+  rankings: PlayerRanking[];
+  playerPhotoUrls: Record<number, string>;
+  teamLogoUrls: Record<number, string>;
+  playerKoreanNames: Record<number, string | null>;
+};
 
 export async function fetchSingleRanking(
   leagueId: number,
   rankingType: RankingApiType
-): Promise<{ rankings: PlayerRanking[]; playerPhotoUrls: Record<number, string>; teamLogoUrls: Record<number, string> }> {
+): Promise<SingleRankingResponse> {
   try {
     const now = new Date();
     const year = now.getFullYear();
@@ -202,7 +209,7 @@ export async function fetchSingleRanking(
     });
 
     if (!response?.response || !Array.isArray(response.response)) {
-      return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {} };
+      return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {}, playerKoreanNames: {} };
     }
 
     const rankings: PlayerRanking[] = response.response
@@ -239,13 +246,14 @@ export async function fetchSingleRanking(
     const playerIds = rankings.map(r => r.player.id).filter(Boolean);
     const teamIds = rankings.map(r => r.statistics[0]?.team?.id).filter(Boolean);
 
-    const [playerPhotoUrls, teamLogoUrls] = await Promise.all([
+    const [playerPhotoUrls, teamLogoUrls, playerKoreanNames] = await Promise.all([
       playerIds.length > 0 ? getPlayerPhotoUrls(playerIds) : {},
       teamIds.length > 0 ? getTeamLogoUrls(teamIds) : {},
+      playerIds.length > 0 ? getPlayersKoreanNames(playerIds) : {},
     ]);
 
-    return { rankings, playerPhotoUrls, teamLogoUrls };
+    return { rankings, playerPhotoUrls, teamLogoUrls, playerKoreanNames };
   } catch {
-    return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {} };
+    return { rankings: [], playerPhotoUrls: {}, teamLogoUrls: {}, playerKoreanNames: {} };
   }
 }

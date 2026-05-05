@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { toPng } from 'html-to-image';
 import { Camera, RefreshCw, PenSquare } from 'lucide-react';
-import Spinner from '@/shared/components/Spinner';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
@@ -487,7 +486,7 @@ export default function Formation({
                        hover:text-gray-900 dark:hover:text-white transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {capturing ? <Spinner size="xs" /> : <Camera className="w-3.5 h-3.5" />}
+            {!capturing && <Camera className="w-3.5 h-3.5" />}
             {capturing ? '생성 중...' : '저장/공유'}
           </button>
           <div className="w-px h-3.5 bg-black/10 dark:bg-white/10" />
@@ -499,7 +498,7 @@ export default function Formation({
                        hover:text-gray-900 dark:hover:text-white transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {posting ? <Spinner size="xs" /> : <PenSquare className="w-3.5 h-3.5" />}
+            {!posting && <PenSquare className="w-3.5 h-3.5" />}
             {posting ? '업로드 중...' : '게시글 작성'}
           </button>
         </div>

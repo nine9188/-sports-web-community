@@ -90,7 +90,7 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
     });
 
     // 최신 시즌 순으로 정렬
-    return uniqueTrophies.sort((a, b) => {
+    const sortedTrophies = uniqueTrophies.sort((a, b) => {
       // 시즌 정보가 없으면 가장 오래된 것으로 간주
       if (!a.season) return 1;
       if (!b.season) return -1;
@@ -104,6 +104,7 @@ export async function fetchPlayerTrophies(playerId: number): Promise<TrophyData[
       // 최신 시즌이 먼저 오도록 내림차순 정렬
       return getStartYear(b.season) - getStartYear(a.season);
     });
+    return sortedTrophies;
   } catch (error) {
     console.error('선수 트로피 기록 가져오기 오류:', error);
     return [];

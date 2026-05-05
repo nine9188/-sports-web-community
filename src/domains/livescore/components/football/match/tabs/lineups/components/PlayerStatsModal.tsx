@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerStatsData } from '@/domains/livescore/types/lineup';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -356,7 +358,7 @@ export default function PlayerStatsModal({
                 {/* 선수 상세 정보 링크 */}
                 <div className="mt-4">
                   <Link
-                    href={`/livescore/football/player/${playerId}`}
+                    href={playerUrl(playerId, getPlayerSlugFromName(playerInfo.name))}
                     className="block w-full py-2.5 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-[13px] text-center"
                   >
                     선수 정보 더보기

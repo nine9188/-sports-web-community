@@ -1,13 +1,18 @@
 'use client';
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getCachedPowerTopPlayersData } from '@/domains/livescore/actions/match/headtohead';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { getMatchSlug, getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { matchUrl, playerUrl, teamUrl } from '@/domains/livescore/utils/urls';
+import { matchKeys } from '@/shared/constants/queryKeys';
 
 // 4590 표준: placeholder URLs
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -18,6 +23,7 @@ interface PowerProps {
   homeTeam: Team;
   awayTeam: Team;
   playerKoreanNames?: PlayerKoreanNames;
+  mode?: 'all' | 'summary' | 'comparison' | 'recent' | 'comparisonRecent' | 'h2h' | 'topPlayers';
   data: {
     teamA: number;
     teamB: number;
@@ -52,25 +58,72 @@ interface PowerProps {
   };
 }
 
-export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
+export default function Power({ matchId, data: initialData, homeTeam, awayTeam, playerKoreanNames = {}, mode = 'all' }: PowerProps) {
   const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
+  const shouldFetchTopPlayers =
+    ['all', 'topPlayers'].includes(mode) &&
+    initialData.teamA > 0 &&
+    initialData.teamB > 0 &&
+    initialData.topPlayers.teamA.topScorers.length === 0 &&
+    initialData.topPlayers.teamA.topAssist.length === 0 &&
+    initialData.topPlayers.teamB.topScorers.length === 0 &&
+    initialData.topPlayers.teamB.topAssist.length === 0;
+
+  const topPlayersQuery = useQuery({
+    queryKey: [...matchKeys.power(matchId, initialData.teamA, initialData.teamB), 'topPlayers'],
+    queryFn: async () => {
+      const result = await getCachedPowerTopPlayersData(initialData.teamA, initialData.teamB, 5);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to load top players');
+      }
+      return result.data;
+    },
+    enabled: shouldFetchTopPlayers,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  const data = topPlayersQuery.data
+    ? {
+        ...initialData,
+        topPlayers: topPlayersQuery.data.topPlayers,
+        playerPhotoUrls: {
+          ...(initialData.playerPhotoUrls || {}),
+          ...(topPlayersQuery.data.playerPhotoUrls || {}),
+        },
+        teamLogoUrls: {
+          ...(initialData.teamLogoUrls || {}),
+          ...(topPlayersQuery.data.teamLogoUrls || {}),
+        },
+      }
+    : initialData;
   // 4590 표준: teamLogoUrls에서 URL 조회 헬퍼
   const getTeamLogo = (teamId: number) => data.teamLogoUrls?.[teamId] || TEAM_PLACEHOLDER;
 
   // 팀 메타 추출 (이름만)
   const findTeamMeta = (id: number) => {
     const item = data.h2h.items.find((m) => (m.teams.home?.id === id) || (m.teams.away?.id === id))
-    const originalName = item ? (item.teams.home?.id === id ? item.teams.home?.name : item.teams.away?.name) : undefined
+    const originalName = item
+      ? (item.teams.home?.id === id ? item.teams.home?.name : item.teams.away?.name)
+      : id === homeTeam.id
+        ? homeTeam.name
+        : id === awayTeam.id
+          ? awayTeam.name
+          : undefined
 
     // 한국어 매핑 시도, 없으면 원래 영어 이름 사용
     const koreanName = getTeamDisplayName(id, { language: 'ko' })
     const displayName = koreanName.startsWith('팀 ') ? (originalName || `#${id}`) : koreanName
 
-    return { name: displayName }
+    return { name: displayName, slugName: originalName || displayName }
   }
 
   const teamAMeta = findTeamMeta(data.teamA)
   const teamBMeta = findTeamMeta(data.teamB)
+  const teamHref = (id: number, name?: string) => teamUrl(id, getTeamSlugFromName(name || `team-${id}`))
+  const playerHref = (id: number, name?: string) => playerUrl(id, getPlayerSlugFromName(name || `player-${id}`))
+  const fixtureHref = (id: number, home?: string, away?: string) => matchUrl(id, getMatchSlug(home || '', away || ''))
 
   // 평균 득/실점 계산 (최근 폼 기준)
   const gamesA = Math.max(1, data.recent.teamA.last)
@@ -79,11 +132,33 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
   const avgAgainstA = data.recent.teamA.summary.goalsAgainst / gamesA
   const avgForB = data.recent.teamB.summary.goalsFor / gamesB
   const avgAgainstB = data.recent.teamB.summary.goalsAgainst / gamesB
+  const showComparison = ['all', 'summary', 'comparison', 'comparisonRecent'].includes(mode);
+  const showRecent = ['all', 'summary', 'recent', 'comparisonRecent'].includes(mode);
+  const showH2H = ['all', 'summary', 'h2h'].includes(mode);
+  const showTopPlayers = ['all', 'topPlayers'].includes(mode);
+  const hasTopPlayers =
+    data.topPlayers.teamA.topScorers.length > 0 ||
+    data.topPlayers.teamA.topAssist.length > 0 ||
+    data.topPlayers.teamB.topScorers.length > 0 ||
+    data.topPlayers.teamB.topAssist.length > 0;
+  const isTopPlayersLoading = showTopPlayers && shouldFetchTopPlayers && topPlayersQuery.isPending;
+  const isTopPlayersEmpty = showTopPlayers && !isTopPlayersLoading && !hasTopPlayers;
+  const renderTopPlayersState = () => {
+    if (!isTopPlayersLoading && !isTopPlayersEmpty) return null;
+
+    return (
+      <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        {isTopPlayersLoading ? '불러오는 중...' : '데이터가 없습니다.'}
+      </div>
+    );
+  };
 
   // 바 차트 너비 정규화는 각 섹션에서 상대 비교로 처리
 
   return (
     <>
+      {showComparison && (
+      <>
       {/* 팀 비교(모바일 우선) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
         <ContainerHeader>
@@ -93,7 +168,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         {/* 1) VS행: 팀명, 순위, 승무패 */}
         <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1">
           <div className="text-right px-1">
-            <Link href={`/livescore/football/team/${data.teamA}`} className="group flex items-center justify-end gap-2 mb-1">
+            <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="group flex items-center justify-end gap-2 mb-1">
               <div className="font-semibold truncate text-right text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{teamAMeta.name}</div>
               <UnifiedSportsImageClient
                 src={getTeamLogo(data.teamA)}
@@ -120,7 +195,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             <div className="text-lg font-extrabold text-gray-900 dark:text-[#F0F0F0]">VS</div>
           </div>
           <div className="text-left px-1">
-            <Link href={`/livescore/football/team/${data.teamB}`} className="group flex items-center justify-start gap-2 mb-1">
+            <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="group flex items-center justify-start gap-2 mb-1">
               <UnifiedSportsImageClient
                 src={getTeamLogo(data.teamB)}
                 alt={teamBMeta.name}
@@ -206,6 +281,11 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
       </Container>
 
       {/* 최근 경기 - Team A (모바일) */}
+      </>
+      )}
+
+      {showRecent && (
+      <>
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
@@ -240,7 +320,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={it.fixtureId}
-                  href={`/livescore/football/match/${it.fixtureId}`}
+                  href={fixtureHref(it.fixtureId, teamAMeta.slugName, it.opponent.name)}
                   className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-1.5 text-xs">
@@ -300,7 +380,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={it.fixtureId}
-                  href={`/livescore/football/match/${it.fixtureId}`}
+                  href={fixtureHref(it.fixtureId, it.opponent.name, teamBMeta.slugName)}
                   className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-1.5 text-xs">
@@ -354,7 +434,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={it.fixtureId}
-                      href={`/livescore/football/match/${it.fixtureId}`}
+                      href={fixtureHref(it.fixtureId, teamAMeta.slugName, it.opponent.name)}
                       className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-1.5 text-xs">
@@ -403,7 +483,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={it.fixtureId}
-                      href={`/livescore/football/match/${it.fixtureId}`}
+                      href={fixtureHref(it.fixtureId, it.opponent.name, teamBMeta.slugName)}
                       className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-1.5 text-xs">
@@ -430,6 +510,11 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         </ContainerContent>
       </Container>
 
+      </>
+      )}
+
+      {showH2H && (
+      <>
       {/* 최근 맞대결 리스트: 중앙 기준 좌/우 분할 */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
         <ContainerHeader>
@@ -446,7 +531,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
             return (
               <Link
                 key={m.fixtureId}
-                href={`/livescore/football/match/${m.fixtureId}`}
+                href={fixtureHref(m.fixtureId, m.teams.home.name, m.teams.away.name)}
                 className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-[13px] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
                 <div className="flex items-center justify-end px-1 gap-2">
@@ -555,6 +640,10 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
         </ContainerContent>
       </Container>
 
+      </>
+      )}
+      {showTopPlayers && (
+      <>
       {/* 팀 탑 플레이어 - Team A (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
@@ -578,6 +667,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
+            {data.topPlayers.teamA.topScorers.length === 0 && renderTopPlayersState()}
             {data.topPlayers.teamA.topScorers.map((playerA, index) => {
               const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -585,7 +675,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={`scorer-a-mobile-${index}`}
-                  href={`/livescore/football/player/${playerA.playerId}`}
+                  href={playerHref(playerA.playerId, playerA.name)}
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -605,6 +695,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
+            {data.topPlayers.teamA.topAssist.length === 0 && renderTopPlayersState()}
             {data.topPlayers.teamA.topAssist.map((playerA, index) => {
               const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -612,7 +703,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={`assist-a-mobile-${index}`}
-                  href={`/livescore/football/player/${playerA.playerId}`}
+                  href={playerHref(playerA.playerId, playerA.name)}
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -650,6 +741,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
+            {data.topPlayers.teamB.topScorers.length === 0 && renderTopPlayersState()}
             {data.topPlayers.teamB.topScorers.map((playerB, index) => {
               const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -657,7 +749,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={`scorer-b-mobile-${index}`}
-                  href={`/livescore/football/player/${playerB.playerId}`}
+                  href={playerHref(playerB.playerId, playerB.name)}
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -677,6 +769,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
+            {data.topPlayers.teamB.topAssist.length === 0 && renderTopPlayersState()}
             {data.topPlayers.teamB.topAssist.map((playerB, index) => {
               const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -684,7 +777,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
               return (
                 <Link
                   key={`assist-b-mobile-${index}`}
-                  href={`/livescore/football/player/${playerB.playerId}`}
+                  href={playerHref(playerB.playerId, playerB.name)}
                   className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -708,7 +801,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
           <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
             {/* Team A 섹션 */}
             <div>
-              <Link href={`/livescore/football/team/${data.teamA}`} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
+              <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
                 <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamA)}
@@ -727,6 +820,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
+                {data.topPlayers.teamA.topScorers.length === 0 && renderTopPlayersState()}
                 {data.topPlayers.teamA.topScorers.map((playerA, index) => {
                   const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -734,7 +828,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={`scorer-a-desktop-${index}`}
-                      href={`/livescore/football/player/${playerA.playerId}`}
+                      href={playerHref(playerA.playerId, playerA.name)}
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -754,6 +848,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
+                {data.topPlayers.teamA.topAssist.length === 0 && renderTopPlayersState()}
                 {data.topPlayers.teamA.topAssist.map((playerA, index) => {
                   const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -761,7 +856,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={`assist-a-desktop-${index}`}
-                      href={`/livescore/football/player/${playerA.playerId}`}
+                      href={playerHref(playerA.playerId, playerA.name)}
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -780,7 +875,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
             {/* Team B 섹션 */}
             <div>
-              <Link href={`/livescore/football/team/${data.teamB}`} className="flex items-center justify-start gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
+              <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="flex items-center justify-start gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamB)}
                   alt={teamBMeta.name}
@@ -799,6 +894,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
+                {data.topPlayers.teamB.topScorers.length === 0 && renderTopPlayersState()}
                 {data.topPlayers.teamB.topScorers.map((playerB, index) => {
                   const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -806,7 +902,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={`scorer-b-desktop-${index}`}
-                      href={`/livescore/football/player/${playerB.playerId}`}
+                      href={playerHref(playerB.playerId, playerB.name)}
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
@@ -826,6 +922,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
 
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
+                {data.topPlayers.teamB.topAssist.length === 0 && renderTopPlayersState()}
                 {data.topPlayers.teamB.topAssist.map((playerB, index) => {
                   const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -833,7 +930,7 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
                   return (
                     <Link
                       key={`assist-b-desktop-${index}`}
-                      href={`/livescore/football/player/${playerB.playerId}`}
+                      href={playerHref(playerB.playerId, playerB.name)}
                       className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     >
                       <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
@@ -849,6 +946,8 @@ export default function Power({ data, playerKoreanNames = {} }: PowerProps) {
           </div>
         </ContainerContent>
       </Container>
+      </>
+      )}
     </>
   );
 }

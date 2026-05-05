@@ -8,6 +8,8 @@
  */
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
 
 /**
  * 다크모드 전용 이미지가 있는 리그 ID 목록
@@ -303,6 +305,7 @@ export function generateMatchCardHtml(
   const homeTeamName = homeTeam.name;
   const awayTeamName = awayTeam.name;
   const leagueName = league.name;
+  const href = matchUrl(matchId, getMatchSlug(homeTeam.name, awayTeam.name));
 
   // 이미지 URL 생성
   const leagueImages = getImageUrls(league.logo, league.id, 'leagues');
@@ -343,7 +346,7 @@ export function generateMatchCardHtml(
 
   return `
     <div class="match-card${processedClass}" data-type="match-card" data-match-id="${matchId}"${processedAttr}>
-      <a href="/livescore/football/match/${matchId}">
+      <a href="${href}">
         <div class="league-header">
           <div style="display: flex; align-items: center;">
             <div class="league-logo-box">
@@ -424,6 +427,7 @@ function generateInlineStyleHtml(
   leagueName: string
 ): string {
   const statusStyle = statusInfo.isLive ? 'color: #059669; font-weight: 500;' : '';
+  const href = matchUrl(matchId, getMatchSlug(homeTeam.name, awayTeam.name));
 
   return `
     <div data-type="match-card" data-match-id="${matchId}" ${dataMatchAttr} style="
@@ -437,7 +441,7 @@ function generateInlineStyleHtml(
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       display: block;
     ">
-      <a href="/livescore/football/match/${matchId}" style="display: block; text-decoration: none; color: inherit;">
+      <a href="${href}" style="display: block; text-decoration: none; color: inherit;">
         <div style="
           padding: 12px;
           background-color: #f9fafb;

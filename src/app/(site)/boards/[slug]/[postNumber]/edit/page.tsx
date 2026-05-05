@@ -7,7 +7,6 @@ import { getPostEditData } from '@/domains/boards/actions';
 import type { DealInfo } from '@/domains/boards/types/hotdeal';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import Spinner from '@/shared/components/Spinner';
 import '@/styles/post-content.css';
 
 // Dynamic import로 Tiptap 에디터 번들을 lazy load
@@ -15,8 +14,8 @@ const PostEditForm = dynamicImport(
   () => import('@/domains/boards/components/post/PostEditForm'),
   {
     loading: () => (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
+      <div className="py-20 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
       </div>
     )
   }

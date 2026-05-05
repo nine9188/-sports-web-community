@@ -1,5 +1,7 @@
 import type { PlayerCardData } from '@/shared/types/playerCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder URLs
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -40,13 +42,14 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
 
   const displayName = playerData.koreanName || playerData.name;
   const teamDisplayName = playerData.team?.koreanName || playerData.team?.name || '';
+  const href = playerUrl(playerId, getPlayerSlugFromName(playerData.name));
 
   // 다크모드 이미지 URL 생성
   const teamImages = getImageUrls(playerData.team?.logo, playerData.team?.id, 'teams');
 
   return `
     <div class="player-card" data-type="player-card" data-player-id="${playerId}">
-      <a href="/livescore/football/player/${playerId}">
+      <a href="${href}">
         <!-- 헤더: 팀 로고 + 팀명 -->
         <div class="league-header">
           <div style="display: flex; align-items: center;">

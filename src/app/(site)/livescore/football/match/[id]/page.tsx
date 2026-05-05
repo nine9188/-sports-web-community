@@ -1,6 +1,5 @@
-import { permanentRedirect } from 'next/navigation';
-import { fetchCachedMatchFullData } from '@/domains/livescore/actions/match/matchData';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
 
 /**
  * /match/[id] → /match/[id]/[slug] 리다이렉트 전용
@@ -16,25 +15,10 @@ export default async function MatchRedirect({
   const { id } = await params;
   const { tab } = await searchParams;
 
-  let slug = 'match';
+  const slug = await resolveCanonicalMatchSlug(id);
 
-  try {
-    const matchData = await fetchCachedMatchFullData(id, {
-      fetchEvents: false,
-      fetchLineups: false,
-      fetchStats: false,
-      fetchStandings: false,
-    });
-
-    if (matchData.success && matchData.match) {
-      const homeTeam = matchData.match.teams?.home?.name;
-      const awayTeam = matchData.match.teams?.away?.name;
-      if (homeTeam && awayTeam) {
-        slug = getMatchSlug(homeTeam, awayTeam);
-      }
-    }
-  } catch {
-    slug = 'match';
+  if (!slug) {
+    notFound();
   }
 
   const tabParam = tab ? `?tab=${tab}` : '';

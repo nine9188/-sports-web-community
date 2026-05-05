@@ -1,10 +1,8 @@
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getMyPosts } from '@/domains/settings/actions/my-posts';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import MyPostsContent from '@/domains/settings/components/my-posts/MyPostsContent';
 import { Container, ContainerContent, Pagination } from '@/shared/components/ui';
-import Spinner from '@/shared/components/Spinner';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -65,17 +63,11 @@ export default async function MyPostsPage({
           </ContainerContent>
         </Container>
 
-        <Suspense fallback={
-          <div className="flex justify-center py-8">
-            <Spinner size="xl" />
-          </div>
-        }>
-          <MyPostsContent
-            key={`my-posts-content-page-${page}`}
-            initialPosts={data || []}
-            initialTotalCount={totalCount || 0}
-          />
-        </Suspense>
+        <MyPostsContent
+          key={`my-posts-content-page-${page}`}
+          initialPosts={data || []}
+          initialTotalCount={totalCount || 0}
+        />
 
         <div className="px-4 sm:px-6">
           <Pagination

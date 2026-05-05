@@ -41,10 +41,6 @@ export default function AttendanceChecker() {
           sessionStorage.setItem(checkedKey, '1')
 
           if (result.isFirstLoginToday) {
-            console.log('[AttendanceChecker] today first attendance complete:', {
-              consecutiveDays: result.consecutiveDays,
-              bonusAwarded: result.bonusAwarded,
-            })
           }
         }
       } catch (error) {

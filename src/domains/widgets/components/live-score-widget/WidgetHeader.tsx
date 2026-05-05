@@ -2,12 +2,6 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 
-/**
- * 위젯 헤더 서버 컴포넌트
- *
- * - "빅매치" 타이틀 + "전체 경기" 링크
- * - 서버에서 렌더링되어 LCP에 포함됨
- */
 export default function WidgetHeader() {
   return (
     <ContainerHeader className="justify-between">

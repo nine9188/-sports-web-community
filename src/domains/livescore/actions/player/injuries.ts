@@ -71,13 +71,10 @@ export async function fetchPlayerInjuries(playerId: number): Promise<InjuryData[
       return [];
     }
 
-    // 현재 시즌과 이전 시즌 계산
-    const currentYear = new Date().getFullYear();
-    const seasons = [
-      `${currentYear}`,
-      `${currentYear-1}`,
-      `${currentYear-2}`
-    ];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentSeason = now.getMonth() >= 6 ? currentYear : currentYear - 1;
+    const seasons = [`${currentSeason}`];
 
     // 모든 시즌의 부상 데이터를 병렬로 가져오기
     const responsesData = await Promise.all(

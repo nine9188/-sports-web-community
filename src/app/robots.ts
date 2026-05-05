@@ -13,12 +13,9 @@ export default function robots(): MetadataRoute.Robots {
           '/test','/ui','/*?from=*','/*?sort=*','/.well-known/',
         ],
       },
-      { userAgent: 'Amazonbot', disallow: '/' },
-      { userAgent: 'Amzn-SearchBot', disallow: '/' },
       { userAgent: 'SERankingBot', disallow: '/' },
-      { userAgent: 'Yeti', allow: '/' },
     ],
-    host: siteConfig.url,
+    host: new URL(siteConfig.url).host,
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };
 }

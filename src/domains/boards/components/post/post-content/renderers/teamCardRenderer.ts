@@ -1,5 +1,7 @@
 import type { TeamCardData } from '@/shared/types/teamCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 const SUPABASE_URL = 'https://cdn.4590football.com';
 
@@ -33,6 +35,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
 
   const displayName = teamData.koreanName || teamData.name;
   const leagueDisplayName = teamData.league?.koreanName || teamData.league?.name || '';
+  const href = teamUrl(teamId, getTeamSlugFromName(teamData.name));
 
   // 다크모드 이미지 URL 생성
   const leagueImages = getImageUrls(teamData.league?.logo, teamData.league?.id, 'leagues');
@@ -40,7 +43,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
 
   return `
     <div class="team-card" data-type="team-card" data-team-id="${teamId}">
-      <a href="/livescore/football/team/${teamId}">
+      <a href="${href}">
         <!-- 헤더: 리그 로고 + 리그명 -->
         <div class="league-header">
           <div style="display: flex; align-items: center;">

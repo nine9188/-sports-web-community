@@ -4,39 +4,18 @@ import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/foot
 import { fetchTeamFullData, fetchTeamSeoData } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
+import {
+  SITE_ORGANIZATION_ID,
+  SITE_WEBSITE_ID,
+  absoluteSiteUrl,
+  buildBreadcrumbJsonLd,
+  buildJsonLdId,
+  isUsableJsonLdImage,
+  jsonLdScriptProps,
+} from '@/shared/utils/jsonLd';
 import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { slugify } from '@/domains/livescore/utils/slugs';
-
-type TeamPagePerfStep = {
-  label: string;
-  ms: number;
-};
-
-function createTeamPagePerfTrace(teamId: string, tab: string) {
-  const enabled = process.env.NODE_ENV === 'development' || process.env.TEAM_DETAIL_PERF === '1';
-  const startedAt = Date.now();
-  const steps: TeamPagePerfStep[] = [];
-
-  return {
-    mark: async <T,>(label: string, task: () => Promise<T>): Promise<T> => {
-      if (!enabled) return task();
-
-      const start = Date.now();
-      try {
-        return await task();
-      } finally {
-        steps.push({ label, ms: Date.now() - start });
-      }
-    },
-    log: (label: string) => {
-      if (!enabled) return;
-
-      const detail = steps.map((step) => `${step.label}=${step.ms}ms`).join(' | ');
-      console.info(`[team-page-perf] ${label} team=${teamId} tab=${tab} total=${Date.now() - startedAt}ms${detail ? ` | ${detail}` : ''}`);
-    },
-  };
-}
+import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -79,10 +58,8 @@ export async function generateMetadata({
 // 유효한 탭 목록
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
-/** 팀 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
+/** 팀 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
 async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
-  const perf = createTeamPagePerfTrace(id, tab);
-
   try {
     // 유효한 탭인지 확인
     const initialTab = VALID_TABS.includes(tab as TeamTabType)
@@ -90,16 +67,13 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       : 'overview';
 
     // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
-    const headersList = await perf.mark('headers', () => import('next/headers').then(m => m.headers()));
-    const isBot = headersList.get('x-is-bot') === '1';
+    const needsMatches = initialTab === 'fixtures';
+    const needsSquad = initialTab === 'squad';
+    const needsPlayerStats = ['squad', 'stats'].includes(initialTab);
+    const needsStandings = initialTab === 'standings';
+    const needsTransfers = initialTab === 'transfers';
 
-    const needsMatches = !isBot && initialTab === 'fixtures';
-    const needsSquad = !isBot && initialTab === 'squad';
-    const needsPlayerStats = !isBot && ['squad', 'stats'].includes(initialTab);
-    const needsStandings = !isBot && initialTab === 'standings';
-    const needsTransfers = !isBot && initialTab === 'transfers';
-
-    const initialData = await perf.mark('fetchTeamFullData', () => fetchTeamFullData(id, {
+    const initialData = await fetchTeamFullData(id, {
       fetchMatches: needsMatches,
       fetchSquad: needsSquad,
       fetchPlayerStats: needsPlayerStats,
@@ -107,7 +81,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       fetchTransfers: needsTransfers,
       fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
       matchLimit: 10,
-    }));
+    });
 
     if (!initialData.success || !initialData.teamData?.team) {
       notFound();
@@ -144,18 +118,15 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
 
     // 선수 한글명 일괄 조회 (DB)
     const playerKoreanNames = playerIds.size > 0
-      ? await perf.mark('db:player-korean-names', () => getPlayersKoreanNames(Array.from(playerIds)))
+      ? await getPlayersKoreanNames(Array.from(playerIds))
       : {};
 
     // SportsTeam JSON-LD 생성
     const team = initialData.teamData?.team?.team;
     const venue = initialData.teamData?.team?.venue;
-    const [teamMapping, leagueMapping] = await perf.mark('jsonld:mappings', () => Promise.all([
-      team ? getTeamById(Number(id)) : Promise.resolve(null),
-      initialData.standings?.data?.[0]?.league
-        ? getLeagueById(initialData.standings.data[0].league.id)
-        : Promise.resolve(null),
-    ]));
+    const teamMapping = team ? await getTeamById(Number(id)) : null;
+    const leagueIdFromData = initialData.standings?.data?.[0]?.league?.id || teamMapping?.league_id;
+    const leagueMapping = leagueIdFromData ? await getLeagueById(leagueIdFromData) : null;
 
     // 코치 정보 추출
     const coach = initialData.squad?.data?.find(
@@ -164,21 +135,33 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
 
     const teamSlug = slug || (team?.name ? slugify(team.name) : '') || 'team';
     const teamUrl = `${siteConfig.url}/livescore/football/team/${id}/${teamSlug}`;
+    const leagueId = leagueIdFromData;
+    const leagueUrl = leagueId ? `${siteConfig.url}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}` : undefined;
+    const teamLogoUrl = initialData.teamLogoUrls?.[Number(id)] || team?.logo;
+    const teamLogoJsonLdUrl = isUsableJsonLdImage(teamLogoUrl) ? absoluteSiteUrl(teamLogoUrl) : undefined;
+    const venueImageJsonLdUrl = isUsableJsonLdImage(initialData.venueImageUrl || venue?.image)
+      ? absoluteSiteUrl(initialData.venueImageUrl || venue?.image || '')
+      : undefined;
 
     const sportsTeamSchema = team ? {
       '@context': 'https://schema.org',
       '@type': 'SportsTeam',
+      '@id': buildJsonLdId(teamUrl, 'sports-team'),
       name: team.name,
       ...(teamMapping?.name_en ? { alternateName: teamMapping.name_en } : {}),
       url: teamUrl,
-      logo: team.logo || `${siteConfig.url}/og-image.png`,
+      isPartOf: { '@id': SITE_WEBSITE_ID },
+      publisher: { '@id': SITE_ORGANIZATION_ID },
+      ...(teamLogoJsonLdUrl ? { logo: teamLogoJsonLdUrl, image: teamLogoJsonLdUrl } : {}),
       ...(team.founded ? { foundingDate: String(team.founded) } : {}),
       sport: 'Football',
-      ...(leagueMapping ? {
+      ...(leagueMapping && leagueUrl ? {
         memberOf: {
           '@type': 'SportsOrganization',
-          name: leagueMapping.name_ko || initialData.standings?.data?.[0]?.league?.name,
-          url: `${siteConfig.url}/livescore/football/leagues/${initialData.standings?.data?.[0]?.league?.id}`,
+          '@id': buildJsonLdId(leagueUrl, 'sports-organization'),
+          name: leagueMapping.name_ko || initialData.standings?.data?.[0]?.league?.name || '',
+          url: leagueUrl,
+          sport: 'Football',
         },
       } : {}),
       ...(coach?.name ? {
@@ -187,52 +170,50 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
           name: coach.name,
         },
       } : {}),
-      location: venue?.name ? {
-        '@type': 'StadiumOrArena',
-        name: venue.name,
-        ...(venue.image ? { image: venue.image } : {}),
-        ...((venue.address || venue.city) ? {
-          address: {
-            '@type': 'PostalAddress',
-            ...(venue.address ? { streetAddress: venue.address } : {}),
-            ...(venue.city ? { addressLocality: venue.city } : {}),
-          },
-        } : {}),
-        ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
-      } : (team.country ? { '@type': 'Country', name: team.country } : undefined),
+      ...(venue?.name ? {
+        location: {
+          '@type': 'StadiumOrArena',
+          name: venue.name,
+          ...(venueImageJsonLdUrl ? { image: venueImageJsonLdUrl } : {}),
+          ...((venue.address || venue.city) ? {
+            address: {
+              '@type': 'PostalAddress',
+              ...(venue.address ? { streetAddress: venue.address } : {}),
+              ...(venue.city ? { addressLocality: venue.city } : {}),
+            },
+          } : {}),
+          ...(venue.capacity ? { maximumAttendeeCapacity: venue.capacity } : {}),
+        },
+      } : (team.country ? {
+        location: { '@type': 'Country', name: team.country },
+      } : {})),
     } : null;
 
     // BreadcrumbList JSON-LD
     const teamDisplayName = teamMapping?.name_ko || team?.name || '';
     const leagueDisplayName = leagueMapping?.name_ko || initialData.standings?.data?.[0]?.league?.name || '';
-    const leagueId = initialData.standings?.data?.[0]?.league?.id;
-    const breadcrumbSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
-        { '@type': 'ListItem', position: 2, name: '라이브스코어', item: `${siteConfig.url}/livescore/football` },
-        ...(leagueDisplayName && leagueId ? [{
-          '@type': 'ListItem', position: 3, name: leagueDisplayName, item: `${siteConfig.url}/livescore/football/leagues/${leagueId}`,
-        }] : []),
-        { '@type': 'ListItem', position: leagueDisplayName && leagueId ? 4 : 3, name: teamDisplayName, item: teamUrl },
+    const breadcrumbSchema = buildBreadcrumbJsonLd({
+      name: `${teamDisplayName || 'Team'} breadcrumb`,
+      items: [
+        { name: '홈', url: '/' },
+        { name: '라이브스코어', url: '/livescore/football' },
+        ...(leagueDisplayName && leagueId && leagueUrl ? [{ name: leagueDisplayName, url: leagueUrl }] : []),
+        { name: teamDisplayName, url: teamUrl },
       ],
-    };
+    });
 
     // 클라이언트 컴포넌트에 데이터 전달
-    perf.log('success');
-
     return (
       <>
         {sportsTeamSchema && (
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsTeamSchema) }}
+            {...jsonLdScriptProps(sportsTeamSchema)}
           />
         )}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+          {...jsonLdScriptProps(breadcrumbSchema)}
         />
         <TeamPageClient
           teamId={id}
@@ -243,7 +224,6 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       </>
     );
   } catch (error: unknown) {
-    perf.log('error');
     console.error('팀 페이지 로딩 오류:', error);
     notFound();
   }

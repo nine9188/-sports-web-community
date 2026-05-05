@@ -186,19 +186,8 @@ function MiniCalendar({
 
   if (isLoading) {
     return (
-      <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg animate-pulse">
-        <div className="flex items-center justify-between mb-3">
-          <div className="h-4 w-16 bg-[#EAEAEA] dark:bg-[#333333] rounded" />
-          <div className="h-4 w-20 bg-[#EAEAEA] dark:bg-[#333333] rounded" />
-        </div>
-        <div className="flex gap-1">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center py-1.5">
-              <div className="w-4 h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded mb-1" />
-              <div className="w-6 h-6 bg-[#EAEAEA] dark:bg-[#333333] rounded-full" />
-            </div>
-          ))}
-        </div>
+      <div className="p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
       </div>
     );
   }
@@ -386,10 +375,8 @@ function FullCalendar({
 
       {/* 달력 본체 */}
       {isLoading ? (
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-[#F5F5F5] dark:bg-[#262626] rounded animate-pulse" />
-          ))}
+        <div className="flex h-40 items-center justify-center text-[13px] text-gray-500 dark:text-gray-400">
+          불러오는 중...
         </div>
       ) : (
         <div className="grid grid-cols-7 gap-1">

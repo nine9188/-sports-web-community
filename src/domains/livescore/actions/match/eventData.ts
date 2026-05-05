@@ -1,18 +1,23 @@
 'use server';
 
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { MatchEvent } from '../../types/match';
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
-// 이벤트 데이터 응답 타입 정의
 export interface EventDataResponse {
   success: boolean;
   data?: MatchEvent[];
   error?: string;
 }
 
-// API 응답 이벤트 타입 정의
+export interface GoalEventDataResponse {
+  success: boolean;
+  data?: MatchEvent[];
+  error?: string;
+}
+
 interface ApiEvent {
   time: {
     elapsed: number;
@@ -36,22 +41,15 @@ interface ApiEvent {
   comments?: string;
 }
 
-/**
- * 특정 경기의 이벤트 데이터를 가져오는 서버 액션
- * @param matchId 경기 ID
- * @returns 경기 이벤트 데이터 및 상태
- */
 export async function fetchMatchEvents(matchId: string): Promise<EventDataResponse> {
   try {
     if (!matchId) {
       throw new Error('Match ID is required');
     }
 
-    // API 요청
     const data = await fetchFromFootballApi('fixtures/events', { fixture: matchId });
     let events = Array.isArray(data.response) ? data.response : [];
 
-    // 팀 데이터 일괄 조회 후 매핑
     const teamIds = Array.from(
       new Set(events.map((e: ApiEvent) => e.team?.id).filter((id: number | undefined): id is number => typeof id === 'number'))
     ) as number[];
@@ -73,20 +71,60 @@ export async function fetchMatchEvents(matchId: string): Promise<EventDataRespon
       }
       return event;
     });
-    
-    return { 
+
+    return {
       success: true,
       data: events
     };
-
   } catch (error) {
-    console.error('경기 이벤트 가져오기 오류:', error);
-    return { 
+    console.error('Match events fetch failed:', error);
+    return {
       success: false,
-      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다'
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }
 
-// 캐싱을 적용한 이벤트 데이터 가져오기
-export const fetchCachedMatchEvents = cache(fetchMatchEvents); 
+export async function fetchMatchGoalEvents(matchId: string): Promise<GoalEventDataResponse> {
+  try {
+    if (!matchId) {
+      throw new Error('Match ID is required');
+    }
+
+    const data = await fetchFromFootballApi('fixtures/events', { fixture: matchId });
+    const events = Array.isArray(data.response) ? data.response : [];
+
+    const goalEvents = events.filter((event: ApiEvent) => {
+      const type = event.type?.toLowerCase() || '';
+      const detail = event.detail?.toLowerCase() || '';
+
+      if (type === 'var' || detail.includes('cancelled')) return false;
+      if (type !== 'goal') return false;
+      if (detail.includes('missed')) return false;
+      return true;
+    });
+
+    return {
+      success: true,
+      data: goalEvents as MatchEvent[],
+    };
+  } catch (error) {
+    console.error('Match goal events fetch failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export const fetchCachedMatchEvents = cache(fetchMatchEvents);
+
+async function fetchMatchGoalEventsCached(matchId: string): Promise<GoalEventDataResponse> {
+  return unstable_cache(
+    () => fetchMatchGoalEvents(matchId),
+    ['match-goal-events-v2', matchId],
+    { revalidate: 300, tags: [`match-${matchId}`, `match-goal-events-${matchId}`] }
+  )();
+}
+
+export const fetchCachedMatchGoalEvents = cache(fetchMatchGoalEventsCached);

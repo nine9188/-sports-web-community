@@ -13,7 +13,7 @@ function plainNotFoundResponse() {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>페이지를 찾을 수 없습니다 | 4590 Football</title>
+  <title>Page not found | 4590 Football</title>
   <style>
     body{margin:0;background:#f8fafc;color:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     .wrap{min-height:100vh;display:flex;justify-content:center;padding:32px 16px;box-sizing:border-box}
@@ -32,12 +32,12 @@ function plainNotFoundResponse() {
   <div class="wrap">
     <div class="inner">
       <div class="card">
-        <div class="head"><h1>페이지를 찾을 수 없습니다</h1></div>
+        <div class="head"><h1>Page not found</h1></div>
         <div class="body">
           <div class="code">404</div>
-          <h2>요청하신 페이지를 찾을 수 없습니다</h2>
-          <p>페이지가 삭제되었거나 주소가 변경되었을 수 있습니다.</p>
-          <a href="/">메인페이지로 돌아가기</a>
+          <h2>The requested page could not be found.</h2>
+          <p>The page may have been deleted or the address may have changed.</p>
+          <a href="/">Go to home</a>
         </div>
       </div>
     </div>
@@ -54,71 +54,11 @@ function plainNotFoundResponse() {
   )
 }
 
-// Supabase 세션 조회를 스킵할 봇 목록
-const BOT_USER_AGENTS = [
-  'Amazonbot',
-  'Amzn-SearchBot',
-  'Googlebot',
-  'Bingbot',
-  'YandexBot',
-  'Baiduspider',
-  'DuckDuckBot',
-  'Slurp',
-  'SemrushBot',
-  'AhrefsBot',
-  'MJ12bot',
-  'DotBot',
-  'PetalBot',
-  'GPTBot',
-  'ChatGPT-User',
-  'CCBot',
-  'anthropic-ai',
-  'Claude-Web',
-  'facebookexternalhit',
-  'Twitterbot',
-  'LinkedInBot',
-  'bytespider',
-  'Scrapy',
-  'JEECRAWL',
-  'Yeti',
-  'SERankingBot',
-  'SERankingBacklinksBot',
-  'seranking',
-]
 
-// robots.txt에서 Disallow: / 로 차단한 봇 → 403 반환
-const BLOCKED_BOTS = [
-  'Amazonbot',
-  'Amzn-SearchBot',
-  'GPTBot',
-  'ChatGPT-User',
-  'CCBot',
-  'anthropic-ai',
-  'Claude-Web',
-  'SemrushBot',
-  'AhrefsBot',
-  'MJ12bot',
-  'DotBot',
-  'PetalBot',
-  'bytespider',
-  'SERankingBot',
-  'SERankingBacklinksBot',
-  'seranking',
-]
-
-function detectBot(ua: string | null): { isBot: boolean; isBlocked: boolean } {
-  if (!ua) return { isBot: false, isBlocked: false } // UA 없으면 일반 요청으로 허용
-  const lowerUA = ua.toLowerCase()
-  const isBot = BOT_USER_AGENTS.some(bot => lowerUA.includes(bot.toLowerCase()))
-  const isBlocked = BLOCKED_BOTS.some(bot => lowerUA.includes(bot.toLowerCase()))
-  return { isBot, isBlocked }
-}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host')?.toLowerCase().split(':')[0]
-  const userAgent = request.headers.get('user-agent')
-  const { isBot, isBlocked } = detectBot(userAgent)
 
   if (process.env.NODE_ENV === 'production' && host && LEGACY_INDEXED_HOSTS.has(host)) {
     const canonicalUrl = request.nextUrl.clone()
@@ -127,12 +67,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(canonicalUrl, 308)
   }
 
-  // 차단 대상 봇 → 즉시 403 반환 (Supabase 호출 없음)
-  if (isBlocked) {
-    return new NextResponse('Forbidden', { status: 403 })
-  }
-
-  // /test/* 경로는 프로덕션에서 차단 (API-Sports 쿼타 보호)
+  // Block internal test pages in production.
   if (pathname.startsWith('/test') && process.env.NODE_ENV === 'production') {
     return new NextResponse('Not Found', { status: 404 })
   }
@@ -141,7 +76,8 @@ export async function proxy(request: NextRequest) {
   if (worthlessPlayerMatch) {
     const playerId = Number(worthlessPlayerMatch[1])
     const playerSlug = worthlessPlayerMatch[2]?.toLowerCase()
-    if (request.method !== 'GET' && playerSlug === 'player') {
+    const isFallbackPlayerSlug = playerSlug === 'player' || playerSlug === `player-${playerId}`
+    if (request.method !== 'GET' && isFallbackPlayerSlug) {
       return new NextResponse('Not Found', {
         status: 404,
         headers: {
@@ -149,7 +85,7 @@ export async function proxy(request: NextRequest) {
         },
       })
     }
-    if (request.method === 'GET' && playerSlug === 'player') {
+    if (request.method === 'GET' && isFallbackPlayerSlug) {
       const requestHeaders = new Headers(request.headers)
       requestHeaders.set('x-skip-site-layout', '1')
       return NextResponse.next({
@@ -163,7 +99,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // SEO slug 리다이렉트: /team/33 → /team/33/slug (slug 없는 기존 URL 호환)
+  // Redirect legacy team URLs without a slug to the canonical slug URL.
   const teamMatch = pathname.match(/^\/livescore\/football\/team\/(\d+)$/)
   if (teamMatch) {
     const teamId = teamMatch[1]
@@ -180,27 +116,17 @@ export async function proxy(request: NextRequest) {
       url.pathname = `/livescore/football/team/${teamId}/${slug}`
       return NextResponse.redirect(url, 301)
     } catch {
-      // DB 조회 실패 시 fallback
+      // Fallback when the database lookup fails.
       const url = request.nextUrl.clone()
       url.pathname = `/livescore/football/team/${teamId}/team`
       return NextResponse.redirect(url, 301)
     }
   }
 
-  // SEO 봇 → 404 차단 없이 통과, x-is-bot 헤더만 설정
-  // 각 페이지/컴포넌트에서 x-is-bot 헤더를 확인하여 API-Sports 호출 스킵
-  if (isBot) {
-    const botResponse = NextResponse.next({
-      request: { headers: new Headers(request.headers) }
-    })
-    botResponse.headers.set('x-is-bot', '1')
-    return botResponse
-  }
-
-  // 경로 분류
-  const protectedPaths = ['/settings'] // 로그인 필요 경로
-  const authPaths = ['/signin', '/signup'] // 인증 페이지 (로그인 사용자 접근 방지)
-  // 콜백/소셜 회원가입은 로그인 사용자도 접근 가능해야 함
+  // Route classification
+  const protectedPaths = ['/settings'] // Login required paths.
+  const authPaths = ['/signin', '/signup'] // Auth pages should redirect logged-in users.
+  // Auth callbacks and social signup must remain accessible during login/signup flow.
   const authExceptionPaths = ['/auth/callback', '/auth/naver', '/social-signup']
 
   const isProtected = protectedPaths.some(path => pathname.startsWith(path))
@@ -209,8 +135,8 @@ export async function proxy(request: NextRequest) {
   const isAuthException = authExceptionPaths.some(path => pathname.startsWith(path)) || pathname.startsWith('/auth')
   const hasNicknameCookie = request.cookies.get('has_nickname')?.value === '1'
 
-  // Fast path: 일반 페이지 + 닉네임 확인됨 → auth 체크 완전 스킵
-  // (일반 유저가 /boards, /livescore 등 방문하는 대다수 케이스)
+  // Fast path: public pages with a verified nickname cookie skip Supabase auth lookup.
+  // This keeps common /boards and /livescore visits from paying auth middleware cost.
   if (!isProtected && !isAuthPage && !isAdmin && !isAuthException && hasNicknameCookie) {
     return NextResponse.next({ request: { headers: request.headers } })
   }
@@ -265,7 +191,7 @@ export async function proxy(request: NextRequest) {
         },
       },
       auth: {
-        // 미들웨어에서 자동 갱신 비활성화 (클라이언트가 담당)
+        // Disable automatic refresh in middleware; the client handles session refresh.
         autoRefreshToken: false,
         persistSession: false,
         detectSessionInUrl: false
@@ -274,19 +200,18 @@ export async function proxy(request: NextRequest) {
   )
 
   try {
-    // 사용자 인증 확인 (getUser: JWT 검증, Supabase 공식 권장)
-    // getSession().user는 JWT 검증을 안 해서 Vercel WARNING 유발 → getUser 사용
+    // Validate the user with getUser so the JWT is checked server-side.
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. 보호된 경로 접근 제어 (비로그인 사용자 차단)
+    // 1. Protect logged-in-only paths.
     if (isProtected && !user) {
       const redirectUrl = new URL('/signin', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
-      redirectUrl.searchParams.set('message', '로그인이 필요한 페이지입니다')
+      redirectUrl.searchParams.set('message', 'Login is required')
       return NextResponse.redirect(redirectUrl)
     }
 
-    // 2. 닉네임 미설정 사용자 강제 소셜 회원가입 리다이렉트
+    // 2. Force social-login users without a nickname through the signup completion flow.
     if (user && !isAuthException) {
       if (!hasNicknameCookie) {
         const { data: profile } = await supabase
@@ -299,7 +224,7 @@ export async function proxy(request: NextRequest) {
           return NextResponse.redirect(new URL('/social-signup', request.url))
         }
 
-        // 닉네임 확인 완료 → 쿠키에 캐싱 (24시간)
+        // Cache nickname completion for 24 hours.
         response.cookies.set('has_nickname', '1', {
           path: '/',
           maxAge: 60 * 60 * 24,
@@ -309,20 +234,20 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    // 3. 로그인 사용자의 인증 페이지 접근 방지 (소셜 회원가입 제외)
+    // 3. Redirect logged-in users away from auth pages.
     if (isAuthPage && user) {
       const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/'
       return NextResponse.redirect(new URL(redirectUrl, request.url))
     }
 
-    // 4. 관리자 페이지 접근 제어
+    // 4. Restrict admin pages to admin users.
     if (isAdmin) {
-      // 비로그인 사용자 차단
+      // Block unauthenticated users.
       if (!user) {
         return NextResponse.redirect(new URL('/', request.url))
       }
 
-      // 관리자 권한 확인
+      // Check admin permission.
       const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin')
@@ -330,14 +255,14 @@ export async function proxy(request: NextRequest) {
         .single()
 
       if (!profile?.is_admin) {
-        // 관리자가 아니면 메인으로 리다이렉트
+        // Redirect non-admin users to the home page.
         return NextResponse.redirect(new URL('/', request.url))
       }
     }
 
   } catch (error) {
-    console.error('미들웨어 처리 중 오류:', error)
-    // 에러 발생 시에도 요청 계속 진행
+    console.error('Proxy error:', error)
+    // Continue the request even if auth middleware fails.
   }
 
   return response
@@ -346,13 +271,12 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * 다음 경로들을 제외한 모든 요청에 미들웨어 적용:
-     * - _next/static (정적 파일)
-     * - _next/image (이미지 최적화 파일)
-     * - favicon.ico (파비콘)
-     * - 정적 파일들 (svg, png, jpg, jpeg, gif, webp)
-     * - api routes (API 라우트는 별도 처리)
+     * Apply proxy to all requests except:
+     * - Next.js static assets
+     * - Next.js image optimizer
+     * - favicon and static public files
+     * - API routes
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|ads\\.txt|llms\\.txt|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',
   ],
 } 

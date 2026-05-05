@@ -89,12 +89,21 @@ export function getTeamSlugFromName(name: string): string {
  * 선수 slug 가져오기 (name에서 생성)
  */
 export function getPlayerSlugFromName(name: string): string {
-  return slugify(name);
+  const slug = slugify(name);
+  if (slug === 'player' || /^player-\d+$/.test(slug)) return '';
+  return slug;
 }
 
 /**
  * 경기 slug 생성 (홈팀 vs 어웨이팀)
  */
 export function getMatchSlug(homeTeam: string, awayTeam: string): string {
-  return `${slugify(homeTeam)}-vs-${slugify(awayTeam)}`;
+  const homeSlug = slugify(homeTeam || '');
+  const awaySlug = slugify(awayTeam || '');
+
+  if (homeSlug && awaySlug) return `${homeSlug}-vs-${awaySlug}`;
+  if (homeSlug) return homeSlug;
+  if (awaySlug) return awaySlug;
+
+  return '';
 }

@@ -1,13 +1,10 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { getBoardPageAllData } from '@/domains/boards/actions/getBoardPageAllData';
 import { searchBoardPosts } from '@/domains/boards/actions/posts';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
-import { BoardListSkeleton } from '@/shared/components/skeletons/page-skeletons';
 import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
 import type { Board } from '@/domains/layout/types/board';
 
@@ -331,15 +328,13 @@ export default async function BoardDetailPage({
   const { page = '1', from: fromParam, store, search, searchType } = await searchParams;
 
   return (
-    <Suspense fallback={<BoardListSkeleton />}>
-      <BoardDetailContent
-        slug={slug}
-        page={page}
-        fromParam={fromParam}
-        store={store}
-        search={search}
-        searchType={searchType}
-      />
-    </Suspense>
+    <BoardDetailContent
+      slug={slug}
+      page={page}
+      fromParam={fromParam}
+      store={store}
+      search={search}
+      searchType={searchType}
+    />
   );
 }

@@ -45,9 +45,7 @@ export default function ClientHoverMenu({
     return (
       <div className="border-b bg-white">
         <div className="flex h-12 items-center px-4">
-          <div className="h-5 w-20 bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded"></div>
-          <div className="h-5 w-24 ml-4 bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded"></div>
-          <div className="h-5 w-20 ml-4 bg-[#F5F5F5] dark:bg-[#262626] animate-pulse rounded"></div>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
         </div>
       </div>
     );

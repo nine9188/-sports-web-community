@@ -7,14 +7,14 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
 import { siteConfig } from '@/shared/config';
 
-// Inter 폰트 정의 - display: swap으로 FOIT 방지
+// Inter font with display swap to avoid FOIT.
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
 });
 
-// 전역 메타데이터
+// Global metadata.
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
@@ -60,14 +60,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root Layout (Server Component)
+ * Site root layout.
+ * - No database query
+ * - No external API call
+ * Runs for every page, including 404 and error pages, but does not create API cost.
  *
- * 완전히 무해한 레이아웃입니다.
- * - DB 쿼리 없음
- * - 외부 API 호출 없음
- *
- * 404, 에러 페이지를 포함한 모든 페이지에서 실행되지만,
- * API 호출을 하지 않으므로 비용이 발생하지 않습니다.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -78,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body className="w-full h-full overflow-x-hidden">
-        {/* Organization + WebSite JSON-LD (사이트 전체 공통) */}
+        {/* Organization + WebSite JSON-LD shared across the site. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -134,7 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </RootLayoutProvider>
         <Analytics />
         <SpeedInsights />
-        {/* Google tag (gtag.js) - next/script로 hydration mismatch 방지 */}
+        {/* Google tag loaded with next/script to avoid hydration mismatch. */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF"
           strategy="lazyOnload"

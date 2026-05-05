@@ -1,16 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import type { Post, PostVariant } from './types';
-
-const MobilePostList = dynamic(
-  () => import('./components/mobile/MobilePostList').then(m => ({ default: m.MobilePostList })),
-  { ssr: false }
-);
-const DesktopPostList = dynamic(
-  () => import('./components/desktop/DesktopPostList').then(m => ({ default: m.DesktopPostList })),
-  { ssr: false }
-);
+import { MobilePostList } from './components/mobile/MobilePostList';
+import { DesktopPostList } from './components/desktop/DesktopPostList';
 
 interface VirtualizedPostListProps {
   posts: Post[];

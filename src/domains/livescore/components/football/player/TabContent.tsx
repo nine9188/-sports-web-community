@@ -11,6 +11,7 @@ import PlayerTransfers from './tabs/PlayerTransfers';
 import PlayerInjuries from './tabs/PlayerInjuries';
 import PlayerRankings from './tabs/PlayerRankings';
 import SidebarRelatedPosts from '@/domains/sidebar/components/SidebarRelatedPosts';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 // ============================================
 // 탭 컴포넌트들 (메모이제이션)
@@ -38,12 +39,20 @@ const StatsTab = memo(function StatsTab({
 });
 
 const FixturesTab = memo(function FixturesTab({
+  playerId,
   fixturesData
 }: {
+  playerId: number;
   fixturesData: {
     data: FixtureData[];
     status?: string;
     message?: string;
+    completeness?: {
+      total: number;
+      success: number;
+      failed: number;
+      failedFixtureIds?: number[];
+    };
     teamLogoUrls?: Record<number, string>;
     leagueLogoUrls?: Record<number, string>;
     leagueLogoDarkUrls?: Record<number, string>;
@@ -57,7 +66,11 @@ const FixturesTab = memo(function FixturesTab({
 
   return (
     <PlayerFixtures
-      fixturesData={safeFixturesData}
+      playerId={playerId}
+      fixturesData={{
+        ...safeFixturesData,
+        completeness: fixturesData?.completeness,
+      }}
       teamLogoUrls={fixturesData?.teamLogoUrls || {}}
       leagueLogoUrls={fixturesData?.leagueLogoUrls || {}}
       leagueLogoDarkUrls={fixturesData?.leagueLogoDarkUrls || {}}
@@ -148,6 +161,74 @@ const ErrorDisplay = memo(function ErrorDisplay({ message }: { message: string }
   );
 });
 
+export const PlayerTabLoadingDisplay = memo(function PlayerTabLoadingDisplay({ title }: { title: string }) {
+  return (
+    <Container>
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent>
+        <p className="py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+          불러오는 중...
+        </p>
+      </ContainerContent>
+    </Container>
+  );
+});
+
+const TAB_NAME_MAP: Record<PlayerTabType, string> = {
+  stats: '통계',
+  fixtures: '경기 기록',
+  trophies: '트로피',
+  transfers: '이적 기록',
+  injuries: '부상 기록',
+  rankings: '순위',
+};
+
+export function PlayerTabLoading({ tab }: { tab: PlayerTabType }) {
+  if (tab === 'rankings') {
+    return <RankingsTabLoading />;
+  }
+
+  return (
+    <PlayerTabLoadingDisplay
+      title={TAB_NAME_MAP[tab]}
+    />
+  );
+}
+
+const rankingLoadingTabs = ['최다 득점', '최다 어시스트', '최다 득점 경기', '최소 출전 시간', '경고', '퇴장'];
+
+function RankingsTabLoading() {
+  return (
+    <div className="space-y-4">
+      <div className="mb-4">
+        <div className="flex overflow-x-auto overflow-hidden border border-black/7 bg-[#F5F5F5] no-scrollbar dark:border-0 dark:bg-[#262626] md:rounded-lg">
+          {rankingLoadingTabs.map((tab, index) => (
+            <div
+              key={tab}
+              className={`flex h-12 flex-1 items-center justify-center whitespace-nowrap px-3 text-xs font-medium ${
+                index === 0
+                  ? 'border-b-2 border-[#002FA7] bg-white font-semibold text-gray-900 dark:bg-[#1D1D1D] dark:text-[#F0F0F0]'
+                  : 'text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {tab}
+            </div>
+          ))}
+        </div>
+      </div>
+      <Container>
+        <ContainerContent>
+          <p className="py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+            순위 데이터를 불러오는 중...
+          </p>
+        </ContainerContent>
+      </Container>
+    </div>
+  );
+}
+
 // ============================================
 // Props 타입
 // ============================================
@@ -192,21 +273,34 @@ export default function TabContent({
   // 플레이어 ID를 숫자로 변환
   const playerIdNum = parseInt(playerId, 10);
 
-  // 탭 이름 매핑
-  const tabNameMap: Record<PlayerTabType, string> = {
-    stats: '통계',
-    fixtures: '경기 기록',
-    trophies: '트로피',
-    transfers: '이적 기록',
-    injuries: '부상 기록',
-    rankings: '순위',
-  };
+  const hasCurrentTabData = useMemo(() => {
+    switch (currentTab) {
+      case 'stats':
+        return Boolean(statsData?.statistics?.length);
+      case 'fixtures':
+        return Boolean(fixturesData);
+      case 'trophies':
+        return trophiesData !== null;
+      case 'transfers':
+        return transfersData !== null;
+      case 'injuries':
+        return injuriesData !== null;
+      case 'rankings':
+        return rankingsData !== null;
+      default:
+        return false;
+    }
+  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData]);
 
   // 현재 탭에 따라 컴포넌트 렌더링
   const renderTabContent = useMemo(() => {
     // 에러 상태 처리
     if (error) {
       return <ErrorDisplay message={error.message} />;
+    }
+
+    if (isLoading && !hasCurrentTabData) {
+      return <PlayerTabLoading tab={currentTab} />;
     }
 
     switch (currentTab) {
@@ -229,7 +323,7 @@ export default function TabContent({
 
       case 'fixtures': {
         const fixtures = fixturesData || { data: [], status: 'error', message: '경기 기록이 없습니다.' };
-        return <FixturesTab fixturesData={fixtures} />;
+        return <FixturesTab playerId={playerIdNum} fixturesData={fixtures} />;
       }
 
       case 'trophies': {
@@ -279,7 +373,25 @@ export default function TabContent({
           </div>
         );
     }
-  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData, playerIdNum, error, tabNameMap, rankingsKoreanNames]);
+  }, [
+    currentTab,
+    statsData,
+    fixturesData,
+    transfersData,
+    trophiesData,
+    injuriesData,
+    rankingsData,
+    trophiesLeagueLogoUrls,
+    trophiesLeagueLogoDarkUrls,
+    transfersTeamLogoUrls,
+    injuriesTeamLogoUrls,
+    playerIdNum,
+    error,
+    isLoading,
+    hasCurrentTabData,
+    initialData,
+    rankingsKoreanNames,
+  ]);
 
   return renderTabContent;
 }

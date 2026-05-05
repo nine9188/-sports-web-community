@@ -7,6 +7,8 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from '@/domains/livescore/components/football/match/tabs/constants/standings';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -140,9 +142,15 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);
 
-  const handleRowClick = useCallback((teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
-  }, [router]);
+  const getTeamHref = useCallback((team?: StandingTeam['team']) => {
+    if (!team?.id) return teamUrl(0);
+    return teamUrl(team.id, team.name ? getTeamSlugFromName(team.name) : undefined);
+  }, []);
+
+  const handleRowClick = useCallback((team?: StandingTeam['team']) => {
+    if (!team?.id) return;
+    router.push(getTeamHref(team));
+  }, [getTeamHref, router]);
 
   if (!standings?.league?.standings || standings.league.standings.length === 0) {
     return (
@@ -168,7 +176,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
         <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader>
             <ContainerTitle>
-              {leagueData.standings!.length > 1 ? `Group ${groupIndex + 1}` : '순위표'}
+              {leagueData.standings!.length > 1 ? `그룹 ${groupIndex + 1}` : '순위표'}
             </ContainerTitle>
           </ContainerHeader>
 
@@ -201,7 +209,9 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
                     <th className={tableStyles.header}>패</th>
                     <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득점</th>
                     <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">실점</th>
-                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">득실차</th>
+                    <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <span className="inline-flex whitespace-nowrap leading-none">득실차</span>
+                    </th>
                     <th className={tableStyles.header}>승점</th>
                     <th className="hidden md:table-cell px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">최근 5경기</th>
                   </tr>
@@ -216,7 +226,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
                       <tr
                         key={standing.team?.id || standing.rank}
                         className={`cursor-pointer transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}
-                        onClick={() => standing.team?.id && handleRowClick(standing.team.id)}
+                        onClick={() => handleRowClick(standing.team)}
                       >
                         {/* 모바일용 순위 */}
                         <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
@@ -232,7 +242,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
 
                         {/* 팀 정보 */}
                         <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-gray-100">
-                          <Link href={`/livescore/football/team/${standing.team?.id || 0}`} className="flex items-center gap-1 md:gap-2">
+                          <Link href={getTeamHref(standing.team)} className="flex items-center gap-1 md:gap-2">
                             <TeamLogo
                               teamName={standing.team?.name || ''}
                               logoUrl={getTeamLogo(standing.team?.id || 0)}

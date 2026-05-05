@@ -280,7 +280,9 @@ async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
   try {
     const data = await fetchFromFootballApi('fixtures', { date });
 
-    if (!data.response) return [];
+    if (!data.response) {
+      return [];
+    }
 
     const majorLeagueIds = await getMajorLeagueIds();
     const filteredApiMatches = data.response.filter(

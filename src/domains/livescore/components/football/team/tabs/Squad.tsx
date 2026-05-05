@@ -1,13 +1,20 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { LoadingState, ErrorState, EmptyState } from '@/domains/livescore/components/common/CommonComponents';
+import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
+import TeamTabEmptyState from './TeamTabEmptyState';
 import { PlayerKoreanNames } from '../TeamPageClient';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
+import { fetchTeamSquadTabData } from '@/domains/livescore/actions/teams/team';
+import { teamKeys } from '@/shared/constants/queryKeys';
+import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -49,6 +56,7 @@ interface Player {
 }
 
 interface SquadProps {
+  teamId: number;
   initialSquad?: (Player | Coach)[];
   initialStats?: Record<number, PlayerStats>;
   isLoading?: boolean;
@@ -59,7 +67,23 @@ interface SquadProps {
   coachPhotoUrls?: Record<number, string>;
 }
 
+type SquadTabData = Awaited<ReturnType<typeof fetchTeamSquadTabData>>;
+
+function SquadLoading() {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>선수단</ContainerTitle>
+      </ContainerHeader>
+      <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+        불러오는 중...
+      </div>
+    </Container>
+  );
+}
+
 export default function Squad({
+  teamId,
   initialSquad,
   initialStats,
   isLoading: externalLoading,
@@ -69,18 +93,43 @@ export default function Squad({
   coachPhotoUrls = {}
 }: SquadProps) {
   const router = useRouter();
+  const squadQuery = useQuery<SquadTabData>({
+    queryKey: [...teamKeys.squad(String(teamId)), 'tab'],
+    queryFn: () => fetchTeamSquadTabData(String(teamId)),
+    enabled: (
+      !initialSquad ||
+      initialSquad.length === 0 ||
+      Object.keys(playerKoreanNames).length === 0
+    ) && !externalLoading && !externalError,
+    ...CACHE_STRATEGIES.STABLE_DATA,
+  });
+
+  const displaySquad = initialSquad || squadQuery.data?.squad;
+  const displayStats = initialStats || squadQuery.data?.playerStats;
+  const displayPlayerKoreanNames: PlayerKoreanNames = {
+    ...playerKoreanNames,
+    ...(squadQuery.data?.playerKoreanNames || {}),
+  };
+  const displayPlayerPhotoUrls: Record<number, string> = {
+    ...playerPhotoUrls,
+    ...(squadQuery.data?.playerPhotoUrls || {}),
+  };
+  const displayCoachPhotoUrls: Record<number, string> = {
+    ...coachPhotoUrls,
+    ...(squadQuery.data?.coachPhotoUrls || {}),
+  };
 
   // 4590 표준: 헬퍼 함수
-  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
-  const getCoachPhoto = (id: number) => coachPhotoUrls[id] || COACH_PLACEHOLDER;
+  const getPlayerPhoto = (id: number) => displayPlayerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  const getCoachPhoto = (id: number) => displayCoachPhotoUrls[id] || COACH_PLACEHOLDER;
 
   // 데이터 병합 처리를 useMemo를 사용하여 최적화
   const squad = useMemo(() => {
-    if (!initialSquad || initialSquad.length === 0) return [];
+    if (!displaySquad || displaySquad.length === 0) return [];
     
-    return initialSquad.map(member => {
-      if (member.position !== 'Coach' && initialStats) {
-        const playerStats = initialStats[member.id];
+    return displaySquad.map(member => {
+      if (member.position !== 'Coach' && displayStats) {
+        const playerStats = displayStats[member.id];
         if (playerStats) {
           return {
             ...member,
@@ -90,7 +139,7 @@ export default function Squad({
       }
       return member;
     });
-  }, [initialSquad, initialStats]);
+  }, [displaySquad, displayStats]);
   
   // 선수단을 포지션별로 그룹화하는 로직
   const groupedPlayers = useMemo(() => {
@@ -116,28 +165,28 @@ export default function Squad({
     // 각 그룹 내에서 이름순 정렬
     Object.keys(grouped).forEach(position => {
       grouped[position].sort((a, b) => {
-        const nameA = playerKoreanNames[a.id] || a.name;
-        const nameB = playerKoreanNames[b.id] || b.name;
+        const nameA = displayPlayerKoreanNames[a.id] || a.name;
+        const nameB = displayPlayerKoreanNames[b.id] || b.name;
         return nameA.localeCompare(nameB);
       });
     });
 
     return grouped;
-  }, [squad]);
+  }, [squad, displayPlayerKoreanNames]);
 
   // 로딩 상태 처리
-  if (externalLoading) {
-    return <LoadingState message="선수단 정보를 불러오는 중..." />;
+  if (externalLoading || (!displaySquad && squadQuery.isLoading)) {
+    return <SquadLoading />;
   }
 
   // 에러 상태 처리
-  if (externalError) {
+  if (externalError || (!displaySquad && squadQuery.isError)) {
     return <ErrorState message={externalError || '선수단 정보를 불러올 수 없습니다'} />;
   }
 
   // 데이터가 없는 경우
-  if (!initialSquad || initialSquad.length === 0) {
-    return <EmptyState title="선수단 데이터가 없습니다" message="현재 이 팀에 대한 선수단 정보를 제공할 수 없습니다." />;
+  if (!displaySquad || displaySquad.length === 0) {
+    return <TeamTabEmptyState title="선수단" message="선수단 데이터가 없습니다." />;
   }
 
   return (
@@ -186,16 +235,17 @@ export default function Squad({
                   <tbody className="divide-y divide-black/5 dark:divide-white/10">
                     {members.map(member => {
                       const playerStats = isPlayer ? (member as Player).stats : undefined;
+                      const href = playerUrl(member.id, getPlayerSlugFromName(member.name));
 
                       return (
                         <tr
                           key={member.id}
                           className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
-                          onClick={() => { if (isPlayer) router.push(`/livescore/football/player/${member.id}`); }}
+                          onClick={() => { if (isPlayer) router.push(href); }}
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-1.5 whitespace-nowrap">
                             {isPlayer ? (
-                              <Link href={`/livescore/football/player/${member.id}`} className="block">
+                              <Link href={href} className="block">
                                 <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
                                   <UnifiedSportsImageClient
                                     src={getPlayerPhoto(member.id)}
@@ -225,11 +275,11 @@ export default function Squad({
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-1.5">
                             {isPlayer ? (
-                              <Link href={`/livescore/football/player/${member.id}`} className="block max-w-[115px] md:max-w-none">
+                              <Link href={href} className="block max-w-[115px] md:max-w-none">
                                 <span className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate md:whitespace-normal block">
-                                  {playerKoreanNames[member.id] || member.name}
+                                  {displayPlayerKoreanNames[member.id] || member.name}
                                 </span>
-                                {playerKoreanNames[member.id] && (
+                                {displayPlayerKoreanNames[member.id] && (
                                   <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate md:whitespace-normal block leading-tight">
                                     {member.name}
                                   </span>
@@ -238,9 +288,9 @@ export default function Squad({
                             ) : (
                               <div className="max-w-[115px] md:max-w-none">
                                 <span className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate md:whitespace-normal block">
-                                  {playerKoreanNames[member.id] || member.name}
+                                  {displayPlayerKoreanNames[member.id] || member.name}
                                 </span>
-                                {playerKoreanNames[member.id] && (
+                                {displayPlayerKoreanNames[member.id] && (
                                   <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate md:whitespace-normal block leading-tight">
                                     {member.name}
                                   </span>

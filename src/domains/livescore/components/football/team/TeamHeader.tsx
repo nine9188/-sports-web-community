@@ -1,9 +1,9 @@
 'use client';
 
-import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container } from '@/shared/components/ui';
 import { TeamResponse } from '@/domains/livescore/actions/teams/team';
+import TeamTabEmptyState from './tabs/TeamTabEmptyState';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -52,7 +52,7 @@ export default function TeamHeader({
 }: TeamHeaderProps) {
   // 팀 데이터가 없는 경우 처리
   if (!initialData?.team) {
-    return <EmptyState title="팀 정보가 없습니다" message="현재 이 팀에 대한 정보를 제공할 수 없습니다." />;
+    return <TeamTabEmptyState title="팀 정보" message="팀 정보가 없습니다." />;
   }
 
   // 데이터 추출

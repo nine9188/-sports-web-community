@@ -9,10 +9,7 @@ import { getAllTeams, getAllLeagues } from '@/domains/livescore/actions/teamLeag
 import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
 import { getFullUserData } from '@/shared/actions/user';
 
-/**
- * Suspense fallback: 우측 사이드바 (CLS 방지용 빈 영역)
- */
-function RightSidebarSkeleton() {
+function RightSidebarPlaceholder() {
   return <aside className="hidden xl:block w-[300px] shrink-0" />;
 }
 
@@ -54,7 +51,6 @@ export default async function SiteLayout({
   const userAgent = headersList.get('user-agent') || '';
   const isMobilePhone = /iPhone|Android.*Mobile|Windows Phone/i.test(userAgent);
   // 봇이면 RightSidebar 스킵 (API-Sports 쿼타 보호 - 미들웨어에서 설정)
-  const isBot = headersList.get('x-is-bot') === '1';
 
   // 캐시 히트 시 < 1ms — 블로킹 비용 거의 없음
   const [teams, leagues, initialUserData] = await Promise.all([
@@ -78,10 +74,12 @@ export default async function SiteLayout({
       <SiteLayoutClient
         boardNavigation={boardNav}
         rightSidebar={
-          isMobilePhone || isBot ? (
-            <RightSidebarSkeleton />
+          isMobilePhone ? (
+            <RightSidebarPlaceholder />
           ) : (
-            <RightSidebar />
+            <Suspense fallback={<RightSidebarPlaceholder />}>
+              <RightSidebar />
+            </Suspense>
           )
         }
         headerBoards={STATIC_NAV_BOARDS}

@@ -5,6 +5,8 @@ import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -25,13 +27,8 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
   if (isLoading) {
     return (
       <ContainerContent className="p-0">
-        <div className="divide-y divide-black/5 dark:divide-white/10">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 px-4 py-2.5 animate-pulse">
-              <div className="w-6 h-6 bg-[#EAEAEA] dark:bg-[#333333] rounded-full" />
-              <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-32" />
-            </div>
-          ))}
+        <div className="py-8 text-center">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
         </div>
       </ContainerContent>
     );
@@ -81,7 +78,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
 
     return (
       <Link
-        href={`/livescore/football/team/${team.id}`}
+        href={teamUrl(team.id, getTeamSlugFromName(team.name))}
         className={`flex items-center gap-3 px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
           team.isWinner ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
         }`}

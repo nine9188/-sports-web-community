@@ -14,6 +14,8 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { StandingsData, League } from '../../types';
 import { useLeagueStandings } from '../../hooks/useLeagueQueries';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -98,8 +100,12 @@ export default function LeagueStandings({
     };
   }, []);
 
-  const handleTeamClick = (teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
+  const getTeamHref = (team: { team_id: number; name: string }) => {
+    return teamUrl(team.team_id, getTeamSlugFromName(team.name));
+  };
+
+  const handleTeamClick = (team: { team_id: number; name: string }) => {
+    router.push(getTeamHref(team));
   };
 
   // 현재 선택된 리그 정보
@@ -182,11 +188,11 @@ export default function LeagueStandings({
                   <tr
                     key={team.team.team_id}
                     className={`${index < standings.standings[0].length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0]`}
-                    onClick={() => handleTeamClick(team.team.team_id)}
+                    onClick={() => handleTeamClick(team.team)}
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">
-                      <Link href={`/livescore/football/team/${team.team.team_id}`} className="flex items-center gap-1">
+                      <Link href={getTeamHref(team.team)} className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <UnifiedSportsImageClient
                             src={getTeamLogo(team.team.team_id)}

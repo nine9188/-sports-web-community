@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { FormConfig, FormField } from '../types';
 import { cn } from '@/shared/utils/cn';
 import { Check, Send, X } from 'lucide-react';
-import Spinner from '@/shared/components/Spinner';
 import { Button, NativeSelect } from '@/shared/components/ui';
 import { focusStyles, inputGrayBgStyles } from '@/shared/styles';
 
 interface ChatFormRendererProps {
   formConfig: FormConfig;
-  onSubmit: (formData: Record<string, any>) => void;
+  onSubmit: (formData: Record<string, unknown>) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
   isSubmitted?: boolean;
   messageSubmitted?: boolean; // 메시지 레벨의 제출 상태
-  initialData?: Record<string, any>; // 저장된 폼 데이터
+  initialData?: Record<string, unknown>; // 저장된 폼 데이터
 }
 
 export function ChatFormRenderer({
@@ -27,12 +26,12 @@ export function ChatFormRenderer({
   messageSubmitted = false,
   initialData
 }: ChatFormRendererProps) {
-  const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
+  const [formData, setFormData] = useState<Record<string, unknown>>(initialData || {});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLocalSubmitted, setIsLocalSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleInputChange = (fieldName: string, value: any) => {
+  const handleInputChange = (fieldName: string, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [fieldName]: value
@@ -55,13 +54,14 @@ export function ChatFormRenderer({
     const newErrors: Record<string, string> = {};
 
     formConfig.fields.forEach(field => {
-      if (field.required && (!formData[field.name] || formData[field.name].toString().trim() === '')) {
+      const value = formData[field.name] == null ? '' : String(formData[field.name]);
+      if (field.required && value.trim() === '') {
         newErrors[field.name] = `${field.label}은(는) 필수 입력 항목입니다.`;
       }
 
-      if (field.type === 'email' && formData[field.name]) {
+      if (field.type === 'email' && value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData[field.name])) {
+        if (!emailRegex.test(value)) {
           newErrors[field.name] = '올바른 이메일 주소를 입력해주세요.';
         }
       }
@@ -91,7 +91,7 @@ export function ChatFormRenderer({
   };
 
   const renderField = (field: FormField) => {
-    const value = formData[field.name] || '';
+    const value = formData[field.name] == null ? '' : String(formData[field.name]);
     const error = errors[field.name];
 
     const isDisabled = isSubmitting || isSubmitted || isLocalSubmitted;
@@ -204,8 +204,7 @@ export function ChatFormRenderer({
           >
             {isSubmitting ? (
               <>
-                <Spinner size="xs" />
-                <span className="ml-2">제출 중...</span>
+                <span>제출 중...</span>
               </>
             ) : isCompleted ? (
               <>

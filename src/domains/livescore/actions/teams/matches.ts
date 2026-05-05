@@ -62,7 +62,7 @@ interface MatchesResponse {
 // 팀 경기 조회 옵션
 export interface FetchTeamMatchesOptions {
   /** 조회 모드: 'season' = 시즌 전체, 'recent' = 최근/예정 경기만 */
-  mode?: 'season' | 'recent';
+  mode?: 'season' | 'recent' | 'last' | 'next';
   /** recent 모드에서 가져올 경기 수 (기본값: 10) */
   limit?: number;
   /** 한국어 팀명 매핑 적용 여부 (기본값: true) */
@@ -167,7 +167,7 @@ export async function fetchTeamMatchesUnified(
         season: season
       });
       matches = data.response || [];
-    } else {
+    } else if (mode === 'recent') {
       // recent 모드: 최근 경기와 예정 경기를 각각 가져오기
       const halfLimit = Math.floor(limit / 2);
       const [lastMatches, nextMatches] = await Promise.all([
@@ -187,6 +187,20 @@ export async function fetchTeamMatchesUnified(
         ...(lastMatches.response || []),
         ...(nextMatches.response || [])
       ];
+    } else if (mode === 'last') {
+      const data = await fetchFromFootballApi('fixtures', {
+        team: teamIdNum,
+        season: season,
+        last: limit
+      });
+      matches = data.response || [];
+    } else {
+      const data = await fetchFromFootballApi('fixtures', {
+        team: teamIdNum,
+        season: season,
+        next: limit
+      });
+      matches = data.response || [];
     }
 
     // 한국어 팀명 매핑 적용
@@ -198,7 +212,7 @@ export async function fetchTeamMatchesUnified(
     matches = sortByDateDesc(matches);
 
     // recent 모드에서는 limit 적용
-    if (mode === 'recent' && matches.length > limit) {
+    if ((mode === 'recent' || mode === 'last' || mode === 'next') && matches.length > limit) {
       matches = matches.slice(0, limit);
     }
 

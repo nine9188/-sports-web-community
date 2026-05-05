@@ -16,9 +16,10 @@ const SITEMAP_IDS = [
 
 export async function GET() {
   const BASE_URL = siteConfig.url;
+  const generatedAt = new Date().toISOString();
 
   const entries = SITEMAP_IDS.map(id =>
-    `  <sitemap>\n    <loc>${BASE_URL}/sitemaps/${id}.xml</loc>\n  </sitemap>`
+    `  <sitemap>\n    <loc>${BASE_URL}/sitemaps/${id}.xml</loc>\n    <lastmod>${generatedAt}</lastmod>\n  </sitemap>`
   ).join('\n');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

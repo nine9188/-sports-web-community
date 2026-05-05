@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { Match } from '@/domains/livescore/types/match';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
+import { getMatchSlug } from '@/domains/livescore/utils/slugs';
+import { matchUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -82,6 +84,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
   };
 
   const statusInfo = getStatusInfo();
+  const href = matchUrl(match.id, getMatchSlug(homeTeam.name, awayTeam.name));
 
   const getScore = (isHome: boolean) => {
     if (statusCode === 'NS' || statusCode === 'TBD') return '-';
@@ -90,7 +93,7 @@ export default function MatchCard({ match, isLast = false }: MatchCardProps) {
 
   return (
     <Link
-      href={`/livescore/football/match/${match.id}`}
+      href={href}
       prefetch={false}
       className={`
         flex items-center h-12 px-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors

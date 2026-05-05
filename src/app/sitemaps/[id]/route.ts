@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { siteConfig } from '@/shared/config';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQuality';
@@ -155,7 +156,7 @@ function getFixtureSlug(fixture: FixtureRow, teamSlugById: Map<number, string>):
   const awaySlug = fixture.away_team_id ? teamSlugById.get(fixture.away_team_id) : null;
 
   if (homeSlug && awaySlug) return `${homeSlug}-vs-${awaySlug}`;
-  return 'match';
+  return '';
 }
 
 // --- Supabase ---
@@ -223,11 +224,11 @@ export async function GET(
     if (id.startsWith('boards-')) {
       const category = id.replace('boards-', '');
       const config = BOARD_CATEGORIES[category];
-      if (!config) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!config) return sitemapResponse([]);
 
       const allBoards = (await getCachedAllBoards()) as BoardRow[];
       const parents = allBoards.filter((b: BoardRow) => b.slug && config.parentSlugs.includes(b.slug));
-      if (!parents.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!parents.length) return sitemapResponse([]);
 
       const parentIds = new Set(parents.map((p: BoardRow) => p.id));
       const children = allBoards.filter((b: BoardRow) => b.parent_id && parentIds.has(b.parent_id) && b.slug);
@@ -245,7 +246,7 @@ export async function GET(
       const category = id.replace('posts-', '');
       const supabase = await getSupabase();
       const boardIds = await getBoardIdsByCategory(category);
-      if (!boardIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!boardIds.length) return sitemapResponse([]);
 
       const { data: posts } = await supabase
         .from('posts')
@@ -256,7 +257,7 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(5000);
 
-      if (!posts?.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!posts?.length) return sitemapResponse([]);
 
       const entries = posts.map(post => {
         const boardSlug = (post.boards as unknown as { slug: string })?.slug;
@@ -285,13 +286,13 @@ export async function GET(
     if (id.startsWith('players-')) {
       const leagueSlug = id.replace('players-', '');
       const leagueId = SITEMAP_LEAGUES[leagueSlug];
-      if (!leagueId) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!leagueId) return sitemapResponse([]);
 
       const allTeams = await _getCachedActiveTeams();
       const leagueTeamIds = allTeams
         .filter((t: TeamRow) => t.league_id === leagueId)
         .map((t: TeamRow) => t.team_id);
-      if (!leagueTeamIds.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!leagueTeamIds.length) return sitemapResponse([]);
 
       const players = (await _getCachedActivePlayersByTeam(leagueTeamIds))
         .filter((p: PlayerRow) => p.player_id > 0 && !isWorthlessSitemapPlayer(p));
@@ -341,9 +342,11 @@ export async function GET(
       for (const f of (fixtures || []) as FixtureRow[]) {
         if (seen.has(f.fixture_id)) continue;
         seen.add(f.fixture_id);
+        const fixtureSlug = getFixtureSlug(f, teamSlugById) || await resolveCanonicalMatchSlug(f.fixture_id);
+        if (!fixtureSlug) continue;
         const isPast = f.match_date ? new Date(f.match_date) < now : true;
         entries.push({
-          loc: `${BASE_URL}/livescore/football/match/${f.fixture_id}/${getFixtureSlug(f, teamSlugById)}`,
+          loc: `${BASE_URL}/livescore/football/match/${f.fixture_id}/${fixtureSlug}`,
           lastmod: f.updated_at || f.match_date || undefined,
           changefreq: isPast ? 'weekly' : 'daily',
           priority: isPast ? 0.6 : 0.7,
@@ -354,15 +357,17 @@ export async function GET(
       for (const h of highlights || []) {
         if (seen.has(h.fixture_id)) continue;
         seen.add(h.fixture_id);
+        const highlightSlug = await resolveCanonicalMatchSlug(h.fixture_id);
+        if (!highlightSlug) continue;
         entries.push({
-          loc: `${BASE_URL}/livescore/football/match/${h.fixture_id}/match`,
+          loc: `${BASE_URL}/livescore/football/match/${h.fixture_id}/${highlightSlug}`,
           lastmod: h.updated_at || undefined,
           changefreq: 'weekly',
           priority: 0.5,
         });
       }
 
-      if (!entries.length) return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+      if (!entries.length) return sitemapResponse([]);
       return sitemapResponse(entries);
     }
 
@@ -377,9 +382,9 @@ export async function GET(
         })));
     }
 
-    return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+    return sitemapResponse([]);
   } catch (error) {
     console.error(`Sitemap ${id} 생성 오류:`, error);
-    return sitemapResponse([{ loc: `${BASE_URL}/` }]);
+    return sitemapResponse([]);
   }
 }

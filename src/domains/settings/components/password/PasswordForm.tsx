@@ -6,7 +6,6 @@ import { Button } from '@/shared/components/ui';
 import { toast } from 'sonner';
 import { changePassword } from '@/domains/settings';
 import TurnstileWidget from '@/shared/components/TurnstileWidget';
-import Spinner from '@/shared/components/Spinner';
 
 interface PasswordFormProps {
   isOAuthAccount?: boolean;
@@ -239,8 +238,7 @@ export default function PasswordForm({ isOAuthAccount = false }: PasswordFormPro
             disabled={isLoading || isOAuthAccount}
             className="flex items-center"
           >
-            {isLoading && <Spinner size="xs" className="mr-2" />}
-            <span className="text-[13px]">비밀번호 변경</span>
+            <span className="text-[13px]">{isLoading ? '처리 중...' : '비밀번호 변경'}</span>
           </Button>
         </div>
       </form>

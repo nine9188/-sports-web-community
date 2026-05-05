@@ -98,8 +98,7 @@ export default function BoardSearchBar(props: BoardSearchBarProps) {
   return (
     <Suspense fallback={
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg animate-pulse" />
-        <div className="w-14 h-10 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg animate-pulse" />
+        <div className="flex-1 py-2 text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</div>
       </div>
     }>
       <BoardSearchBarInner {...props} />

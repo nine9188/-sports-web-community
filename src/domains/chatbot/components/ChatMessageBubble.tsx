@@ -1,34 +1,18 @@
 'use client';
 
-import { ChatMessage, FormConfig } from '../types';
+import { ChatMessage, ChipButton, FormConfig } from '../types';
 import { formatMessageTime } from '../utils';
 import { Check, CheckCheck, Clock, User, Bot } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
-
-// Dynamic imports for better code splitting
-const ChatChipButtons = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.ChatChipButtons })), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-none" />
-});
-
-const SingleChipButton = dynamic(() => import('./ChatChipButtons').then(m => ({ default: m.SingleChipButton })), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 w-24 rounded-none" />
-});
-
-const ChatFormRenderer = dynamic(() => import('./ChatFormRenderer').then(m => ({ default: m.ChatFormRenderer })), {
-  ssr: false,
-  loading: () => <div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-none" />
-});
+import { ChatChipButtons, SingleChipButton } from './ChatChipButtons';
+import { ChatFormRenderer } from './ChatFormRenderer';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   showTimestamp?: boolean;
   showReadStatus?: boolean;
-  onFormSubmit?: (formData: Record<string, any>) => void;
-  onChipClick?: (chip: any) => void;
+  onFormSubmit?: (formData: Record<string, unknown>) => void;
+  onChipClick?: (chip: ChipButton) => void;
   isFormSubmitting?: boolean;
 }
 
@@ -41,7 +25,6 @@ export function ChatMessageBubble({
   isFormSubmitting = false
 }: ChatMessageBubbleProps) {
   const isUser = message.type === 'user';
-  const isBot = message.type === 'bot';
   const isSystem = message.type === 'system';
   const isForm = message.type === 'form';
   const isChips = message.type === 'chips';
@@ -71,7 +54,6 @@ export function ChatMessageBubble({
 
         {/* Chips Content */}
         <div className="max-w-xs lg:max-w-md w-full">
-          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-10 rounded-none" />}>
             {isCompletion ? (
               <div className="flex space-x-2">
                 <SingleChipButton
@@ -101,7 +83,6 @@ export function ChatMessageBubble({
                 selectedLabel={selectedLabel}
               />
             )}
-          </Suspense>
         </div>
       </div>
     );
@@ -117,7 +98,6 @@ export function ChatMessageBubble({
 
         {/* Form Content */}
         <div className="max-w-xs lg:max-w-md">
-          <Suspense fallback={<div className="animate-pulse bg-[#F5F5F5] dark:bg-[#262626] h-40 rounded-none" />}>
             <ChatFormRenderer
               formConfig={message.form_data as FormConfig}
               onSubmit={onFormSubmit || (() => {})}
@@ -125,7 +105,6 @@ export function ChatMessageBubble({
               messageSubmitted={message.form_data?.is_submitted === true}
               initialData={message.form_data?.submitted_data}
             />
-          </Suspense>
         </div>
       </div>
     );

@@ -10,13 +10,13 @@ import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
-import Spinner from '@/shared/components/Spinner';
 import { useState } from 'react';
 
 // 4590 표준: Placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface StatsProps {
+  matchId?: string;
   matchData: {
     stats?: TeamStats[];
     homeTeam?: Team;
@@ -196,9 +196,6 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
 
   // 로딩 상태는 더 이상 필요 없음 (서버에서 미리 로드)
-  const loading = false;
-  const error = null;
-
   // 정렬 상태 관리 (홈팀)
   const [homeSortField, setHomeSortField] = useState<string>('minutes');
   const [homeSortDirection, setHomeSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -260,38 +257,10 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
   }, [statMappings]);
 
 
-  // 로딩 상태 표시
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-center">
-          <Spinner size="xl" className="mx-auto mb-2" />
-          <p className="text-[13px] text-gray-600">통계 데이터를 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // 에러 상태 표시
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-red-500 mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p className="text-[13px] text-gray-600">통계 데이터를 불러오는 중 오류가 발생했습니다.</p>
-        <p className="text-xs text-gray-500 mt-1">{error}</p>
-      </div>
-    );
-  }
-
-  // 데이터가 없을 경우 메시지 표시
   if (!stats.length) {
     return (
       <div className="text-center py-8">
-        <p className="text-[13px] text-gray-600">통계 데이터가 없습니다</p>
+        <p className="text-[13px] text-gray-600">통계 데이터가 없습니다.</p>
         <p className="text-xs text-gray-500 mt-1">현재 이 경기에 대한 통계 정보를 제공할 수 없습니다.</p>
       </div>
     );

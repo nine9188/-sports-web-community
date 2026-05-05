@@ -37,11 +37,13 @@ import { TabList, type TabItem } from '@/shared/components/ui';
 interface PlayerTabNavigationProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
+  onTabIntent?: (tabId: string) => void;
 }
 
 export default function PlayerTabNavigation({
   activeTab = 'stats',
   onTabChange,
+  onTabIntent,
 }: PlayerTabNavigationProps) {
   // UI 상태 (탭 전환 애니메이션용)
   const [currentTabUI, setCurrentTabUI] = useState(activeTab);
@@ -86,6 +88,7 @@ export default function PlayerTabNavigation({
       tabs={tabs}
       activeTab={currentTabUI}
       onTabChange={handleTabChange}
+      onTabIntent={onTabIntent}
       isChangingTab={isChangingTab}
     />
   );

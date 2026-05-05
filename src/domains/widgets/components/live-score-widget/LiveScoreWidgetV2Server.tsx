@@ -1,7 +1,4 @@
 import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
-import { getLeaguesByIds } from '@/domains/livescore/actions/teamLeagueData';
-import { getTeamLogoUrls } from '@/domains/livescore/actions/images/getTeamLogoUrl';
-import { resolveMatchNames } from '@/domains/livescore/utils/resolveMatchNames';
 import { Container } from '@/shared/components/ui';
 import LeagueToggleClient from './LeagueToggleClient';
 import LeagueHeader from './LeagueHeader';
@@ -12,9 +9,9 @@ import type { WidgetLeague, WidgetMatch } from './types';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
-// 경기 시작 시간 추출 (HH:mm 형식, KST 고정)
 function getKickoffTime(dateString?: string): string | undefined {
   if (!dateString) return undefined;
+
   try {
     const date = new Date(dateString);
     const kst = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
@@ -26,33 +23,16 @@ function getKickoffTime(dateString?: string): string | undefined {
   }
 }
 
-// 리그별로 경기를 그룹화하는 함수
-// 4590 표준: 팀 로고를 배치로 조회 (로컬 있으면 로컬, 없으면 CDN 폴백)
-async function groupMatchesByLeague(
+function groupMatchesByLeague(
   matches: FootballMatchData[],
   dateLabel: 'yesterday' | 'today' | 'tomorrow' = 'today'
-): Promise<WidgetLeague[]> {
-  // 1. 모든 팀 ID 수집
-  const allTeamIds = new Set<number>();
-  for (const match of matches) {
-    if (match.teams?.home?.id) allTeamIds.add(match.teams.home.id);
-    if (match.teams?.away?.id) allTeamIds.add(match.teams.away.id);
-  }
-
-  // 2. 팀 로고 + 팀명 배치 조회 (병렬)
-  const [teamLogoMap, teamNameResults] = await Promise.all([
-    getTeamLogoUrls(Array.from(allTeamIds)),
-    Promise.all(matches.map(m => resolveMatchNames(m))),
-  ]);
-
-  // 3. 리그별 그룹화
+): WidgetLeague[] {
   const leagueMap = new Map<number, { matches: WidgetMatch[]; firstMatch: FootballMatchData }>();
 
-  for (let i = 0; i < matches.length; i++) {
-    const match = matches[i];
+  for (const match of matches) {
     if (!match.league?.id) continue;
+
     const leagueId = match.league.id;
-    const names = teamNameResults[i];
     const homeId = match.teams?.home?.id || 0;
     const awayId = match.teams?.away?.id || 0;
 
@@ -60,13 +40,13 @@ async function groupMatchesByLeague(
       id: String(match.id),
       homeTeam: {
         id: homeId,
-        name: names.homeName || '홈팀',
-        logo: teamLogoMap[homeId] || TEAM_PLACEHOLDER,
+        name: match.teams?.home?.name || '홈팀',
+        logo: match.teams?.home?.logo || TEAM_PLACEHOLDER,
       },
       awayTeam: {
         id: awayId,
-        name: names.awayName || '원정팀',
-        logo: teamLogoMap[awayId] || TEAM_PLACEHOLDER,
+        name: match.teams?.away?.name || '원정팀',
+        logo: match.teams?.away?.logo || TEAM_PLACEHOLDER,
       },
       score: {
         home: match.goals?.home ?? 0,
@@ -81,74 +61,61 @@ async function groupMatchesByLeague(
     if (!leagueMap.has(leagueId)) {
       leagueMap.set(leagueId, { matches: [], firstMatch: match });
     }
+
     leagueMap.get(leagueId)!.matches.push(widgetMatch);
   }
 
-  const leagueIds = Array.from(leagueMap.keys());
-  const leagueInfoMap = leagueIds.length > 0 ? await getLeaguesByIds(leagueIds) : {};
-
-  return Array.from(leagueMap.entries()).map(([leagueId, { matches: leagueMatches, firstMatch }]) => {
-    const leagueInfo = leagueInfoMap[leagueId];
-
-    return {
-      id: String(leagueId),
-      name: leagueInfo?.name_ko || firstMatch.league?.name || '리그',
-      icon: '⚽',
-      logo: firstMatch.league?.logo,
-      logoDark: firstMatch.league?.logoDark,
-      leagueIdNumber: leagueId,
-      matches: leagueMatches,
-    };
-  });
+  return Array.from(leagueMap.entries()).map(([leagueId, { matches: leagueMatches, firstMatch }]) => ({
+    id: String(leagueId),
+    name: firstMatch.league?.name || '리그',
+    icon: '',
+    logo: firstMatch.league?.logo,
+    logoDark: firstMatch.league?.logoDark,
+    leagueIdNumber: leagueId,
+    matches: leagueMatches,
+  }));
 }
 
-// 빅매치 리그 ID - 유럽 Top 5 리그 + 유럽 컵대회 + FA컵 + K리그1
 const BIG_MATCH_LEAGUES = [
-  39,  // 프리미어 리그
-  140, // 라리가
-  78,  // 분데스리가
-  135, // 세리에 A
-  61,  // 리그앙
-  2,   // 챔피언스 리그
-  3,   // 유로파 리그
-  848, // 컨퍼런스 리그
-  531, // UEFA 슈퍼컵
-  45,  // FA컵
-  292, // K리그1
-  293, // K리그2
-  10,  // 국가대표 친선경기
+  39,
+  140,
+  78,
+  135,
+  61,
+  2,
+  3,
+  848,
+  531,
+  45,
+  292,
+  293,
+  10,
 ];
 
-// 리그 표시 우선순위 (낮을수록 먼저 표시)
 const LEAGUE_PRIORITY: Record<number, number> = {
-  39: 1,   // 프리미어리그
-  2: 2,    // 챔피언스리그
-  3: 3,    // 유로파리그
-  140: 4,  // 라리가
-  78: 4,   // 분데스리가
-  135: 4,  // 세리에A
-  61: 4,   // 리그앙
-  45: 5,   // FA컵
-  848: 6,  // 컨퍼런스리그
-  531: 7,  // UEFA 슈퍼컵
-  292: 8,  // K리그1
-  293: 8.5, // K리그2
-  10: 9,   // 국가대표 친선경기
+  39: 1,
+  2: 2,
+  3: 3,
+  140: 4,
+  78: 4,
+  135: 4,
+  61: 4,
+  45: 5,
+  848: 6,
+  531: 7,
+  292: 8,
+  293: 8.5,
+  10: 9,
 };
 
-/**
- * TodayMatchesResult → 위젯용 League[] 변환
- * bigMatch 리그만 필터링 + 오늘 경기를 리그별로 그룹화
- */
-export async function transformToWidgetLeagues(result: TodayMatchesResult): Promise<WidgetLeague[]> {
+export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeague[] {
   if (!result.success || !result.data) return [];
 
   const todayMatches = (result.data.today?.matches || [])
-    .filter(m => BIG_MATCH_LEAGUES.includes(m.league?.id || 0));
+    .filter((match) => BIG_MATCH_LEAGUES.includes(match.league?.id || 0));
 
-  const leagues = await groupMatchesByLeague(todayMatches, 'today');
+  const leagues = groupMatchesByLeague(todayMatches, 'today');
 
-  // 우선순위 정렬
   leagues.sort((a, b) => {
     const pa = LEAGUE_PRIORITY[Number(a.id)] ?? 99;
     const pb = LEAGUE_PRIORITY[Number(b.id)] ?? 99;
@@ -158,28 +125,13 @@ export async function transformToWidgetLeagues(result: TodayMatchesResult): Prom
   return leagues;
 }
 
-
 interface LiveScoreWidgetV2ServerProps {
-  /** page.tsx에서 transformToWidgetLeagues()로 변환한 데이터 */
   initialData?: WidgetLeague[];
 }
 
-/**
- * 라이브스코어 위젯 V2 서버 컴포넌트
- *
- * 구조:
- * - 서버: 리그/경기 목록 HTML 렌더링 (LCP 최적화)
- * - 클라이언트: 펼침/접기 토글만 담당
- *
- * 렌더링 흐름:
- * 1. 서버에서 leagues 데이터로 전체 HTML 생성
- * 2. LeagueToggleClient가 각 리그 섹션을 감싸서 토글 기능 제공
- * 3. 클라이언트는 서버 HTML을 그대로 show/hide만 처리
- */
 export default async function LiveScoreWidgetV2Server({ initialData }: LiveScoreWidgetV2ServerProps = {}) {
   const leagues = initialData ?? [];
 
-  // 경기가 없을 때 - 빈 상태 UI 표시
   if (leagues.length === 0) {
     return (
       <Container className="bg-white dark:bg-[#1D1D1D]">
@@ -206,17 +158,14 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
             key={league.id}
             className="bg-white dark:bg-[#1D1D1D]"
           >
-            {/* 첫 번째 리그일 때만 위젯 헤더 표시 (서버 렌더링) */}
             {isFirst && <WidgetHeader />}
 
-            {/* 리그 섹션: 클라이언트 토글 + 서버 렌더링 콘텐츠 */}
             <LeagueToggleClient
               defaultExpanded={isFirst}
               matchCount={league.matches.length}
               header={<LeagueHeader league={league} />}
               matches={isFirst ? undefined : league.matches}
             >
-              {/* 첫 번째 리그만 서버에서 매치카드 렌더링, 나머지는 펼칠 때 클라이언트에서 렌더 */}
               {isFirst && league.matches.map((match, idx) => (
                 <MatchCardServer
                   key={match.id}
@@ -233,18 +182,9 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
   );
 }
 
-/**
- * Suspense 스트리밍용 래퍼 서버 컴포넌트
- *
- * page.tsx에서 blocking await 없이 <Suspense>로 감싸서 사용.
- * 이 컴포넌트 내부에서 데이터를 fetch하므로 HTML 스트리밍이 가능:
- * - 오늘 경기만 fetch (위젯 + 헤더 뱃지용)
- * - 어제/내일은 모달 탭 클릭 시 클라이언트에서 lazy fetch
- * - CacheSeeder로 React Query 캐시에 주입 (헤더용)
- */
 export async function LiveScoreWidgetStreaming() {
   const todayData = await fetchTodayMatches();
-  const leagues = await transformToWidgetLeagues(todayData);
+  const leagues = transformToWidgetLeagues(todayData);
 
   return (
     <>

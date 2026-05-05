@@ -10,6 +10,8 @@ import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/com
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { PlayerKoreanNames } from '../../../TeamPageClient';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 interface SeasonHighlightsProps {
   playerStats: Record<number, PlayerStats>;
@@ -87,7 +89,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
               topScorers.map((player, index) => (
                 <Link
                   key={player.id}
-                  href={`/livescore/football/player/${player.id}`}
+                  href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">
@@ -128,7 +130,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
               topAssists.map((player, index) => (
                 <Link
                   key={player.id}
-                  href={`/livescore/football/player/${player.id}`}
+                  href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">

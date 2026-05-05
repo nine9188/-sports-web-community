@@ -1,6 +1,5 @@
 'use client'
 
-import { Suspense } from 'react'
 import { Pagination } from '@/shared/components/ui'
 
 interface SearchPaginationProps {
@@ -24,7 +23,6 @@ function PaginationContent({ currentPage, totalPages }: { currentPage: number; t
 
 export default function SearchPagination({
   query,
-  type,
   currentPage,
   totalItems,
   itemsPerPage,
@@ -35,9 +33,5 @@ export default function SearchPagination({
 
   const totalPages = Math.ceil(totalItems / itemsPerPage)
 
-  return (
-    <Suspense fallback={<div className="h-12" />}>
-      <PaginationContent currentPage={currentPage} totalPages={totalPages} />
-    </Suspense>
-  )
+  return <PaginationContent currentPage={currentPage} totalPages={totalPages} />
 }

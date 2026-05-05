@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { InjuryData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
+import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -28,7 +30,7 @@ export default function PlayerInjuries({
   const getTeamLogo = (teamId: number) => teamLogoUrls[teamId] || TEAM_PLACEHOLDER;
 
   if (!injuriesData || injuriesData.length === 0) {
-    return <EmptyState title="부상 기록이 없습니다" message="이 선수의 부상 기록 정보를 찾을 수 없습니다." />;
+    return <PlayerTabEmptyState title="부상 기록" message="부상 기록이 없습니다." />;
   }
   
   return (
@@ -53,7 +55,7 @@ export default function PlayerInjuries({
                 </div>
                 
                 <Link
-                  href={`/livescore/football/team/${injury.team.id}`}
+                  href={teamUrl(injury.team.id, getTeamSlugFromName(injury.team.name))}
                   className="flex items-center gap-2 mb-2 transition-opacity hover:opacity-70 outline-none focus:outline-none"
                 >
                   <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">

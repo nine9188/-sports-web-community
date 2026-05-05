@@ -97,6 +97,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
     case 'squad':
       return (
         <Squad
+          teamId={numericTeamId}
           initialSquad={squad?.data}
           initialStats={playerStats?.data}
           isLoading={false}
@@ -124,8 +125,6 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
       return (
         <Stats
           teamStats={convertTeamStatsForStatsComponent(teamData?.stats)}
-          isLoading={false}
-          error={null}
           leagueLogoUrls={leagueLogoUrls}
           leagueLogoDarkUrls={leagueLogoDarkUrls}
         />
@@ -145,6 +144,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
     case 'transfers':
       return (
         <TransfersTab
+          teamId={numericTeamId}
           transfers={transfers?.data}
           playerKoreanNames={playerKoreanNames}
           playerPhotoUrls={playerPhotoUrls}

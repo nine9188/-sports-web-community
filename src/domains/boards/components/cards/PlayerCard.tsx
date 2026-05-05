@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder 및 CDN URL (CDN은 /teams/md/... 직접 경로)
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -29,6 +31,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
 
   const teamLogo = team?.id ? getTeamLogo() : TEAM_PLACEHOLDER;
   const playerPhoto = photo ? getPlayerPhoto() : PLAYER_PLACEHOLDER;
+  const href = playerUrl(numericPlayerId, getPlayerSlugFromName(name));
 
   const CardContent = () => (
     <>
@@ -79,7 +82,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
 
   return (
     <div className="player-card">
-      <Link href={`/livescore/football/player/${numericPlayerId}`} prefetch={false}>
+      <Link href={href} prefetch={false}>
         <CardContent />
       </Link>
     </div>

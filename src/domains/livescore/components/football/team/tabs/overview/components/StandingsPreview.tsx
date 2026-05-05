@@ -9,6 +9,8 @@ import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStand
 import FormDisplay from './FormDisplay';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -57,10 +59,10 @@ export default function StandingsPreview({
   }, []);
 
   // 4590 표준: 헬퍼 함수
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const getLeagueLogo = (id: number) => {
+  const getTeamLogo = (id: number, fallback?: string) => teamLogoUrls[id] || fallback || TEAM_PLACEHOLDER;
+  const getLeagueLogo = (id: number, fallback?: string) => {
     if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
-    return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
+    return leagueLogoUrls[id] || fallback || LEAGUE_PLACEHOLDER;
   };
   
   // 현재 팀의 순위 정보 찾기
@@ -78,6 +80,7 @@ export default function StandingsPreview({
   // 공통 스타일
   const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400";
   const tableCellStyle = "px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0]";
+  const getTeamHref = (id: number, name: string) => teamUrl(id, getTeamSlugFromName(name));
   
   // 순위 데이터가 없으면 렌더링하지 않음
   if (displayStandings.length === 0 || !leagueInfo) {
@@ -89,7 +92,7 @@ export default function StandingsPreview({
       <ContainerHeader>
         <div className="w-6 h-6 relative flex-shrink-0 mr-2">
           <UnifiedSportsImageClient
-            src={getLeagueLogo(displayLeagueInfo?.id || leagueInfo.id)}
+            src={getLeagueLogo(displayLeagueInfo?.id || leagueInfo.id, displayLeagueInfo?.logo || leagueInfo.logo || safeLeague.logo)}
             alt={displayLeagueInfo?.name || leagueInfo.name || safeLeague.name || '리그'}
             width={24}
             height={24}
@@ -137,14 +140,14 @@ export default function StandingsPreview({
                 <tr
                   key={`standings-preview-${standing.team.id}-${standing.rank}-${index}`}
                   className={`border-b border-black/5 dark:border-white/10 ${isCurrentTeam ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors`}
-                  onClick={() => { if (standing.team.id !== teamId) router.push(`/livescore/football/team/${standing.team.id}`); }}
+                  onClick={() => { if (standing.team.id !== teamId) router.push(getTeamHref(standing.team.id, standing.team.name)); }}
                 >
                   <td className={tableCellStyle}>{standing.rank}</td>
                   <td className={tableCellStyle}>
-                    <Link href={`/livescore/football/team/${standing.team.id}`} className="flex items-center gap-2">
+                    <Link href={getTeamHref(standing.team.id, standing.team.name)} className="flex items-center gap-2">
                       <div className="w-5 h-5 relative flex-shrink-0">
                         <UnifiedSportsImageClient
-                          src={getTeamLogo(standing.team.id)}
+                          src={getTeamLogo(standing.team.id, standing.team.logo)}
                           alt={standing.team.name}
                           width={20}
                           height={20}
@@ -199,4 +202,4 @@ export default function StandingsPreview({
       </Button>
     </Container>
   );
-} 
+}

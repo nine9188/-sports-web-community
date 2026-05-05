@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { buildMetadata } from '@/shared/utils/metadataNew'
 import EmoticonStudioClient from './EmoticonStudioClient'
 
@@ -11,9 +10,5 @@ export async function generateMetadata() {
 }
 
 export default function EmoticonStudioPage() {
-  return (
-    <Suspense fallback={<div className="py-16" />}>
-      <EmoticonStudioClient />
-    </Suspense>
-  )
+  return <EmoticonStudioClient />
 }

@@ -296,7 +296,7 @@ async function fetchMatchFullDataCached(
   const statusCode = basicData.data?.fixture?.status?.short ?? '';
   const finishedCodes = ['FT', 'AET', 'PEN'];
 
-  if (finishedCodes.includes(statusCode)) {
+  if (finishedCodes.includes(statusCode) && !options.fetchEvents) {
     // options를 캐시 키에 포함 — generateMetadata(all false)가 풀 데이터 캐시를 오염시키는 버그 방지
     const optionsKey = [
       options.fetchEvents ? '1' : '0',

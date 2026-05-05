@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import React from 'react';
-import Spinner from '@/shared/components/Spinner';
 import { Button, Container, ContainerContent } from '@/shared/components/ui';
 
 // 로딩 상태 표시 공통 컴포넌트
@@ -9,7 +8,6 @@ export const LoadingState = memo(({ message = '데이터를 불러오는 중...'
     <Container className="bg-white dark:bg-[#1D1D1D]">
       <ContainerContent className="flex justify-center items-center py-8">
         <div className="text-center">
-          <Spinner size="xl" className="mx-auto mb-2" />
           <p className="text-[13px] text-gray-700 dark:text-gray-300">{message}</p>
         </div>
       </ContainerContent>
@@ -60,28 +58,10 @@ EmptyState.displayName = 'EmptyState';
 // 플레이어 프로필 로딩 컴포넌트 (애니메이션 추가)
 export const PlayerProfileLoadingState = memo(() => {
   return (
-    <Container className="animate-pulse bg-white dark:bg-[#1D1D1D] mt-4 md:mt-0">
-      <div className="flex flex-col md:flex-row items-stretch p-4 md:p-6">
-        <div className="flex flex-row items-center gap-4 md:gap-6 md:w-1/3">
-          <div className="w-20 h-20 md:w-28 md:h-28 bg-[#EAEAEA] dark:bg-[#333333] rounded-full"></div>
-          <div className="flex-1">
-            <div className="h-6 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-1/2 mb-2"></div>
-            <div className="h-4 bg-[#F5F5F5] dark:bg-[#262626] rounded w-1/3"></div>
-          </div>
-        </div>
-        <div className="flex-1 mt-4 md:mt-0 md:ml-8 border-t md:border-t-0 md:border-l border-black/5 dark:border-white/10 pt-4 md:pt-0 md:pl-8">
-          <div className="h-5 bg-[#EAEAEA] dark:bg-[#333333] rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="overflow-hidden">
-                <div className="h-3 bg-[#F5F5F5] dark:bg-[#262626] rounded w-1/2 mb-1"></div>
-                <div className="h-4 bg-[#EAEAEA] dark:bg-[#333333] rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <Container className="bg-white dark:bg-[#1D1D1D] mt-4 md:mt-0">
+      <ContainerContent className="py-8 text-center">
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+      </ContainerContent>
     </Container>
   );
 });

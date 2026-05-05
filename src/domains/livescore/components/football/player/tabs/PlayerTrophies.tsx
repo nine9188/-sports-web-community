@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { EmptyState } from '@/domains/livescore/components/common';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TrophyData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -98,7 +98,7 @@ export default function PlayerTrophies({
   };
   
   if (trophiesData.length === 0) {
-    return <EmptyState title="트로피 기록이 없습니다" message="이 선수의 트로피 기록 정보를 찾을 수 없습니다." />;
+    return <PlayerTabEmptyState title="트로피" message="트로피 기록이 없습니다." />;
   }
 
   return (

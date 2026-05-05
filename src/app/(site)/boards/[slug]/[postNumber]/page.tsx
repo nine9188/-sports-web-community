@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPostPageData } from '@/domains/boards/actions';
@@ -9,7 +9,7 @@ import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { PostDetailSkeleton } from '@/shared/components/skeletons/page-skeletons';
+import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -19,16 +19,6 @@ export const revalidate = 0;
 /**
  * 게시글 본문에서 설명 추출 (HTML 태그 제거)
  */
-function extractDescription(content: unknown): string {
-  if (!content) return '';
-  const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-  return contentStr
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 160);
-}
-
 /**
  * TipTap JSON에서 첫 번째 이미지 URL 추출
  */
@@ -108,7 +98,7 @@ async function PostDetailContent({
     if (!result.post || !result.board) {
       notFound();
     }
-    
+
     // 타입 호환을 위한 데이터 변환
     const topLevelBoards = result.topLevelBoards?.map(board => ({
       id: board.id,
@@ -445,11 +435,19 @@ async function PostDetailContent({
       }
     ];
 
-    const breadcrumbSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: breadcrumbListItems
-    };
+    void breadcrumbListItems;
+
+    const breadcrumbSchema = buildBreadcrumbJsonLd({
+      name: `${result.post.title || 'Post'} breadcrumb`,
+      items: [
+        { name: '홈', url: baseSiteUrl },
+        ...validBreadcrumbs.map((breadcrumb) => ({
+          name: breadcrumb.name,
+          url: breadcrumb.item,
+        })),
+        { name: result.post.title, url: postUrl },
+      ],
+    });
 
     // 레이아웃 컴포넌트에 데이터 전달
     return (
@@ -464,9 +462,7 @@ async function PostDetailContent({
         {/* BreadcrumbList 구조화 데이터 */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(breadcrumbSchema)
-          }}
+          {...jsonLdScriptProps(breadcrumbSchema)}
         />
         <TrackPageVisit
           id={result.board.id}
@@ -536,13 +532,11 @@ export default async function PostDetailPage({
   }
 
   return (
-    <Suspense fallback={<PostDetailSkeleton />}>
-      <PostDetailContent
-        slug={slug}
-        postNumber={postNumber}
-        fromBoardId={fromBoardId}
-        pageParam={safePage}
-      />
-    </Suspense>
+    <PostDetailContent
+      slug={slug}
+      postNumber={postNumber}
+      fromBoardId={fromBoardId}
+      pageParam={safePage}
+    />
   );
 }

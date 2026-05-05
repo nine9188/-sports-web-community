@@ -4,7 +4,6 @@ import React from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { Container, ContainerContent, Button } from '@/shared/components/ui'
-import Spinner from '@/shared/components/Spinner'
 import { useMySubmissions, useCancelSubmission } from '@/domains/shop/hooks/useEmoticonStudio'
 import { STATUS_CONFIG } from '@/domains/shop/types/emoticon-submission'
 
@@ -25,7 +24,7 @@ export default function MyEmoticonList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Spinner size="md" />
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
       </div>
     )
   }

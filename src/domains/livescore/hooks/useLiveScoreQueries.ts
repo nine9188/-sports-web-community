@@ -76,7 +76,7 @@ export function useTodayLiveCount(enabled: boolean = true) {
     queryKey: liveScoreKeys.matches(todayStr),
     queryFn: async () => {
       const data = await fetchMatchesByDate(todayStr);
-      return transformMatches(data);
+      return await transformMatches(data);
     },
     enabled,
     staleTime: 1000 * 60 * 2, // 2분 (API cache와 동일)

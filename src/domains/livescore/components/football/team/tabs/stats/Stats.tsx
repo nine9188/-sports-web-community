@@ -1,6 +1,5 @@
 'use client';
 
-import { LoadingState, ErrorState, EmptyState } from '../../../../common/CommonComponents';
 import BasicStatsCards from './components/BasicStatsCards';
 import HomeAwayStats from './components/HomeAwayStats';
 import GoalsChart from './components/GoalsChart';
@@ -8,57 +7,35 @@ import FormationStats from './components/FormationStats';
 import CardsChart from './components/CardsChart';
 import AdditionalStats from './components/AdditionalStats';
 import { TeamStatsData } from '../../../../../types/stats';
+import TeamTabEmptyState from '../TeamTabEmptyState';
 
 interface StatsProps {
   teamStats: TeamStatsData | undefined;
-  isLoading: boolean;
-  error: string | null;
-  // 4590 표준: 이미지 Storage URL
   leagueLogoUrls?: Record<number, string>;
-  leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
-export default function Stats({ teamStats, isLoading, error, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: StatsProps) {
-  // 데이터 존재 여부
+export default function Stats({ teamStats, leagueLogoUrls = {}, leagueLogoDarkUrls = {} }: StatsProps) {
   const hasStats = teamStats && Object.keys(teamStats).length > 0;
 
-  if (isLoading) {
-    return <LoadingState message="팀 통계를 불러오는 중..." />;
-  }
-
-  if (error) {
-    return <ErrorState message="팀 통계를 불러오는 중 오류가 발생했습니다." />;
-  }
-
   if (!hasStats) {
-    return <EmptyState message="팀 통계 데이터가 없습니다." />;
+    return <TeamTabEmptyState title="통계" message="팀 통계 데이터가 없습니다." />;
   }
+
+  const resolvedStats = teamStats as TeamStatsData;
 
   return (
     <div className="space-y-4">
-      {/* 기본 통계 카드 섹션 */}
       <BasicStatsCards
-        stats={teamStats}
-        leagueLogoUrl={teamStats.league?.id ? leagueLogoUrls[teamStats.league.id] : undefined}
-        leagueLogoDarkUrl={teamStats.league?.id ? leagueLogoDarkUrls[teamStats.league.id] : undefined}
+        stats={resolvedStats}
+        leagueLogoUrl={resolvedStats.league?.id ? leagueLogoUrls[resolvedStats.league.id] : undefined}
+        leagueLogoDarkUrl={resolvedStats.league?.id ? leagueLogoDarkUrls[resolvedStats.league.id] : undefined}
       />
-      
-      {/* 홈/원정 상세 통계 섹션 */}
-      <HomeAwayStats stats={teamStats} />
-
-      {/* 추가 통계 섹션 */}
-      <AdditionalStats stats={teamStats} />
-
-      {/* 포메이션 통계 차트 */}
-      <FormationStats stats={teamStats} />
-            
-      {/* 득점/실점 시간대 차트 */}
-      <GoalsChart stats={teamStats} />
-      
-      {/* 카드 시간대 차트 */}
-      <CardsChart stats={teamStats} />
-      
-
+      <HomeAwayStats stats={resolvedStats} />
+      <AdditionalStats stats={resolvedStats} />
+      <FormationStats stats={resolvedStats} />
+      <GoalsChart stats={resolvedStats} />
+      <CardsChart stats={resolvedStats} />
     </div>
   );
 }

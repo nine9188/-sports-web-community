@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, ReactNode } from 'react';
-import Spinner from './Spinner';
 import { Container, ContainerContent, Button } from './ui';
 
 // =============================================================================
@@ -61,13 +60,11 @@ interface EmptyStateProps extends BaseStateProps {
  */
 export const LoadingState = memo(({
   message = '데이터를 불러오는 중...',
-  size = 'lg',
   withContainer = true,
   className = '',
 }: LoadingStateProps) => {
   const content = (
     <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
-      <Spinner size={size} className="mb-3" />
       {message && (
         <p className="text-[13px] text-gray-500 dark:text-gray-400">{message}</p>
       )}
@@ -235,13 +232,12 @@ EmptyState.displayName = 'EmptyState';
  */
 export const InlineLoading = memo(({
   height = 'h-40',
-  size = 'md',
 }: {
   height?: string;
   size?: 'sm' | 'md' | 'lg';
 }) => (
   <div className={`flex items-center justify-center ${height}`}>
-    <Spinner size={size} />
+    <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
   </div>
 ));
 

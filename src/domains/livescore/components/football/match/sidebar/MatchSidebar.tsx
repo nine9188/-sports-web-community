@@ -1,6 +1,5 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
@@ -59,24 +58,25 @@ import RelatedPosts from './RelatedPosts';
 
 // 매치 정보 섹션 컴포넌트 - export 추가
 export function MatchInfoSection({
+  matchId,
   initialData,
   showOnlyMatchInfo = false,
+  showMatchInfo = true,
   sidebarData,
   teamLogoUrls
 }: {
+  matchId: string;
   initialData?: MatchDataType | null;
   showOnlyMatchInfo?: boolean;
+  showMatchInfo?: boolean;
   sidebarData?: SidebarData | null;
   teamLogoUrls?: Record<number, string>;
 }) {
-  const pathname = usePathname();
   const { getTeamById } = useTeamLeague();
   const [matchData, setMatchData] = useState<MatchDataType | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
 
   // URL에서 매치 ID 추출
-  const matchId = pathname?.split('/').pop();
-
   useEffect(() => {
     // initialData가 있으면 우선적으로 사용 - 즉시 렌더링
     if (initialData) {
@@ -155,6 +155,7 @@ export function MatchInfoSection({
   return (
     <>
       {/* 경기 상세정보 섹션 */}
+      {showMatchInfo && (
       <Container className="bg-white dark:bg-[#1D1D1D] rounded-none md:rounded-lg mb-4">
         {/* 헤더 */}
         <ContainerHeader className="md:rounded-t-lg">
@@ -241,12 +242,14 @@ export function MatchInfoSection({
           </div>
         </div>
       </Container>
+      )}
 
       {/* showOnlyMatchInfo가 false일 때만 승무패 예측과 응원 댓글 표시 */}
       {!showOnlyMatchInfo && (
         <>
           {/* 승무패 예측 섹션 - 클라이언트 컴포넌트 */}
           <MatchPredictionClient
+            matchId={matchId}
             matchData={matchData}
             initialPrediction={sidebarData?.userPrediction}
             initialStats={sidebarData?.predictionStats}
@@ -255,6 +258,7 @@ export function MatchInfoSection({
           
           {/* 응원 댓글 섹션 - 클라이언트 컴포넌트 */}
           <SupportCommentsSection
+            matchId={matchId}
             matchData={matchData}
             initialComments={sidebarData?.comments}
           />
@@ -275,21 +279,33 @@ export function MatchInfoSection({
 
 // 메인 매치 사이드바 컴포넌트
 export default function MatchSidebar({ 
+  matchId,
   initialData,
-  sidebarData 
+  sidebarData,
+  showMatchInfo = true,
+  showExtras = true,
+  teamLogoUrls,
 }: { 
+  matchId: string;
   initialData?: MatchDataType | null;
   sidebarData?: SidebarData | null;
+  showMatchInfo?: boolean;
+  showExtras?: boolean;
+  teamLogoUrls?: Record<number, string>;
 }) {
   return (
-    <aside className="hidden xl:block w-[300px] shrink-0">
-      <div className="h-full pt-4">
+    <div>
+      <div>
         {/* 경기 정보 섹션 */}
         <MatchInfoSection 
+          matchId={matchId}
           initialData={initialData} 
           sidebarData={sidebarData}
+          showMatchInfo={showMatchInfo}
+          showOnlyMatchInfo={!showExtras}
+          teamLogoUrls={teamLogoUrls}
         />
       </div>
-    </aside>
+    </div>
   );
 } 

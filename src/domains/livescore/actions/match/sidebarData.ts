@@ -77,3 +77,51 @@ export const getCachedSidebarData = cache(async (matchId: string): Promise<{
     };
   }
 }); 
+
+export const getCachedSidebarExtrasData = cache(async (
+  matchId: string,
+  homeTeamId?: number,
+  awayTeamId?: number,
+  matchData?: Record<string, unknown>
+): Promise<{
+  success: boolean;
+  data?: SidebarData;
+  error?: string;
+}> => {
+  try {
+    const [
+      userPredictionResult,
+      predictionStatsResult,
+      commentsResult,
+      relatedPostsResult,
+      homeBoardSlug,
+      awayBoardSlug
+    ] = await Promise.all([
+      getUserPrediction(matchId),
+      getPredictionStats(matchId),
+      getSupportComments(matchId),
+      getRelatedPosts(matchId, homeTeamId, awayTeamId, 10),
+      homeTeamId ? getBoardSlugByTeamId(homeTeamId) : Promise.resolve(null),
+      awayTeamId ? getBoardSlugByTeamId(awayTeamId) : Promise.resolve(null),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        matchData: matchData ?? {},
+        userPrediction: userPredictionResult.success ? userPredictionResult.data as MatchPrediction : null,
+        predictionStats: predictionStatsResult.success ? predictionStatsResult.data as PredictionStats : null,
+        comments: commentsResult.success && Array.isArray(commentsResult.data) ? commentsResult.data as SupportComment[] : [],
+        relatedPosts: relatedPostsResult ?? [],
+        homeBoardSlug,
+        awayBoardSlug,
+      }
+    };
+  } catch (error) {
+    console.error('[getCachedSidebarExtrasData] error:', error);
+    return {
+      success: false,
+      error: 'Failed to load sidebar extras'
+    };
+  }
+});
