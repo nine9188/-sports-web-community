@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/shared/types/supabase'
 
 const CANONICAL_HOST = '4590football.com'
-const LEGACY_INDEXED_HOSTS = new Set(['sports-web-community.vercel.app'])
 
 function plainNotFoundResponse() {
   return new NextResponse(
@@ -60,11 +59,24 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host')?.toLowerCase().split(':')[0]
 
-  if (process.env.NODE_ENV === 'production' && host && LEGACY_INDEXED_HOSTS.has(host)) {
+  if (process.env.NODE_ENV === 'production' && host?.endsWith('.vercel.app')) {
     const canonicalUrl = request.nextUrl.clone()
     canonicalUrl.protocol = 'https'
     canonicalUrl.host = CANONICAL_HOST
     return NextResponse.redirect(canonicalUrl, 308)
+  }
+
+  const boardPostMatch = pathname.match(/^\/boards\/[^/]+\/\d+$/)
+  if (
+    request.method === 'GET' &&
+    boardPostMatch &&
+    (request.nextUrl.searchParams.has('page') ||
+      request.nextUrl.searchParams.has('sort') ||
+      request.nextUrl.searchParams.has('from'))
+  ) {
+    const canonicalUrl = request.nextUrl.clone()
+    canonicalUrl.search = ''
+    return NextResponse.redirect(canonicalUrl, 301)
   }
 
   const worthlessPlayerMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)\/([^/]+)$/)
