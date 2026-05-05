@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/signin','/signup','/social-signup','/auth','/help','/settings',
           '/notifications','/admin','/api/','/boards/*/create','/boards/*/edit',
-          '/test','/ui','/*?from=*','/*?sort=*','/.well-known/',
+          '/ui','/*?from=*','/*?sort=*',
         ],
       },
       { userAgent: 'SERankingBot', disallow: '/' },

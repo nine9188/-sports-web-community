@@ -33,9 +33,6 @@ const nextConfig = {
       {
         pathname: '/leagues/**',
       },
-      {
-        pathname: '/test/**',
-      },
     ],
     remotePatterns: [
       // API-Sports (선수/감독 이미지)
@@ -86,9 +83,6 @@ const nextConfig = {
       },
       // 외부 URL 이미지는 /api/proxy-image를 통해 프록시 처리
     ],
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
   // Next.js 16: eslint 설정은 더 이상 next.config.js에서 지원되지 않음
   // 대신 next lint 명령어 옵션을 사용하거나 package.json scripts에서 설정

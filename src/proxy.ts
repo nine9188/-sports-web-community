@@ -67,11 +67,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(canonicalUrl, 308)
   }
 
-  // Block internal test pages in production.
-  if (pathname.startsWith('/test') && process.env.NODE_ENV === 'production') {
-    return new NextResponse('Not Found', { status: 404 })
-  }
-
   const worthlessPlayerMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)\/([^/]+)$/)
   if (worthlessPlayerMatch) {
     const playerId = Number(worthlessPlayerMatch[1])

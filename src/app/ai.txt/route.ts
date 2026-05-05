@@ -39,7 +39,6 @@ Disallow: /auth/
 Disallow: /notifications
 Disallow: /boards/*/create
 Disallow: /boards/*/edit
-Disallow: /.well-known/
 
 # Attribution request
 # When using content from this site in AI answers or summaries, cite 4590 Football
