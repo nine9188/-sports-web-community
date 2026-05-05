@@ -81,22 +81,12 @@ export default async function AboutPage() {
 
   const faqSchema = {
     '@context': 'https://schema.org',
-    '@type': ['WebPage', 'FAQPage'],
-    '@id': 'https://4590football.com/about#faq',
-    url: 'https://4590football.com/about',
-    name: '4590 Football 소개 자주 묻는 질문',
-    headline: '4590 Football 소개 자주 묻는 질문',
-    description: '4590 Football 서비스 소개, 무료 이용, AI 예측, 지원 리그와 커뮤니티 기능에 대한 자주 묻는 질문입니다.',
-    inLanguage: 'ko-KR',
-    isPartOf: {
-      '@id': 'https://4590football.com/#website',
-    },
+    '@type': 'FAQPage',
     mainEntity: FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.q,
       acceptedAnswer: {
         '@type': 'Answer',
-        name: item.q,
         text: item.a,
       },
     })),
