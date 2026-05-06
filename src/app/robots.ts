@@ -29,8 +29,6 @@ const SITEMAP_IDS = [
 ];
 
 export default function robots(): MetadataRoute.Robots {
-  const sitemapBaseUrl = `${siteConfig.url}/sitemaps`;
-
   return {
     rules: [
       {
@@ -48,7 +46,7 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: [
       `${siteConfig.url}/sitemap.xml`,
       `${siteConfig.url}/sitemap-index.xml`,
-      ...SITEMAP_IDS.map((id) => `${sitemapBaseUrl}/${id}.xml`),
+      ...SITEMAP_IDS.map((id) => `${siteConfig.url}/sitemap-${id}.xml`),
     ],
   };
 }

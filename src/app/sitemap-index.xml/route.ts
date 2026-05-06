@@ -37,7 +37,7 @@ export async function GET() {
 
   const entries = SITEMAP_IDS.map(
     (id) => `  <sitemap>
-    <loc>${baseUrl}/sitemaps/${id}.xml</loc>
+    <loc>${baseUrl}/sitemap-${id}.xml</loc>
     <lastmod>${lastmod}</lastmod>
   </sitemap>`
   ).join('\n');
