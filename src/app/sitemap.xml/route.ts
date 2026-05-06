@@ -33,10 +33,12 @@ const SITEMAP_IDS = [
 
 export async function GET() {
   const baseUrl = siteConfig.url;
+  const lastmod = new Date().toISOString();
 
   const entries = SITEMAP_IDS.map(
     (id) => `  <sitemap>
     <loc>${baseUrl}/sitemaps/${id}.xml</loc>
+    <lastmod>${lastmod}</lastmod>
   </sitemap>`
   ).join('\n');
 
