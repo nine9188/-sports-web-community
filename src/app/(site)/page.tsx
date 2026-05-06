@@ -91,6 +91,8 @@ const homeJsonLd = {
 const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
+  '@id': 'https://4590football.com/#faq',
+  name: '4590 Football FAQ',
   mainEntity: [
     {
       '@type': 'Question',

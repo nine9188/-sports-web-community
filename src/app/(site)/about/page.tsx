@@ -82,6 +82,8 @@ export default async function AboutPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': 'https://4590football.com/about#faq',
+    name: '4590 Football About FAQ',
     mainEntity: FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.q,
