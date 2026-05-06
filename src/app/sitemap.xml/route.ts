@@ -1,25 +1,43 @@
 import { NextResponse } from 'next/server';
 import { siteConfig } from '@/shared/config';
 
-// ISR: 1시간
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const SITEMAP_IDS = [
   'static',
-  'boards-football', 'boards-kleague', 'boards-news', 'boards-community',
-  'posts-football', 'posts-kleague', 'posts-news', 'posts-community',
-  'teams', 'matches', 'shop',
-  'players-epl', 'players-laliga', 'players-bundesliga', 'players-serie-a',
-  'players-ligue1', 'players-eredivisie', 'players-primeira', 'players-danish',
-  'players-kleague', 'players-jleague', 'players-saudi', 'players-mls',
+  'boards-football',
+  'boards-kleague',
+  'boards-news',
+  'boards-community',
+  'posts-football',
+  'posts-kleague',
+  'posts-news',
+  'posts-community',
+  'teams',
+  'matches',
+  'shop',
+  'players-epl',
+  'players-laliga',
+  'players-bundesliga',
+  'players-serie-a',
+  'players-ligue1',
+  'players-eredivisie',
+  'players-primeira',
+  'players-danish',
+  'players-kleague',
+  'players-jleague',
+  'players-saudi',
+  'players-mls',
 ];
 
 export async function GET() {
-  const BASE_URL = siteConfig.url;
+  const baseUrl = siteConfig.url;
 
-  const entries = SITEMAP_IDS.map(id =>
-    `  <sitemap>\n    <loc>${BASE_URL}/sitemaps/${id}.xml</loc>\n  </sitemap>`
+  const entries = SITEMAP_IDS.map(
+    (id) => `  <sitemap>
+    <loc>${baseUrl}/sitemaps/${id}.xml</loc>
+  </sitemap>`
   ).join('\n');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
