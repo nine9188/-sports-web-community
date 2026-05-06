@@ -47,6 +47,7 @@ export default function robots(): MetadataRoute.Robots {
     host: new URL(siteConfig.url).host,
     sitemap: [
       `${siteConfig.url}/sitemap.xml`,
+      `${siteConfig.url}/sitemap-index.xml`,
       ...SITEMAP_IDS.map((id) => `${sitemapBaseUrl}/${id}.xml`),
     ],
   };
