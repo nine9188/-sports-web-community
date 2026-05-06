@@ -3,7 +3,6 @@ import { unstable_cache } from 'next/cache';
 import { siteConfig } from '@/shared/config';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
-import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQuality';
@@ -317,18 +316,13 @@ export async function GET(
       const pastDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
       const futureDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const [{ data: fixtures }, { data: highlights }, allTeams] = await Promise.all([
+      const [{ data: fixtures }, allTeams] = await Promise.all([
         supabase
           .from('fixtures')
           .select('fixture_id, home_team_id, away_team_id, match_date, updated_at')
           .gte('match_date', pastDate)
           .lte('match_date', futureDate)
           .order('match_date', { ascending: false }),
-        supabase
-          .from('match_highlights')
-          .select('fixture_id, updated_at')
-          .neq('video_id', 'NOT_FOUND')
-          .order('published_at', { ascending: false }),
         _getCachedActiveTeams(),
       ]);
 
@@ -340,11 +334,33 @@ export async function GET(
           .map((team: TeamRow) => [team.team_id, team.slug as string])
       );
 
+      const missingTeamIds = [
+        ...new Set(
+          ((fixtures || []) as FixtureRow[])
+            .flatMap((fixture) => [fixture.home_team_id, fixture.away_team_id])
+            .filter((teamId): teamId is number => typeof teamId === 'number' && !teamSlugById.has(teamId))
+        ),
+      ];
+
+      if (missingTeamIds.length) {
+        const { data: extraTeams } = await supabase
+          .from('football_teams')
+          .select('team_id, slug')
+          .in('team_id', missingTeamIds)
+          .not('slug', 'is', null);
+
+        for (const team of (extraTeams || []) as TeamRow[]) {
+          if (team.team_id && team.slug) {
+            teamSlugById.set(team.team_id, team.slug);
+          }
+        }
+      }
+
       // 1순위: fixtures (예정 포함)
       for (const f of (fixtures || []) as FixtureRow[]) {
         if (seen.has(f.fixture_id)) continue;
         seen.add(f.fixture_id);
-        const fixtureSlug = getFixtureSlug(f, teamSlugById) || await resolveCanonicalMatchSlug(f.fixture_id);
+        const fixtureSlug = getFixtureSlug(f, teamSlugById);
         if (!fixtureSlug) continue;
         const isPast = f.match_date ? new Date(f.match_date) < now : true;
         entries.push({
@@ -352,20 +368,6 @@ export async function GET(
           lastmod: f.updated_at || f.match_date || undefined,
           changefreq: isPast ? 'weekly' : 'daily',
           priority: isPast ? 0.6 : 0.7,
-        });
-      }
-
-      // 2순위: match_highlights에만 있는 오래된 경기
-      for (const h of highlights || []) {
-        if (seen.has(h.fixture_id)) continue;
-        seen.add(h.fixture_id);
-        const highlightSlug = await resolveCanonicalMatchSlug(h.fixture_id);
-        if (!highlightSlug) continue;
-        entries.push({
-          loc: `${BASE_URL}/livescore/football/match/${h.fixture_id}/${highlightSlug}`,
-          lastmod: h.updated_at || undefined,
-          changefreq: 'weekly',
-          priority: 0.5,
         });
       }
 
