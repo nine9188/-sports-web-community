@@ -1,34 +1,26 @@
 import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/shared/config';
+import {
+  getMatchSitemapCount,
+  getPlayerSitemapCount,
+  getPostSitemapCount,
+  getTeamSitemapCount,
+  sitemapPageCount,
+  siteUrl,
+} from '@/shared/seo/sitemap';
 
-const SITEMAP_IDS = [
-  'static',
-  'boards-football',
-  'boards-kleague',
-  'boards-news',
-  'boards-community',
-  'posts-football',
-  'posts-kleague',
-  'posts-news',
-  'posts-community',
-  'teams',
-  'matches',
-  'shop',
-  'players-epl',
-  'players-laliga',
-  'players-bundesliga',
-  'players-serie-a',
-  'players-ligue1',
-  'players-eredivisie',
-  'players-primeira',
-  'players-danish',
-  'players-kleague',
-  'players-jleague',
-  'players-saudi',
-  'players-mls',
-];
+function generatedSitemapUrls(path: string, pages: Array<{ id: number }>) {
+  return pages.map(({ id }) => siteUrl(`${path}/sitemap/${id}.xml`));
+}
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const [postPages, teamPages, playerPages, matchPages] = await Promise.all([
+    getPostSitemapCount().then(sitemapPageCount),
+    getTeamSitemapCount().then(sitemapPageCount),
+    getPlayerSitemapCount().then(sitemapPageCount),
+    getMatchSitemapCount().then(sitemapPageCount),
+  ]);
+
   return {
     rules: [
       {
@@ -44,9 +36,14 @@ export default function robots(): MetadataRoute.Robots {
     ],
     host: new URL(siteConfig.url).host,
     sitemap: [
-      `${siteConfig.url}/sitemap.xml`,
-      `${siteConfig.url}/sitemap-index.xml`,
-      ...SITEMAP_IDS.map((id) => `${siteConfig.url}/sitemap-${id}.xml`),
+      siteUrl('/sitemap.xml'),
+      siteUrl('/boards/sitemap.xml'),
+      ...generatedSitemapUrls('/boards/posts', postPages),
+      siteUrl('/livescore/football/leagues/sitemap.xml'),
+      ...generatedSitemapUrls('/livescore/football/team', teamPages),
+      ...generatedSitemapUrls('/livescore/football/player', playerPages),
+      ...generatedSitemapUrls('/livescore/football/match', matchPages),
+      siteUrl('/shop/sitemap.xml'),
     ],
   };
 }
