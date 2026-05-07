@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import Formation from './Formation';
 import PlayerEvents from './components/PlayerEvents';
 import PlayerStatsModal from './components/PlayerStatsModal';
@@ -17,6 +18,8 @@ import { fetchCachedMatchEvents } from '@/domains/livescore/actions/match/eventD
 import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
+import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { playerUrl } from '@/domains/livescore/utils/urls';
 import { matchKeys } from '@/shared/constants/queryKeys';
 
 // 4590 표준: Placeholder 상수
@@ -208,6 +211,20 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   const getTeamDisplayName = (id: number, fallbackName: string): string => {
     const teamInfo = getTeamById(id);
     return teamInfo?.name_ko || fallbackName;
+  };
+  const renderPlayerName = (player: Player) => {
+    const displayName = mergedPlayerKoreanNames[player.id] || player.name;
+    if (!player.id) return displayName;
+
+    return (
+      <Link
+        href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
+        className="hover:underline"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {displayName}
+      </Link>
+    );
   };
 
   // 포메이션 데이터를 가공하는 함수
@@ -444,7 +461,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {mergedPlayerKoreanNames[homeLineup.startXI[index].player.id] || homeLineup.startXI[index].player.name}
+                          {renderPlayerName(homeLineup.startXI[index].player)}
                           {isCaptain(homeLineup.startXI[index].player.id, homeLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -491,7 +508,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {mergedPlayerKoreanNames[awayLineup.startXI[index].player.id] || awayLineup.startXI[index].player.name}
+                          {renderPlayerName(awayLineup.startXI[index].player)}
                           {isCaptain(awayLineup.startXI[index].player.id, awayLineup.startXI[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -569,7 +586,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {mergedPlayerKoreanNames[homeLineup.substitutes[index].player.id] || homeLineup.substitutes[index].player.name}
+                          {renderPlayerName(homeLineup.substitutes[index].player)}
                           {isCaptain(homeLineup.substitutes[index].player.id, homeLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -615,7 +632,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                       <div className="flex-1">
                         <div className="text-xs text-gray-900 dark:text-gray-100">
                           {/* 선수 한국어 이름 매핑 */}
-                          {mergedPlayerKoreanNames[awayLineup.substitutes[index].player.id] || awayLineup.substitutes[index].player.name}
+                          {renderPlayerName(awayLineup.substitutes[index].player)}
                           {isCaptain(awayLineup.substitutes[index].player.id, awayLineup.substitutes[index].player.captain) && (
                             <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                           )}
@@ -771,7 +788,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {mergedPlayerKoreanNames[item.player.id] || item.player.name}
+                        {renderPlayerName(item.player)}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -824,7 +841,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {mergedPlayerKoreanNames[item.player.id] || item.player.name}
+                        {renderPlayerName(item.player)}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -941,7 +958,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {mergedPlayerKoreanNames[item.player.id] || item.player.name}
+                        {renderPlayerName(item.player)}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
@@ -994,7 +1011,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-900 dark:text-gray-100">
-                        {mergedPlayerKoreanNames[item.player.id] || item.player.name}
+                        {renderPlayerName(item.player)}
                         {isCaptain(item.player.id, item.player.captain) && (
                           <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400 font-semibold">(주장)</span>
                         )}
