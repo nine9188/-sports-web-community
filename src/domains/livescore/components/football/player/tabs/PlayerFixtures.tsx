@@ -337,6 +337,8 @@ export default function PlayerFixtures({
                     <tr
                       key={fixture.fixture.id}
                       className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors"
+                      onMouseEnter={() => router.prefetch(href)}
+                      onFocus={() => router.prefetch(href)}
                       onClick={() => router.push(href)}
                     >
                       <td className="px-2 py-3 text-left whitespace-nowrap text-xs text-gray-900 dark:text-[#F0F0F0]">

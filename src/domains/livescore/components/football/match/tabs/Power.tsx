@@ -7,7 +7,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { Team } from '@/domains/livescore/types/match';
 import { StandingsData } from '@/domains/livescore/types/match';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getCachedPowerTopPlayersData } from '@/domains/livescore/actions/match/headtohead';
+import { getCachedPowerH2HData, getCachedPowerRecentData, getCachedPowerTopPlayersData } from '@/domains/livescore/actions/match/headtohead';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { getMatchSlug, getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
@@ -17,6 +17,7 @@ import { matchKeys } from '@/shared/constants/queryKeys';
 // 4590 표준: placeholder URLs
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LOADING_TEXT = '\uBD88\uB7EC\uC624\uB294 \uC911...';
 
 interface PowerProps {
   matchId: string;
@@ -24,7 +25,7 @@ interface PowerProps {
   awayTeam: Team;
   playerKoreanNames?: PlayerKoreanNames;
   mode?: 'all' | 'summary' | 'comparison' | 'recent' | 'comparisonRecent' | 'h2h' | 'topPlayers';
-  data: {
+  data?: {
     teamA: number;
     teamB: number;
     h2h: {
@@ -55,24 +56,84 @@ interface PowerProps {
     playerPhotoUrls?: Record<number, string>;
     // 4590 표준: 팀 로고 Storage URL (teamId -> URL)
     teamLogoUrls?: Record<number, string>;
+    leagueLogoUrls?: Record<number, string>;
+  };
+}
+
+type PowerData = NonNullable<PowerProps['data']>;
+
+function createEmptyPowerData(teamA: number, teamB: number): PowerData {
+  const emptySummary = { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 };
+
+  return {
+    teamA,
+    teamB,
+    h2h: {
+      last: 5,
+      items: [],
+      resultSummary: {
+        teamA: emptySummary,
+        teamB: emptySummary,
+      },
+    },
+    recent: {
+      teamA: { last: 0, items: [], summary: emptySummary },
+      teamB: { last: 0, items: [], summary: emptySummary },
+    },
+    topPlayers: {
+      teamA: { topScorers: [], topAssist: [] },
+      teamB: { topScorers: [], topAssist: [] },
+    },
+    teamLogoUrls: {},
+    leagueLogoUrls: {},
+    playerPhotoUrls: {},
   };
 }
 
 export default function Power({ matchId, data: initialData, homeTeam, awayTeam, playerKoreanNames = {}, mode = 'all' }: PowerProps) {
   const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
-  const shouldFetchTopPlayers =
-    ['all', 'topPlayers'].includes(mode) &&
-    initialData.teamA > 0 &&
-    initialData.teamB > 0 &&
-    initialData.topPlayers.teamA.topScorers.length === 0 &&
-    initialData.topPlayers.teamA.topAssist.length === 0 &&
-    initialData.topPlayers.teamB.topScorers.length === 0 &&
-    initialData.topPlayers.teamB.topAssist.length === 0;
+  const showComparison = ['all', 'summary', 'comparison', 'comparisonRecent'].includes(mode);
+  const showRecent = ['all', 'summary', 'recent', 'comparisonRecent'].includes(mode);
+  const showH2H = ['all', 'summary', 'h2h'].includes(mode);
+  const showTopPlayers = ['all', 'topPlayers'].includes(mode);
+  const canFetchPowerData = homeTeam.id > 0 && awayTeam.id > 0;
+
+  const recentQuery = useQuery({
+    queryKey: [...matchKeys.power(matchId, homeTeam.id, awayTeam.id), 'recent'],
+    queryFn: async () => {
+      const result = await getCachedPowerRecentData(homeTeam.id, awayTeam.id, 5);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to load recent form data');
+      }
+      return result.data;
+    },
+    enabled: !initialData && canFetchPowerData && (showComparison || showRecent),
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  const h2hQuery = useQuery({
+    queryKey: [...matchKeys.power(matchId, homeTeam.id, awayTeam.id), 'h2h'],
+    queryFn: async () => {
+      const result = await getCachedPowerH2HData(homeTeam.id, awayTeam.id, 5);
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to load h2h data');
+      }
+      return result.data;
+    },
+    enabled: !initialData && canFetchPowerData && showH2H,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  const shouldFetchTopPlayers = !initialData && canFetchPowerData && showTopPlayers;
 
   const topPlayersQuery = useQuery({
-    queryKey: [...matchKeys.power(matchId, initialData.teamA, initialData.teamB), 'topPlayers'],
+    queryKey: [...matchKeys.power(matchId, homeTeam.id, awayTeam.id), 'topPlayers-v3'],
     queryFn: async () => {
-      const result = await getCachedPowerTopPlayersData(initialData.teamA, initialData.teamB, 5);
+      const result = await getCachedPowerTopPlayersData(homeTeam.id, awayTeam.id, 5);
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to load top players');
       }
@@ -84,20 +145,28 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
     refetchOnWindowFocus: false,
   });
 
-  const data = topPlayersQuery.data
-    ? {
-        ...initialData,
-        topPlayers: topPlayersQuery.data.topPlayers,
-        playerPhotoUrls: {
-          ...(initialData.playerPhotoUrls || {}),
-          ...(topPlayersQuery.data.playerPhotoUrls || {}),
-        },
-        teamLogoUrls: {
-          ...(initialData.teamLogoUrls || {}),
-          ...(topPlayersQuery.data.teamLogoUrls || {}),
-        },
-      }
-    : initialData;
+  const emptyData = React.useMemo(() => createEmptyPowerData(homeTeam.id, awayTeam.id), [homeTeam.id, awayTeam.id]);
+  const recentData = initialData ?? recentQuery.data;
+  const h2hData = initialData ?? h2hQuery.data;
+  const topPlayersData = initialData ?? topPlayersQuery.data;
+  const data: PowerData = {
+    ...emptyData,
+    recent: recentData?.recent ?? emptyData.recent,
+    h2h: h2hData?.h2h ?? emptyData.h2h,
+    topPlayers: topPlayersData?.topPlayers ?? emptyData.topPlayers,
+    standings: initialData?.standings ?? null,
+    teamLogoUrls: {
+      ...(recentData?.teamLogoUrls || {}),
+      ...(h2hData?.teamLogoUrls || {}),
+      ...(topPlayersData?.teamLogoUrls || {}),
+    },
+    leagueLogoUrls: {
+      ...(h2hData?.leagueLogoUrls || {}),
+    },
+    playerPhotoUrls: {
+      ...(topPlayersData?.playerPhotoUrls || {}),
+    },
+  };
   // 4590 표준: teamLogoUrls에서 URL 조회 헬퍼
   const getTeamLogo = (teamId: number) => data.teamLogoUrls?.[teamId] || TEAM_PLACEHOLDER;
 
@@ -132,25 +201,19 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
   const avgAgainstA = data.recent.teamA.summary.goalsAgainst / gamesA
   const avgForB = data.recent.teamB.summary.goalsFor / gamesB
   const avgAgainstB = data.recent.teamB.summary.goalsAgainst / gamesB
-  const showComparison = ['all', 'summary', 'comparison', 'comparisonRecent'].includes(mode);
-  const showRecent = ['all', 'summary', 'recent', 'comparisonRecent'].includes(mode);
-  const showH2H = ['all', 'summary', 'h2h'].includes(mode);
-  const showTopPlayers = ['all', 'topPlayers'].includes(mode);
-  const hasTopPlayers =
-    data.topPlayers.teamA.topScorers.length > 0 ||
-    data.topPlayers.teamA.topAssist.length > 0 ||
-    data.topPlayers.teamB.topScorers.length > 0 ||
-    data.topPlayers.teamB.topAssist.length > 0;
+  const isRecentLoading = !initialData && canFetchPowerData && (showComparison || showRecent) && recentQuery.isPending;
+  const isH2HLoading = !initialData && canFetchPowerData && showH2H && h2hQuery.isPending;
   const isTopPlayersLoading = showTopPlayers && shouldFetchTopPlayers && topPlayersQuery.isPending;
-  const isTopPlayersEmpty = showTopPlayers && !isTopPlayersLoading && !hasTopPlayers;
-  const renderTopPlayersState = () => {
-    if (!isTopPlayersLoading && !isTopPlayersEmpty) return null;
 
-    return (
-      <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-        {isTopPlayersLoading ? '불러오는 중...' : '데이터가 없습니다.'}
-      </div>
-    );
+  const renderInlineState = (message: string) => (
+    <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+      {message}
+    </div>
+  );
+
+  const renderTopPlayersListState = (isEmpty: boolean, emptyMessage: string) => {
+    if (!isEmpty) return null;
+    return renderInlineState(isTopPlayersLoading ? LOADING_TEXT : emptyMessage);
   };
 
   // 바 차트 너비 정규화는 각 섹션에서 상대 비교로 처리
@@ -302,6 +365,11 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
         </ContainerHeader>
         <ContainerContent>
           <div className="space-y-1.5">
+            {isRecentLoading
+              ? renderInlineState(LOADING_TEXT)
+              : data.recent.teamA.items.length === 0
+                ? renderInlineState('최근 경기 데이터가 없습니다.')
+                : null}
             {data.recent.teamA.items.slice(0, 5).map((it) => {
               const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
               const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
@@ -362,6 +430,11 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
         </ContainerHeader>
         <ContainerContent>
           <div className="space-y-1.5">
+            {isRecentLoading
+              ? renderInlineState(LOADING_TEXT)
+              : data.recent.teamB.items.length === 0
+                ? renderInlineState('최근 경기 데이터가 없습니다.')
+                : null}
             {data.recent.teamB.items.slice(0, 5).map((it) => {
               const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
               const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
@@ -416,6 +489,11 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             <div>
               <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamAMeta.name}</div>
               <div className="space-y-1.5">
+                {isRecentLoading
+                  ? renderInlineState(LOADING_TEXT)
+                  : data.recent.teamA.items.length === 0
+                    ? renderInlineState('최근 경기 데이터가 없습니다.')
+                    : null}
                 {data.recent.teamA.items.slice(0, 5).map((it) => {
                   const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
                   const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
@@ -465,6 +543,11 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             <div>
               <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamBMeta.name}</div>
               <div className="space-y-1.5">
+                {isRecentLoading
+                  ? renderInlineState(LOADING_TEXT)
+                  : data.recent.teamB.items.length === 0
+                    ? renderInlineState('최근 경기 데이터가 없습니다.')
+                    : null}
                 {data.recent.teamB.items.slice(0, 5).map((it) => {
                   const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
                   const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
@@ -524,6 +607,11 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
         
         {/* 경기 결과 목록 */}
         <div className="space-y-1">
+          {isH2HLoading
+            ? renderInlineState(LOADING_TEXT)
+            : data.h2h.items.length === 0
+              ? renderInlineState('맞대결 데이터가 없습니다.')
+              : null}
           {data.h2h.items.map((m) => {
             const isTeamAHome = m.teams.home?.id === data.teamA
             const aScore = isTeamAHome ? m.score.home : m.score.away
@@ -532,35 +620,35 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
               <Link
                 key={m.fixtureId}
                 href={fixtureHref(m.fixtureId, m.teams.home.name, m.teams.away.name)}
-                className="grid grid-cols-[3fr_1fr_3fr] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-[13px] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                className="grid min-w-0 grid-cols-[minmax(0,2.8fr)_minmax(0,1.4fr)_minmax(0,2.8fr)] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-[13px] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
               >
-                <div className="flex items-center justify-end px-1 gap-2">
-                  <span className="text-[13px]">{teamAMeta.name}</span>
+                <div className="flex min-w-0 items-center justify-end px-1 gap-2">
+                  <span className="min-w-0 truncate text-[13px]">{teamAMeta.name}</span>
                   <UnifiedSportsImageClient
                     src={getTeamLogo(data.teamA)}
                     alt={teamAMeta.name}
                     width={20}
                     height={20}
                     fit="contain"
-                    className="w-5 h-5"
+                    className="w-5 h-5 flex-shrink-0"
                   />
-                  <span className="font-semibold">{aScore}</span>
+                  <span className="font-semibold flex-shrink-0">{aScore}</span>
                 </div>
-                <div className="text-center text-gray-500 dark:text-gray-400 px-1">
+                <div className="min-w-0 text-center text-gray-500 dark:text-gray-400 px-1">
                   <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).replace(/\./g, '. ')}</div>
-                  <div className="text-xs truncate">{getLeagueKoreanName(m.league.name)}</div>
+                  <div className="min-w-0 truncate whitespace-nowrap text-xs">{getLeagueKoreanName(m.league.name)}</div>
                 </div>
-                <div className="flex items-center justify-start px-1 gap-2">
-                  <span className="font-semibold">{bScore}</span>
+                <div className="flex min-w-0 items-center justify-start px-1 gap-2">
+                  <span className="font-semibold flex-shrink-0">{bScore}</span>
                   <UnifiedSportsImageClient
                     src={getTeamLogo(data.teamB)}
                     alt={teamBMeta.name}
                     width={20}
                     height={20}
                     fit="contain"
-                    className="w-5 h-5"
+                    className="w-5 h-5 flex-shrink-0"
                   />
-                  <span className="text-[13px]">{teamBMeta.name}</span>
+                  <span className="min-w-0 truncate text-[13px]">{teamBMeta.name}</span>
                 </div>
               </Link>
             )
@@ -667,7 +755,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
-            {data.topPlayers.teamA.topScorers.length === 0 && renderTopPlayersState()}
+            {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
             {data.topPlayers.teamA.topScorers.map((playerA, index) => {
               const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -695,7 +783,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
-            {data.topPlayers.teamA.topAssist.length === 0 && renderTopPlayersState()}
+            {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
             {data.topPlayers.teamA.topAssist.map((playerA, index) => {
               const playerAKoreanName = playerKoreanNames[playerA.playerId];
               const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -741,7 +829,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
           {/* 득점왕 목록 */}
           <div className="space-y-1.5 mb-4">
-            {data.topPlayers.teamB.topScorers.length === 0 && renderTopPlayersState()}
+            {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
             {data.topPlayers.teamB.topScorers.map((playerB, index) => {
               const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -769,7 +857,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
           {/* 도움왕 목록 */}
           <div className="space-y-1.5">
-            {data.topPlayers.teamB.topAssist.length === 0 && renderTopPlayersState()}
+            {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
             {data.topPlayers.teamB.topAssist.map((playerB, index) => {
               const playerBKoreanName = playerKoreanNames[playerB.playerId];
               const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -820,7 +908,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
-                {data.topPlayers.teamA.topScorers.length === 0 && renderTopPlayersState()}
+                {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
                 {data.topPlayers.teamA.topScorers.map((playerA, index) => {
                   const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -848,7 +936,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
-                {data.topPlayers.teamA.topAssist.length === 0 && renderTopPlayersState()}
+                {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
                 {data.topPlayers.teamA.topAssist.map((playerA, index) => {
                   const playerAKoreanName = playerKoreanNames[playerA.playerId];
                   const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
@@ -894,7 +982,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
               {/* 득점왕 목록 */}
               <div className="space-y-1.5 mb-4">
-                {data.topPlayers.teamB.topScorers.length === 0 && renderTopPlayersState()}
+                {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
                 {data.topPlayers.teamB.topScorers.map((playerB, index) => {
                   const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
@@ -922,7 +1010,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
 
               {/* 도움왕 목록 */}
               <div className="space-y-1.5">
-                {data.topPlayers.teamB.topAssist.length === 0 && renderTopPlayersState()}
+                {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
                 {data.topPlayers.teamB.topAssist.map((playerB, index) => {
                   const playerBKoreanName = playerKoreanNames[playerB.playerId];
                   const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;

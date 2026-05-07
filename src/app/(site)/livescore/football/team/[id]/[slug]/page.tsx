@@ -16,6 +16,7 @@ import {
 import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
+import { getTeamLogoUrl } from '@/domains/livescore/actions/images';
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -45,12 +46,17 @@ export async function generateMetadata({
   const team = teamData.team;
   const teamName = team.name;
   const teamSlug = slug || slugify(teamName) || 'team';
+  const teamLogoUrl = await getTeamLogoUrl(Number(id), 'md');
+  const ogImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
   const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
 
   return buildMetadata({
     title: `${teamName} - 순위·선수단·일정`,
     description,
     path: `/livescore/football/team/${id}/${teamSlug}`,
+    image: ogImage,
+    imageWidth: ogImage ? 128 : undefined,
+    imageHeight: ogImage ? 128 : undefined,
     keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
   });
 }

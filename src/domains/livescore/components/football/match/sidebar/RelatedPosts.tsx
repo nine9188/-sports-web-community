@@ -14,10 +14,12 @@ export default function RelatedPosts({
   posts,
   boardSlug,
   teams,
+  isLoading = false,
 }: {
   posts: RelatedPost[];
   boardSlug?: string;
   teams?: { home?: TeamInfo; away?: TeamInfo };
+  isLoading?: boolean;
 }) {
   // 팀 그룹핑 모드 (매치 페이지)
   if (teams) {
@@ -43,11 +45,13 @@ export default function RelatedPosts({
             team={teams.home}
             posts={homePosts}
             label="홈"
+            isLoading={isLoading}
           />
           <TeamSection
             team={teams.away}
             posts={awayPosts}
             label="원정"
+            isLoading={isLoading}
           />
           {otherPosts.length > 0 && (
             <PostList posts={otherPosts} />
@@ -72,9 +76,13 @@ export default function RelatedPosts({
         )}
       </ContainerHeader>
 
-      {!posts || posts.length === 0 ? (
+      {isLoading ? (
         <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-[13px]">
-          관련 글이 없습니다.
+          불러오는 중...
+        </div>
+      ) : !posts || posts.length === 0 ? (
+        <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-[13px]">
+          관련 게시글 데이터가 없습니다.
         </div>
       ) : (
         <PostList posts={posts} />
@@ -87,10 +95,12 @@ function TeamSection({
   team,
   posts,
   label,
+  isLoading = false,
 }: {
   team?: TeamInfo;
   posts: RelatedPost[];
   label: string;
+  isLoading?: boolean;
 }) {
   if (!team) return null;
 
@@ -109,11 +119,15 @@ function TeamSection({
           </Link>
         )}
       </div>
-      {posts.length > 0 ? (
+      {isLoading ? (
+        <div className="px-3 py-3 text-[13px] text-gray-400 dark:text-gray-500">
+          불러오는 중...
+        </div>
+      ) : posts.length > 0 ? (
         <PostList posts={posts} />
       ) : (
         <div className="px-3 py-3 text-[13px] text-gray-400 dark:text-gray-500">
-          관련 글이 없습니다.
+          관련 게시글 데이터가 없습니다.
         </div>
       )}
     </div>

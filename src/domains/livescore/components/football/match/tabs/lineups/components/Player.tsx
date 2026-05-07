@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import styles from '../styles/formation.module.css';
 import { PlayerKoreanNames } from '../../../MatchPageClient';
 
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
+
 // 마지막 단어만 표시 (성 제외)
 // "프란시스코 바리도" → "바리도" / "박성수" → "박성수" / "Rashford" → "Rashford"
 function getShortName(fullName: string): string {
@@ -90,20 +92,11 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl
   }, [playerId]);
 
   const imageUrl = photoUrl || null;
-
-  // 에러 시 placeholder 원으로 대체 (null 대신)
-  if (!imageUrl || hasError) {
-    return (
-      <circle
-        r="2.5"
-        fill="#d1d5db"
-        clipPath={`url(#clip-${teamId}-${playerId})`}
-      />
-    );
-  }
+  const isUsingFallback = !imageUrl || hasError;
+  const imageSrc = isUsingFallback ? PLAYER_PLACEHOLDER : imageUrl;
 
   // 재시도용 캐시버스터
-  const src = retryCount > 0 ? `${imageUrl}?r=${retryCount}` : imageUrl;
+  const src = !isUsingFallback && retryCount > 0 ? `${imageSrc}?r=${retryCount}` : imageSrc;
 
   return (
     <image
@@ -119,7 +112,7 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl
       style={{ imageRendering: 'auto' }}
       onLoad={onImageLoad}
       onError={() => {
-        if (retryCount < 2) {
+        if (!isUsingFallback && retryCount < 2) {
           // 최대 2회 재시도
           setRetryCount(prev => prev + 1);
         } else {
@@ -444,4 +437,4 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
   );
 });
 
-export default Player; 
+export default Player;

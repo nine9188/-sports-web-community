@@ -151,7 +151,7 @@ export default function SupportCommentsSection({
   const awayTeam = matchData.teams?.away;
 
   // React Query로 댓글 로드
-  const { data: commentsData } = useQuery({
+  const { data: commentsData, isPending: commentsPending } = useQuery({
     queryKey: ['supportComments', matchId],
     queryFn: async () => {
       const result = await getSupportComments(matchId);
@@ -377,10 +377,13 @@ export default function SupportCommentsSection({
 
       {/* 댓글 목록 */}
       <div className="max-h-[32rem] overflow-y-auto">
-        {filteredComments.length === 0 ? (
+        {commentsPending ? (
           <div className="p-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
-            <p>아직 댓글이 없습니다.</p>
-            <p className="text-xs mt-1">첫 번째 응원 댓글을 남겨보세요!</p>
+            불러오는 중...
+          </div>
+        ) : filteredComments.length === 0 ? (
+          <div className="p-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+            댓글이 없습니다.
           </div>
         ) : (
           <>

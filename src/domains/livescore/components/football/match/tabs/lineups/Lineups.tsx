@@ -12,17 +12,23 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
-import MatchTabState from '../MatchTabState';
 import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
 import { fetchCachedMatchEvents } from '@/domains/livescore/actions/match/eventData';
 import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import { matchKeys } from '@/shared/constants/queryKeys';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const COACH_PLACEHOLDER = '/images/placeholder-coach.svg';
+
+const LineupInlineEmpty = ({ message }: { message: string }) => (
+  <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+    {message}
+  </div>
+);
 
 interface Player {
   id: number;
@@ -65,9 +71,10 @@ interface LineupsProps {
   playerKoreanNames?: PlayerKoreanNames;
   // 4590 표준: 서버에서 전달받은 Storage URL 맵
   teamLogoUrls?: Record<number, string>;
+  isLoading?: boolean;
 }
 
-export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {} }: LineupsProps) {
+export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, isLoading = false }: LineupsProps) {
   const { getTeamById } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
@@ -109,7 +116,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   });
 
   const playerStatsQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.detail(matchId), 'player-stats'] : ['match', 'player-stats', 'missing-id'],
+    queryKey: matchId ? [...matchKeys.detail(matchId), 'player-stats-v2'] : ['match', 'player-stats-v2', 'missing-id'],
     queryFn: () => fetchAllPlayerStats(matchId, matchStatus),
     enabled: !!matchId && !hasInitialPlayerStats,
     staleTime: 5 * 60 * 1000,
@@ -132,18 +139,57 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     return lineupCaptain === true || captainIds.includes(playerId);
   };
 
-  const lineups = resolvedLineups;
+  const rawLineups = resolvedLineups;
   const events = resolvedEvents;
   const lineupPlayerIds = useMemo(() => {
-    if (!lineups) return [];
+    if (!rawLineups) return [];
 
     const ids = new Set<number>();
-    lineups.home?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
-    lineups.home?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
-    lineups.away?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
-    lineups.away?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
+    rawLineups.home?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
+    rawLineups.home?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
+    rawLineups.away?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
+    rawLineups.away?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
     return Array.from(ids);
-  }, [lineups]);
+  }, [rawLineups]);
+
+  const playerPhotosQuery = useQuery({
+    queryKey: matchId ? [...matchKeys.lineups(matchId), 'player-photos', lineupPlayerIds.join(',')] : ['match', 'lineups', 'player-photos', 'missing-id'],
+    queryFn: () => getPlayerPhotoUrls(lineupPlayerIds, 'md'),
+    enabled: lineupPlayerIds.length > 0,
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+  });
+
+  const lineups = useMemo(() => {
+    if (!rawLineups) return null;
+
+    const photoMap = playerPhotosQuery.data || {};
+    const normalizePhoto = (player: Player) => (
+      photoMap[player.id]
+      || (player.photo?.includes('media.api-sports.io') ? PLAYER_PLACEHOLDER : player.photo)
+      || PLAYER_PLACEHOLDER
+    );
+    const mergePlayers = (items: TeamLineup['startXI']) => items.map(item => ({
+      ...item,
+      player: {
+        ...item.player,
+        photo: normalizePhoto(item.player),
+      },
+    }));
+
+    return {
+      home: {
+        ...rawLineups.home,
+        startXI: mergePlayers(rawLineups.home?.startXI || []),
+        substitutes: mergePlayers(rawLineups.home?.substitutes || []),
+      },
+      away: {
+        ...rawLineups.away,
+        startXI: mergePlayers(rawLineups.away?.startXI || []),
+        substitutes: mergePlayers(rawLineups.away?.substitutes || []),
+      },
+    };
+  }, [rawLineups, playerPhotosQuery.data]);
 
   const koreanNamesQuery = useQuery({
     queryKey: matchId ? [...matchKeys.lineups(matchId), 'korean-names', lineupPlayerIds.join(',')] : ['match', 'lineups', 'korean-names', 'missing-id'],
@@ -255,18 +301,21 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     }
   }, [currentPlayerIndex, teamPlayers, selectedPlayer]);
 
-  if (!lineups) {
-    if (lineupsQuery.isLoading || lineupsQuery.isFetching) {
-      return <MatchTabState title="라인업" message="불러오는 중..." />;
-    }
-
-    return <MatchTabState title="라인업" message="라인업 데이터가 없습니다." />;
-  }
-
   const homeTeam = matchData?.homeTeam || { id: 0, name: '홈팀', logo: '/placeholder-team.svg' };
   const awayTeam = matchData?.awayTeam || { id: 0, name: '원정팀', logo: '/placeholder-team.svg' };
-  const homeLineup = lineups.home;
-  const awayLineup = lineups.away;
+  const createEmptyLineup = (team: typeof homeTeam): TeamLineup => ({
+    team: {
+      id: team.id,
+      name: team.name,
+      logo: team.logo,
+    },
+    formation: '-',
+    startXI: [],
+    substitutes: [],
+  });
+  const homeLineup = lineups?.home ?? createEmptyLineup(homeTeam);
+  const awayLineup = lineups?.away ?? createEmptyLineup(awayTeam);
+  const isLineupsLoading = isLoading || (!lineups && (lineupsQuery.isLoading || lineupsQuery.isFetching));
 
   // 팀별 전체 선수 목록 (선발 + 교체) - 네비게이션용
   const homeAllPlayers: Player[] = [
@@ -297,6 +346,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             awayTeamDisplayName={getTeamDisplayName(awayTeam.id, awayTeam.name)}
             homeTeamLogoUrl={getTeamLogo(homeTeam.id)}
             awayTeamLogoUrl={getTeamLogo(awayTeam.id)}
+            isLoading={isLineupsLoading}
           />
         </div>
       )}
@@ -345,6 +395,16 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             <tbody className="divide-y divide-black/5 dark:divide-white/10 bg-white dark:bg-[#1D1D1D]">
 
             {/* 선발 라인업 행 생성 - 최대 11명 */}
+            {(homeLineup.startXI?.length || 0) === 0 && (awayLineup.startXI?.length || 0) === 0 && (
+              <tr>
+                <td className="w-1/2 border-r border-black/5 dark:border-white/10">
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '선발 라인업 데이터가 없습니다.'} />
+                </td>
+                <td className="w-1/2">
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '선발 라인업 데이터가 없습니다.'} />
+                </td>
+              </tr>
+            )}
             {Array.from({ length: Math.max(
               homeLineup.startXI?.length || 0,
               awayLineup.startXI?.length || 0
@@ -461,6 +521,16 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             <tbody className="divide-y divide-black/5 dark:divide-white/10 bg-white dark:bg-[#1D1D1D]">
 
             {/* 교체 선수 행 생성 */}
+            {(homeLineup.substitutes?.length || 0) === 0 && (awayLineup.substitutes?.length || 0) === 0 && (
+              <tr>
+                <td className="w-1/2 border-r border-black/5 dark:border-white/10">
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '교체 선수 데이터가 없습니다.'} />
+                </td>
+                <td className="w-1/2">
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '교체 선수 데이터가 없습니다.'} />
+                </td>
+              </tr>
+            )}
             {Array.from({ length: Math.max(
               homeLineup.substitutes?.length || 0,
               awayLineup.substitutes?.length || 0
@@ -566,7 +636,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
       </Container>
 
       {/* 감독 테이블 - 둘 다 있을 때만 표시 */}
-      {homeLineup.coach && awayLineup.coach && homeLineup.coach.name && awayLineup.coach.name && (
+      {(homeLineup.coach?.name || awayLineup.coach?.name) ? (
         <Container className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader>
             <ContainerTitle>감독</ContainerTitle>
@@ -624,6 +694,18 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             </table>
           </ContainerContent>
         </Container>
+      ) : (
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader>
+            <ContainerTitle>감독</ContainerTitle>
+          </ContainerHeader>
+          <ContainerContent className="p-0">
+            <div className="grid grid-cols-2 divide-x divide-black/5 dark:divide-white/10">
+              <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '감독 데이터가 없습니다.'} />
+              <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '감독 데이터가 없습니다.'} />
+            </div>
+          </ContainerContent>
+        </Container>
       )}
       </div>
 
@@ -658,6 +740,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             </ContainerHeader>
             <ContainerContent className="p-0">
               <div className="divide-y divide-black/5 dark:divide-white/10">
+                {(!homeLineup.startXI || homeLineup.startXI.length === 0) && (
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '선발 라인업 데이터가 없습니다.'} />
+                )}
                 {homeLineup.startXI?.map((item, index) => (
                   <div
                     key={`home-start-${index}`}
@@ -709,6 +794,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             </ContainerHeader>
             <ContainerContent className="p-0">
               <div className="divide-y divide-black/5 dark:divide-white/10">
+                {(!homeLineup.substitutes || homeLineup.substitutes.length === 0) && (
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '교체 선수 데이터가 없습니다.'} />
+                )}
                 {homeLineup.substitutes?.map((item, index) => (
                   <div
                     key={`home-sub-${index}`}
@@ -753,7 +841,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
           </Container>
 
           {/* 홈팀 감독 */}
-          {homeLineup.coach && homeLineup.coach.name && (
+          {homeLineup.coach?.name ? (
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <ContainerTitle>감독</ContainerTitle>
@@ -779,6 +867,15 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     <div className="text-xs text-gray-500 dark:text-gray-400">감독</div>
                   </div>
                 </div>
+              </ContainerContent>
+            </Container>
+          ) : (
+            <Container className="bg-white dark:bg-[#1D1D1D]">
+              <ContainerHeader>
+                <ContainerTitle>감독</ContainerTitle>
+              </ContainerHeader>
+              <ContainerContent className="p-0">
+                <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '감독 데이터가 없습니다.'} />
               </ContainerContent>
             </Container>
           )}
@@ -813,6 +910,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             </ContainerHeader>
             <ContainerContent className="p-0">
               <div className="divide-y divide-black/5 dark:divide-white/10">
+                {(!awayLineup.startXI || awayLineup.startXI.length === 0) && (
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '선발 라인업 데이터가 없습니다.'} />
+                )}
                 {awayLineup.startXI?.map((item, index) => (
                   <div
                     key={`away-start-${index}`}
@@ -864,6 +964,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             </ContainerHeader>
             <ContainerContent className="p-0">
               <div className="divide-y divide-black/5 dark:divide-white/10">
+                {(!awayLineup.substitutes || awayLineup.substitutes.length === 0) && (
+                  <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '교체 선수 데이터가 없습니다.'} />
+                )}
                 {awayLineup.substitutes?.map((item, index) => (
                   <div
                     key={`away-sub-${index}`}
@@ -908,7 +1011,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
           </Container>
 
           {/* 원정팀 감독 */}
-          {awayLineup.coach && awayLineup.coach.name && (
+          {awayLineup.coach?.name ? (
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <ContainerTitle>감독</ContainerTitle>
@@ -934,6 +1037,15 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     <div className="text-xs text-gray-500 dark:text-gray-400">감독</div>
                   </div>
                 </div>
+              </ContainerContent>
+            </Container>
+          ) : (
+            <Container className="bg-white dark:bg-[#1D1D1D]">
+              <ContainerHeader>
+                <ContainerTitle>감독</ContainerTitle>
+              </ContainerHeader>
+              <ContainerContent className="p-0">
+                <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : '감독 데이터가 없습니다.'} />
               </ContainerContent>
             </Container>
           )}

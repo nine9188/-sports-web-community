@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
@@ -27,6 +26,9 @@ interface StatsProps {
   playerKoreanNames?: PlayerKoreanNames;
   // 4590 표준: 서버에서 전달받은 Storage URL 맵
   teamLogoUrls?: Record<number, string>;
+  isLoading?: boolean;
+  teamStatsLoading?: boolean;
+  playerStatsLoading?: boolean;
 }
 
 // 팀 로고 컴포넌트 - 메모이제이션
@@ -63,6 +65,21 @@ const HorizontalScrollContainer = ({ children }: { children: React.ReactNode }) 
   );
 };
 
+const EmptyContent = ({ message }: { message: string }) => (
+  <ContainerContent className="px-3 py-4 text-center">
+    <p className="text-[13px] text-gray-500 dark:text-gray-400">{message}</p>
+  </ContainerContent>
+);
+
+const PlayerStatsEmpty = ({ title, message = '선수 통계 데이터가 없습니다.' }: { title: string; message?: string }) => (
+  <Container className="bg-white dark:bg-[#1D1D1D]">
+    <ContainerHeader>
+      <ContainerTitle>{title}</ContainerTitle>
+    </ContainerHeader>
+    <EmptyContent message={message} />
+  </Container>
+);
+
 // 통계 항목 렌더링 함수 - 메모이제이션
 const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: { 
   homeValue: string | number | null; 
@@ -94,17 +111,7 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
   }
   
   return (
-    <motion.div 
-      className="mb-3"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ 
-        duration: 0.5, 
-        delay: index * 0.1,
-        ease: "easeOut"
-      }}
-    >
+    <div className="mb-3">
       {/* 통계 제목 */}
       <div className="text-center text-xs font-semibold mb-1 uppercase tracking-wide text-gray-700 dark:text-gray-300">
         {koreanLabel}
@@ -120,45 +127,31 @@ const StatItem = memo(({ homeValue, awayValue, koreanLabel, index = 0 }: {
           <div className="absolute left-1/2 top-0 h-full w-0"></div>
           
           {/* 왼쪽 팀 바 (파란색) - 중앙에서 왼쪽으로 */}
-          <motion.div 
+          <div
             className="absolute top-0 h-full"
             style={{ 
               backgroundColor: '#0ea5e9',
               right: '50%',
-              transform: 'translateX(-0%)'
-            }}
-            initial={{ width: 0 }}
-            whileInView={{ width: `${homeWidth}%` }}
-            viewport={{ once: true }}
-            transition={{ 
-              duration: 0.8, 
-              delay: index * 0.1 + 0.3,
-              ease: "easeOut"
+              transform: 'translateX(-0%)',
+              width: `${homeWidth}%`,
             }}
           />
           
           {/* 오른쪽 팀 바 (녹색) - 중앙에서 오른쪽으로 */}
-          <motion.div 
+          <div
             className="absolute top-0 h-full"
             style={{ 
               backgroundColor: '#84cc16',
               left: '50%',
-              transform: 'translateX(0%)'
-            }}
-            initial={{ width: 0 }}
-            whileInView={{ width: `${awayWidth}%` }}
-            viewport={{ once: true }}
-            transition={{ 
-              duration: 0.8, 
-              delay: index * 0.1 + 0.3,
-              ease: "easeOut"
+              transform: 'translateX(0%)',
+              width: `${awayWidth}%`,
             }}
           />
         </div>
 
         <span className="font-medium text-[13px] w-8 text-left ml-2 text-gray-900 dark:text-[#F0F0F0]">{awayValue || '0'}</span>
       </div>
-    </motion.div>
+    </div>
   );
 });
 
@@ -185,7 +178,15 @@ const SortIcon = ({ field, currentField, direction }: { field: string; currentFi
   );
 };
 
-const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, playerKoreanNames = {}, teamLogoUrls = {} }: StatsProps) => {
+const Stats = memo(({
+  matchData: propsMatchData,
+  initialMatchPlayerStats,
+  playerKoreanNames = {},
+  teamLogoUrls = {},
+  isLoading = false,
+  teamStatsLoading = isLoading,
+  playerStatsLoading = isLoading,
+}: StatsProps) => {
   const { getTeamById } = useTeamLeague();
   // props에서 데이터 직접 추출 (서버에서 프리로드된 데이터)
   const stats = propsMatchData?.stats || [];
@@ -255,9 +256,11 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
     
     return groups;
   }, [statMappings]);
+  const hasTeamStats = stats.length > 0;
+  const teamSectionMessage = teamStatsLoading ? '불러오는 중...' : '통계 데이터가 없습니다.';
+  const playerSectionMessage = playerStatsLoading ? '불러오는 중...' : '선수 통계 데이터가 없습니다.';
 
-
-  if (!stats.length) {
+  if (false && !stats.length) {
     return (
       <div className="text-center py-8">
         <p className="text-[13px] text-gray-600">통계 데이터가 없습니다.</p>
@@ -348,22 +351,9 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
 
   return (
     <div className="p-0 relative">
-      <motion.div
-        className="space-y-2 relative"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div className="space-y-2 relative">
         {/* 기본 통계 */}
-        <motion.div
-          ref={basicRef}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.3,
-            ease: "easeOut"
-          }}
-        >
+        <div ref={basicRef}>
           <Container className="bg-white dark:bg-[#1D1D1D]">
             <ContainerHeader>
               <div className="flex items-center justify-between w-full">
@@ -382,65 +372,51 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                 )}
               </div>
             </ContainerHeader>
-            <ContainerContent>
-              {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
-            </ContainerContent>
+            {hasTeamStats ? (
+              <ContainerContent>
+                {categoryGroups.basic.map(({ key, label }, index) => renderStat(key, label, index))}
+              </ContainerContent>
+            ) : (
+              <EmptyContent message={teamSectionMessage} />
+            )}
           </Container>
-        </motion.div>
+        </div>
 
         {/* 슈팅 통계 */}
-        <motion.div
-          ref={shootingRef}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{
-            duration: 0.6,
-            delay: 0.2,
-            ease: "easeOut"
-          }}
-        >
+        <div ref={shootingRef}>
           <Container className="bg-white dark:bg-[#1D1D1D]">
             <ContainerHeader>
               <ContainerTitle>슈팅</ContainerTitle>
             </ContainerHeader>
-            <ContainerContent>
-              {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
-            </ContainerContent>
+            {hasTeamStats ? (
+              <ContainerContent>
+                {categoryGroups.shooting.map(({ key, label }, index) => renderStat(key, label, index))}
+              </ContainerContent>
+            ) : (
+              <EmptyContent message={teamSectionMessage} />
+            )}
           </Container>
-        </motion.div>
+        </div>
 
         {/* 패스 통계 */}
-        <motion.div
-          ref={passingRef}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{
-            duration: 0.6,
-            delay: 0.3,
-            ease: "easeOut"
-          }}
-        >
+        <div ref={passingRef}>
           <Container className="bg-white dark:bg-[#1D1D1D]">
             <ContainerHeader>
               <ContainerTitle>패스</ContainerTitle>
             </ContainerHeader>
-            <ContainerContent>
-              {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
-            </ContainerContent>
+            {hasTeamStats ? (
+              <ContainerContent>
+                {categoryGroups.passing.map(({ key, label }, index) => renderStat(key, label, index))}
+              </ContainerContent>
+            ) : (
+              <EmptyContent message={teamSectionMessage} />
+            )}
           </Container>
-        </motion.div>
+        </div>
 
         {/* 선수 종합 통계 - 홈팀 */}
-        {playerStatsData?.success && playerStatsData.data?.homeTeam && (
-          <motion.div
-            ref={homePlayersRef}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          >
+        {playerStatsData?.success && playerStatsData.data?.homeTeam ? (
+          <div ref={homePlayersRef}>
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
@@ -618,18 +594,12 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                 </HorizontalScrollContainer>
               </ContainerContent>
             </Container>
-          </motion.div>
-        )}
+          </div>
+        ) : <PlayerStatsEmpty title="홈팀 선수 통계" message={playerSectionMessage} />}
 
         {/* 선수 종합 통계 - 원정팀 */}
-        {playerStatsData?.success && playerStatsData.data?.awayTeam && (
-          <motion.div
-            ref={awayPlayersRef}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          >
+        {playerStatsData?.success && playerStatsData.data?.awayTeam ? (
+          <div ref={awayPlayersRef}>
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
@@ -807,9 +777,9 @@ const Stats = memo(({ matchData: propsMatchData, initialMatchPlayerStats, player
                 </HorizontalScrollContainer>
               </ContainerContent>
             </Container>
-          </motion.div>
-        )}
-      </motion.div>
+          </div>
+        ) : <PlayerStatsEmpty title="원정팀 선수 통계" message={playerSectionMessage} />}
+      </div>
     </div>
   );
 });

@@ -6,6 +6,7 @@ import { TabList, type TabItem } from '@/shared/components/ui';
 interface TabNavigationProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
+  onTabIntent?: (tabId: string) => void;
 }
 
 const tabs: TabItem[] = [
@@ -17,7 +18,7 @@ const tabs: TabItem[] = [
   { id: 'standings', label: '순위' }
 ];
 
-export default function TabNavigation({ activeTab = 'power', onTabChange }: TabNavigationProps) {
+export default function TabNavigation({ activeTab = 'power', onTabChange, onTabIntent }: TabNavigationProps) {
   // 탭 변경 처리 - 부모 컴포넌트에게 알림
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab) return;
@@ -29,6 +30,7 @@ export default function TabNavigation({ activeTab = 'power', onTabChange }: TabN
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
+      onTabIntent={onTabIntent}
     />
   );
-} 
+}

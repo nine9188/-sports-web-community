@@ -58,6 +58,7 @@ interface FormationProps {
   awayTeamDisplayName?: string;
   homeTeamLogoUrl?: string;
   awayTeamLogoUrl?: string;
+  isLoading?: boolean;
 }
 
 // 이미지 로드 헬퍼
@@ -138,8 +139,10 @@ export default function Formation({
   awayTeamDisplayName,
   homeTeamLogoUrl,
   awayTeamLogoUrl,
+  isLoading = false,
 }: FormationProps) {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const hasFormationPlayers = homeTeamData.startXI.length > 0 || awayTeamData.startXI.length > 0;
   const captureRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -506,11 +509,17 @@ export default function Formation({
 
       {/* 경기장 */}
       <ContainerContent className="p-0">
+        {false && !hasFormationPlayers && (
+          <div className="border-b border-black/5 px-3 py-4 text-center text-[13px] text-gray-500 dark:border-white/10 dark:text-gray-400">
+            포메이션 데이터가 없습니다. 라인업은 경기 시작 전에 공개됩니다.
+          </div>
+        )}
         <motion.div
           style={{
             maxWidth: '100%',
             aspectRatio: isMobile ? '9/16' : '100/67',
             margin: '0 auto',
+            position: 'relative',
           }}
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -527,6 +536,21 @@ export default function Formation({
               playerKoreanNames={playerKoreanNames}
             />
           </Field>
+          {(isLoading || !hasFormationPlayers) && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center px-4 pointer-events-none">
+              <div className="max-w-[280px] rounded-md border border-white/20 bg-black/45 px-4 py-3 text-center text-[13px] font-medium leading-relaxed text-white shadow-sm backdrop-blur-sm">
+                {isLoading ? (
+                  '불러오는 중...'
+                ) : (
+                  <>
+                    포메이션 데이터가 없습니다.
+                    <br />
+                    라인업은 경기 시작 전에 공개됩니다.
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       </ContainerContent>
     </Container>

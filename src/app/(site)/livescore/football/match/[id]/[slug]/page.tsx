@@ -1,7 +1,5 @@
 import { Metadata } from 'next';
 import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
-import { getCachedSidebarExtrasData } from '@/domains/livescore/actions/match/sidebarData';
-import { getCachedPowerSummaryData } from '@/domains/livescore/actions/match/headtohead';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { getLeagueSlug, getMatchSlug, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
@@ -9,13 +7,9 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
-import { getTeamsByIds, getLeagueById, isCupLeague, getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { getTeamsByIds, getLeagueById, isCupLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
-import type { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
-import MatchHeader from '@/domains/livescore/components/football/match/MatchHeader';
-import MatchSidebar from '@/domains/livescore/components/football/match/sidebar/MatchSidebar';
-import HighlightBanner from '@/domains/livescore/components/football/match/HighlightBanner';
 
 function addHoursToIsoDate(isoDate: string, hours: number): string {
   const date = new Date(isoDate);
@@ -104,41 +98,6 @@ export async function generateMetadata({
   });
 }
 
-async function MatchSidebarLoader({
-  matchId,
-  matchData,
-}: {
-  matchId: string;
-  matchData: MatchFullDataResponse;
-}) {
-  const numericMatchId = parseInt(matchId, 10);
-  const homeTeamId = matchData.homeTeam?.id;
-  const awayTeamId = matchData.awayTeam?.id;
-  const leagueId = matchData.match?.league?.id;
-  const statusCode = matchData.match?.status?.code ?? '';
-  const isFinished = ['FT', 'AET', 'PEN'].includes(statusCode);
-
-  const [sidebarDataResult, highlightData] = await Promise.all([
-    getCachedSidebarExtrasData(matchId, homeTeamId, awayTeamId, matchData.matchData as Record<string, unknown> | undefined),
-    isFinished && homeTeamId && awayTeamId && leagueId
-      ? getMatchHighlight(numericMatchId, homeTeamId, awayTeamId, leagueId, matchData.match?.time?.date).catch(() => null)
-      : Promise.resolve(null),
-  ]);
-  const sidebarData = sidebarDataResult.success ? sidebarDataResult.data : null;
-
-  return (
-    <>
-      {highlightData && <HighlightBanner highlight={highlightData} mode="modal" />}
-      <MatchSidebar
-        matchId={matchId}
-        initialData={matchData.matchData}
-        sidebarData={sidebarData}
-        teamLogoUrls={matchData.teamLogoUrls}
-      />
-    </>
-  );
-}
-
 async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug: string; tab?: string }) {
   try {
     const initialTab: MatchTabType = tab && VALID_TABS.includes(tab as MatchTabType)
@@ -155,16 +114,11 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       permanentRedirect(`/livescore/football/match/${matchId}/${canonicalSlug}${tabParam}`);
     }
 
-    // Stage 1: load base match data first so the header and JSON-LD can render early.
-    const fetchEvents = initialTab === 'events' || initialTab === 'lineups';
-    const fetchLineups = initialTab === 'lineups';
-    const fetchStats = initialTab === 'stats';
-    const fetchStandings = initialTab === 'standings';
     const matchData = await fetchCachedMatchFullData(matchId, {
-      fetchEvents,
-      fetchLineups,
-      fetchStats,
-      fetchStandings,
+      fetchEvents: false,
+      fetchLineups: false,
+      fetchStats: false,
+      fetchStandings: false,
     });
 
     if (!matchData.success) {
@@ -172,24 +126,9 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     }
     // JSON-LD building (SEO)
     const match = matchData.match;
-    const homeTeamId = matchData.homeTeam?.id;
-    const awayTeamId = matchData.awayTeam?.id;
-    const leagueId = match?.league?.id;
-    const needsCupRounds = initialTab === 'standings';
-    const [powerDataResult, leagueIsCup, cupSeason] = await Promise.all([
-      homeTeamId && awayTeamId
-        ? getCachedPowerSummaryData(homeTeamId, awayTeamId, 5)
-        : Promise.resolve({ success: false, data: undefined }),
-      needsCupRounds ? isCupLeague(leagueId) : Promise.resolve(false),
-      needsCupRounds && leagueId ? getCurrentSeasonForLeague(leagueId) : Promise.resolve(undefined),
-    ]);
-    const powerResult = powerDataResult as { success?: boolean; data?: HeadToHeadTestData };
-    const powerData = powerResult.success ? powerResult.data : undefined;
-    const cupRoundsResult = needsCupRounds && leagueIsCup && leagueId
-      ? await fetchCupFixturesByRound(leagueId, cupSeason).catch(() => ({ success: false as const, rounds: [] }))
-      : { success: true as const, rounds: [] };
     const rawData = matchData.matchData as Record<string, unknown> | undefined;
     const rawFixture = rawData?.fixture as { venue?: { name?: string; city?: string } } | undefined;
+    const rawLeague = rawData?.league as { season?: number } | undefined;
     const venueName = rawFixture?.venue?.name;
     const venueCity = rawFixture?.venue?.city;
     const statusCode = match?.status?.code ?? '';
@@ -304,9 +243,26 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
         { name: matchDisplayName, url: matchUrl },
       ],
     });
+    const shouldLoadCupRounds = initialTab === 'standings' && match?.league?.id
+      ? await isCupLeague(match.league.id)
+      : false;
+    const [cupRoundsData, highlight] = await Promise.all([
+      shouldLoadCupRounds && match?.league?.id
+        ? fetchCupFixturesByRound(match.league.id, rawLeague?.season).then((result) => result.rounds)
+        : Promise.resolve(undefined),
+      match?.id && match?.teams.home.id && match?.teams.away.id && match?.league.id
+        ? getMatchHighlight(
+            match.id,
+            match.teams.home.id,
+            match.teams.away.id,
+            match.league.id,
+            match.time?.date
+          )
+        : Promise.resolve(null),
+    ]);
 
     return (
-      <div className="container">
+      <>
         {sportsEventSchema && (
           <script
             type="application/ld+json"
@@ -317,32 +273,14 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
           type="application/ld+json"
           {...jsonLdScriptProps(breadcrumbSchema)}
         />
-        <div className="flex gap-4">
-          <div className="flex-1 min-w-0">
-            <MatchHeader
-              matchId={matchId}
-              initialData={matchData}
-              teamLogoUrls={matchData.teamLogoUrls}
-              leagueLogoUrl={matchData.leagueLogoUrl}
-              leagueLogoDarkUrl={matchData.leagueLogoDarkUrl}
-            />
-            <MatchPageClient
-              matchId={matchId}
-              initialTab={initialTab}
-              initialData={matchData}
-              initialPowerData={powerData}
-              powerMode="all"
-              cupRoundsData={cupRoundsResult.rounds}
-            />
-          </div>
-          <aside className="hidden xl:block w-[300px] shrink-0">
-            <MatchSidebarLoader
-              matchId={matchId}
-              matchData={matchData}
-            />
-          </aside>
-        </div>
-      </div>
+        <MatchPageClient
+          matchId={matchId}
+          initialTab={initialTab}
+          initialData={matchData}
+          cupRoundsData={cupRoundsData}
+          highlight={highlight}
+        />
+      </>
     );
   } catch (error) {
     if (

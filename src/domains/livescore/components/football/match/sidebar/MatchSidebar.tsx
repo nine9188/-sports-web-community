@@ -55,6 +55,8 @@ interface MatchDataType {
 import MatchPredictionClient from './MatchPredictionClient';
 import SupportCommentsSection from './SupportCommentsSection';
 import RelatedPosts from './RelatedPosts';
+import HighlightBanner from '../HighlightBanner';
+import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 
 // 매치 정보 섹션 컴포넌트 - export 추가
 export function MatchInfoSection({
@@ -63,7 +65,8 @@ export function MatchInfoSection({
   showOnlyMatchInfo = false,
   showMatchInfo = true,
   sidebarData,
-  teamLogoUrls
+  teamLogoUrls,
+  highlight,
 }: {
   matchId: string;
   initialData?: MatchDataType | null;
@@ -71,6 +74,7 @@ export function MatchInfoSection({
   showMatchInfo?: boolean;
   sidebarData?: SidebarData | null;
   teamLogoUrls?: Record<number, string>;
+  highlight?: MatchHighlight | null;
 }) {
   const { getTeamById } = useTeamLeague();
   const [matchData, setMatchData] = useState<MatchDataType | null>(initialData || null);
@@ -247,6 +251,8 @@ export function MatchInfoSection({
       {/* showOnlyMatchInfo가 false일 때만 승무패 예측과 응원 댓글 표시 */}
       {!showOnlyMatchInfo && (
         <>
+          <HighlightBanner highlight={highlight ?? null} mode="modal" />
+
           {/* 승무패 예측 섹션 - 클라이언트 컴포넌트 */}
           <MatchPredictionClient
             matchId={matchId}
@@ -285,6 +291,7 @@ export default function MatchSidebar({
   showMatchInfo = true,
   showExtras = true,
   teamLogoUrls,
+  highlight,
 }: { 
   matchId: string;
   initialData?: MatchDataType | null;
@@ -292,6 +299,7 @@ export default function MatchSidebar({
   showMatchInfo?: boolean;
   showExtras?: boolean;
   teamLogoUrls?: Record<number, string>;
+  highlight?: MatchHighlight | null;
 }) {
   return (
     <div>
@@ -304,6 +312,7 @@ export default function MatchSidebar({
           showMatchInfo={showMatchInfo}
           showOnlyMatchInfo={!showExtras}
           teamLogoUrls={teamLogoUrls}
+          highlight={highlight}
         />
       </div>
     </div>

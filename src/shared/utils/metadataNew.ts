@@ -31,6 +31,10 @@ export interface BuildMetadataParams {
   description?: string;
   /** OG 이미지 URL (선택) - 없으면 전역 이미지 사용 */
   image?: string;
+  /** OG 이미지 너비 (선택) */
+  imageWidth?: number;
+  /** OG 이미지 높이 (선택) */
+  imageHeight?: number;
   /** 검색 제외 여부 (선택) */
   noindex?: boolean;
   /** 페이지 타입 (선택) */
@@ -149,6 +153,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
 
   // 이미지 타입
   const imageType = getImageType(ogImage);
+  const imageSize = getDefaultImageSize(ogImage);
 
   const metadata: Metadata = {
     title: titleMeta,
@@ -164,8 +169,8 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
       images: [{
         url: ogImage,
         secureUrl: ogImage,  // Safari 최적화: property="og:image:secure_url" 생성
-        width: 1200,
-        height: 630,
+        width: params.imageWidth || imageSize.width,
+        height: params.imageHeight || imageSize.height,
         alt: params.title,
         type: imageType,
       }],
@@ -213,6 +218,13 @@ const getImageType = (path: string): string => {
   }
   return 'image/png';
 };
+
+function getDefaultImageSize(path: string): { width: number; height: number } {
+  if (path.includes('og-image-square')) {
+    return { width: 1200, height: 1200 };
+  }
+  return { width: 1200, height: 630 };
+}
 
 /**
  * 페이지의 메타데이터를 생성합니다.

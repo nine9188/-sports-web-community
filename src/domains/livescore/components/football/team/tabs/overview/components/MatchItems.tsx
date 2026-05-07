@@ -172,6 +172,8 @@ export default function MatchItems({
                   <tr
                     key={match.fixture.id}
                     className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
+                    onMouseEnter={() => router.prefetch(getMatchHref(match))}
+                    onFocus={() => router.prefetch(getMatchHref(match))}
                     onClick={() => router.push(getMatchHref(match))}
                   >
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
@@ -312,6 +314,8 @@ export default function MatchItems({
                   <tr
                     key={match.fixture.id}
                     className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
+                    onMouseEnter={() => router.prefetch(getMatchHref(match))}
+                    onFocus={() => router.prefetch(getMatchHref(match))}
                     onClick={() => router.push(getMatchHref(match))}
                   >
                     <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
@@ -411,4 +415,3 @@ export default function MatchItems({
     </div>
   );
 } 
-

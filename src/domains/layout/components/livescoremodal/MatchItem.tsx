@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Trophy, Users } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
@@ -93,6 +94,7 @@ const MatchItem = React.memo(function MatchItem({
   homeTeamLogoUrl,
   awayTeamLogoUrl,
 }: MatchItemProps) {
+  const router = useRouter();
   const { getLeagueName, getLeagueKoreanName, getTeamById } = useTeamLeague();
   const isLive = ['LIVE', '1H', '2H', 'HT'].includes(match.status?.code || '');
   const isFinished = ['FT', 'AET', 'PEN'].includes(match.status?.code || '');
@@ -134,12 +136,14 @@ const MatchItem = React.memo(function MatchItem({
   // 경기 클릭 핸들러
   const handleMatchClick = () => {
     onClose();
-    window.location.href = matchHref;
+    router.push(matchHref);
   };
 
   return (
     <div
       className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 rounded-lg p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer relative"
+      onMouseEnter={() => router.prefetch(matchHref)}
+      onFocus={() => router.prefetch(matchHref)}
       onClick={handleMatchClick}
     >
       {/* SEO: 크롤러가 매치 URL을 발견할 수 있도록 숨겨진 Link */}

@@ -26,15 +26,15 @@ const STATUS_LABEL: Record<string, string> = {
 const LIVE_CODES = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'SUSP', 'INT']);
 const FINISHED_CODES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO']);
 
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '';
+function formatDateTime(iso: string | undefined): { date: string; time: string } {
+  if (!iso) return { date: '', time: '' };
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
+  if (Number.isNaN(d.getTime())) return { date: '', time: '' };
   const m = d.getMonth() + 1;
   const day = d.getDate();
   const h = String(d.getHours()).padStart(2, '0');
   const min = String(d.getMinutes()).padStart(2, '0');
-  return `${m}/${day} ${h}:${min}`;
+  return { date: `${m}/${day}`, time: `${h}:${min}` };
 }
 
 function teamDisplayName(f: CupFixture['home']): string {
@@ -53,6 +53,7 @@ function FixtureRow({ fixture, isLast, isCurrent = false }: FixtureRowProps) {
   const isFinished = FINISHED_CODES.has(status.short);
   const showScore = isLive || isFinished;
   const statusLabel = STATUS_LABEL[status.short] || status.short || '';
+  const dateTime = formatDateTime(fixture.date);
 
   const href = matchUrl(fixture.id, getMatchSlug(home.name, away.name));
 
@@ -77,7 +78,9 @@ function FixtureRow({ fixture, isLast, isCurrent = false }: FixtureRowProps) {
     >
       {/* 날짜 + 상태 */}
       <div className="w-[56px] flex-shrink-0 text-[11px] leading-tight">
-        <div className="text-gray-700 dark:text-gray-300">{formatDate(fixture.date)}</div>
+        <div className="whitespace-nowrap text-gray-700 dark:text-gray-300">
+          {dateTime.date} {dateTime.time}
+        </div>
         <div className={isLive ? 'text-red-500 font-medium' : 'text-gray-400 dark:text-gray-500'}>
           {statusLabel}
         </div>

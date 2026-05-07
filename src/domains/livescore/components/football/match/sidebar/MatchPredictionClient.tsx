@@ -169,7 +169,7 @@ export default function MatchPredictionClient({
   };
 
   // React Query로 사용자 예측 로드
-  const { data: userPredictionData } = useQuery({
+  const { data: userPredictionData, isPending: predictionPending } = useQuery({
     queryKey: ['userPrediction', matchId],
     queryFn: async () => {
       const result = await getUserPrediction(matchId);
@@ -182,7 +182,7 @@ export default function MatchPredictionClient({
   });
 
   // React Query로 예측 통계 로드
-  const { data: statsData } = useQuery({
+  const { data: statsData, isPending: statsPending } = useQuery({
     queryKey: ['predictionStats', matchId],
     queryFn: async () => {
       const result = await getPredictionStats(matchId);
@@ -324,6 +324,12 @@ export default function MatchPredictionClient({
   const canPredict = !isMatchFinished() && !isMatchStarted();
   const finished = isMatchFinished();
   const inProgress = isMatchInProgress();
+  const isPredictionDataLoading = predictionPending || statsPending;
+  const predictionEmptyMessage = finished
+    ? ['종료된 경기입니다. 예측 참여가 없습니다.']
+    : inProgress
+      ? ['경기가 진행 중입니다.', '시작 전까지만 예측할 수 있습니다.']
+      : ['아직 예측 참여가 없습니다.'];
 
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
@@ -446,7 +452,17 @@ export default function MatchPredictionClient({
         )}
 
         {/* 전체 통계 표시 */}
-        {stats && stats.total_votes > 0 && (
+        {isPredictionDataLoading ? (
+          <div className="mt-3 p-3 text-center text-[13px] text-gray-500 dark:text-gray-400">
+            불러오는 중...
+          </div>
+        ) : !stats || stats.total_votes === 0 ? (
+          <div className="mt-3 p-3 text-center text-[13px] text-gray-500 dark:text-gray-400">
+            {predictionEmptyMessage.map((line) => (
+              <div key={line}>{line}</div>
+            ))}
+          </div>
+        ) : (
           <div className="mt-3 p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="text-xs text-gray-700 dark:text-gray-300 mb-2 text-center">
               총 {stats.total_votes}명이 예측했습니다

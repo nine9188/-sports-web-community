@@ -31,7 +31,18 @@ export default function HighlightBanner({ highlight, mode = 'modal' }: Highlight
     };
   }, [isModalOpen]);
 
-  if (!highlight) return null;
+  if (!highlight) {
+    return (
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <ContainerHeader>
+          <ContainerTitle>공식 하이라이트</ContainerTitle>
+        </ContainerHeader>
+        <div className="p-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+          하이라이트가 없습니다.
+        </div>
+      </Container>
+    );
+  }
 
   const thumbnailUrl =
     highlight.thumbnail_url ||

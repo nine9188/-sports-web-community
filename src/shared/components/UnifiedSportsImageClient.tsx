@@ -9,6 +9,8 @@ type ShapeVariant = 'square' | 'circle';
 
 const MAX_RETRY = 1; // 에러 시 최대 재시도 횟수
 
+const DEFAULT_FALLBACK_SRC = '/images/placeholder-player.svg';
+
 interface UnifiedSportsImageClientProps {
   src: string;  // 서버에서 확정된 URL만 받음 (라이트모드 기본)
   srcDark?: string;  // 다크모드용 URL (선택사항)
@@ -17,6 +19,7 @@ interface UnifiedSportsImageClientProps {
   variant?: ShapeVariant;
   showFallback?: boolean;
   fallbackContent?: React.ReactNode;
+  fallbackSrc?: string;
   loading?: 'lazy' | 'eager';
   priority?: boolean;
   unoptimized?: boolean;
@@ -45,6 +48,7 @@ export default function UnifiedSportsImageClient({
   variant = 'square',
   showFallback = true,
   fallbackContent,
+  fallbackSrc = DEFAULT_FALLBACK_SRC,
   loading = 'lazy',
   priority = false,
   unoptimized = true,
@@ -134,6 +138,17 @@ export default function UnifiedSportsImageClient({
         style={containerStyle}
       >
         {showFallback && fallbackContent ? fallbackContent : null}
+        {showFallback && !fallbackContent ? (
+          <Image
+            src={fallbackSrc}
+            alt={alt}
+            width={finalWidth}
+            height={finalHeight}
+            unoptimized
+            className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
+            sizes={`${finalWidth}px`}
+          />
+        ) : null}
       </div>
     );
   }

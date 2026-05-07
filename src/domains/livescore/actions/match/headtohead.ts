@@ -11,6 +11,8 @@ import { unstable_cache } from 'next/cache'
 // Utilities
 
 const FINISHED_STATUSES = ['FT', 'AET', 'PEN']
+const API_BASE_URL = 'https://v3.football.api-sports.io'
+const API_KEY = process.env.FOOTBALL_API_KEY || ''
 
 async function fetchWithRetry<T>(fn: () => Promise<T>, maxRetries: number = 1): Promise<T> {
 	for (let i = 0; i <= maxRetries; i++) {
@@ -22,6 +24,34 @@ async function fetchWithRetry<T>(fn: () => Promise<T>, maxRetries: number = 1): 
 		}
 	}
 	throw new Error('fetchWithRetry: unreachable')
+}
+
+async function fetchFootballApiNoStore(endpoint: string, params: Record<string, string | number> = {}) {
+	const queryParams = new URLSearchParams()
+	Object.entries(params)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.forEach(([key, value]) => {
+			queryParams.append(key, value.toString())
+		})
+
+	const response = await fetch(`${API_BASE_URL}/${endpoint}?${queryParams.toString()}`, {
+		cache: 'no-store',
+		headers: {
+			'x-rapidapi-host': 'v3.football.api-sports.io',
+			'x-rapidapi-key': API_KEY,
+		},
+	})
+
+	if (!response.ok) {
+		throw new Error(`API response error: ${response.status}`)
+	}
+
+	const data = await response.json()
+	if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {
+		throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`)
+	}
+
+	return data
 }
 
 type TeamId = number
@@ -343,14 +373,14 @@ function mapTopPlayerResponse(response: ApiTopPlayerResponse[]): TopPlayerItem[]
 }
 
 async function fetchTeamTopPlayersRaw(teamId: TeamId, season: number, league: number): Promise<TopPlayerItem[]> {
-	const firstPage = await fetchFromFootballApi('players', { team: teamId, season, league, page: 1 })
+	const firstPage = await fetchFootballApiNoStore('players', { team: teamId, season, league, page: 1 })
 	const firstResponse = Array.isArray(firstPage?.response) ? firstPage.response as ApiTopPlayerResponse[] : []
 	const totalPages = Math.min(Number(firstPage?.paging?.total || 1), 3)
 
 	const restPages = totalPages > 1
 		? await Promise.all(
 			Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(page =>
-				fetchFromFootballApi('players', { team: teamId, season, league, page })
+				fetchFootballApiNoStore('players', { team: teamId, season, league, page })
 					.catch(() => ({ response: [] }))
 			)
 		)
@@ -606,13 +636,10 @@ export async function getPowerH2HData(teamA: TeamId, teamB: TeamId, last: number
 }
 
 export async function getPowerTopPlayersData(teamA: TeamId, teamB: TeamId, last: number = 5): Promise<HeadToHeadTestData> {
-	const results = await Promise.allSettled([
+	const [topA, topB] = await Promise.all([
 		fetchWithRetry(() => fetchTeamTopPlayers(teamA)),
 		fetchWithRetry(() => fetchTeamTopPlayers(teamB))
 	])
-
-	const topA = results[0].status === 'fulfilled' ? results[0].value : createEmptyTopPlayers(teamA)
-	const topB = results[1].status === 'fulfilled' ? results[1].value : createEmptyTopPlayers(teamB)
 
 	const teamLogoUrls = await getTeamLogoUrls([teamA, teamB])
 	const playerPhotoUrls: Record<number, string> = {
@@ -631,7 +658,7 @@ export async function getPowerTopPlayersData(teamA: TeamId, teamB: TeamId, last:
 		topPlayers: { teamA: topA, teamB: topB },
 		playerPhotoUrls,
 		teamLogoUrls,
-		isComplete: results.every(r => r.status === 'fulfilled')
+		isComplete: true
 	}
 }
 
@@ -745,23 +772,18 @@ export async function fetchCachedPowerTopPlayersData(
 	teamB: TeamId,
 	last: number = 5
 ): Promise<{ success: boolean; data?: HeadToHeadTestData; error?: string }> {
-	return unstable_cache(
-		async () => {
-			try {
-				if (!teamA || !teamB) return { success: false, error: 'Team IDs are required' }
-				const data = await getPowerTopPlayersData(teamA, teamB, last)
-				return { success: true, data }
-			} catch (error) {
-				console.error('[fetchCachedPowerTopPlayersData] error:', error)
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : 'Failed to load top player data.'
-				}
-			}
-		},
-		['power-top-players-data', String(teamA), String(teamB), String(last)],
-		{ revalidate: 21600, tags: [`power-top-players-${teamA}-${teamB}`] }
-	)()
+	if (!teamA || !teamB) return { success: false, error: 'Team IDs are required' }
+
+	try {
+		const data = await getPowerTopPlayersData(teamA, teamB, last)
+		return { success: true, data }
+	} catch (error) {
+		console.error('[fetchCachedPowerTopPlayersData] error:', error)
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : 'Failed to load top player data.'
+		}
+	}
 }
 
 export const getCachedPowerData = cache(fetchCachedPowerData)

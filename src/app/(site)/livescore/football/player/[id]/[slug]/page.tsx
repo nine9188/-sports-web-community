@@ -67,6 +67,8 @@ export async function generateMetadata({
   const teamMapping = teamId ? await getSafeTeamById(teamId) : null;
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
   const position = statistics?.[0]?.games?.position || '';
+  const playerPhotoUrl = playerData.playerPhotoUrl || player.photo;
+  const ogImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
 
   const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
 
@@ -74,6 +76,9 @@ export async function generateMetadata({
     title: `${playerName} - 통계·기록·프로필`,
     description,
     path: `/livescore/football/player/${id}/${slug || slugify(player.name) || 'player'}`,
+    image: ogImage,
+    imageWidth: ogImage ? 128 : undefined,
+    imageHeight: ogImage ? 128 : undefined,
     keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
   });
 }

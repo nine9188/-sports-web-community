@@ -98,7 +98,6 @@ export interface PlayerDuels {
 export interface PlayerDribbles {
   attempts?: number;
   success?: number;
-  past?: number;
 }
 
 export interface PlayerFouls {
@@ -112,10 +111,6 @@ export interface PlayerCards {
 }
 
 export interface PlayerPenalty {
-  won?: number;
-  committed?: number;
-  scored?: number;
-  missed?: number;
   saved?: number;
 }
 
@@ -131,7 +126,7 @@ export interface PlayerStatistics {
   shots: PlayerShots;
   goals: PlayerGoals;
   passes: PlayerPasses;
-  tackles: PlayerTackles;
+  tackles?: PlayerTackles;
   duels: PlayerDuels;
   dribbles: PlayerDribbles;
   fouls: PlayerFouls;
@@ -144,7 +139,7 @@ export interface PlayerStatsData {
   player: {
     id: number;
     name: string;
-    photo: string;
+    photo?: string;
     number?: number;
     pos?: string;
   };

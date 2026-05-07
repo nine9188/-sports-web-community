@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -10,6 +10,7 @@ import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/
 import { LEAGUE_IDS } from './constants/standings';
 import CupRoundsView from '@/domains/livescore/components/football/leagues/CupRoundsView';
 import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
+import MatchTabState from './MatchTabState';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -25,6 +26,7 @@ interface StandingsProps {
   leagueLogoUrls?: Record<number, string>;
   leagueLogoDarkUrls?: Record<number, string>;
   cupRoundsData?: CupRound[];
+  isLoading?: boolean;
 }
 
 const headerCell = 'px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap';
@@ -121,9 +123,19 @@ function getLegend(leagueId: number) {
   }
 }
 
-const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData }: StandingsProps) => {
+const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData, isLoading = false }: StandingsProps) => {
   const router = useRouter();
   const { getTeamDisplayName, getLeagueName } = useTeamLeague();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   const handleRowClick = useCallback((teamId: number) => {
     router.push(`/livescore/football/team/${teamId}`);
@@ -141,21 +153,14 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
 
   const standings = matchData.standings?.standings?.league;
   if (!standings?.standings?.length) {
-    return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader>
-          <ContainerTitle>순위</ContainerTitle>
-        </ContainerHeader>
-        <ContainerContent>
-          <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">순위 데이터가 없습니다.</p>
-        </ContainerContent>
-      </Container>
-    );
+    return <MatchTabState title="순위" message={isLoading ? '불러오는 중...' : '순위 데이터가 없습니다.'} />;
   }
 
   const leagueId = standings.id;
   const leagueName = getLeagueName(leagueId) || standings.name;
-  const leagueLogo = leagueLogoDarkUrls[leagueId] || leagueLogoUrls[leagueId] || standings.logo || LEAGUE_PLACEHOLDER;
+  const leagueLogo = (isDark && leagueLogoDarkUrls[leagueId])
+    ? leagueLogoDarkUrls[leagueId]
+    : leagueLogoUrls[leagueId] || standings.logo || LEAGUE_PLACEHOLDER;
   const homeTeamId = matchData.homeTeam?.id;
   const awayTeamId = matchData.awayTeam?.id;
 
@@ -176,33 +181,34 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
             </div>
           </ContainerHeader>
           <ContainerContent className="p-0">
+            <div className="w-full">
             <table className="w-full table-fixed border-collapse">
               <colgroup>
-                <col className="w-12" />
-                <col />
-                <col className="w-12" />
+                <col className="w-8 md:w-12" />
+                <col className="w-[42%] md:w-auto" />
+                <col className="hidden md:table-column w-12" />
                 <col className="w-10" />
                 <col className="w-10" />
                 <col className="w-10" />
+                <col className="hidden md:table-column w-12" />
+                <col className="hidden md:table-column w-12" />
+                <col className="hidden md:table-column w-14" />
                 <col className="w-12" />
-                <col className="w-12" />
-                <col className="w-14" />
-                <col className="w-12" />
-                <col className="w-32" />
+                <col className="hidden md:table-column w-32" />
               </colgroup>
               <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
                 <tr>
                   <th className={headerCell}>순위</th>
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">팀</th>
-                  <th className={headerCell}>경기</th>
+                  <th className={`hidden md:table-cell ${headerCell}`}>경기</th>
                   <th className={headerCell}>승</th>
                   <th className={headerCell}>무</th>
                   <th className={headerCell}>패</th>
-                  <th className={headerCell}>득점</th>
-                  <th className={headerCell}>실점</th>
-                  <th className={headerCell}>득실차</th>
+                  <th className={`hidden md:table-cell ${headerCell}`}>득점</th>
+                  <th className={`hidden md:table-cell ${headerCell}`}>실점</th>
+                  <th className={`hidden md:table-cell ${headerCell}`}>득실차</th>
                   <th className={headerCell}>승점</th>
-                  <th className={headerCell}>최근 5경기</th>
+                  <th className={`hidden md:table-cell ${headerCell}`}>최근 5경기</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,15 +242,15 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
                           )}
                         </Link>
                       </td>
-                      <td className={bodyCell}>{standing.all.played}</td>
+                      <td className={`hidden md:table-cell ${bodyCell}`}>{standing.all.played}</td>
                       <td className={bodyCell}>{standing.all.win}</td>
                       <td className={bodyCell}>{standing.all.draw}</td>
                       <td className={bodyCell}>{standing.all.lose}</td>
-                      <td className={bodyCell}>{standing.all.goals.for}</td>
-                      <td className={bodyCell}>{standing.all.goals.against}</td>
-                      <td className={bodyCell}>{standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff}</td>
+                      <td className={`hidden md:table-cell ${bodyCell}`}>{standing.all.goals.for}</td>
+                      <td className={`hidden md:table-cell ${bodyCell}`}>{standing.all.goals.against}</td>
+                      <td className={`hidden md:table-cell ${bodyCell}`}>{standing.goalsDiff > 0 ? `+${standing.goalsDiff}` : standing.goalsDiff}</td>
                       <td className={`${bodyCell} font-bold`}>{standing.points}</td>
-                      <td className={bodyCell}>
+                      <td className={`hidden md:table-cell ${bodyCell}`}>
                         <div className="flex justify-center gap-1">
                           {standing.form?.split('').slice(-5).map((result, index) => (
                             <span key={`${standing.team.id}-${index}`} className={`flex h-6 w-6 items-center justify-center rounded text-xs font-medium ${getFormStyle(result)}`}>
@@ -258,6 +264,7 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
                 })}
               </tbody>
             </table>
+            </div>
           </ContainerContent>
         </Container>
       ))}
