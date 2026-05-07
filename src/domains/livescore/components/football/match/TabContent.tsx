@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Events from './tabs/Events';
 import Standings from './tabs/Standings';
 import Power from './tabs/Power';
+import Lineups from './tabs/lineups/Lineups';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import RelatedPosts from './sidebar/RelatedPosts';
@@ -96,7 +97,6 @@ function convertToMatchPlayerStats(
   };
 }
 
-const Lineups = dynamic(() => import('./tabs/lineups/Lineups'), { ssr: false });
 const Stats = dynamic(() => import('./tabs/Stats'), { ssr: false });
 
 interface TabContentProps {
@@ -138,6 +138,11 @@ export default function TabContent({
   const needsStats = currentTab === 'stats';
   const needsStandings = currentTab === 'standings';
   const needsTabData = needsEvents || needsLineups || needsStats || needsStandings;
+  const hasInitialTabData =
+    (currentTab === 'events' && initialData.events !== undefined) ||
+    (currentTab === 'lineups' && initialData.lineups !== undefined && initialData.events !== undefined) ||
+    (currentTab === 'stats' && initialData.stats !== undefined) ||
+    (currentTab === 'standings' && initialData.standings !== undefined);
 
   const tabDataQuery = useQuery({
     queryKey: [...matchKeys.detail(matchId), currentTab, 'full-data'],
@@ -147,7 +152,7 @@ export default function TabContent({
       fetchStats: needsStats,
       fetchStandings: needsStandings,
     }),
-    enabled: Boolean(matchId) && needsTabData,
+    enabled: Boolean(matchId) && needsTabData && !hasInitialTabData,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,

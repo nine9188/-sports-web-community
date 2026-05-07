@@ -158,8 +158,8 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     }
 
     const matchData = await fetchCachedMatchFullData(matchId, {
-      fetchEvents: false,
-      fetchLineups: false,
+      fetchEvents: initialTab === 'events' || initialTab === 'lineups',
+      fetchLineups: initialTab === 'lineups',
       fetchStats: false,
       fetchStandings: initialTab === DEFAULT_TAB || initialTab === 'standings',
     });
