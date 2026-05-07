@@ -1134,6 +1134,7 @@ export type Database = {
           id: string
           league_id: number
           published_at: string | null
+          duration: string | null
           source_type: string
           thumbnail_url: string | null
           updated_at: string | null
@@ -1147,6 +1148,7 @@ export type Database = {
           id?: string
           league_id: number
           published_at?: string | null
+          duration?: string | null
           source_type?: string
           thumbnail_url?: string | null
           updated_at?: string | null
@@ -1160,6 +1162,7 @@ export type Database = {
           id?: string
           league_id?: number
           published_at?: string | null
+          duration?: string | null
           source_type?: string
           thumbnail_url?: string | null
           updated_at?: string | null

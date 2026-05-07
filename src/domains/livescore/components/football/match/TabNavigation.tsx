@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
@@ -9,17 +10,17 @@ interface TabNavigationProps {
   onTabIntent?: (tabId: string) => void;
 }
 
-const tabs: TabItem[] = [
-  { id: 'support', label: '응원', mobileOnly: true },
-  { id: 'power', label: '전력' },
-  { id: 'events', label: '이벤트' },
-  { id: 'lineups', label: '라인업' },
-  { id: 'stats', label: '통계' },
-  { id: 'standings', label: '순위' }
-];
-
 export default function TabNavigation({ activeTab = 'power', onTabChange, onTabIntent }: TabNavigationProps) {
-  // 탭 변경 처리 - 부모 컴포넌트에게 알림
+  const pathname = usePathname();
+  const tabs = useMemo<TabItem[]>(() => [
+    { id: 'support', label: '\uC751\uC6D0', mobileOnly: true, href: `${pathname}?tab=support` },
+    { id: 'power', label: '\uC804\uB825', href: pathname },
+    { id: 'events', label: '\uC774\uBCA4\uD2B8', href: `${pathname}?tab=events` },
+    { id: 'lineups', label: '\uB77C\uC778\uC5C5', href: `${pathname}?tab=lineups` },
+    { id: 'stats', label: '\uD1B5\uACC4', href: `${pathname}?tab=stats` },
+    { id: 'standings', label: '\uC21C\uC704', href: `${pathname}?tab=standings` }
+  ], [pathname]);
+
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab) return;
     onTabChange?.(tabId);

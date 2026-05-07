@@ -10,22 +10,27 @@ import NavigationBar from './NavigationBar';
 
 interface LiveScoreViewProps {
   initialDate: string;
+  initialShowLiveOnly?: boolean;
 }
 
-export default function LiveScoreView({ initialDate }: LiveScoreViewProps) {
+export default function LiveScoreView({
+  initialDate,
+  initialShowLiveOnly = false,
+}: LiveScoreViewProps) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date>(() => (
     initialDate ? new Date(initialDate) : new Date()
   ));
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [showLiveOnly, setShowLiveOnly] = useState(false);
+  const [showLiveOnly, setShowLiveOnly] = useState(initialShowLiveOnly);
   const [allExpanded, setAllExpanded] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     setSelectedDate(initialDate ? new Date(initialDate) : new Date());
+    setShowLiveOnly(initialShowLiveOnly);
     setIsNavigating(false);
-  }, [initialDate]);
+  }, [initialDate, initialShowLiveOnly]);
 
   const { matches, isLoading, liveMatchCount } = useLiveScore(selectedDate, { showLiveOnly });
 

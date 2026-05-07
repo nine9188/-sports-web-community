@@ -29,6 +29,7 @@ type IndexedVideo = {
   normalized_title: string;
   thumbnail_url: string | null;
   published_at: string | null;
+  duration: string | null;
 };
 
 type FixtureRow = {
@@ -146,8 +147,50 @@ async function fetchUploadPlaylist(channel: ChannelConfig): Promise<IndexedVideo
       normalized_title: normalizeTitle(title),
       thumbnail_url: getThumbnailUrl(item),
       published_at: item.snippet.publishedAt || null,
+      duration: null,
     }];
   });
+}
+
+async function fetchVideoDurations(videoIds: string[]): Promise<Record<string, string>> {
+  const durations: Record<string, string> = {};
+  const uniqueIds = [...new Set(videoIds.filter(Boolean))];
+
+  for (let i = 0; i < uniqueIds.length; i += 50) {
+    const chunk = uniqueIds.slice(i, i + 50);
+    const params = new URLSearchParams({
+      part: 'contentDetails',
+      id: chunk.join(','),
+      key: YOUTUBE_API_KEY,
+    });
+
+    const res = await fetch(`${YOUTUBE_API_BASE}/videos?${params}`, {
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn(`[sync-highlights] YouTube videos failed status=${res.status}`, body);
+      continue;
+    }
+
+    const data = await res.json() as {
+      items?: Array<{
+        id?: string;
+        contentDetails?: {
+          duration?: string;
+        };
+      }>;
+    };
+
+    for (const item of data.items || []) {
+      if (item.id && item.contentDetails?.duration) {
+        durations[item.id] = item.contentDetails.duration;
+      }
+    }
+  }
+
+  return durations;
 }
 
 async function matchFixturesToVideos(fixtures: FixtureRow[], videos: IndexedVideo[]) {
@@ -189,6 +232,7 @@ async function matchFixturesToVideos(fixtures: FixtureRow[], videos: IndexedVide
       source_type: video.channel_name === KOREAN_CHANNELS.UEFA.name ? 'official' : 'korean',
       thumbnail_url: video.thumbnail_url,
       published_at: video.published_at,
+      duration: video.duration,
       updated_at: now,
     });
   }
@@ -215,13 +259,20 @@ export async function GET(request: Request) {
   const uniqueVideos = Array.from(
     new Map(fetchedVideos.map(video => [video.video_id, video])).values()
   );
+  const durationsByVideoId = uniqueVideos.length
+    ? await fetchVideoDurations(uniqueVideos.map(video => video.video_id))
+    : {};
+  const videosWithDurations = uniqueVideos.map(video => ({
+    ...video,
+    duration: durationsByVideoId[video.video_id] ?? video.duration ?? null,
+  }));
 
   let indexed = 0;
-  if (uniqueVideos.length) {
+  if (videosWithDurations.length) {
     const { error } = await supabase
       .from('youtube_video_index')
       .upsert(
-        uniqueVideos.map(video => ({ ...video, updated_at: now.toISOString() })),
+        videosWithDurations.map(video => ({ ...video, updated_at: now.toISOString() })),
         { onConflict: 'video_id' }
       );
 
@@ -230,7 +281,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    indexed = uniqueVideos.length;
+    indexed = videosWithDurations.length;
   }
 
   const { data: fixtures, error: fixturesError } = await supabase
@@ -250,7 +301,7 @@ export async function GET(request: Request) {
 
   const { data: indexedVideos, error: videosError } = await supabase
     .from('youtube_video_index')
-    .select('video_id, channel_id, channel_name, title, normalized_title, thumbnail_url, published_at')
+    .select('video_id, channel_id, channel_name, title, normalized_title, thumbnail_url, published_at, duration')
     .gte('published_at', videoCutoff)
     .order('published_at', { ascending: false })
     .limit(300);

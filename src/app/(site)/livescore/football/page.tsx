@@ -22,7 +22,7 @@ export async function generateMetadata({
     return buildMetadata({
       title: '실시간 축구 경기 - 라이브스코어',
       description: '지금 진행 중인 축구 경기를 실시간으로 확인하세요. EPL, 라리가, 세리에A, 분데스리가, 챔피언스리그, K리그 실시간 스코어.',
-      path: '/livescore/football?filter=live',
+      path: '/livescore/football',
       keywords: [
         '실시간 축구', '실시간 경기', '라이브 축구', '축구 라이브',
         '실시간 스코어', '라이브스코어', '진행중 축구 경기',
@@ -78,10 +78,11 @@ const getKstDateString = (): string => {
 export default async function FootballLiveScorePage({
   searchParams: searchParamsPromise
 }: {
-  searchParams?: Promise<{ date?: string }>
+  searchParams?: Promise<{ date?: string; filter?: string }>
 }) {
   const searchParams = await searchParamsPromise;
   const dateParam = searchParams?.date ?? getKstDateString();
+  const initialShowLiveOnly = searchParams?.filter === 'live';
   const queryClient = getQueryClient();
 
   // 선택된 날짜만 prefetch (어제/내일은 날짜 전환 시 SSR에서 로드)
@@ -114,7 +115,11 @@ export default async function FootballLiveScorePage({
         }}
       />
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <LiveScoreView key={dateParam} initialDate={dateParam} />
+        <LiveScoreView
+          key={`${dateParam}-${initialShowLiveOnly ? 'live' : 'all'}`}
+          initialDate={dateParam}
+          initialShowLiveOnly={initialShowLiveOnly}
+        />
       </HydrationBoundary>
     </>
   );

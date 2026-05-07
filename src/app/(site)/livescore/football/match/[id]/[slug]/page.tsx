@@ -10,6 +10,8 @@ import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/mat
 import { getTeamsByIds, getLeagueById, isCupLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
+import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
+import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 
 function addHoursToIsoDate(isoDate: string, hours: number): string {
   const date = new Date(isoDate);
@@ -29,6 +31,47 @@ function addHoursToIsoDate(isoDate: string, hours: number): string {
 
 const VALID_TABS: MatchTabType[] = ['power', 'events', 'lineups', 'stats', 'standings', 'support'];
 const DEFAULT_TAB: MatchTabType = 'power';
+
+function buildVideoObjectJsonLd({
+  highlight,
+  matchUrl,
+  homeTeamName,
+  awayTeamName,
+  leagueName,
+}: {
+  highlight: MatchHighlight | null;
+  matchUrl: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  leagueName: string;
+}) {
+  if (!highlight?.video_id || !highlight.published_at) return null;
+
+  const title = highlight.video_title || `${homeTeamName} vs ${awayTeamName} 하이라이트`;
+  const thumbnailUrl =
+    highlight.thumbnail_url ||
+    `https://i.ytimg.com/vi/${highlight.video_id}/hqdefault.jpg`;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    '@id': `${matchUrl}#video-${highlight.video_id}`,
+    name: title,
+    description: `${leagueName} ${homeTeamName} vs ${awayTeamName} 경기 하이라이트 영상입니다.`,
+    thumbnailUrl: [thumbnailUrl],
+    uploadDate: highlight.published_at,
+    embedUrl: `https://www.youtube.com/embed/${highlight.video_id}`,
+    url: matchUrl,
+    publisher: { '@id': `${siteConfig.url}#organization` },
+    ...(highlight.duration && { duration: highlight.duration }),
+    ...(highlight.channel_name && {
+      author: {
+        '@type': 'Organization',
+        name: highlight.channel_name,
+      },
+    }),
+  };
+}
 
 export async function generateMetadata({
   params
@@ -118,7 +161,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       fetchEvents: false,
       fetchLineups: false,
       fetchStats: false,
-      fetchStandings: false,
+      fetchStandings: initialTab === DEFAULT_TAB || initialTab === 'standings',
     });
 
     if (!matchData.success) {
@@ -151,7 +194,9 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
         ? 'https://schema.org/EventCancelled'
         : ['PST', 'SUSP'].includes(statusCode)
           ? 'https://schema.org/EventPostponed'
-          : 'https://schema.org/EventScheduled';
+          : ['FT', 'AET', 'PEN', 'AWD', 'WO'].includes(statusCode)
+            ? 'https://schema.org/EventCompleted'
+            : 'https://schema.org/EventScheduled';
 
     const matchStartDate = match?.time?.date;
     const matchEndDate = matchStartDate
@@ -246,7 +291,8 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const shouldLoadCupRounds = initialTab === 'standings' && match?.league?.id
       ? await isCupLeague(match.league.id)
       : false;
-    const [cupRoundsData, highlight] = await Promise.all([
+    const shouldLoadPowerData = initialTab === DEFAULT_TAB && match?.teams.home.id && match?.teams.away.id;
+    const [cupRoundsData, highlight, powerDataResult] = await Promise.all([
       shouldLoadCupRounds && match?.league?.id
         ? fetchCupFixturesByRound(match.league.id, rawLeague?.season).then((result) => result.rounds)
         : Promise.resolve(undefined),
@@ -259,7 +305,21 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
             match.time?.date
           )
         : Promise.resolve(null),
+      shouldLoadPowerData
+        ? getCachedPowerData(match.teams.home.id, match.teams.away.id, 5).catch((error) => {
+            console.error('[match-page] power data preload failed:', error);
+            return null;
+          })
+        : Promise.resolve(null),
     ]);
+    const initialPowerData = powerDataResult?.success ? powerDataResult.data : undefined;
+    const videoObjectSchema = buildVideoObjectJsonLd({
+      highlight,
+      matchUrl,
+      homeTeamName,
+      awayTeamName,
+      leagueName,
+    });
 
     return (
       <>
@@ -267,6 +327,12 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventSchema) }}
+          />
+        )}
+        {videoObjectSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObjectSchema) }}
           />
         )}
         <script
@@ -277,6 +343,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
           matchId={matchId}
           initialTab={initialTab}
           initialData={matchData}
+          initialPowerData={initialPowerData}
           cupRoundsData={cupRoundsData}
           highlight={highlight}
         />

@@ -9,6 +9,7 @@ export interface MatchHighlight {
   source_type: 'korean' | 'official' | 'search';
   thumbnail_url: string | null;
   published_at: string | null;
+  duration: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,5 +58,6 @@ export interface HighlightMatchResult {
   channelName: string;
   thumbnailUrl: string;
   publishedAt: string;
+  duration?: string | null;
   sourceType: 'korean' | 'official' | 'search';
 }
