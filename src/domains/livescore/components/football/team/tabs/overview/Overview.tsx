@@ -16,6 +16,7 @@ import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 import { PlayerKoreanNames } from '../../TeamPageClient';
 import {
+  fetchTeamOverviewPlayerRankingsData,
   fetchTeamOverviewRecentMatchesData,
   fetchTeamOverviewStandingsData,
   fetchTeamOverviewTransfersData,
@@ -28,6 +29,7 @@ import { convertStandingsData } from '../../../../../utils/teamDataUtils';
 import TeamTabEmptyState from '../TeamTabEmptyState';
 
 type OverviewMatchesData = Awaited<ReturnType<typeof fetchTeamOverviewRecentMatchesData>>;
+type OverviewPlayerRankingsData = Awaited<ReturnType<typeof fetchTeamOverviewPlayerRankingsData>>;
 
 interface Team {
   team: {
@@ -246,6 +248,12 @@ export default function Overview({
     enabled: canFetchSupplemental && !transfers,
     ...CACHE_STRATEGIES.STATIC_DATA,
   });
+  const playerRankingsQuery = useQuery<OverviewPlayerRankingsData>({
+    queryKey: [...teamKeys.detail(String(teamId)), 'overview-player-rankings'],
+    queryFn: () => fetchTeamOverviewPlayerRankingsData(String(teamId), 5),
+    enabled: canFetchSupplemental && (!playerStats || !squad),
+    ...CACHE_STRATEGIES.STABLE_DATA,
+  });
   const recentMatchesQuery = useQuery<OverviewMatchesData>({
     queryKey: [...teamKeys.matches(String(teamId)), 'overview-recent'],
     queryFn: () => fetchTeamOverviewRecentMatchesData(String(teamId), 5),
@@ -260,6 +268,8 @@ export default function Overview({
   });
   const displayStandings = standings || convertStandingsData(standingsQuery.data?.standings);
   const displayTransfers = transfers || transfersQuery.data?.transfers;
+  const displayPlayerStats = playerStats || playerRankingsQuery.data?.playerStats;
+  const displaySquad = squad || playerRankingsQuery.data?.squad;
   const fetchedMatches = [
     ...(recentMatchesQuery.data?.matches || []),
     ...(upcomingMatchesQuery.data?.matches || []),
@@ -267,10 +277,12 @@ export default function Overview({
   const displayMatches = matches || (fetchedMatches.length > 0 ? fetchedMatches : undefined);
   const displayPlayerKoreanNames: PlayerKoreanNames = {
     ...playerKoreanNames,
+    ...(playerRankingsQuery.data?.playerKoreanNames || {}),
     ...(transfersQuery.data?.playerKoreanNames || {}),
   };
   const displayPlayerPhotoUrls: Record<number, string> = {
     ...playerPhotoUrls,
+    ...(playerRankingsQuery.data?.playerPhotoUrls || {}),
     ...(transfersQuery.data?.playerPhotoUrls || {}),
   };
   const displayTeamLogoUrls: Record<number, string> = {
@@ -361,15 +373,17 @@ export default function Overview({
       ) : null}
 
       {/* 4. Season highlights */}
-      {playerStats && squad && (
+      {displayPlayerStats && displaySquad ? (
         <SeasonHighlights
-          playerStats={playerStats}
-          squad={squad}
+          playerStats={displayPlayerStats}
+          squad={displaySquad}
           onTabChange={handleTabChange}
           playerKoreanNames={displayPlayerKoreanNames}
           playerPhotoUrls={displayPlayerPhotoUrls}
         />
-      )}
+      ) : playerRankingsQuery.isLoading ? (
+        <OverviewSectionLoading title="시즌 하이라이트" />
+      ) : null}
 
       {/* 5. Recent transfers */}
       {displayTransfers ? (
@@ -388,4 +402,3 @@ export default function Overview({
     </div>
   );
 } 
-

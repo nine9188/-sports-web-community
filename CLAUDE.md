@@ -226,10 +226,10 @@ This project uses a consistent color system across all components. Always follow
 | **Soft Text (배지·보조 텍스트)** | `#001F78` | `#6690DD` |
 
 **Tailwind 적용 패턴**:
-- Primary 버튼: `bg-[#002FA7] dark:bg-[#3366CC] text-white`
-- Outline 버튼/링크: `text-[#002FA7] dark:text-[#3366CC] border-[#002FA7] dark:border-[#3366CC]`
-- Soft 배지: `bg-[#E6EAFB] dark:bg-[rgba(0,47,167,0.2)] text-[#001F78] dark:text-[#6690DD]`
-- 탭 활성 언더라인: `border-b-[#002FA7] dark:border-b-[#3366CC]`
+- Primary 버튼: `bg-brand-primary dark:bg-brand-primary-dark text-white`
+- Outline 버튼/링크: `text-brand-primary dark:text-brand-primary-dark border-brand-primary dark:border-brand-primary-dark`
+- Soft 배지: `bg-brand-soft dark:bg-brand-soft-dark text-brand-soft-text dark:text-brand-soft-text-dark`
+- 탭 활성 언더라인: `border-b-brand-primary dark:border-b-brand-primary-dark`
 
 #### Dark Mode Support
 

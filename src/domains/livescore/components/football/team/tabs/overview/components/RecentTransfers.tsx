@@ -35,8 +35,8 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
   // 4590 표준: URL 조회 헬퍼
   const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const recentIn = transfers.in.slice(0, 3);
-  const recentOut = transfers.out.slice(0, 3);
+  const recentIn = transfers.in.slice(0, 5);
+  const recentOut = transfers.out.slice(0, 5);
 
   if (recentIn.length === 0 && recentOut.length === 0) {
     return null;

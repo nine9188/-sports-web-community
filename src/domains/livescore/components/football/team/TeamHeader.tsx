@@ -63,8 +63,6 @@ export default function TeamHeader({
   const effectiveTeamLogoUrl = teamLogoUrl || TEAM_PLACEHOLDER;
   const effectiveVenueImageUrl = venueImageUrl || VENUE_PLACEHOLDER;
 
-
-
   return (
     <Container className="mb-4 bg-white dark:bg-[#1D1D1D]">
       <div className="flex flex-col md:flex-row items-stretch md:items-center">

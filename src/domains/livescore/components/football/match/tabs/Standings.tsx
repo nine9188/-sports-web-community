@@ -11,6 +11,8 @@ import { LEAGUE_IDS } from './constants/standings';
 import CupRoundsView from '@/domains/livescore/components/football/leagues/CupRoundsView';
 import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
 import MatchTabState from './MatchTabState';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -137,9 +139,13 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
     return () => observer.disconnect();
   }, []);
 
-  const handleRowClick = useCallback((teamId: number) => {
-    router.push(`/livescore/football/team/${teamId}`);
-  }, [router]);
+  const getTeamHref = useCallback((team: Standing['team']) => {
+    return teamUrl(team.id, getTeamSlugFromName(team.name));
+  }, []);
+
+  const handleRowClick = useCallback((team: Standing['team']) => {
+    router.push(getTeamHref(team));
+  }, [getTeamHref, router]);
 
   const hasCupRounds = Boolean(cupRoundsData && cupRoundsData.length > 0);
   const standings = matchData.standings?.standings?.league;
@@ -238,14 +244,14 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
                       className={`cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
                         isHomeTeam ? 'bg-blue-50 dark:bg-blue-900/30' : isAwayTeam ? 'bg-red-50 dark:bg-red-900/30' : ''
                       }`}
-                      onClick={() => handleRowClick(standing.team.id)}
+                      onClick={() => handleRowClick(standing.team)}
                     >
                       <td className={`${bodyCell} relative`}>
                         <span className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
                         {standing.rank}
                       </td>
                       <td className="px-2 py-2 text-[13px] text-gray-900 dark:text-gray-100">
-                        <Link href={`/livescore/football/team/${standing.team.id}`} className="flex min-w-0 items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                        <Link href={getTeamHref(standing.team)} className="flex min-w-0 items-center gap-2" onClick={(event) => event.stopPropagation()}>
                           <TeamLogo teamName={teamName} logoUrl={logoUrl} />
                           <span className="truncate">{teamName}</span>
                           {(isHomeTeam || isAwayTeam) && (

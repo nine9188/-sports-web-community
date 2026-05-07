@@ -63,8 +63,8 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
     assisters.sort((a, b) => b.value - a.value);
 
     return {
-      topScorers: scorers.slice(0, 3),
-      topAssists: assisters.slice(0, 3),
+      topScorers: scorers.slice(0, 5),
+      topAssists: assisters.slice(0, 5),
     };
   }, [playerStats, squad, playerKoreanNames]);
 

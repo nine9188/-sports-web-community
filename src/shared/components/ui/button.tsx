@@ -14,7 +14,7 @@ const buttonVariants = cva(
         // Container Header 스타일 버튼: 컨테이너 헤더와 동일한 색상 + 공통 호버
         header: "bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-0",
         // Primary 버튼: 강조 색상 (다크모드는 회색 계열로 통일감)
-        primary: "bg-[#002FA7] dark:bg-[#002FA7] text-white hover:bg-[#001F78] dark:hover:bg-[#0038C8]",
+        primary: "bg-brand-primary dark:bg-brand-primary-dark text-white hover:bg-brand-hover dark:hover:bg-brand-hover-dark",
         destructive:
           "bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600",
         outline:

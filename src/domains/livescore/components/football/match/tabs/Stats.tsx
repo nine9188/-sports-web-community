@@ -7,6 +7,8 @@ import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matc
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { teamUrl } from '@/domains/livescore/utils/urls';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 import { useState } from 'react';
@@ -420,7 +422,10 @@ const Stats = memo(({
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
-                  href={`/livescore/football/team/${playerStatsData.data.homeTeam.id}`}
+                  href={teamUrl(
+                    playerStatsData.data.homeTeam.id,
+                    getTeamSlugFromName(playerStatsData.data.homeTeam.name)
+                  )}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
                   <UnifiedSportsImageClient
@@ -603,7 +608,10 @@ const Stats = memo(({
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
-                  href={`/livescore/football/team/${playerStatsData.data.awayTeam.id}`}
+                  href={teamUrl(
+                    playerStatsData.data.awayTeam.id,
+                    getTeamSlugFromName(playerStatsData.data.awayTeam.name)
+                  )}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
                   <UnifiedSportsImageClient

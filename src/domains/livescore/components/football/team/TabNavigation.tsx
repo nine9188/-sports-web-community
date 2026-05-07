@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
@@ -9,38 +10,28 @@ interface TabNavigationProps {
   onTabChange?: (tabId: string) => void;
 }
 
-/**
- * 팀 탭 네비게이션 컴포넌트
- * 개요, 경기, 순위, 선수단, 통계 탭을 제공합니다.
- *
- * ## 클라이언트 사이드 탭 전환
- *
- * onTabChange 콜백을 통해 부모 컴포넌트(TeamPageClient)에서
- * 탭 상태와 URL을 관리합니다. 이를 통해:
- * - 서버 리로드 없이 즉시 탭 전환
- * - URL 업데이트로 북마크/공유 가능
- */
 export default function TabNavigation({
   teamId,
   activeTab = 'overview',
   onTabChange,
 }: TabNavigationProps) {
-  // 탭 목록 정의
-  const tabs: TabItem[] = [
-    { id: 'overview', label: '개요' },
-    { id: 'fixtures', label: '경기' },
-    { id: 'standings', label: '순위' },
-    { id: 'squad', label: '선수단' },
-    { id: 'transfers', label: '이적' },
-    { id: 'stats', label: '통계' }
-  ];
+  const pathname = usePathname();
 
-  // 탭 변경 처리 함수
+  const tabs: TabItem[] = useMemo(() => {
+    const basePath = pathname || `/livescore/football/team/${teamId}`;
+
+    return [
+      { id: 'overview', label: '\uAC1C\uC694', href: basePath },
+      { id: 'fixtures', label: '\uACBD\uAE30', href: `${basePath}?tab=fixtures` },
+      { id: 'standings', label: '\uC21C\uC704', href: `${basePath}?tab=standings` },
+      { id: 'squad', label: '\uC120\uC218\uB2E8', href: `${basePath}?tab=squad` },
+      { id: 'transfers', label: '\uC774\uC801', href: `${basePath}?tab=transfers` },
+      { id: 'stats', label: '\uD1B5\uACC4', href: `${basePath}?tab=stats` },
+    ];
+  }, [pathname, teamId]);
+
   const handleTabChange = useCallback((tabId: string) => {
-    // 같은 탭이면 무시
     if (tabId === activeTab) return;
-
-    // 부모에게 탭 변경 알림 (URL 업데이트는 부모가 처리)
     onTabChange?.(tabId);
   }, [activeTab, onTabChange]);
 
@@ -51,4 +42,4 @@ export default function TabNavigation({
       onTabChange={handleTabChange}
     />
   );
-} 
+}

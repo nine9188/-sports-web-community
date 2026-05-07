@@ -520,9 +520,13 @@ export const fetchTeamOverviewStandingsData = cache(
 export const fetchTeamOverviewTransfersData = cache(
   async (teamId: string) => {
     const transfers = await getTeamTransfers(teamId);
+    const previewData = {
+      in: (transfers.data?.in || []).slice(0, 5),
+      out: (transfers.data?.out || []).slice(0, 5),
+    };
     const previewTransfers = [
-      ...(transfers.data?.in || []).slice(0, 3),
-      ...(transfers.data?.out || []).slice(0, 3),
+      ...previewData.in,
+      ...previewData.out,
     ];
     const playerIds = new Set<number>();
     const teamIds = new Set<number>();
@@ -546,7 +550,7 @@ export const fetchTeamOverviewTransfersData = cache(
     return {
       success: transfers.success,
       message: transfers.message,
-      transfers: transfers.data,
+      transfers: previewData,
       playerKoreanNames,
       playerPhotoUrls,
       teamLogoUrls,
@@ -630,6 +634,61 @@ export const fetchTeamSquadTabData = cache(
       playerKoreanNames,
       playerPhotoUrls,
       coachPhotoUrls,
+    };
+  }
+);
+
+export const fetchTeamOverviewPlayerRankingsData = cache(
+  async (teamId: string, limit = 5) => {
+    const [squad, playerStats] = await Promise.all([
+      getTeamSquad(teamId),
+      getTeamPlayerStats(teamId),
+    ]);
+
+    const playerMap = new Map<number, Player>();
+    for (const member of squad.data || []) {
+      if (member.position !== 'Coach') {
+        playerMap.set(member.id, member as Player);
+      }
+    }
+
+    const rankedIds = new Set<number>();
+    const topScorerIds = Object.entries(playerStats.data || {})
+      .filter(([, stats]) => stats.goals > 0)
+      .sort(([, a], [, b]) => b.goals - a.goals)
+      .slice(0, limit)
+      .map(([id]) => Number(id));
+    const topAssistIds = Object.entries(playerStats.data || {})
+      .filter(([, stats]) => stats.assists > 0)
+      .sort(([, a], [, b]) => b.assists - a.assists)
+      .slice(0, limit)
+      .map(([id]) => Number(id));
+
+    for (const id of [...topScorerIds, ...topAssistIds]) {
+      if (playerMap.has(id)) rankedIds.add(id);
+    }
+
+    const rankedPlayers = [...rankedIds]
+      .map((id) => playerMap.get(id))
+      .filter((player): player is Player => Boolean(player));
+    const rankedStats = Object.fromEntries(
+      [...rankedIds]
+        .map((id) => [id, playerStats.data?.[id]] as const)
+        .filter((entry): entry is readonly [number, PlayerStats] => Boolean(entry[1]))
+    );
+
+    const [playerKoreanNames, playerPhotoUrls] = await Promise.all([
+      rankedIds.size > 0 ? getPlayersKoreanNames([...rankedIds]) : {},
+      rankedIds.size > 0 ? getPlayerPhotoUrls([...rankedIds]) : {},
+    ]);
+
+    return {
+      success: squad.success && playerStats.success,
+      message: squad.message || playerStats.message,
+      squad: rankedPlayers,
+      playerStats: rankedStats,
+      playerKoreanNames,
+      playerPhotoUrls,
     };
   }
 );

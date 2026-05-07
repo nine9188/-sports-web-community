@@ -20,6 +20,16 @@ const config: Config = {
     },
     extend: {
       colors: {
+        brand: {
+          primary: "#002FA7",
+          "primary-dark": "#3366CC",
+          hover: "#001F78",
+          "hover-dark": "#0038C8",
+          soft: "#E6EAFB",
+          "soft-dark": "rgba(0,47,167,0.2)",
+          "soft-text": "#001F78",
+          "soft-text-dark": "#6690DD",
+        },
         white: "#ffffff",
         black: "#000000",
         gray: {

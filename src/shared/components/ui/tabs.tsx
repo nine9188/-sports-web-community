@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, ReactNode } from 'react';
+import Link from 'next/link';
 import { cn } from "@/shared/utils/cn"
 
 // ============================================
@@ -47,14 +48,14 @@ const TabButton = React.forwardRef<
   const underlineClasses = cn(
     "text-[13px] flex-shrink-0",
     active
-      ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#002FA7] dark:border-[#002FA7] pb-1"
+      ? "text-gray-900 dark:text-[#F0F0F0] border-b-2 border-brand-primary dark:border-brand-primary-dark pb-1"
       : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] pb-1"
   );
 
   const fillClasses = cn(
     "flex-1 text-xs",
     active
-      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#002FA7] dark:border-[#002FA7]"
+      ? "bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-brand-primary dark:border-brand-primary-dark"
       : "bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-400 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
   );
 
@@ -90,6 +91,7 @@ TabButton.displayName = "TabButton"
 export interface TabItem {
   id: string;
   label: string;
+  href?: string;
   count?: number;
   disabled?: boolean;
   mobileOnly?: boolean;
@@ -162,21 +164,21 @@ function TabList({
 
     if (variant === 'minimal') {
       return `${baseButton} py-2 px-3 ${isActive
-        ? 'border-b-2 border-[#002FA7] dark:border-[#002FA7] font-medium text-gray-900 dark:text-[#F0F0F0]'
+        ? 'border-b-2 border-brand-primary dark:border-brand-primary-dark font-medium text-gray-900 dark:text-[#F0F0F0]'
         : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       } ${mobileClass}`;
     }
 
     if (variant === 'contained') {
       return `${baseButton} py-2 px-2 h-auto flex items-center justify-center text-xs flex-1 whitespace-nowrap ${isActive
-        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-[#002FA7] dark:border-[#002FA7]'
+        ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-brand-primary dark:border-brand-primary-dark'
         : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       } ${mobileClass} ${disabledClass}`;
     }
 
     // default
     return `${baseButton} h-12 px-3 flex items-center justify-center text-xs font-medium flex-1 whitespace-nowrap ${isActive
-      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-[#002FA7] dark:border-[#002FA7]'
+      ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-semibold border-b-2 border-brand-primary dark:border-brand-primary-dark'
       : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
     } ${mobileClass} ${disabledClass}`;
   };
@@ -200,6 +202,40 @@ function TabList({
 
           const buttonClasses = getButtonClasses(isActive, tab);
 
+          const loadingIndicator = isChangingTab && isActive && (
+            <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-[#D1D1D1] dark:bg-[#4A4A4A]"></span>
+          );
+
+          if (tab.href && !tab.disabled) {
+            return (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                onClick={(event) => {
+                  if (isChangingTab) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                  }
+
+                  event.preventDefault();
+                  handleTabChange(tab.id);
+                }}
+                onMouseEnter={() => handleTabIntent(tab.id)}
+                onFocus={() => handleTabIntent(tab.id)}
+                onPointerDown={() => handleTabIntent(tab.id)}
+                className={buttonClasses}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {tabLabel}
+                {loadingIndicator}
+              </Link>
+            );
+          }
+
           return (
             <button
               key={tab.id}
@@ -213,9 +249,7 @@ function TabList({
               disabled={tab.disabled || isChangingTab}
             >
               {tabLabel}
-              {isChangingTab && isActive && (
-                <span className="ml-1 inline-block h-3 w-3 animate-pulse rounded-full bg-[#D1D1D1] dark:bg-[#4A4A4A]"></span>
-              )}
+              {loadingIndicator}
             </button>
           );
         })}

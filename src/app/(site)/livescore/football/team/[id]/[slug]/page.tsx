@@ -1,7 +1,15 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
-import { fetchTeamFullData, fetchTeamSeoData } from '@/domains/livescore/actions/teams/team';
+import {
+  fetchTeamFullData,
+  fetchTeamOverviewPlayerRankingsData,
+  fetchTeamOverviewRecentMatchesData,
+  fetchTeamOverviewStandingsData,
+  fetchTeamOverviewTransfersData,
+  fetchTeamOverviewUpcomingMatchesData,
+  fetchTeamSeoData,
+} from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import {
@@ -79,18 +87,121 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const needsStandings = initialTab === 'standings';
     const needsTransfers = initialTab === 'transfers';
 
-    const initialData = await fetchTeamFullData(id, {
-      fetchMatches: needsMatches,
-      fetchSquad: needsSquad,
-      fetchPlayerStats: needsPlayerStats,
-      fetchStandings: needsStandings,
-      fetchTransfers: needsTransfers,
-      fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
-      matchLimit: 10,
-    });
+    const [
+      initialData,
+      overviewPlayerRankings,
+      overviewTransfers,
+      overviewRecentMatches,
+      overviewUpcomingMatches,
+      overviewStandings,
+    ] = await Promise.all([
+      fetchTeamFullData(id, {
+        fetchMatches: needsMatches,
+        fetchSquad: needsSquad,
+        fetchPlayerStats: needsPlayerStats,
+        fetchStandings: needsStandings,
+        fetchTransfers: needsTransfers,
+        fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
+        matchLimit: 10,
+      }),
+      initialTab === 'overview'
+        ? fetchTeamOverviewPlayerRankingsData(id, 5)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewTransfersData(id)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewRecentMatchesData(id, 5)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewUpcomingMatchesData(id, 5)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewStandingsData(id)
+        : Promise.resolve(null),
+    ]);
 
     if (!initialData.success || !initialData.teamData?.team) {
       notFound();
+    }
+
+    if (overviewPlayerRankings?.success) {
+      initialData.squad = {
+        success: true,
+        data: overviewPlayerRankings.squad,
+        message: overviewPlayerRankings.message,
+      };
+      initialData.playerStats = {
+        success: true,
+        data: overviewPlayerRankings.playerStats,
+        message: overviewPlayerRankings.message,
+      };
+      initialData.playerPhotoUrls = {
+        ...(initialData.playerPhotoUrls || {}),
+        ...overviewPlayerRankings.playerPhotoUrls,
+      };
+    }
+
+    if (overviewTransfers?.success) {
+      initialData.transfers = {
+        success: true,
+        data: overviewTransfers.transfers,
+        message: overviewTransfers.message,
+      };
+      initialData.playerPhotoUrls = {
+        ...(initialData.playerPhotoUrls || {}),
+        ...overviewTransfers.playerPhotoUrls,
+      };
+      initialData.teamLogoUrls = {
+        ...(initialData.teamLogoUrls || {}),
+        ...overviewTransfers.teamLogoUrls,
+      };
+    }
+
+    if (overviewRecentMatches?.success || overviewUpcomingMatches?.success) {
+      initialData.matches = {
+        success: Boolean(overviewRecentMatches?.success || overviewUpcomingMatches?.success),
+        data: [
+          ...(overviewRecentMatches?.matches || []),
+          ...(overviewUpcomingMatches?.matches || []),
+        ],
+        message: overviewRecentMatches?.message || overviewUpcomingMatches?.message || '팀 경기 preview 데이터를 가져왔습니다',
+      };
+      initialData.teamLogoUrls = {
+        ...(initialData.teamLogoUrls || {}),
+        ...(overviewRecentMatches?.teamLogoUrls || {}),
+        ...(overviewUpcomingMatches?.teamLogoUrls || {}),
+      };
+      initialData.leagueLogoUrls = {
+        ...(initialData.leagueLogoUrls || {}),
+        ...(overviewRecentMatches?.leagueLogoUrls || {}),
+        ...(overviewUpcomingMatches?.leagueLogoUrls || {}),
+      };
+      initialData.leagueLogoDarkUrls = {
+        ...(initialData.leagueLogoDarkUrls || {}),
+        ...(overviewRecentMatches?.leagueLogoDarkUrls || {}),
+        ...(overviewUpcomingMatches?.leagueLogoDarkUrls || {}),
+      };
+    }
+
+    if (overviewStandings?.success) {
+      initialData.standings = {
+        success: true,
+        data: overviewStandings.standings,
+        message: overviewStandings.message,
+      };
+      initialData.teamLogoUrls = {
+        ...(initialData.teamLogoUrls || {}),
+        ...overviewStandings.teamLogoUrls,
+      };
+      initialData.leagueLogoUrls = {
+        ...(initialData.leagueLogoUrls || {}),
+        ...overviewStandings.leagueLogoUrls,
+      };
+      initialData.leagueLogoDarkUrls = {
+        ...(initialData.leagueLogoDarkUrls || {}),
+        ...overviewStandings.leagueLogoDarkUrls,
+      };
     }
 
     // 선수 ID 추출 (squad + transfers)
@@ -108,10 +219,10 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       // 영입 선수
       const transferInForNames = initialTab === 'transfers'
         ? initialData.transfers.data.in
-        : initialData.transfers.data.in?.slice(0, 3);
+        : initialData.transfers.data.in?.slice(0, 5);
       const transferOutForNames = initialTab === 'transfers'
         ? initialData.transfers.data.out
-        : initialData.transfers.data.out?.slice(0, 3);
+        : initialData.transfers.data.out?.slice(0, 5);
 
       transferInForNames?.forEach((transfer: { player?: { id?: number } }) => {
         if (transfer.player?.id) playerIds.add(transfer.player.id);
@@ -123,9 +234,11 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     }
 
     // 선수 한글명 일괄 조회 (DB)
-    const playerKoreanNames = playerIds.size > 0
-      ? await getPlayersKoreanNames(Array.from(playerIds))
-      : {};
+    const playerKoreanNames = {
+      ...(overviewPlayerRankings?.playerKoreanNames || {}),
+      ...(overviewTransfers?.playerKoreanNames || {}),
+      ...(playerIds.size > 0 ? await getPlayersKoreanNames(Array.from(playerIds)) : {}),
+    };
 
     // SportsTeam JSON-LD 생성
     const team = initialData.teamData?.team?.team;

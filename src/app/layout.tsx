@@ -5,7 +5,7 @@ import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
-import { siteConfig } from '@/shared/config';
+import { brandColors, siteConfig } from '@/shared/config';
 
 // Inter font with display swap to avoid FOIT.
 const inter = Inter({
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
   },
   other: {
-    'msapplication-TileColor': '#002FA7',
+    'msapplication-TileColor': brandColors.primary,
     'application-name': '4590 Football',
   },
   robots: {

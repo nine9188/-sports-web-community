@@ -209,7 +209,7 @@ function RankingsTabLoading() {
               key={tab}
               className={`flex h-12 flex-1 items-center justify-center whitespace-nowrap px-3 text-xs font-medium ${
                 index === 0
-                  ? 'border-b-2 border-[#002FA7] bg-white font-semibold text-gray-900 dark:bg-[#1D1D1D] dark:text-[#F0F0F0]'
+                  ? 'border-b-2 border-brand-primary bg-white font-semibold text-gray-900 dark:border-brand-primary-dark dark:bg-[#1D1D1D] dark:text-[#F0F0F0]'
                   : 'text-gray-700 dark:text-gray-300'
               }`}
             >
