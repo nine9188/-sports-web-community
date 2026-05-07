@@ -101,12 +101,105 @@ function HomeWidgetLoading({
         <ContainerTitle>{title}</ContainerTitle>
       </ContainerHeader>
       <ContainerContent
-        className="flex items-center justify-center"
+        className="flex items-center justify-center py-0"
         style={{ minHeight }}
       >
         <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
       </ContainerContent>
     </Container>
+  );
+}
+
+function BoardCollectionWidgetLoading() {
+  const loadingBody = (
+    <div className="h-12 px-3 flex items-center justify-center text-center">
+      <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+    </div>
+  );
+
+  const sectionHeader = (title: string) => (
+    <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10">
+      <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{title}</h3>
+    </div>
+  );
+
+  return (
+    <div>
+      <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
+        <ContainerHeader className="justify-between">
+          <ContainerTitle>데이터분석</ContainerTitle>
+          <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
+            분석 더보기
+          </span>
+        </ContainerHeader>
+
+        <div className="grid grid-cols-2">
+          <div className="border-r border-black/5 dark:border-white/10">
+            {sectionHeader('해외축구 분석')}
+            {loadingBody}
+          </div>
+          <div>
+            {sectionHeader('국내축구 분석')}
+            {loadingBody}
+          </div>
+        </div>
+      </Container>
+
+      <div className="md:hidden space-y-4">
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader className="justify-between">
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">해외축구 분석</h3>
+            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
+              분석 더보기
+            </span>
+          </ContainerHeader>
+          {loadingBody}
+        </Container>
+
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader className="justify-between">
+            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">국내축구 분석</h3>
+            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
+              분석 더보기
+            </span>
+          </ContainerHeader>
+          {loadingBody}
+        </Container>
+      </div>
+    </div>
+  );
+}
+
+function NewsWidgetLoading() {
+  const sideLoadingCard = (
+    <div className="h-[96px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+      <div className="h-full p-3 flex items-center justify-center text-center">
+        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="md:w-1/2">
+          <div className="h-[320px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+            <div className="h-full p-3 flex items-center justify-center text-center">
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+        <div className="md:w-1/2 flex flex-col gap-4">
+          {sideLoadingCard}
+          {sideLoadingCard}
+          {sideLoadingCard}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sideLoadingCard}
+        {sideLoadingCard}
+      </div>
+    </div>
   );
 }
 
@@ -123,13 +216,13 @@ export default function HomePage() {
           <BoardQuickLinksWidget />
         </div>
         <AdBanner />
-        <Suspense fallback={<HomeWidgetLoading title="라이브스코어" minHeight={120} />}>
+        <Suspense fallback={<HomeWidgetLoading title="빅매치" minHeight={48} />}>
           <LiveScoreWidgetStreaming />
         </Suspense>
-        <Suspense fallback={<HomeWidgetLoading title="데이터분석" minHeight={164} />}>
+        <Suspense fallback={<BoardCollectionWidgetLoading />}>
           <BoardCollectionWidget />
         </Suspense>
-        <Suspense fallback={<HomeWidgetLoading title="최신 게시글" minHeight={220} />}>
+        <Suspense fallback={<HomeWidgetLoading title="최신 게시글" minHeight={48} />}>
           <AllPostsWidget />
         </Suspense>
         <div className="hidden md:flex justify-center">
@@ -138,7 +231,7 @@ export default function HomePage() {
         <div className="md:hidden flex justify-center">
           <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
         </div>
-        <Suspense fallback={<HomeWidgetLoading title="축구 소식" minHeight={260} />}>
+        <Suspense fallback={<NewsWidgetLoading />}>
           <NewsWidget />
         </Suspense>
       </main>

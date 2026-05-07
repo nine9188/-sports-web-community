@@ -17,6 +17,7 @@ export interface StandingsDataResponse {
       season?: number;
       name_ko?: string;
       standings?: Array<Array<{
+        group?: string;
         rank?: number;
         team?: {
           id?: number;

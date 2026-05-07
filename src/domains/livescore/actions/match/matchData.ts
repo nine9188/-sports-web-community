@@ -185,6 +185,7 @@ export async function fetchMatchFullData(
                       
                       // 타입 안전성 확보를 위한 타입 단언
                       const standing: Standing = {
+                        group: item.group,
                         rank: item.rank,
                         team: {
                           id: item.team.id,

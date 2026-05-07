@@ -37,6 +37,8 @@ export interface BuildMetadataParams {
   imageHeight?: number;
   /** 검색 제외 여부 (선택) */
   noindex?: boolean;
+  /** robots 메타 세부 설정 (선택) */
+  robots?: Metadata['robots'];
   /** 페이지 타입 (선택) */
   type?: 'website' | 'article';
   /** 게시 시간 - article 타입용 (선택) */
@@ -189,8 +191,10 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     },
   };
 
-  // noindex 처리
-  if (params.noindex) {
+  // robots 처리
+  if (params.robots) {
+    metadata.robots = params.robots;
+  } else if (params.noindex) {
     metadata.robots = { index: false, follow: false };
   }
 

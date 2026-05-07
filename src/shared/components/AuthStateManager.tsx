@@ -64,7 +64,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
         totalPostCountSlot={headerTotalPostCountSlot}
       />
       </div>
-      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto bg-transparent" data-site-content-row>
+      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto pb-4 bg-transparent" data-site-content-row>
         <div data-site-left-sidebar>
         <Sidebar
           isOpen={isOpen}
@@ -79,7 +79,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
           onClose={onProfileClose}
           userData={fullUserData}
         />
-        <main className="flex-1 mt-4 mb-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
+        <main className="flex-1 mt-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
           {children}
         </main>
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}

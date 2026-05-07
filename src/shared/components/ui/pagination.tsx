@@ -34,6 +34,10 @@ interface PaginationProps {
   className?: string;
   /** 상단 border 표시 여부 */
   withBorder?: boolean;
+  /** URL 모드에서 사용할 페이지 쿼리 파라미터 이름 */
+  pageParamName?: string;
+  /** 1페이지 링크에서 페이지 쿼리 파라미터 생략 여부 */
+  omitFirstPageParam?: boolean;
 }
 
 /**
@@ -63,6 +67,8 @@ export function Pagination({
   withMargin = false,
   className = "",
   withBorder = false,
+  pageParamName = "page",
+  omitFirstPageParam = true,
 }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -83,10 +89,10 @@ export function Pagination({
     const params = new URLSearchParams(searchParams?.toString());
     // SEO를 위해 from 파라미터 제거
     params.delete("from");
-    if (targetPage <= 1) {
-      params.delete("page");
+    if (targetPage <= 1 && omitFirstPageParam) {
+      params.delete(pageParamName);
     } else {
-      params.set("page", String(targetPage));
+      params.set(pageParamName, String(targetPage));
     }
     const queryString = params.toString();
     return queryString ? `${pathname}?${queryString}` : pathname;
@@ -118,6 +124,7 @@ export function Pagination({
       return (
         <Link
           href={buildHref(targetPage)}
+          scroll={false}
           aria-label={ariaLabel}
           className={className}
           aria-disabled={disabled}
@@ -151,6 +158,7 @@ export function Pagination({
         <Link
           key={page}
           href={buildHref(page)}
+          scroll={false}
           aria-current={isActive ? "page" : undefined}
           className={className}
         >

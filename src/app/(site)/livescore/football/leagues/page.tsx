@@ -25,7 +25,7 @@ const LEAGUE_CATEGORIES: Record<string, number[]> = {
   '아시아': [292, 293, 98, 169, 17, 307],
   '아메리카': [253, 71, 262],
   '국내 컵 대회': [45, 48, 143, 137, 66, 81],
-  '국제 대회': [32, 30, 10, 5, 9, 13, 15, 531],
+  '국제 대회': [1, 32, 30, 10, 5, 9, 13, 15, 531],
 };
 
 export default async function LeaguesPage() {

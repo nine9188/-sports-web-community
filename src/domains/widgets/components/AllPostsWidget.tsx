@@ -268,10 +268,10 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
               </Link>
             </div>
           </ContainerHeader>
-          <ContainerContent>
-            <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
+          <ContainerContent className="h-12 px-3 py-0 flex items-center justify-center text-center">
+            <p className="text-[13px] text-gray-500 dark:text-gray-400">
               게시글이 없습니다.
-            </div>
+            </p>
           </ContainerContent>
         </Container>
       );
@@ -317,8 +317,8 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
         <ContainerHeader>
           <ContainerTitle>최신 게시글</ContainerTitle>
         </ContainerHeader>
-        <ContainerContent className="text-center">
-          <p className="text-gray-500 dark:text-gray-400">게시글을 불러오는 중 오류가 발생했습니다.</p>
+        <ContainerContent className="h-12 px-3 py-0 flex items-center justify-center text-center">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">게시글을 불러오는 중 오류가 발생했습니다.</p>
         </ContainerContent>
       </Container>
     );

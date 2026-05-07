@@ -11,6 +11,7 @@ interface CompetitionLegend {
 
 // 리그별 ID 매핑 (API-Sports League IDs)
 export const LEAGUE_IDS = {
+  WORLD_CUP: 1,             // FIFA World Cup
   // 유럽 TOP 5 리그
   PREMIER_LEAGUE: 39,      // 프리미어리그
   LA_LIGA: 140,            // 라리가

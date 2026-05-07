@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 // 동기화 대상 리그 (하이라이트 지원 리그 + 5대 리그 전체)
-const SYNC_LEAGUE_IDS = [39, 140, 78, 135, 61, 292, 293, 2, 3];
+const SYNC_LEAGUE_IDS = [1, 39, 140, 78, 135, 61, 292, 293, 2, 3];
 
 const API_BASE = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';

@@ -162,6 +162,7 @@ export interface StandingsData {
 }
 
 export interface Standing {
+  group?: string;
   rank: number;
   team: {
     id: number;
@@ -197,4 +198,3 @@ export interface TeamStatistics {
   };
   statistics: TeamStat[];
 }
-

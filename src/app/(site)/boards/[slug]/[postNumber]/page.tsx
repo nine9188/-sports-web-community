@@ -47,11 +47,19 @@ function extractFirstImage(content: unknown): string | null {
 
 // 게시글 메타데이터 생성
 export async function generateMetadata({
-  params
+  params,
+  searchParams
 }: {
-  params: Promise<{ slug: string; postNumber: string }>
+  params: Promise<{ slug: string; postNumber: string }>,
+  searchParams: Promise<{ listPage?: string; page?: string; from?: string; sort?: string }>
 }): Promise<Metadata> {
-  const { slug, postNumber } = await params;
+  const [{ slug, postNumber }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const hasListState = Boolean(
+    resolvedSearchParams?.listPage ||
+    resolvedSearchParams?.page ||
+    resolvedSearchParams?.from ||
+    resolvedSearchParams?.sort
+  );
 
   // 1. 게시판 정보 조회 (7일 캐시 재사용)
   const board = await getCachedBoardBySlug(slug);
@@ -75,6 +83,7 @@ export async function generateMetadata({
     publishedTime: post.created_at ?? undefined,
     modifiedTime: post.updated_at ?? undefined,
     keywords: [board.name, '축구 커뮤니티', '4590', '4590football', '축구 게시판'],
+    ...(hasListState && { robots: { index: false, follow: true } }),
   });
 }
 
@@ -82,7 +91,7 @@ export async function generateMetadata({
 async function PostDetailContent({
   slug, postNumber, fromBoardId, pageParam
 }: {
-  slug: string; postNumber: string; fromBoardId?: string; pageParam: number;
+  slug: string; postNumber: string; fromBoardId?: string; pageParam?: number;
 }) {
   try {
     // 서버 액션을 통해 모든 데이터 로드 (page 전달)
@@ -496,7 +505,7 @@ export default async function PostDetailPage({
   searchParams
 }: {
   params: Promise<{ slug: string, postNumber: string }>,
-  searchParams: Promise<{ from?: string, page?: string }>
+  searchParams: Promise<{ from?: string, page?: string, listPage?: string }>
 }) {
   const [{ slug, postNumber }, resolvedSearchParams] = await Promise.all([
     params,
@@ -504,9 +513,9 @@ export default async function PostDetailPage({
   ]);
 
   const fromBoardId = resolvedSearchParams?.from;
-  const pageFromQuery = resolvedSearchParams?.page;
+  const pageFromQuery = resolvedSearchParams?.listPage ?? resolvedSearchParams?.page;
   const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
-  const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : undefined;
 
   if (!slug || !postNumber) {
     return notFound();

@@ -14,6 +14,7 @@ import { teamUrl } from '@/domains/livescore/utils/urls';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 interface StandingTeam {
+  group?: string;
   rank?: number;
   team?: {
     id?: number;
@@ -176,7 +177,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
         <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader>
             <ContainerTitle>
-              {leagueData.standings!.length > 1 ? `그룹 ${groupIndex + 1}` : '순위표'}
+              {leagueData.standings!.length > 1 ? standingsGroup[0]?.group || `그룹 ${groupIndex + 1}` : '순위표'}
             </ContainerTitle>
           </ContainerHeader>
 

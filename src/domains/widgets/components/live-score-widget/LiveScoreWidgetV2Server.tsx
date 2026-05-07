@@ -141,7 +141,7 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
             최근 빅매치가 없습니다
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            프리미어리그 · 라리가 · 분데스리가 · 세리에A · 리그앙 · 챔피언스리그 · 유로파리그 · K리그1
+            프리미어리그 · 라리가 · 분데스리가 · 세리에A · 리그앙 · UEFA 대항전 · FA컵 · K리그1/2 · 국가대표 경기
           </p>
         </div>
       </Container>

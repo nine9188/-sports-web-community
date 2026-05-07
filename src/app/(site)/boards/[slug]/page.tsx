@@ -65,12 +65,24 @@ function getBoardSeoData(slug: string, boardName: string) {
 
 // 게시판 메타데이터 생성
 export async function generateMetadata({
-  params
+  params,
+  searchParams
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>,
+  searchParams: Promise<{ page?: string; from?: string; store?: string; search?: string; searchType?: string }>
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const supabase = await getSupabaseServer();
+  const pageParam = resolvedSearchParams?.page;
+  const parsedPage = pageParam ? Number(pageParam) : 1;
+  const currentPage = Number.isInteger(parsedPage) && parsedPage > 1 ? parsedPage : 1;
+  const hasIndexablePageParam = currentPage > 1;
+  const hasFilterParams = Boolean(
+    resolvedSearchParams?.from ||
+    resolvedSearchParams?.store ||
+    resolvedSearchParams?.search ||
+    resolvedSearchParams?.searchType
+  );
 
   // 게시판 정보 조회
   const { data: board } = await supabase
@@ -93,8 +105,9 @@ export async function generateMetadata({
   return buildMetadata({
     title: seo.title,
     description: board.description ? `${board.description} 축구 커뮤니티 4590 Football.` : seo.desc,
-    path: `/boards/${slug}`,
+    path: hasIndexablePageParam && !hasFilterParams ? `/boards/${slug}?page=${currentPage}` : `/boards/${slug}`,
     keywords: seo.keywords,
+    ...(hasFilterParams && { robots: { index: false, follow: true } }),
   });
 }
 

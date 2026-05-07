@@ -169,12 +169,15 @@ async function LeagueStandingsSection({
   leagueType: string;
 }) {
   const perf = createLeaguePerfTrace(`${leagueId}:standings`);
+  const isWorldCup = leagueId === 1;
+  const shouldShowStandings = !isCup || isWorldCup;
+  const shouldShowCupRounds = isCup;
 
-  const standingsResponse = isCup
-    ? { success: false as const, data: null as null }
-    : await perf.mark('standings', () => fetchLeagueStandings(leagueId));
+  const standingsResponse = shouldShowStandings
+    ? await perf.mark('standings', () => fetchLeagueStandings(leagueId, season))
+    : { success: false as const, data: null as null };
 
-  const cupRoundsResponse = isCup
+  const cupRoundsResponse = shouldShowCupRounds
     ? await perf.mark('cup-rounds', () => fetchCupFixturesByRound(leagueId, season))
     : { success: true as const, rounds: [] };
 
@@ -196,14 +199,29 @@ async function LeagueStandingsSection({
 
   perf.log(`section type=${leagueType}`);
 
-  return isCup ? (
-    <CupRoundsView rounds={cupRoundsResponse.rounds} />
-  ) : (
+  const standingsTable = (
     <LeagueStandingsTable
       standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
       leagueId={leagueId}
       teamLogoUrls={teamLogoUrls}
     />
+  );
+
+  const cupRounds = <CupRoundsView rounds={cupRoundsResponse.rounds} />;
+
+  if (shouldShowStandings && shouldShowCupRounds) {
+    return (
+      <div className="space-y-4">
+        {standingsTable}
+        {cupRounds}
+      </div>
+    );
+  }
+
+  return shouldShowCupRounds ? (
+    <CupRoundsView rounds={cupRoundsResponse.rounds} />
+  ) : (
+    standingsTable
   );
 }
 

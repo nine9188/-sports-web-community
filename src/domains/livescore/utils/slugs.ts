@@ -25,6 +25,7 @@ export function slugify(text: string): string {
  * 리그 slug 매핑 (상수 기반, 34개 리그)
  */
 export const LEAGUE_SLUGS: Record<number, string> = {
+  1: 'world-cup',
   // 유럽 Top 5
   39: 'premier-league',
   140: 'la-liga',

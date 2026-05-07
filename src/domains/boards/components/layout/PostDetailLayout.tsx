@@ -12,13 +12,13 @@ import PostHeader from "../post/PostHeader";
 import PostContent from "../post/PostContent";
 import PostActions from "../post/PostActions";
 import PostFooter from "../post/PostFooter";
-import { Container, Pagination } from "@/shared/components/ui";
+import { Container } from "@/shared/components/ui";
 import CommentSection from "../post/CommentSection";
-import PostList from "../post/PostList";
 import { HotdealInfoBox } from "../hotdeal";
 import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
 import BoardSearchBar from "../board/BoardSearchBar";
+import PostDetailRelatedList from "./PostDetailRelatedList";
 import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
 import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
@@ -29,9 +29,8 @@ const MemoizedPostHeader = memo(PostHeader);
 const MemoizedPostNavigation = memo(PostNavigation);
 const MemoizedPostActions = memo(PostActions);
 const MemoizedPostFooter = memo(PostFooter);
-const MemoizedPagination = memo(Pagination);
 const MemoizedCommentSection = memo(CommentSection);
-const MemoizedPostList = memo(PostList);
+const MemoizedPostDetailRelatedList = memo(PostDetailRelatedList);
 
 interface PostAuthor {
   nickname: string | null;
@@ -189,20 +188,6 @@ export default function PostDetailLayout({
       }[]
     >,
   );
-
-  // 아이콘 URL을 formattedPosts에 추가 - 각 게시글 작성자의 고유한 아이콘 유지
-  // 4590 표준: team/league 로고 필드도 함께 전달
-  const postsWithIcons = formattedPosts.map((post) => ({
-    ...post,
-    // 이미 author_icon_url이 있으면 그대로 사용, 없으면 기본 아이콘도 사용하지 않음
-    author_icon_url: post.author_icon_url || undefined,
-    // 4590 표준: 팀/리그 로고 (다크모드 포함)
-    team_id: post.team_id,
-    league_id: post.league_id,
-    team_logo: post.team_logo,
-    league_logo: post.league_logo,
-    league_logo_dark: post.league_logo_dark,
-  }));
 
   // 게시글 상태 확인
   const isPostHidden = post.is_hidden === true;
@@ -449,15 +434,16 @@ export default function PostDetailLayout({
         />
       </div>
 
-      {/* 8. 같은 게시판의 다른 글 목록 - 즉시 로딩 */}
-      <div className="mb-4">
-        <MemoizedPostList
-          posts={postsWithIcons}
-          showBoard={true}
-          currentBoardId={board.id}
-          currentPostId={post.id}
-        />
-      </div>
+      {/* 8. 같은 게시판의 다른 글 목록 - 초기 SSR 후 페이지 이동은 목록만 갱신 */}
+      <MemoizedPostDetailRelatedList
+        initialPosts={formattedPosts}
+        initialCurrentPage={currentPage}
+        totalPages={totalPages}
+        boardId={board.id}
+        currentPostId={post.id}
+        slug={slug}
+        postNumber={postNumber}
+      />
 
       {/* 9. 게시글 푸터 (중복) */}
       <MemoizedPostFooter
@@ -485,17 +471,6 @@ export default function PostDetailLayout({
         )}
       </div>
 
-      {/* 11. 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="px-4 sm:px-6 mt-4">
-          <MemoizedPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            mode="url"
-            withMargin={false}
-          />
-        </div>
-      )}
     </div>
   );
 }

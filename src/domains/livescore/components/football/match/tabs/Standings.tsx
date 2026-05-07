@@ -141,18 +141,31 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
     router.push(`/livescore/football/team/${teamId}`);
   }, [router]);
 
-  if (cupRoundsData && cupRoundsData.length > 0) {
+  const hasCupRounds = Boolean(cupRoundsData && cupRoundsData.length > 0);
+  const standings = matchData.standings?.standings?.league;
+  const isWorldCup = standings?.id === LEAGUE_IDS.WORLD_CUP;
+
+  if (hasCupRounds && !isWorldCup) {
     const numericMatchId = Number.parseInt(matchId, 10);
     return (
       <CupRoundsView
-        rounds={cupRoundsData}
+        rounds={cupRoundsData!}
         currentMatchId={Number.isFinite(numericMatchId) ? numericMatchId : undefined}
       />
     );
   }
 
-  const standings = matchData.standings?.standings?.league;
   if (!standings?.standings?.length) {
+    if (hasCupRounds) {
+      const numericMatchId = Number.parseInt(matchId, 10);
+      return (
+        <CupRoundsView
+          rounds={cupRoundsData!}
+          currentMatchId={Number.isFinite(numericMatchId) ? numericMatchId : undefined}
+        />
+      );
+    }
+
     return <MatchTabState title="순위" message={isLoading ? '불러오는 중...' : '순위 데이터가 없습니다.'} />;
   }
 
@@ -288,6 +301,13 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
           </div>
         </ContainerContent>
       </Container>
+
+      {hasCupRounds && (
+        <CupRoundsView
+          rounds={cupRoundsData!}
+          currentMatchId={Number.isFinite(Number.parseInt(matchId, 10)) ? Number.parseInt(matchId, 10) : undefined}
+        />
+      )}
     </div>
   );
 });

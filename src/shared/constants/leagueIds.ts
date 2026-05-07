@@ -1,5 +1,6 @@
 // 컵 대회 ID
 export const CUP_LEAGUE_IDS = [
+  1,   // FIFA World Cup
   // 유럽 컵 대회
   2,   // UEFA 챔피언스 리그
   3,   // UEFA 유로파 리그

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { ChevronRight } from 'lucide-react';
 import BoardPostItem from './BoardPostItem';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import type { BoardPost } from './types';
 
@@ -119,7 +119,7 @@ interface BoardCollectionWidgetProps {
  */
 function EmptyPostList() {
   return (
-    <div className="flex justify-center items-center h-24 text-center">
+    <div className="h-12 px-3 flex items-center justify-center text-center">
       <p className="text-gray-500 dark:text-gray-400 text-[13px]">아직 게시글이 없습니다.</p>
     </div>
   );

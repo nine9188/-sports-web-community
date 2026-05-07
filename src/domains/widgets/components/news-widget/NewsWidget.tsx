@@ -1,7 +1,7 @@
 import { getAllNewsPosts } from './actions';
 import { MainCard, SideCard } from './NewsCardServer';
 import { NewsWidgetProps, NewsItem } from './types';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import { Container } from '@/shared/components/ui';
 
 /** 기본 뉴스 게시판 */
 const DEFAULT_BOARD_SLUGS = ['foreign-news', 'domestic-news'];
@@ -44,17 +44,35 @@ export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetS
   }
 
   if (!news || news.length === 0) {
+    const sideEmptyCard = (
+      <div className="h-[96px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+        <div className="h-full p-3 flex items-center justify-center text-center">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">뉴스가 없습니다.</p>
+        </div>
+      </div>
+    );
+
     return (
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader>
-          <ContainerTitle>축구 소식</ContainerTitle>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
-            뉴스가 없습니다.
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="md:w-1/2">
+            <div className="h-[320px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
+              <div className="h-full p-3 flex items-center justify-center text-center">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">뉴스가 없습니다.</p>
+              </div>
+            </div>
           </div>
-        </ContainerContent>
-      </Container>
+          <div className="md:w-1/2 flex flex-col gap-4">
+            {sideEmptyCard}
+            {sideEmptyCard}
+            {sideEmptyCard}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {sideEmptyCard}
+          {sideEmptyCard}
+        </div>
+      </div>
     );
   }
 

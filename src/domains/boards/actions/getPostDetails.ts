@@ -12,6 +12,19 @@ import { getCachedAllBoards, getCachedBoardBySlug } from './getCachedBoards';
 import { getCachedTeamsByIds, getCachedLeaguesByIds } from './getCachedTeamsLeagues';
 import { getCachedShopItemIconUrl } from './getCachedShopItems';
 
+const POST_DETAIL_LIST_PAGE_SIZE = 20;
+
+type BoardStructureRow = {
+  id: string;
+  name: string;
+  slug: string | null;
+  parent_id: string | null;
+  display_order: number | null;
+  view_type: string | null;
+  team_id: number | null;
+  league_id: number | null;
+};
+
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
  */
@@ -103,7 +116,6 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       content: contentRow?.content ?? null,
     } as typeof postRaw & { content: unknown };
 
-    type BoardStructureRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; view_type: string | null; team_id: number | null; league_id: number | null };
     const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
     const { data: prevPostData } = prevPostResult;
     const { data: nextPostData } = nextPostResult;
@@ -167,8 +179,11 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     );
     
     // 7. 현재 페이지 게시글 가져오기 - 전달된 페이지 사용
-    const pageSize = 20;
-    const page = typeof pageParam === 'number' && Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const pageSize = POST_DETAIL_LIST_PAGE_SIZE;
+    const requestedPage = typeof pageParam === 'number' && Number.isFinite(pageParam) && pageParam > 0
+      ? Math.floor(pageParam)
+      : null;
+    let page = requestedPage || 1;
     
     // 필터링 조건 설정
     let boardFilter;
@@ -177,6 +192,18 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       boardFilter = getFilteredBoardIds(normalizedFromBoardId, fromBoardLevel, boardsMap, childBoardsMap);
     } else {
       boardFilter = filteredBoardIds;
+    }
+
+    if (!requestedPage && post.created_at) {
+      const { count: postsBeforeCurrent } = await supabase
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .in('board_id', boardFilter)
+        .eq('is_hidden', false)
+        .eq('is_deleted', false)
+        .gt('created_at', post.created_at);
+
+      page = Math.floor((postsBeforeCurrent || 0) / pageSize) + 1;
     }
     
     // 8. 필요한 ID 미리 계산 (팀/리그용)
@@ -414,6 +441,181 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     return {
       success: false,
       error: error instanceof Error ? error.message : '게시글 데이터를 불러오는 중 오류가 발생했습니다.'
+    };
+  }
+}
+
+export async function getPostDetailListPageData(
+  slug: string,
+  postNumber: string,
+  pageParam: number,
+  fromBoardId?: string
+) {
+  try {
+    const postNum = parseInt(postNumber, 10);
+    if (isNaN(postNum) || postNum <= 0) {
+      return { success: false as const, error: '유효하지 않은 게시글 번호입니다.' };
+    }
+
+    const supabase = await getSupabaseServer();
+    const board = await getCachedBoardBySlug(slug);
+    if (!board) {
+      return { success: false as const, error: '게시판을 찾을 수 없습니다.' };
+    }
+
+    const cachedBoardStructure = await getCachedAllBoards();
+
+    const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
+    const boardsMap: BoardMap = {};
+    const childBoardsMap: ChildBoardsMap = {};
+    const boardNameMap: Record<string, string> = {};
+    const boardsData: Record<string, BoardData> = {};
+
+    boardStructure.forEach((board) => {
+      const safeBoard = {
+        ...board,
+        slug: board.slug || board.id,
+        display_order: board.display_order || 0,
+        view_type: board.view_type as Board['view_type'],
+      };
+      boardsMap[board.id] = safeBoard as Board;
+      boardNameMap[board.id] = board.name;
+      boardsData[board.id] = {
+        team_id: board.team_id || null,
+        league_id: board.league_id || null,
+        slug: board.slug || board.id,
+      };
+
+      if (board.parent_id) {
+        if (!childBoardsMap[board.parent_id]) {
+          childBoardsMap[board.parent_id] = [];
+        }
+        childBoardsMap[board.parent_id].push(safeBoard as Board);
+      }
+    });
+
+    const boardLevel = getBoardLevel(board.id, boardsMap, childBoardsMap);
+    const filteredBoardIds = getFilteredBoardIds(board.id, boardLevel, boardsMap, childBoardsMap);
+    let normalizedFromBoardId = fromBoardId;
+    const rootBoardId = findRootBoard(board.id, boardsMap);
+    if (normalizedFromBoardId === 'boards' || normalizedFromBoardId === 'root') {
+      normalizedFromBoardId = rootBoardId;
+    }
+
+    const boardFilter = normalizedFromBoardId && boardsMap[normalizedFromBoardId]
+      ? getFilteredBoardIds(
+          normalizedFromBoardId,
+          getBoardLevel(normalizedFromBoardId, boardsMap, childBoardsMap),
+          boardsMap,
+          childBoardsMap
+        )
+      : filteredBoardIds;
+
+    const pageSize = POST_DETAIL_LIST_PAGE_SIZE;
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+
+    const postsResult = await supabase
+      .from('posts')
+      .select(
+        'id, title, post_number, views, likes, dislikes, created_at, updated_at, user_id, board_id, is_notice, is_must_read, notice_type, notice_boards, notice_order, notice_created_at, is_hidden, is_deleted, show_in_widget, meta, deal_info, thumbnail_url, summary, profiles(id, nickname, icon_id, level, exp, public_id)',
+        { count: 'exact' }
+      )
+      .in('board_id', boardFilter)
+      .eq('is_hidden', false)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1);
+
+    const { data: postsData, count } = postsResult;
+    const postBoardIds = Array.from(new Set((postsData || []).map((post) => post.board_id).filter(Boolean))) as string[];
+    const teamIds = Array.from(new Set(
+      postBoardIds
+        .map((boardId) => boardsData[boardId]?.team_id)
+        .filter((id): id is number => id !== null && id !== undefined)
+    ));
+    const leagueIds = Array.from(new Set(
+      postBoardIds
+        .map((boardId) => boardsData[boardId]?.league_id)
+        .filter((id): id is number => id !== null && id !== undefined)
+    ));
+
+    const [teamsResult, leaguesResult, teamLogoUrlMap, leagueLogoUrlMap, leagueLogoDarkUrlMap] = await Promise.all([
+      getCachedTeamsByIds(teamIds).then(data => ({ data })),
+      getCachedLeaguesByIds(leagueIds).then(data => ({ data })),
+      teamIds.length > 0 ? getTeamLogoUrls(teamIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds) : Promise.resolve({} as Record<number, string>),
+      leagueIds.length > 0 ? getLeagueLogoUrls(leagueIds, true) : Promise.resolve({} as Record<number, string>),
+    ]);
+
+    const teamsMap: Record<string, { id: number; name: string; logo: string; [key: string]: unknown }> = {};
+    const teamsData = teamsResult.data || [];
+    teamsData.forEach((team) => {
+      teamsMap[String(team.id)] = {
+        ...team,
+        logo: teamLogoUrlMap[team.id] || '',
+      };
+    });
+
+    const leaguesMap: Record<string, { id: number; name: string; logo: string; logo_dark?: string; [key: string]: unknown }> = {};
+    const leaguesData = leaguesResult.data || [];
+    leaguesData.forEach((league) => {
+      leaguesMap[String(league.id)] = {
+        ...league,
+        logo: leagueLogoUrlMap[league.id] || '',
+        logo_dark: leagueLogoDarkUrlMap[league.id] || '',
+      };
+    });
+
+    const postIds = (postsData || []).map(p => p.id);
+    const commentCounts: Record<string, number> = {};
+
+    if (postIds.length > 0) {
+      const { data: commentCountsData } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', postIds)
+        .eq('is_hidden', false)
+        .eq('is_deleted', false);
+
+      (commentCountsData || []).forEach((comment) => {
+        if (comment.post_id) {
+          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+        }
+      });
+    }
+
+    const formattedPosts = await formatPosts(
+      (postsData || []).map(p => ({
+        ...p,
+        is_hidden: p.is_hidden ?? undefined,
+        is_deleted: p.is_deleted ?? undefined,
+        profiles: p.profiles ? {
+          ...p.profiles,
+          nickname: p.profiles.nickname ?? null,
+          public_id: p.profiles.public_id ?? null,
+          icon_id: p.profiles.icon_id ?? null,
+          level: p.profiles.level ?? undefined,
+          exp: p.profiles.exp ?? undefined,
+        } : undefined,
+      })) as unknown as import('../types/post').Post[],
+      commentCounts,
+      boardsData,
+      boardNameMap,
+      teamsMap,
+      leaguesMap
+    );
+
+    return {
+      success: true as const,
+      formattedPosts,
+      totalPages: Math.ceil((count || 0) / pageSize),
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error('게시글 상세 하단 목록 조회 오류:', error);
+    return {
+      success: false as const,
+      error: error instanceof Error ? error.message : '게시글 목록을 불러오는 중 오류가 발생했습니다.',
     };
   }
 }
