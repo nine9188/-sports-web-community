@@ -7,26 +7,13 @@ import MatchCard from './MatchCardServer';
 import type { WidgetMatch } from './types';
 
 interface LeagueToggleClientProps {
-  /** 리그 헤더 (서버에서 렌더링된 HTML) */
   header: ReactNode;
-  /** 경기 목록 - 첫 번째 리그: 서버 렌더링된 HTML */
   children?: ReactNode;
-  /** 초기 펼침 상태 (서버에서 결정) */
   defaultExpanded?: boolean;
-  /** 경기 수 */
   matchCount: number;
-  /** 경기 데이터 - 나머지 리그: 펼칠 때 클라이언트 렌더링 */
   matches?: WidgetMatch[];
 }
 
-/**
- * 리그별 토글 클라이언트 컴포넌트
- *
- * LCP 최적화:
- * - 첫 번째 리그: children으로 서버 렌더링된 HTML 받아서 show/hide
- * - 나머지 리그: matches 데이터만 받고, 펼칠 때 클라이언트에서 렌더링
- *   → 초기 HTML 크기를 줄여 LCP 개선
- */
 export default function LeagueToggleClient({
   header,
   children,
@@ -38,7 +25,6 @@ export default function LeagueToggleClient({
 
   return (
     <>
-      {/* 리그 헤더 - 클릭하면 토글 */}
       <Button
         variant="ghost"
         onClick={() => setExpanded(!expanded)}
@@ -46,7 +32,6 @@ export default function LeagueToggleClient({
       >
         {header}
 
-        {/* 토글 버튼 영역 */}
         <div className="flex items-center gap-3">
           <span className="bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-[#F0F0F0] text-xs font-medium px-2.5 py-1 rounded-full min-w-[28px] text-center">
             {matchCount}
@@ -59,21 +44,16 @@ export default function LeagueToggleClient({
         </div>
       </Button>
 
-      {/* 경기 목록 - 펼쳐져 있을 때만 표시 */}
-      {expanded && (
-        <div className="bg-white dark:bg-[#1D1D1D]">
-          {/* 첫 번째 리그: 서버 렌더링된 children */}
-          {children}
-          {/* 나머지 리그: 클라이언트 렌더링 */}
-          {matches?.map((match, idx) => (
-            <MatchCard
-              key={match.id}
-              match={match}
-              isLast={idx === matches.length - 1}
-            />
-          ))}
-        </div>
-      )}
+      <div className={`bg-white dark:bg-[#1D1D1D] ${expanded ? '' : 'hidden'}`}>
+        {children}
+        {matches?.map((match, idx) => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            isLast={idx === matches.length - 1}
+          />
+        ))}
+      </div>
     </>
   );
 }
