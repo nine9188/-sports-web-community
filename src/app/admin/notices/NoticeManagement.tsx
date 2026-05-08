@@ -363,6 +363,7 @@ export default function NoticeManagement() {
                     <Link
                       href={`/boards/${notice.board?.slug || 'unknown'}/${notice.id}`}
                       className="group"
+                    prefetch={false}
                     >
                       <h3 className="font-medium text-gray-900 dark:text-[#F0F0F0] group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
                         {notice.title}

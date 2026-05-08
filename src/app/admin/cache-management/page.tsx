@@ -79,6 +79,7 @@ export default function CacheManagementPage() {
             key={page.href}
             href={page.href}
             className="block bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+          prefetch={false}
           >
             <div className="flex items-center gap-4 mb-3">
               {page.icon}

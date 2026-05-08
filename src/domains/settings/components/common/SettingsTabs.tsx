@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
@@ -23,15 +23,6 @@ const tabs: TabItem[] = [
 export default function SettingsTabs() {
   const pathname = usePathname();
   const router = useRouter();
-
-  // 모든 탭 페이지를 미리 로드
-  useEffect(() => {
-    tabs.forEach((tab) => {
-      if (tab.id !== pathname) {
-        router.prefetch(tab.id);
-      }
-    });
-  }, [pathname, router]);
 
   // 탭 변경 처리
   const handleTabChange = useCallback((href: string) => {

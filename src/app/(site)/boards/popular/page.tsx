@@ -136,7 +136,7 @@ export default async function PopularPostsPage({
         <div className={errorBoxStyles}>
           <h1 className={errorTitleStyles}>오류가 발생했습니다</h1>
           <p className={errorMessageStyles}>인기 게시글을 불러오는 중 오류가 발생했습니다.</p>
-          <Link href="/" className={errorLinkStyles}>메인페이지로 이동</Link>
+          <Link href="/" className={errorLinkStyles} prefetch={false}>메인페이지로 이동</Link>
         </div>
       </div>
     );

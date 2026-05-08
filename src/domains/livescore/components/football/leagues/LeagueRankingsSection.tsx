@@ -46,6 +46,7 @@ const PlayerRow = memo(({
     <Link
       href={playerUrl(ranking.player.id, getPlayerSlugFromName(ranking.player.name))}
       className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
+    prefetch={false}
     >
       <span className={`w-5 text-center text-xs font-bold flex-shrink-0 ${
         index < 3 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'

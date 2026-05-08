@@ -82,6 +82,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
         className={`flex items-center gap-3 px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
           team.isWinner ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
         }`}
+      prefetch={false}
       >
         <UnifiedSportsImageClient
           src={getTeamLogo(team.id)}

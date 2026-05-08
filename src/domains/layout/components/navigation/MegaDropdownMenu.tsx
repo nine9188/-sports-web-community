@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { Board } from '../../types/board';
-import { Button } from '@/shared/components/ui';
 
 interface MegaDropdownMenuProps {
   board: Board;
@@ -100,19 +99,17 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                   board.children
                     .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
                     .map(secondLevel => (
-                      <Button
+                      <Link
                         key={secondLevel.id}
-                        variant="ghost"
+                        href={getBoardHref(secondLevel)}
+                        prefetch={false}
                         className={`w-full justify-start px-3 py-2 h-auto text-[13px] ${
                           selectedSecondLevel?.id === secondLevel.id
                             ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
                             : 'text-gray-700 dark:text-gray-300'
-                        }`}
+                        } inline-flex rounded transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333]`}
                         onMouseEnter={() => setSelectedSecondLevel(secondLevel)}
-                        onClick={() => {
-                          window.location.href = getBoardHref(secondLevel);
-                          onClose();
-                        }}
+                        onClick={onClose}
                       >
                         <div className="flex items-center justify-between w-full">
                           <span>{secondLevel.name}</span>
@@ -122,7 +119,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                             </span>
                           )}
                         </div>
-                      </Button>
+                      </Link>
                     ))
                 ) : (
                   <div className="px-3 py-2 text-[13px] text-gray-500 dark:text-gray-400">

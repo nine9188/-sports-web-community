@@ -166,6 +166,7 @@ export default function PlayerStats({
                       <Link
                         href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
+                      prefetch={false}
                       >
                         <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />
                         <span className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0]">
@@ -382,6 +383,7 @@ export default function PlayerStats({
                       <Link
                         href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
+                      prefetch={false}
                       >
                         <TeamLogo name={stat.team.name} logoUrl={getTeamLogo(stat.team.id)} />
                         <span className="font-medium text-[13px] text-gray-900 dark:text-[#F0F0F0]">

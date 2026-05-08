@@ -69,6 +69,7 @@ export default function CommentSearchResults({
             <Link
               href={`/boards/${comment.posts?.boards?.slug || 'unknown'}/${comment.posts?.post_number || 0}#comment-${comment.id}`}
               className="block"
+              prefetch={false}
               onClick={() => handleCommentClick(comment)}
             >
               <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
@@ -113,6 +114,7 @@ export default function CommentSearchResults({
           <Link
             href={`/search?q=${encodeURIComponent(query)}&type=comments`}
             className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+          prefetch={false}
           >
             더 많은 댓글 보기 ({pagination?.totalItems || 0}개)
           </Link>

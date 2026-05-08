@@ -7,7 +7,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -71,8 +70,6 @@ export default function LeagueStandings({
   // UI 상태 관리
   const [activeLeague, setActiveLeague] = useState(initialLeague);
   const [isMobile, setIsMobile] = useState(false);
-  const router = useRouter();
-
   // React Query로 리그 순위 데이터 관리 (teamLogoUrls 포함)
   const { standings, teamLogoUrls: queryTeamLogoUrls, isFetching, error } = useLeagueStandings(activeLeague, {
     initialData: activeLeague === initialLeague ? initialStandings : undefined,
@@ -102,10 +99,6 @@ export default function LeagueStandings({
 
   const getTeamHref = (team: { team_id: number; name: string }) => {
     return teamUrl(team.team_id, getTeamSlugFromName(team.name));
-  };
-
-  const handleTeamClick = (team: { team_id: number; name: string }) => {
-    router.push(getTeamHref(team));
   };
 
   // 현재 선택된 리그 정보
@@ -187,8 +180,7 @@ export default function LeagueStandings({
                 {standings.standings[0].map((team, index) => (
                   <tr
                     key={team.team.team_id}
-                    className={`${index < standings.standings[0].length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors text-gray-900 dark:text-[#F0F0F0]`}
-                    onClick={() => handleTeamClick(team.team)}
+                    className={`${index < standings.standings[0].length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]`}
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">

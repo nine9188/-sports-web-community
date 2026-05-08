@@ -116,6 +116,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
                     key={team.id}
                     href={transferTeamUrl(team.id, team.slug || getTeamSlugFromName(team.name_en || team.name_ko))}
                     className="flex items-center justify-between gap-2 rounded border border-black/5 dark:border-white/10 px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+                  prefetch={false}
                   >
                     <span className="truncate">{team.name_ko || team.name_en}</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">이적시장</span>

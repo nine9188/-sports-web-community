@@ -30,6 +30,7 @@ export default function TeamCard({ team, teamLogoUrl }: TeamCardProps) {
           ? 'ring-2 ring-yellow-400 dark:ring-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
           : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
       }`}
+    prefetch={false}
     >
       {team.isWinner && (
         <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 bg-yellow-500 text-white text-[6px] lg:text-[10px] font-bold px-1 py-0.5 rounded">

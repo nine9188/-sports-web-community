@@ -542,6 +542,7 @@ export default function MatchPredictionClient({
           <Link
             href="/livescore/football"
             className="mt-3 block w-full py-2.5 text-xs text-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors"
+          prefetch={false}
           >
             다른 경기 예측하기 →
           </Link>

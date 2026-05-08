@@ -70,6 +70,7 @@ export default function PostSearchResults({
             <Link
               href={`/boards/${post.boards?.slug || 'unknown'}/${post.post_number}`}
               className="block"
+              prefetch={false}
               onClick={() => handlePostClick(post)}
             >
               <div className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] mb-2 transition-colors">
@@ -122,6 +123,7 @@ export default function PostSearchResults({
           <Link
             href={`/search?q=${encodeURIComponent(query)}&type=posts`}
             className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+          prefetch={false}
           >
             더 많은 게시글 보기 ({pagination?.totalItems || 0}개)
           </Link>

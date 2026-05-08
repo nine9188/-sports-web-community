@@ -75,6 +75,7 @@ function FixtureRow({ fixture, isLast, isCurrent = false }: FixtureRowProps) {
       href={href}
       aria-current={isCurrent ? 'page' : undefined}
       className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${rowBaseBg} ${rowHover} ${borderClass}`}
+    prefetch={false}
     >
       {/* 날짜 + 상태 */}
       <div className="w-[56px] flex-shrink-0 text-[11px] leading-tight">

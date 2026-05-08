@@ -22,7 +22,7 @@ export default function EmailConfirmedPage() {
     <div className="min-h-screen bg-white dark:bg-[#1F1F1F]">
       <div className="px-4 py-6 sm:p-6">
         <div className="mb-6 sm:mb-8">
-          <Link href="/" className="inline-block">
+          <Link href="/" className="inline-block" prefetch={false}>
             <div className="flex items-center gap-2">
               <Image
                 src={siteConfig.logo}
@@ -54,12 +54,12 @@ export default function EmailConfirmedPage() {
               </p>
 
               <div className="space-y-3">
-                <Link href="/signin" className="block">
+                <Link href="/signin" className="block" prefetch={false}>
                   <Button className="w-full py-3 px-4 h-auto font-medium">
                     로그인하기
                   </Button>
                 </Link>
-                <Link href="/" className="block">
+                <Link href="/" className="block" prefetch={false}>
                   <Button variant="outline" className="w-full py-3 px-4 h-auto font-medium">
                     메인으로
                   </Button>

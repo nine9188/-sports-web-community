@@ -138,6 +138,7 @@ export default function MobileNotificationModal({
             href="/notifications"
             onClick={onClose}
             className="block w-full py-3 text-center text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-lg transition-colors outline-none focus:outline-none"
+          prefetch={false}
           >
             전체 알림 보기
           </Link>

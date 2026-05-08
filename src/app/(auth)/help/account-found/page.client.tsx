@@ -121,12 +121,12 @@ function AccountFoundContent() {
 
             <div className="space-y-3">
               <Button asChild variant="primary" className="w-full py-3 h-auto">
-                <Link href="/signin">
+                <Link href="/signin" prefetch={false}>
                   로그인하기
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full py-3 h-auto">
-                <Link href="/help/find-password">
+                <Link href="/help/find-password" prefetch={false}>
                   비밀번호 찾기
                 </Link>
               </Button>
@@ -149,12 +149,12 @@ function AccountFoundContent() {
 
             <div className="space-y-3">
               <Button asChild variant="primary" className="w-full py-3 h-auto">
-                <Link href="/signin">
+                <Link href="/signin" prefetch={false}>
                   로그인하기
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full py-3 h-auto">
-                <Link href="/help/find-id">
+                <Link href="/help/find-id" prefetch={false}>
                   계정 찾기
                 </Link>
               </Button>
@@ -165,7 +165,7 @@ function AccountFoundContent() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             처음 방문이신가요?{' '}
-            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
+            <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors" prefetch={false}>
               회원가입
             </Link>
           </p>
@@ -199,8 +199,8 @@ export default function AccountFoundPage() {
         </Suspense>
       </div>
       <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
-        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>개인정보처리방침</Link>
       </div>
     </div>
   );

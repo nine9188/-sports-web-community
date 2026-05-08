@@ -211,6 +211,7 @@ function TabList({
               <Link
                 key={tab.id}
                 href={tab.href}
+                prefetch={false}
                 onClick={(event) => {
                   if (isChangingTab) {
                     event.preventDefault();

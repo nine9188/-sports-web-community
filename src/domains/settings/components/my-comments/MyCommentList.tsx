@@ -53,6 +53,7 @@ export default function MyCommentList({
                       href={`/boards/${comment.board_id}/posts/${comment.post_id}#comment-${comment.id}`}
                       className="text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 transition-colors block truncate"
                       title={comment.content}
+                    prefetch={false}
                     >
                       {comment.content}
                     </Link>
@@ -62,6 +63,7 @@ export default function MyCommentList({
                       href={`/boards/${comment.board_id}/posts/${comment.post_id}`}
                       className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors block truncate"
                       title={comment.post_title || '(제목 없음)'}
+                    prefetch={false}
                     >
                       {comment.post_title || '(제목 없음)'}
                     </Link>

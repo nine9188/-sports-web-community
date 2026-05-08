@@ -3620,7 +3620,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
       )}
       {/* 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="inline-block">
+        <Link href="/" className="inline-block" prefetch={false}>
           <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" priority />
         </Link>
       </div>
@@ -4012,6 +4012,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
                 <Link
                   href="/"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-[#F0F0F0] dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                prefetch={false}
                 >
                   홈으로
                   <ChevronRight className="w-4 h-4" />
@@ -4019,6 +4020,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
                 <Link
                   href="/boards/notice"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333] transition-colors"
+                prefetch={false}
                 >
                   공지사항
                   <ChevronRight className="w-4 h-4" />
@@ -4026,6 +4028,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
                 <Link
                   href="/contact"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg hover:bg-[#EAEAEA] dark:hover:bg-[#333] transition-colors"
+                prefetch={false}
                 >
                   문의하기
                   <ChevronRight className="w-4 h-4" />

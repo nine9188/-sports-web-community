@@ -34,6 +34,7 @@ export default function BoardBreadcrumbs({ breadcrumbs }: BoardBreadcrumbsProps)
                   href={bc.slug?.startsWith('/') ? bc.slug : `/boards/${bc.slug || bc.id}`}
                   className="px-2 py-1 hover:text-gray-600 dark:hover:text-gray-300 hover:underline sm:max-w-none truncate flex-shrink-0 transition-colors"
                   title={bc.name}
+                prefetch={false}
                 >
                   {bc.name}
                 </Link>

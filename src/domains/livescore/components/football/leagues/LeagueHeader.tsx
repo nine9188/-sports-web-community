@@ -49,6 +49,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
         <Link
           href="/livescore/football/leagues"
           className="flex items-center space-x-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors group px-2 py-1 rounded outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+        prefetch={false}
         >
           <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -59,6 +60,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
           <Link
             href={`/boards/${boardSlug}`}
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors px-2 py-1"
+          prefetch={false}
           >
             게시판 이동 →
           </Link>

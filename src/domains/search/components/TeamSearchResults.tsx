@@ -296,6 +296,7 @@ function MoreTeamsLink({ query, totalCount }: { query: string; totalCount: numbe
     <Link
       href={`/search?q=${encodeURIComponent(query)}&type=teams`}
       className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline font-medium transition-colors"
+    prefetch={false}
     >
       더 많은 팀 보기 ({totalCount}개)
     </Link>
@@ -360,6 +361,7 @@ function TeamRowWithMatches({
                   href={teamHref}
                   onClick={handleTeamPageClick}
                   className="truncate hover:underline transition-colors text-left p-0 h-auto font-medium min-w-0"
+                prefetch={false}
                 >
                   {team.display_name}
                 </Link>

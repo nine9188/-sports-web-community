@@ -220,6 +220,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
       <Link
         href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
         className="hover:underline"
+        prefetch={false}
         onClick={(event) => event.stopPropagation()}
       >
         {displayName}

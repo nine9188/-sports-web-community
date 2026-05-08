@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing, StandingsData, Team } from '@/domains/livescore/types/match';
@@ -125,9 +124,7 @@ function getLegend(leagueId: number) {
   }
 }
 
-const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData, isLoading = false }: StandingsProps) => {
-  const router = useRouter();
-  const { getTeamDisplayName, getLeagueName } = useTeamLeague();
+const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls = {}, leagueLogoDarkUrls = {}, cupRoundsData, isLoading = false }: StandingsProps) => {  const { getTeamDisplayName, getLeagueName } = useTeamLeague();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -142,10 +139,6 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
   const getTeamHref = useCallback((team: Standing['team']) => {
     return teamUrl(team.id, getTeamSlugFromName(team.name));
   }, []);
-
-  const handleRowClick = useCallback((team: Standing['team']) => {
-    router.push(getTeamHref(team));
-  }, [getTeamHref, router]);
 
   const hasCupRounds = Boolean(cupRoundsData && cupRoundsData.length > 0);
   const standings = matchData.standings?.standings?.league;
@@ -250,17 +243,16 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
                   return (
                     <tr
                       key={standing.team.id}
-                      className={`cursor-pointer border-b border-black/5 dark:border-white/10 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
+                      className={`border-b border-black/5 dark:border-white/10 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${
                         isHomeTeam ? 'bg-blue-50 dark:bg-blue-900/30' : isAwayTeam ? 'bg-red-50 dark:bg-red-900/30' : ''
                       }`}
-                      onClick={() => handleRowClick(standing.team)}
                     >
                       <td className={`${bodyCell} relative`}>
                         <span className={`absolute inset-y-0 left-0 w-1 ${statusColor}`} />
                         {standing.rank}
                       </td>
                       <td className="px-2 py-2 text-[13px] text-gray-900 dark:text-gray-100">
-                        <Link href={getTeamHref(standing.team)} className="flex min-w-0 items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                        <Link href={getTeamHref(standing.team)} className="flex min-w-0 items-center gap-2" prefetch={false}>
                           <TeamLogo teamName={teamName} logoUrl={logoUrl} />
                           <span className="truncate">{teamName}</span>
                           {(isHomeTeam || isAwayTeam) && (

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
@@ -38,9 +37,7 @@ export default function StandingsPreview({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {}
-}: StandingsPreviewProps) {
-  const router = useRouter();
-  const { getLeagueKoreanName } = useTeamLeague();
+}: StandingsPreviewProps) {  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
@@ -140,12 +137,11 @@ export default function StandingsPreview({
               return (
                 <tr
                   key={`standings-preview-${standing.team.id}-${standing.rank}-${index}`}
-                  className={`border-b border-black/5 dark:border-white/10 ${isCurrentTeam ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors`}
-                  onClick={() => { if (standing.team.id !== teamId) router.push(getTeamHref(standing.team.id, standing.team.name)); }}
+                  className={`border-b border-black/5 dark:border-white/10 ${isCurrentTeam ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors`}
                 >
                   <td className={tableCellStyle}>{standing.rank}</td>
                   <td className={tableCellStyle}>
-                    <Link href={getTeamHref(standing.team.id, standing.team.name)} className="flex items-center gap-2">
+                    <Link href={getTeamHref(standing.team.id, standing.team.name)} className="flex items-center gap-2" prefetch={false}>
                       <div className="w-5 h-5 relative flex-shrink-0">
                         <UnifiedSportsImageClient
                           src={getTeamLogo(standing.team.id, standing.team.logo)}

@@ -49,6 +49,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
         <Link
           href="/transfers"
           className="ml-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-0.5 transition-colors"
+        prefetch={false}
         >
           이적센터
           <svg
@@ -80,6 +81,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                   key={`in-${transfer.player.id}-${index}`}
                   href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
+                prefetch={false}
                 >
                   <div className="flex gap-2">
                     <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
@@ -140,6 +142,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                   key={`out-${transfer.player.id}-${index}`}
                   href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
+                prefetch={false}
                 >
                   <div className="flex gap-2">
                     <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">

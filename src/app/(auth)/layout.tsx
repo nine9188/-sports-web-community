@@ -27,7 +27,7 @@ export default function AuthLayout({
     <div className="min-h-screen bg-white dark:bg-[#1F1F1F] flex flex-col overflow-y-auto">
       {/* 로고 헤더 - 고정 높이 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5 flex-shrink-0">
-        <Link href="/" className="inline-block">
+        <Link href="/" className="inline-block" prefetch={false}>
           <div className="flex items-center gap-2">
             <Image
               src={siteConfig.logo}

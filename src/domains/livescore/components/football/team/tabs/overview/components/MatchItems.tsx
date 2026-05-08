@@ -180,6 +180,7 @@ export default function MatchItems({
           key={match.fixture.id}
           href={href}
           className="block px-3 py-2.5 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:px-4 md:py-3"
+        prefetch={false}
         >
           <div className="mb-2 flex items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400 md:text-xs">
             <span className="whitespace-nowrap">

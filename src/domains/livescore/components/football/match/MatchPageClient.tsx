@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
 import AdBanner from '@/shared/components/AdBanner';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
@@ -54,9 +54,7 @@ export default function MatchPageClient({
   highlight,
 }: MatchPageClientProps) {
   const [currentTab, setCurrentTab] = useState<MatchTabType>(initialTab);
-  const [hasDesktopSidebar, setHasDesktopSidebar] = useState(false);
-  const queryClient = useQueryClient();
-  const pathname = usePathname();
+  const [hasDesktopSidebar, setHasDesktopSidebar] = useState(false);  const pathname = usePathname();
   const searchParams = useSearchParams();
   const homeTeamId = initialData.homeTeam?.id;
   const awayTeamId = initialData.awayTeam?.id;
@@ -108,17 +106,6 @@ export default function MatchPageClient({
     );
   }, [currentTab, pathname, searchParams]);
 
-  const handleTabIntent = useCallback((tabId: string) => {
-    if (tabId !== 'support' || !matchId) return;
-
-    queryClient.prefetchQuery({
-      queryKey: sidebarQueryKey,
-      queryFn: fetchSidebarExtras,
-      staleTime: 1000 * 60 * 3,
-      gcTime: 1000 * 60 * 15,
-    });
-  }, [fetchSidebarExtras, matchId, queryClient, sidebarQueryKey]);
-
   useEffect(() => {
     scrollToTop('auto');
   }, [currentTab]);
@@ -142,7 +129,6 @@ export default function MatchPageClient({
           <TabNavigation
             activeTab={currentTab}
             onTabChange={handleTabChange}
-            onTabIntent={handleTabIntent}
           />
 
           <TabContent

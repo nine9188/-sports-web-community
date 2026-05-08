@@ -1,8 +1,3 @@
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import getQueryClient from '@/shared/api/getQueryClient';
-import { liveScoreKeys } from '@/shared/constants/queryKeys';
-import { fetchMatchesByDateCached } from '@/domains/livescore/actions/footballApi';
-import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -74,7 +69,7 @@ const getKstDateString = (): string => {
   return kstNow.toISOString().split('T')[0];
 };
 
-// 서버 컴포넌트 - HydrationBoundary + prefetchQuery 패턴
+// 서버 컴포넌트 - client query loading 패턴
 export default async function FootballLiveScorePage({
   searchParams: searchParamsPromise
 }: {
@@ -83,16 +78,6 @@ export default async function FootballLiveScorePage({
   const searchParams = await searchParamsPromise;
   const dateParam = searchParams?.date ?? getKstDateString();
   const initialShowLiveOnly = searchParams?.filter === 'live';
-  const queryClient = getQueryClient();
-
-  // 선택된 날짜만 prefetch (어제/내일은 날짜 전환 시 SSR에서 로드)
-  await queryClient.prefetchQuery({
-    queryKey: liveScoreKeys.matches(dateParam),
-    queryFn: async () => {
-      const rawMatches = await fetchMatchesByDateCached(dateParam);
-      return transformMatches(rawMatches);
-    },
-  });
 
   const pageUrl = `${siteConfig.url}/livescore/football`;
 
@@ -114,13 +99,11 @@ export default async function FootballLiveScorePage({
           }),
         }}
       />
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <LiveScoreView
+      <LiveScoreView
           key={`${dateParam}-${initialShowLiveOnly ? 'live' : 'all'}`}
           initialDate={dateParam}
           initialShowLiveOnly={initialShowLiveOnly}
         />
-      </HydrationBoundary>
     </>
   );
 }

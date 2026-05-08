@@ -61,6 +61,7 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline break-all text-[13px] transition-colors"
+            prefetch={false}
             >
               {dealInfo.deal_url}
             </Link>

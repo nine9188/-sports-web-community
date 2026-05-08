@@ -98,7 +98,7 @@ export function useTodayLiveCount(enabled: boolean = true) {
  * LiveScoreView에서 사용하는 통합 훅
  *
  * HydrationBoundary 패턴:
- * - 서버에서 prefetchQuery로 3일치 데이터를 캐시에 주입
+ * - 서버에서 client query fetch로 3일치 데이터를 캐시에 주입
  * - 클라이언트에서는 캐시 히트로 즉시 데이터 사용 (로딩 스침 없음)
  * - initialData prop drilling 불필요
  */

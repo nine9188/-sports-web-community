@@ -24,6 +24,7 @@ export default function BoardInfo({ boardName, boardId, boardSlug, isLoggedIn = 
             aria-label="글쓰기"
             title="글쓰기"
             className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+          prefetch={false}
           >
             <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
           </Link>

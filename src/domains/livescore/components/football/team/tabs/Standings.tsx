@@ -2,7 +2,6 @@
 
 import { memo, useCallback, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
@@ -82,9 +81,7 @@ function Standings({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {}
-}: StandingsProps) {
-  const router = useRouter();
-  const { getLeagueKoreanName } = useTeamLeague();
+}: StandingsProps) {  const { getLeagueKoreanName } = useTeamLeague();
   const standingsQuery = useQuery<StandingsQueryData>({
     queryKey: [...teamKeys.standings(String(teamId)), 'tab'],
     queryFn: () => fetchTeamStandings(String(teamId)),
@@ -333,14 +330,13 @@ function Standings({
 
                       // 팀 행 스타일 설정
                       const rowClass = isCurrentTeam
-                        ? `bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`
-                        : `hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`;
+                        ? `bg-[#EAEAEA] dark:bg-[#333333] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`
+                        : `hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`;
 
                       return (
                         <tr
                           key={`league-${leagueIndex}-group-${groupIndex}-team-${standing.team?.id}-rank-${standing.rank}`}
                           className={rowClass}
-                          onClick={() => { if (standing.team?.id && standing.team.id !== teamId) router.push(getTeamUrl(standing.team.id, standing.team.name)); }}
                         >
                           {/* 모바일용 축약된 순위 */}
                           <td className="md:hidden px-1 py-1 text-center text-xs relative w-8">
@@ -356,7 +352,7 @@ function Standings({
                           
                           {/* 팀 정보 - 고정 너비 사용 */}
                           <td className="px-2 py-2 md:px-3 whitespace-nowrap text-[13px] text-gray-900 dark:text-[#F0F0F0]">
-                            <Link href={getTeamUrl(standing.team.id, standing.team.name)} className="flex items-center gap-1 md:gap-2">
+                            <Link href={getTeamUrl(standing.team.id, standing.team.name)} className="flex items-center gap-1 md:gap-2" prefetch={false}>
                               <TeamLogo
                                 teamName={standing.team.name}
                                 logoUrl={getTeamLogo(standing.team.id, standing.team.logo)}

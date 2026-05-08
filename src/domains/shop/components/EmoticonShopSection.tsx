@@ -79,6 +79,7 @@ export default function EmoticonShopSection({
       <Link
         href="/shop/emoticon-studio"
         className="relative flex items-center h-12 px-4 bg-white dark:bg-[#1D1D1D] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] border border-black/7 dark:border-0 md:rounded-lg transition-colors"
+      prefetch={false}
       >
         <span className="text-xs text-gray-500 dark:text-gray-400">나만의 이모티콘 만들기</span>
         <span className="absolute left-1/2 -translate-x-1/2 text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">이모티콘 스튜디오 →</span>

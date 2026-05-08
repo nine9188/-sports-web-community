@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerContent, ContainerHeader, ContainerTitle, Pagination } from '@/shared/components/ui';
 import { wdlDraw, wdlLose, wdlWin } from '@/shared/styles/badge';
@@ -68,9 +67,7 @@ export default function PlayerFixtures({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {},
-}: PlayerFixturesProps) {
-  const router = useRouter();
-  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
+}: PlayerFixturesProps) {  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
   const [pageFixturesData, setPageFixturesData] = useState(initialFixturesData);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -280,8 +277,7 @@ export default function PlayerFixtures({
                     key={fixture.fixture.id}
                     href={href}
                     className="block px-3 py-2.5 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:px-4 md:py-3"
-                    onMouseEnter={() => router.prefetch(href)}
-                    onFocus={() => router.prefetch(href)}
+                    prefetch={false}
                   >
                     <div className="mb-2 flex items-center text-[11px] text-gray-500 dark:text-gray-400 md:text-xs">
                       <span className="whitespace-nowrap">

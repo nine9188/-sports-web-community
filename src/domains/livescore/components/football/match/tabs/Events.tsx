@@ -108,6 +108,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
                   key={`player-link-${event.player.id}-${i}-${idx}`} // 고유한 key 추가
                   href={playerUrl(event.player.id, getPlayerSlugFromName(event.player.name))}
                   className="hover:underline transition-all"
+                prefetch={false}
                 >
                   {koreanPlayerName}
                 </Link>
@@ -140,6 +141,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
                   key={`assist-link-${assistId}-${i}-${idx}`}
                   href={playerUrl(assistId, getPlayerSlugFromName(englishAssistName))}
                   className="hover:underline transition-all"
+                prefetch={false}
                 >
                   {koreanAssistName}
                 </Link>
@@ -285,6 +287,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
                   <Link
                     href={teamUrl(event.team?.id || 0, getTeamSlugFromName(event.team?.name || ''))}
                     className="flex items-center gap-1.5 group min-w-0"
+                  prefetch={false}
                   >
                     <TeamLogo
                       name={event.team?.name || ''}

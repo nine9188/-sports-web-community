@@ -108,6 +108,7 @@ export default async function TransfersPageContent({
           <Link
             href="/transfers"
             className="inline-block bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          prefetch={false}
           >
             다시 시도
           </Link>
@@ -190,6 +191,7 @@ export default async function TransfersPageContent({
                     <div className="min-w-0">
                       <Link
                         href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
+                        prefetch={false}
                         className={`${playerName.length > 15 ? 'text-xs' : 'text-[13px]'} block truncate font-semibold text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:font-medium`}
                       >
                         {playerName}
@@ -214,6 +216,7 @@ export default async function TransfersPageContent({
                         href={teamUrl(latestTransfer.teams.out.id, getTeamSlugFromName(latestTransfer.teams.out.name))}
                         className="truncate text-xs text-gray-700 transition-colors hover:underline dark:text-gray-300 md:text-[13px]"
                         title={latestTransfer.teams.out.name}
+                      prefetch={false}
                       >
                         {outTeamName}
                       </Link>
@@ -229,6 +232,7 @@ export default async function TransfersPageContent({
                         href={teamUrl(latestTransfer.teams.in.id, getTeamSlugFromName(latestTransfer.teams.in.name))}
                         className="truncate text-xs text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:text-[13px] md:font-medium"
                         title={latestTransfer.teams.in.name}
+                      prefetch={false}
                       >
                         {inTeamName}
                       </Link>

@@ -56,6 +56,7 @@ export default function SiteManagementDashboard() {
             key={link.href}
             href={link.href}
             className="flex items-center gap-2 px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-white/10 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+          prefetch={false}
           >
             <link.icon className="w-4 h-4" />
             {link.label}
@@ -70,6 +71,7 @@ export default function SiteManagementDashboard() {
             key={section.href}
             href={section.href}
             className="group relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6 hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+          prefetch={false}
           >
             <div className="flex items-start gap-4">
               {/* 아이콘 */}

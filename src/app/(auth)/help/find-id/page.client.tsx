@@ -290,13 +290,13 @@ function FindIdContent() {
         <div className="mt-8 text-center space-y-3">
           <p className="text-gray-600 dark:text-gray-400">
             비밀번호를 잊으셨나요?{' '}
-            <Link href="/help/find-password" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
+            <Link href="/help/find-password" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors" prefetch={false}>
               비밀번호 찾기
             </Link>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             계정이 기억나셨나요?{' '}
-            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
+            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors" prefetch={false}>
               로그인
             </Link>
           </p>
@@ -329,8 +329,8 @@ export default function FindIdPage() {
         </Suspense>
       </div>
       <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
-        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>개인정보처리방침</Link>
       </div>
     </div>
   );

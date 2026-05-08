@@ -249,6 +249,7 @@ export default function TransfersTab({ teamId, transfers, playerKoreanNames = {}
           <Link
             href="/transfers"
             className="hidden md:flex p-2 px-3 rounded border border-black/7 dark:border-0 text-[13px] transition-colors bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] items-center gap-1 flex-shrink-0"
+          prefetch={false}
           >
             이적센터
             <svg

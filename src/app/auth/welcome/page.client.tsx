@@ -218,7 +218,7 @@ export default function WelcomePageClient() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <Link href="/" className="inline-block">
+            <Link href="/" className="inline-block" prefetch={false}>
               <div className="flex items-center gap-2">
                 <Image
                   src={siteConfig.logo}
@@ -311,7 +311,7 @@ export default function WelcomePageClient() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.0 }}
               >
-                <Link href="/" className="block">
+                <Link href="/" className="block" prefetch={false}>
                   <motion.button
                     className="w-full py-3 px-4 h-auto rounded-xl font-medium text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-300/30 dark:shadow-indigo-500/20"
                     whileHover={{ scale: 1.02, boxShadow: '0 10px 40px rgba(99,102,241,0.35)' }}

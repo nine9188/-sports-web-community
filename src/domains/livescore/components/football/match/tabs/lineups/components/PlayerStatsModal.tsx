@@ -360,6 +360,7 @@ export default function PlayerStatsModal({
                   <Link
                     href={playerUrl(playerId, getPlayerSlugFromName(playerInfo.name))}
                     className="block w-full py-2.5 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-[13px] text-center"
+                  prefetch={false}
                   >
                     선수 정보 더보기
                   </Link>

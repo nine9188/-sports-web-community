@@ -129,6 +129,7 @@ export function Pagination({
           className={className}
           aria-disabled={disabled}
           tabIndex={disabled ? -1 : undefined}
+        prefetch={false}
         >
           {icon}
         </Link>
@@ -161,6 +162,7 @@ export function Pagination({
           scroll={false}
           aria-current={isActive ? "page" : undefined}
           className={className}
+        prefetch={false}
         >
           {page}
         </Link>

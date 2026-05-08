@@ -205,6 +205,7 @@ export default function IconForm({
             <Link
               href="/shop"
               className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            prefetch={false}
             >
               더 많은 아이콘 보기 →
             </Link>

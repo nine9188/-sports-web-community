@@ -165,12 +165,12 @@ function ResetPasswordContent() {
             </div>
 
             <div className="space-y-3">
-              <Link href="/help/find-password" className="block">
+              <Link href="/help/find-password" className="block" prefetch={false}>
                 <Button variant="primary" className="w-full py-3 h-auto">
                   새 재설정 링크 요청
                 </Button>
               </Link>
-              <Link href="/signin" className="block">
+              <Link href="/signin" className="block" prefetch={false}>
                 <Button variant="outline" className="w-full py-3 h-auto">
                   로그인하기
                 </Button>
@@ -180,7 +180,7 @@ function ResetPasswordContent() {
             <div className="mt-8 text-center">
               <p className="text-gray-600 dark:text-gray-400">
                 처음 방문이신가요?{' '}
-                <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
+                <Link href="/signup" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors" prefetch={false}>
                   회원가입
                 </Link>
               </p>
@@ -334,7 +334,7 @@ function ResetPasswordContent() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             비밀번호가 기억나셨나요?{' '}
-            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors">
+            <Link href="/signin" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline font-medium transition-colors" prefetch={false}>
               로그인
             </Link>
           </p>
@@ -368,8 +368,8 @@ export default function ResetPasswordPage() {
         </Suspense>
       </div>
       <div className="mt-8 flex space-x-4 text-[13px] text-gray-500 dark:text-gray-400">
-        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">이용약관</Link>
-        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">개인정보처리방침</Link>
+        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>이용약관</Link>
+        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors" prefetch={false}>개인정보처리방침</Link>
       </div>
     </div>
   );

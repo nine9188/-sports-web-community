@@ -47,6 +47,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
               <Link
                 href="/"
                 className="inline-flex items-center px-3 py-2 border border-black/7 dark:border-white/10 rounded-md text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#262626] hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D] transition-colors"
+              prefetch={false}
               >
                 <Home className="w-4 h-4 mr-2" />
                 사이트로 돌아가기
@@ -73,6 +74,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
                           ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]'
                           : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
                       }`}
+                    prefetch={false}
                     >
                       {item.icon}
                       {item.label}

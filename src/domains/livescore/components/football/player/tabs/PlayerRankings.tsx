@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Medal } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Container, ContainerContent } from '@/shared/components/ui';
 import { TabList } from '@/shared/components/ui/tabs';
 import { RankingsData, PlayerRanking } from '@/domains/livescore/types/player';
@@ -45,10 +44,7 @@ export default function PlayerRankings({
   playerKoreanNames = {},
   playerPhotoUrls: initialPlayerPhotoUrls = {},
   teamLogoUrls: initialTeamLogoUrls = {},
-}: PlayerRankingsProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { getTeamById } = useTeamLeague();
+}: PlayerRankingsProps) {  const { getTeamById } = useTeamLeague();
   const [rankingType, setRankingType] = useState('topScorers');
 
   const rankingTypes = [
@@ -83,20 +79,6 @@ export default function PlayerRankings({
 
   // 현재 서브탭에 필요한 API 타입
   const apiType = SUB_TAB_TO_API[rankingType];
-
-  const prefetchRankingType = (tabId: string) => {
-    const nextApiType = SUB_TAB_TO_API[tabId];
-    if (!nextApiType || !leagueId) return;
-
-    const queryKey = ['player-ranking', leagueId, nextApiType] as const;
-    if (queryClient.getQueryData(queryKey)) return;
-
-    void queryClient.prefetchQuery({
-      queryKey,
-      queryFn: () => fetchSingleRanking(leagueId, nextApiType),
-      ...CACHE_STRATEGIES.STATIC_DATA,
-    });
-  };
 
   // 서브탭 클릭 시에만 해당 API 호출 (React Query lazy loading)
   const { data: fetchedData, isLoading, isFetching } = useQuery({
@@ -180,7 +162,6 @@ export default function PlayerRankings({
         tabs={displayRankingTypes}
         activeTab={rankingType}
         onTabChange={setRankingType}
-        onTabIntent={prefetchRankingType}
         variant="default"
       />
 
@@ -244,6 +225,7 @@ export default function PlayerRankings({
                   key={player.player.id}
                   href={playerUrl(player.player.id, getPlayerSlugFromName(player.player.name))}
                   className="relative flex min-h-[92px] items-center gap-3 rounded-lg border border-black/7 bg-white p-3 pl-10 transition-colors hover:bg-[#EAEAEA] dark:border-0 dark:bg-[#1D1D1D] dark:hover:bg-[#333333] sm:min-h-[180px] sm:flex-col sm:justify-center sm:pl-3"
+                prefetch={false}
                 >
                   {cardContent}
                 </Link>
@@ -277,8 +259,7 @@ export default function PlayerRankings({
                         className={`grid grid-cols-[1.5rem_minmax(0,1.35fr)_minmax(0,1fr)_auto] items-center gap-1.5 px-3 py-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:grid-cols-[2.25rem_minmax(0,1.2fr)_minmax(0,1fr)_auto] md:gap-3 md:px-4 md:py-3 ${
                           isCurrentPlayer ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
                         }`}
-                        onMouseEnter={() => router.prefetch(href)}
-                        onFocus={() => router.prefetch(href)}
+                        prefetch={false}
                       >
                         <span className="text-center text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
                           {index + 4}

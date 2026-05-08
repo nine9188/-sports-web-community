@@ -437,7 +437,7 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
             {/* 홈팀 */}
             <div className="w-1/3 md:w-1/3 text-center">
               {homeTeam?.id ? (
-                <Link href={getTeamHref(homeTeam.id, homeTeam.name)} className="group">
+                <Link href={getTeamHref(homeTeam.id, homeTeam.name)} className="group" prefetch={false}>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(homeTeam.id)}
@@ -495,7 +495,7 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
             {/* 원정팀 */}
             <div className="w-1/3 md:w-1/3 text-center">
               {awayTeam?.id ? (
-                <Link href={getTeamHref(awayTeam.id, awayTeam.name)} className="group">
+                <Link href={getTeamHref(awayTeam.id, awayTeam.name)} className="group" prefetch={false}>
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(awayTeam.id)}

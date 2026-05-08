@@ -13,6 +13,7 @@ export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
     <Link 
       href={`/shop/${category.slug}`}
       className="block group"
+    prefetch={false}
     >
       <div className="border border-black/7 dark:border-0 rounded-lg overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all hover:bg-[#EAEAEA] dark:hover:bg-[#333333]">
         <div className="h-48 bg-[#F5F5F5] dark:bg-[#262626] relative">

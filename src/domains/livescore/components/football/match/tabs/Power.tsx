@@ -253,6 +253,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             key={it.fixtureId}
             href={href}
             className="block rounded-md p-1 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+          prefetch={false}
           >
             <div className="flex items-center gap-1.5 text-xs">
               {it.venue === 'home' ? (
@@ -310,6 +311,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             key={`${valueKey}-${player.playerId}-${index}`}
             href={playerHref(player.playerId, player.name)}
             className={`flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${align === 'right' ? 'justify-between md:flex-row-reverse' : 'justify-between'}`}
+          prefetch={false}
           >
             {content}
           </Link>
@@ -355,6 +357,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
         <Link
           href={teamHref(teamId, teamMeta.slugName)}
           className={`flex items-center gap-2 rounded-md transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${align === 'right' ? 'md:flex-row-reverse' : ''}`}
+        prefetch={false}
         >
           <UnifiedSportsImageClient
             src={getTeamLogo(teamId)}
@@ -400,7 +403,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
         {/* 1) VS행: 팀명, 순위, 승무패 */}
         <div className="grid grid-cols-[3fr_1fr_3fr] items-center gap-1">
           <div className="text-right px-1">
-            <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="group flex items-center justify-end gap-2 mb-1">
+            <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="group flex items-center justify-end gap-2 mb-1" prefetch={false}>
               <div className="font-semibold truncate text-right text-gray-900 dark:text-[#F0F0F0] group-hover:underline transition-colors">{teamAMeta.name}</div>
               <UnifiedSportsImageClient
                 src={getTeamLogo(data.teamA)}
@@ -426,7 +429,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             <div className="text-lg font-extrabold text-gray-900 dark:text-[#F0F0F0]">VS</div>
           </div>
           <div className="text-left px-1">
-            <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="group flex items-center justify-start gap-2 mb-1">
+            <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="group flex items-center justify-start gap-2 mb-1" prefetch={false}>
               <UnifiedSportsImageClient
                 src={getTeamLogo(data.teamB)}
                 alt={teamBMeta.name}
@@ -546,6 +549,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
                 key={m.fixtureId}
                 href={fixtureHref(m.fixtureId, m.teams.home.name, m.teams.away.name)}
                 className="grid min-w-0 grid-cols-[minmax(0,2.8fr)_minmax(0,1.4fr)_minmax(0,2.8fr)] gap-1 items-center p-2 border-b border-black/5 dark:border-white/10 last:border-b-0 text-[13px] rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+              prefetch={false}
               >
                 <div className="flex min-w-0 items-center justify-end px-1 gap-2">
                   <span className="min-w-0 truncate text-[13px]">{teamAMeta.name}</span>

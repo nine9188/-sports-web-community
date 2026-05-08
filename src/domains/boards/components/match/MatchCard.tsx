@@ -156,7 +156,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
 
   return (
     <div className="match-card">
-      <Link href={href}>
+      <Link href={href} prefetch={false}>
         <CardContent />
       </Link>
     </div>

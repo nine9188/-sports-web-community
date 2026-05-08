@@ -10,15 +10,13 @@ interface TopLevelBoardProps {
   href: string;
   onHover: (boardId: string, element: HTMLDivElement) => void;
   onLeave: () => void;
-  onClick: (board: Board) => void;
 }
 
 const TopLevelBoard = React.memo(function TopLevelBoard({
   board,
   href,
   onHover,
-  onLeave,
-  onClick
+  onLeave
 }: TopLevelBoardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const hasChildren = board.children && board.children.length > 0;
@@ -33,10 +31,6 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
       <Link
         href={href}
         prefetch={false}
-        onClick={(e) => {
-          e.preventDefault();
-          onClick(board);
-        }}
         className="px-2 py-1 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded flex items-center gap-1 cursor-pointer whitespace-nowrap transition-colors"
       >
         {board.name || '게시판'}

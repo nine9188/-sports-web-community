@@ -98,7 +98,7 @@ export default async function CreatePostPage({
           <div className={errorBoxStyles}>
             <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
             <p className={errorMessageStyles}>게시판 정보가 올바르지 않습니다.</p>
-            <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+            <Link href="/boards" className={errorLinkStyles} prefetch={false}>게시판 목록으로</Link>
           </div>
         </div>
       );
@@ -113,7 +113,7 @@ export default async function CreatePostPage({
           <div className={errorBoxStyles}>
             <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
             <p className={errorMessageStyles}>{result.error || '게시판 정보를 불러오는 중 오류가 발생했습니다.'}</p>
-            <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+            <Link href="/boards" className={errorLinkStyles} prefetch={false}>게시판 목록으로</Link>
           </div>
         </div>
       );
@@ -152,7 +152,7 @@ export default async function CreatePostPage({
         <div className={errorBoxStyles}>
           <h2 className={errorTitleStyles}>오류</h2>
           <p className={errorMessageStyles}>게시판 정보를 불러오는 중 오류가 발생했습니다.</p>
-          <Link href="/boards" className={errorLinkStyles}>게시판 목록으로</Link>
+          <Link href="/boards" className={errorLinkStyles} prefetch={false}>게시판 목록으로</Link>
         </div>
       </div>
     );

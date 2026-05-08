@@ -62,6 +62,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
             aria-label="글쓰기"
             title="글쓰기"
             className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+          prefetch={false}
           >
             <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
           </Link>
@@ -87,6 +88,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
         <Link
           href={leagueUrl(leagueData.id, getLeagueSlug(leagueData.id, leagueData.name))}
           className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
+        prefetch={false}
         >
           리그 정보 →
         </Link>
@@ -98,6 +100,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
           aria-label="글쓰기"
           title="글쓰기"
           className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
+        prefetch={false}
         >
           <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
         </Link>

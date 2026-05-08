@@ -195,6 +195,7 @@ export default function AuthorLink({
           href={`/user/${publicId}`}
           onClick={handleToggle}
           className={`flex items-center flex-shrink-0 hover:underline active:underline cursor-pointer ${className}`}
+        prefetch={false}
         >
           {content}
         </Link>
@@ -207,6 +208,7 @@ export default function AuthorLink({
           >
             <Link
               href={`/user/${publicId}`}
+              prefetch={false}
               onClick={() => setIsOpen(false)}
               className="w-full px-3 py-2 text-left text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] flex items-center gap-2 transition-colors"
             >

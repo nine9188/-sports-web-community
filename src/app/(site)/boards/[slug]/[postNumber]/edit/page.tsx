@@ -63,7 +63,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
           <div className={errorBoxStyles}>
             <h2 className={errorTitleStyles}>오류가 발생했습니다</h2>
             <p className={errorMessageStyles}>{result.error || '게시글 정보를 불러오는 중 오류가 발생했습니다.'}</p>
-            <Link href={`/boards/${slug}/${postNumber}`} className={errorLinkStyles}>게시글로 돌아가기</Link>
+            <Link href={`/boards/${slug}/${postNumber}`} className={errorLinkStyles} prefetch={false}>게시글로 돌아가기</Link>
           </div>
         </div>
       );

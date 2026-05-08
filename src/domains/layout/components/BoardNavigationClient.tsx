@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Board } from '../types/board';
 import {
   SearchBar,
@@ -107,7 +106,6 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
 
   // 가상 보드 데이터 생성
   const navBoards = useMemo(() => createNavBoards(boards), [boards]);
@@ -210,11 +208,6 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
     return `/boards/${board.slug || board.id}`;
   };
 
-  // 게시판 클릭 처리
-  const handleBoardClick = (board: Board) => {
-    router.push(getBoardHref(board));
-  };
-
   // 드롭다운 닫기
   const closeDropdown = () => {
     clearTimers();
@@ -239,7 +232,6 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
               href={getBoardHref(board)}
               onHover={handleMouseEnter}
               onLeave={handleMouseLeave}
-              onClick={handleBoardClick}
             />
           ))}
 

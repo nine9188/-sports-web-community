@@ -163,6 +163,7 @@ export default function NotificationItem({ notification, onRead, isSelected, onT
           href={notification.link}
           className={`flex-1 cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${!onToggleSelect ? 'pl-3' : 'pl-2'}`}
           onClick={handleClick}
+        prefetch={false}
         >
           {notificationContent}
         </Link>

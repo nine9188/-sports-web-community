@@ -761,7 +761,7 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
     <div className="min-h-screen">
       {/* 로고 */}
       <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="inline-block">
+        <Link href="/" className="inline-block" prefetch={false}>
           <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" priority />
         </Link>
       </div>
@@ -784,8 +784,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
             게시글에 선수를 태그하면 스탯이 바로 뜹니다.<br />경기를 태그하면 스코어가 실시간으로 업데이트됩니다.<br /><span className="text-white font-medium">그게 4590입니다.</span>
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.1 }} className="flex flex-col sm:flex-row gap-3 justify-center mb-14">
-            <Link href="/" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">둘러보고 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/signup" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all">팬들과 함께하기</Link>
+            <Link href="/" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2" prefetch={false}>둘러보고 시작하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/signup" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all" prefetch={false}>팬들과 함께하기</Link>
           </motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
             <ChevronDown className="w-5 h-5 text-gray-500 mx-auto animate-bounce" />
@@ -1148,8 +1148,8 @@ export default function AboutPageClient({ demoImages }: { demoImages: DemoImages
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">같이 볼 사람, 여기 있습니다</h2>
           <p className="text-[13px] md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">댓글 하나가 대화가 되고,<br />대화가 커뮤니티가 됩니다.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2">팬들과 함께하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all">조금 더 둘러보기</Link>
+            <Link href="/signup" className="group px-8 py-3.5 bg-white text-gray-900 rounded-xl text-[13px] font-bold hover:shadow-xl hover:shadow-white/10 transition-all flex items-center justify-center gap-2" prefetch={false}>팬들과 함께하기 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></Link>
+            <Link href="/" className="px-8 py-3.5 border border-white/20 text-white rounded-xl text-[13px] font-medium hover:bg-white/10 transition-all" prefetch={false}>조금 더 둘러보기</Link>
           </div>
         </div>
       </Section>

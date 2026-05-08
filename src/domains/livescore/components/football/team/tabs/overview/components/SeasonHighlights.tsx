@@ -91,6 +91,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                   key={player.id}
                   href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
+                prefetch={false}
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">
                     {index + 1}
@@ -132,6 +133,7 @@ export default function SeasonHighlights({ playerStats, squad, onTabChange, play
                   key={player.id}
                   href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
                   className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
+                prefetch={false}
                 >
                   <span className="text-xs font-bold text-gray-400 dark:text-gray-500 w-4 text-center">
                     {index + 1}

@@ -2,7 +2,6 @@
 
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -91,9 +90,7 @@ export default function Squad({
   playerKoreanNames = {},
   playerPhotoUrls = {},
   coachPhotoUrls = {}
-}: SquadProps) {
-  const router = useRouter();
-  const squadQuery = useQuery<SquadTabData>({
+}: SquadProps) {  const squadQuery = useQuery<SquadTabData>({
     queryKey: [...teamKeys.squad(String(teamId)), 'tab'],
     queryFn: () => fetchTeamSquadTabData(String(teamId)),
     enabled: (
@@ -240,12 +237,11 @@ export default function Squad({
                       return (
                         <tr
                           key={member.id}
-                          className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${isPlayer ? 'cursor-pointer' : ''}`}
-                          onClick={() => { if (isPlayer) router.push(href); }}
+                          className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors`}
                         >
                           <td className="px-2 sm:px-4 md:px-6 py-1.5 whitespace-nowrap">
                             {isPlayer ? (
-                              <Link href={href} className="block">
+                              <Link href={href} className="block" prefetch={false}>
                                 <div className="w-8 h-8 md:w-10 md:h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
                                   <UnifiedSportsImageClient
                                     src={getPlayerPhoto(member.id)}
@@ -275,7 +271,7 @@ export default function Squad({
                           </td>
                           <td className="px-2 sm:px-4 md:px-6 py-1.5">
                             {isPlayer ? (
-                              <Link href={href} className="block max-w-[115px] md:max-w-none">
+                              <Link href={href} className="block max-w-[115px] md:max-w-none" prefetch={false}>
                                 <span className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate md:whitespace-normal block">
                                   {displayPlayerKoreanNames[member.id] || member.name}
                                 </span>

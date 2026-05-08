@@ -320,7 +320,6 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
           initialData={initialData}
           playerKoreanName={playerKoreanName}
           rankingsKoreanNames={rankingsKoreanNames}
-          prefetchEnabled
         />
       </>
     );

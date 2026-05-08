@@ -86,6 +86,7 @@ export default function PlayerTransfers({
                   <Link
                     href={teamUrl(transfer.teams.from.id, getTeamSlugFromName(transfer.teams.from.name))}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
+                  prefetch={false}
                   >
                     <TeamLogo
                       logoUrl={getTeamLogo(transfer.teams.from.id)}
@@ -126,6 +127,7 @@ export default function PlayerTransfers({
                   <Link
                     href={teamUrl(transfer.teams.to.id, getTeamSlugFromName(transfer.teams.to.name))}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
+                  prefetch={false}
                   >
                     <TeamLogo
                       logoUrl={getTeamLogo(transfer.teams.to.id)}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -70,9 +70,7 @@ export default function FixturesTab({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {},
-}: FixturesTabProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+}: FixturesTabProps) {  const searchParams = useSearchParams();
   const { getLeagueKoreanName } = useTeamLeague();
 
   const fixturesQuery = useQuery<FixturesTabData>({
@@ -221,8 +219,7 @@ export default function FixturesTab({
                 key={match.fixture.id}
                 href={href}
                 className="block px-3 py-2.5 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:px-4 md:py-3"
-                onMouseEnter={() => router.prefetch(href)}
-                onFocus={() => router.prefetch(href)}
+                prefetch={false}
               >
                 <div className="mb-2 flex items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400 md:text-xs">
                   <span className="whitespace-nowrap">

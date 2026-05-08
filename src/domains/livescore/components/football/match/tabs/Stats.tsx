@@ -427,6 +427,7 @@ const Stats = memo(({
                     getTeamSlugFromName(playerStatsData.data.homeTeam.name)
                   )}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                prefetch={false}
                 >
                   <UnifiedSportsImageClient
                     src={getTeamLogo(playerStatsData.data.homeTeam.id)}
@@ -559,6 +560,7 @@ const Stats = memo(({
                                 <Link 
                                   href={`/livescore/football/player/${player.playerId}`}
                                   className="flex items-center gap-1.5 hover:underline transition-all"
+                                prefetch={false}
                                 >
                                   {player.playerNumber && (
                                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium min-w-[1.5rem]">
@@ -613,6 +615,7 @@ const Stats = memo(({
                     getTeamSlugFromName(playerStatsData.data.awayTeam.name)
                   )}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                prefetch={false}
                 >
                   <UnifiedSportsImageClient
                     src={getTeamLogo(playerStatsData.data.awayTeam.id)}
@@ -745,6 +748,7 @@ const Stats = memo(({
                                 <Link 
                                   href={`/livescore/football/player/${player.playerId}`}
                                   className="flex items-center gap-1.5 hover:underline transition-all"
+                                prefetch={false}
                                 >
                                   {player.playerNumber && (
                                     <span className="text-xs text-gray-500 dark:text-gray-400 font-medium min-w-[1.5rem]">

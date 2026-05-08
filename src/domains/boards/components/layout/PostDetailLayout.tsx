@@ -229,6 +229,7 @@ export default function PostDetailLayout({
             <Link
               href={`/boards/${slug}`}
               className="inline-flex items-center px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800 transition-colors"
+            prefetch={false}
             >
               게시판으로 돌아가기
             </Link>
@@ -277,6 +278,7 @@ export default function PostDetailLayout({
             <Link
               href={`/boards/${slug}`}
               className="inline-flex items-center px-4 py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] rounded-md transition-colors"
+            prefetch={false}
             >
               게시판으로 돌아가기
             </Link>
@@ -465,6 +467,7 @@ export default function PostDetailLayout({
           <Link
             href={`/boards/${slug}/create`}
             className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
+          prefetch={false}
           >
             <span>글쓰기</span>
           </Link>

@@ -70,6 +70,7 @@ export default function RelatedPosts({
           <Link
             href={`/boards/${boardSlug}`}
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          prefetch={false}
           >
             게시판 이동 →
           </Link>
@@ -114,6 +115,7 @@ function TeamSection({
           <Link
             href={`/boards/${team.boardSlug}`}
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          prefetch={false}
           >
             게시판 이동 →
           </Link>
@@ -142,6 +144,7 @@ function PostList({ posts }: { posts: RelatedPost[] }) {
           <Link
             href={`/boards/${post.board_slug}/${post.post_number}`}
             className="block px-3 py-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
+          prefetch={false}
           >
             <span className="text-[13px] truncate block">{post.title}</span>
           </Link>
