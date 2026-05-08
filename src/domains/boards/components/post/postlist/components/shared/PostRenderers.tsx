@@ -229,7 +229,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
     // 팀 게시판: 팀 로고 사용
     const logoUrl = post.team_logo || TEAM_PLACEHOLDER;
     return (
-      <Link href={boardLink} className="flex items-center hover:underline">
+      <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <UnifiedSportsImageClient
             src={logoUrl}
@@ -252,7 +252,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
     // 리그 게시판: 다크모드 지원
     const leagueLogo = post.league_logo || LEAGUE_PLACEHOLDER;
     return (
-      <Link href={boardLink} className="flex items-center hover:underline">
+      <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <LeagueLogoImage
             leagueLogo={leagueLogo}
@@ -272,7 +272,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
   } else {
     // 일반 게시판: 사이트 로고
     return (
-      <Link href={boardLink} className="flex items-center hover:underline">
+      <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <Image
             src={siteConfig.icon}

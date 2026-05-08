@@ -117,6 +117,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
               {/* 글쓰기 */}
               <Link
                 href="/boards/soccer/create"
+                prefetch={false}
                 className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -132,6 +133,7 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
               {/* 프로필 설정 */}
               <Link
                 href="/settings/profile"
+                prefetch={false}
                 className="flex items-center w-full px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -184,12 +186,14 @@ export default function UserProfileClient({ userData }: UserProfileClientProps) 
     <div className="hidden md:flex space-x-2">
       <Link
         href="/signin"
+        prefetch={false}
         className="px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         로그인
       </Link>
       <Link
         href="/signup"
+        prefetch={false}
         className="px-3 py-2 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
       >
         회원가입

@@ -145,6 +145,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
         <div className="p-4 border-t border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] space-y-3">
           <Link
             href="/livescore/football"
+            prefetch={false}
             onClick={onClose}
             className="block w-full text-center py-2 px-4 bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] text-[13px] font-medium rounded-lg transition-colors"
           >

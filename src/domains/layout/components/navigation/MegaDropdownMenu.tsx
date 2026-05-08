@@ -88,6 +88,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
             <div className="w-56 flex-shrink-0">
               <Link
                 href={getBoardHref(board)}
+                prefetch={false}
                 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] hover:text-gray-600 dark:hover:text-gray-300 transition-colors inline-flex items-center gap-1 mb-3"
                 onClick={onClose}
               >
@@ -144,6 +145,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                     </h4>
                     <Link
                       href={getBoardHref(selectedSecondLevel)}
+                      prefetch={false}
                       className="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors"
                       onClick={onClose}
                     >
@@ -161,6 +163,7 @@ const MegaDropdownMenu = React.memo(function MegaDropdownMenu({
                             <Link
                               key={thirdLevel.id}
                               href={getBoardHref(thirdLevel)}
+                              prefetch={false}
                               className="block px-2 py-1.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded transition-colors"
                               onClick={onClose}
                             >

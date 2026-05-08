@@ -261,6 +261,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
               <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h2>
               <Link
                 href="/boards/all"
+                prefetch={false}
                 className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
               >
                 전체글 보기
@@ -288,6 +289,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
         <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h2>
         <Link
           href="/boards/all"
+          prefetch={false}
           className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
         >
           전체글 보기

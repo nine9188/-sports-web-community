@@ -18,16 +18,16 @@ function GuestAuthSection() {
         className="w-full mb-2"
         asChild
       >
-        <Link href="/signin">
+        <Link href="/signin" prefetch={false}>
           <span className="font-bold mr-1">4590</span> 로그인
         </Link>
       </Button>
       <div className="flex justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
-        <Link href="/help/find-id" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">아이디 찾기</Link>
+        <Link href="/help/find-id" prefetch={false} className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">아이디 찾기</Link>
         <span className="text-gray-300 dark:text-gray-600">|</span>
-        <Link href="/help/find-password" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">비밀번호 찾기</Link>
+        <Link href="/help/find-password" prefetch={false} className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">비밀번호 찾기</Link>
         <span className="text-gray-300 dark:text-gray-600">|</span>
-        <Link href="/signup" className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">회원가입</Link>
+        <Link href="/signup" prefetch={false} className="hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline transition-colors">회원가입</Link>
       </div>
     </>
   );

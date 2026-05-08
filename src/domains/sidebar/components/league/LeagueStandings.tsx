@@ -192,7 +192,7 @@ export default function LeagueStandings({
                   >
                     <td className="text-center py-1.5 px-0">{team.rank}</td>
                     <td className="text-left py-1.5 px-1">
-                      <Link href={getTeamHref(team.team)} className="flex items-center gap-1">
+                      <Link href={getTeamHref(team.team)} prefetch={false} className="flex items-center gap-1">
                         <div className="w-5 h-5 relative flex-shrink-0">
                           <UnifiedSportsImageClient
                             src={getTeamLogo(team.team.team_id)}

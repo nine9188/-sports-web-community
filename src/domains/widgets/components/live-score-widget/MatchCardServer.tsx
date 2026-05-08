@@ -106,6 +106,7 @@ export default function MatchCardServer({ match, isLast, eager }: MatchCardServe
   return (
     <Link
       href={href}
+      prefetch={false}
       aria-label={ariaLabel}
       className={`
         flex items-center h-12 px-4 md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors

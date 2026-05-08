@@ -32,6 +32,7 @@ const TopLevelBoard = React.memo(function TopLevelBoard({
     >
       <Link
         href={href}
+        prefetch={false}
         onClick={(e) => {
           e.preventDefault();
           onClick(board);

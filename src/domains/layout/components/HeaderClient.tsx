@@ -257,7 +257,7 @@ export default function HeaderClient({
         <div className="w-full max-w-[1360px] mx-auto relative z-[999]">
           <div className="flex h-20 items-center px-4">
             <div className="flex items-center space-x-2">
-              <Link href="/" className="flex items-center space-x-2">
+              <Link href="/" prefetch={false} className="flex items-center space-x-2">
                 {/* 라이트모드: 원본 로고 */}
                 <Image
                   src={logoUrl}
@@ -317,7 +317,7 @@ export default function HeaderClient({
           <div className="w-full max-w-[1360px] mx-auto relative z-[999]">
             <div className="flex h-16 items-center px-4">
               <div className="flex items-center space-x-2">
-                <Link href="/" className="flex items-center space-x-2">
+                <Link href="/" prefetch={false} className="flex items-center space-x-2">
                   {/* 라이트모드: 원본 로고 */}
                   <Image
                     src={logoUrl}

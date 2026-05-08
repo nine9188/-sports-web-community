@@ -12,6 +12,7 @@ export default function UserStats({ postCount = 0, commentCount = 0 }: UserStats
     <div className="grid grid-cols-2 gap-2 text-xs text-center">
       <Link
         href="/settings/my-posts"
+        prefetch={false}
         className="bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md py-2 transition-colors"
       >
         <div className="font-medium text-gray-900 dark:text-[#F0F0F0]">{postCount}</div>
@@ -19,6 +20,7 @@ export default function UserStats({ postCount = 0, commentCount = 0 }: UserStats
       </Link>
       <Link
         href="/settings/my-comments"
+        prefetch={false}
         className="bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md py-2 transition-colors"
       >
         <div className="font-medium text-gray-900 dark:text-[#F0F0F0]">{commentCount}</div>

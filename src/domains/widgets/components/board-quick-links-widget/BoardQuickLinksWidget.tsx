@@ -46,6 +46,7 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
         <Link
           key={item.key}
           href={item.href}
+          prefetch={false}
           aria-label={item.ariaLabel ?? item.label}
           className={classNames(
             // 타일 스타일 (모바일: 심플, 데스크탑: 헤더 UI 색상)
@@ -113,5 +114,4 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
     </nav>
   );
 }
-
 

@@ -159,7 +159,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
           {/* 메타 정보 */}
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             {post.is_notice ? (
-              <Link href="/boards/notice" className="inline-flex items-center">
+              <Link href="/boards/notice" prefetch={false} className="inline-flex items-center">
                 <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
                   post.is_must_read
                     ? 'bg-red-600 dark:bg-red-700 text-white'
@@ -169,7 +169,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
                 </span>
               </Link>
             ) : (
-              <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300">
+              <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300">
                 {post.board_name}
               </Link>
             )}
@@ -214,7 +214,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       {showBoard && (
         <td className="py-2 pl-3 pr-1 align-middle">
           {post.is_notice ? (
-            <Link href="/boards/notice" className="flex items-center ml-6">
+            <Link href="/boards/notice" prefetch={false} className="flex items-center ml-6">
               <span className={`inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none whitespace-nowrap ${
                 post.is_must_read
                   ? 'bg-red-600 dark:bg-red-700 text-white'

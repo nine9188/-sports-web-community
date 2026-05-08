@@ -64,6 +64,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
                 <Link
                   key={child.id}
                   href={getBoardHref(child)}
+                  prefetch={false}
                   className="group block relative"
                   onClick={onClose}
                 >
@@ -130,6 +131,7 @@ const SimpleDropdownMenu = React.memo(function SimpleDropdownMenu({
                 <Link
                   key={child.id}
                   href={getBoardHref(child)}
+                  prefetch={false}
                   className={`block px-4 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors truncate`}
                   onClick={onClose}
                 >

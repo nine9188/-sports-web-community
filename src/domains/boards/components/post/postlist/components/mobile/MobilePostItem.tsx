@@ -151,7 +151,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
           <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
             <div className="w-full flex items-center justify-between gap-2">
               <div className="flex items-center overflow-hidden whitespace-nowrap">
-                <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
+                <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
                   {post.board_name}
                 </Link>
                 <span className="mx-1 flex-shrink-0">|</span>
@@ -218,7 +218,7 @@ export const MobilePostItem = React.memo(function MobilePostItem({
       <div className="flex text-[11px] text-gray-500 dark:text-gray-400">
         <div className="w-full flex items-center justify-between gap-2">
           <div className="flex items-center overflow-hidden whitespace-nowrap">
-            <Link href={`/boards/${post.board_slug}`} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
+            <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300 truncate" style={{maxWidth: '80px'}}>
               {post.board_name}
             </Link>
             <span className="mx-1 flex-shrink-0">|</span>

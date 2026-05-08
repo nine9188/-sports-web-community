@@ -181,6 +181,7 @@ const BoardCategoryItem = ({
       <div>
         <Link
           href={`/boards/${boardSlug}`}
+          prefetch={false}
           onClick={onNavigate}
           className={`flex items-center ${itemText} ${itemPy} px-4 transition-colors ${
             isActive
@@ -249,6 +250,7 @@ export default function ClientBoardNavigation({
       {/* 전체글 (개수 표시) */}
       <Link
         href="/boards/all"
+        prefetch={false}
         onClick={onNavigate}
         className={`flex items-center justify-between ${itemText} ${itemPy} px-4 transition-colors ${
           isAllPostsActive
@@ -274,6 +276,7 @@ export default function ClientBoardNavigation({
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             onClick={onNavigate}
             className={`flex items-center gap-3 ${itemText} ${itemPy} px-4 transition-colors ${
               isActive
@@ -289,6 +292,7 @@ export default function ClientBoardNavigation({
       {isAdmin && (
         <Link
           href="/admin"
+          prefetch={false}
           onClick={onNavigate}
           className={`flex items-center gap-3 ${itemText} ${itemPy} px-4 transition-colors ${
             pathname.startsWith('/admin')

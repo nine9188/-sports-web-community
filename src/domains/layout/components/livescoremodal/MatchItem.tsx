@@ -142,12 +142,16 @@ const MatchItem = React.memo(function MatchItem({
   return (
     <div
       className="bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 rounded-lg p-4 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors cursor-pointer relative"
-      onMouseEnter={() => router.prefetch(matchHref)}
-      onFocus={() => router.prefetch(matchHref)}
       onClick={handleMatchClick}
     >
       {/* SEO: 크롤러가 매치 URL을 발견할 수 있도록 숨겨진 Link */}
-      <Link href={matchHref} className="absolute inset-0 z-0" aria-hidden="true" tabIndex={-1} />
+      <Link
+        href={matchHref}
+        prefetch={false}
+        className="absolute inset-0 z-0"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       {/* 리그 정보 */}
       {match.league && (
         <div className="flex items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">

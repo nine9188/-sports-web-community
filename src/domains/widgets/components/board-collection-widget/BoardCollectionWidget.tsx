@@ -179,6 +179,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
           <ContainerTitle>데이터분석</ContainerTitle>
           <Link
             href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
+            prefetch={false}
             className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
           >
             분석 더보기
@@ -209,6 +210,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
             <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{foreign.boardName}</h3>
             <Link
               href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
+              prefetch={false}
               className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
             >
               분석 더보기
@@ -224,6 +226,7 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
             <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{domestic.boardName}</h3>
             <Link
               href={`/boards/${DOMESTIC_ANALYSIS_SLUG}`}
+              prefetch={false}
               className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
             >
               분석 더보기

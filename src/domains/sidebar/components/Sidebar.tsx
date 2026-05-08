@@ -50,6 +50,7 @@ export default function Sidebar({
           {/* 이용 가이드 바로가기 */}
           <Link
             href="/guide"
+            prefetch={false}
             className="flex items-center gap-2.5 mb-4 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 text-white md:rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-500 transition-all group"
           >
             <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">

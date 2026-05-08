@@ -115,6 +115,7 @@ export default function ProfileSidebar({
                 {/* 글쓰기 */}
                 <Link
                   href="/boards/soccer/create"
+                  prefetch={false}
                   className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   onClick={handleMenuClick}
                 >
@@ -125,6 +126,7 @@ export default function ProfileSidebar({
                 {/* 프로필 설정 */}
                 <Link
                   href="/settings/profile"
+                  prefetch={false}
                   className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]"
                   onClick={handleMenuClick}
                 >
@@ -165,6 +167,7 @@ export default function ProfileSidebar({
                 <div className="space-y-3">
                   <Link
                     href="/signin"
+                    prefetch={false}
                     className="block w-full bg-[#262626] dark:bg-[#3F3F3F] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors"
                     onClick={handleMenuClick}
                   >
@@ -173,6 +176,7 @@ export default function ProfileSidebar({
 
                   <Link
                     href="/signup"
+                    prefetch={false}
                     className="block w-full bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] py-3 px-4 rounded-lg font-medium hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                     onClick={handleMenuClick}
                   >

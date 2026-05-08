@@ -102,6 +102,7 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
     <li className={!isLast ? "border-b border-black/5 dark:border-white/10" : ""}>
       <Link
         href={`/boards/${post.board_slug}/${post.post_number}`}
+        prefetch={false}
         className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden"
       >
         <div className="flex items-center text-xs gap-1">

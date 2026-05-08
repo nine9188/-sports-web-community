@@ -95,6 +95,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
           {/* 이용 가이드 바로가기 */}
           <Link
             href="/guide"
+            prefetch={false}
             onClick={onClose}
             className="flex items-center gap-2.5 mx-4 mt-3 mb-0 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-500 dark:to-blue-400 text-white rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-500 transition-all group"
           >
@@ -138,6 +139,7 @@ const MobileHamburgerModal = React.memo(function MobileHamburgerModal({
                   <Link
                     key={board.id}
                     href={`/boards/${board.slug || board.id}`}
+                    prefetch={false}
                     onClick={onClose}
                     className="block px-4 py-3 text-[14px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
                   >
