@@ -318,6 +318,73 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
     </div>
   );
 
+  const renderRecentContainer = (
+    teamId: number,
+    teamMeta: TeamMeta,
+    items: RecentItem[],
+    side: 'teamA' | 'teamB'
+  ) => (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <div className="flex items-center gap-2">
+          <ContainerTitle>최근 경기 - {teamMeta.name}</ContainerTitle>
+          <UnifiedSportsImageClient
+            src={getTeamLogo(teamId)}
+            alt={teamMeta.name}
+            width={20}
+            height={20}
+            fit="contain"
+            className="h-5 w-5"
+          />
+        </div>
+      </ContainerHeader>
+      <ContainerContent>
+        {renderRecentMatchRows(items, teamMeta, side)}
+      </ContainerContent>
+    </Container>
+  );
+
+  const renderTopPlayersContainer = (
+    teamId: number,
+    teamMeta: TeamMeta,
+    players: { topScorers: TopScorer[]; topAssist: TopAssist[] },
+    align: 'left' | 'right' = 'left'
+  ) => (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <Link
+          href={teamHref(teamId, teamMeta.slugName)}
+          className={`flex items-center gap-2 rounded-md transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${align === 'right' ? 'md:flex-row-reverse' : ''}`}
+        >
+          <UnifiedSportsImageClient
+            src={getTeamLogo(teamId)}
+            alt={teamMeta.name}
+            width={20}
+            height={20}
+            fit="contain"
+            className="h-5 w-5"
+          />
+          <ContainerTitle>{teamMeta.name} 득점·도움 순위</ContainerTitle>
+        </Link>
+      </ContainerHeader>
+      <ContainerContent>
+        <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
+          득점
+        </div>
+        <div className="mb-4">
+          {renderTopPlayersListState(players.topScorers.length === 0, '득점 데이터가 없습니다.')}
+          {renderTopPlayerRows(players.topScorers, 'goals', align)}
+        </div>
+
+        <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
+          도움
+        </div>
+        {renderTopPlayersListState(players.topAssist.length === 0, '도움 데이터가 없습니다.')}
+        {renderTopPlayerRows(players.topAssist, 'assists', align)}
+      </ContainerContent>
+    </Container>
+  );
+
   // 바 차트 너비 정규화는 각 섹션에서 상대 비교로 처리
 
   return (
@@ -448,86 +515,10 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
       )}
 
       {showRecent && (
-      <>
-      <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
-        <ContainerHeader>
-          <div className="flex items-center gap-2">
-            <ContainerTitle>최근 경기 - {teamAMeta.name}</ContainerTitle>
-            <UnifiedSportsImageClient
-              src={getTeamLogo(data.teamA)}
-              alt={teamAMeta.name}
-              width={20}
-              height={20}
-              fit="contain"
-              className="h-5 w-5"
-            />
-          </div>
-        </ContainerHeader>
-        <ContainerContent>
-          {renderRecentMatchRows(data.recent.teamA.items, teamAMeta, 'teamA')}
-        </ContainerContent>
-      </Container>
-
-      <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
-        <ContainerHeader>
-          <div className="flex items-center gap-2">
-            <ContainerTitle>최근 경기 - {teamBMeta.name}</ContainerTitle>
-            <UnifiedSportsImageClient
-              src={getTeamLogo(data.teamB)}
-              alt={teamBMeta.name}
-              width={20}
-              height={20}
-              fit="contain"
-              className="h-5 w-5"
-            />
-          </div>
-        </ContainerHeader>
-        <ContainerContent>
-          {renderRecentMatchRows(data.recent.teamB.items, teamBMeta, 'teamB')}
-        </ContainerContent>
-      </Container>
-
-      <Container className="bg-white dark:bg-[#1D1D1D] mb-4 hidden md:block">
-        <ContainerHeader>
-          <ContainerTitle>최근 경기</ContainerTitle>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
-            <div>
-              <div className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                <span>{teamAMeta.name}</span>
-                <UnifiedSportsImageClient
-                  src={getTeamLogo(data.teamA)}
-                  alt={teamAMeta.name}
-                  width={20}
-                  height={20}
-                  fit="contain"
-                  className="h-5 w-5"
-                />
-              </div>
-              {renderRecentMatchRows(data.recent.teamA.items, teamAMeta, 'teamA')}
-            </div>
-
-            <div className="hidden w-px bg-black/5 dark:bg-white/10 md:block" />
-
-            <div>
-              <div className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                <UnifiedSportsImageClient
-                  src={getTeamLogo(data.teamB)}
-                  alt={teamBMeta.name}
-                  width={20}
-                  height={20}
-                  fit="contain"
-                  className="h-5 w-5"
-                />
-                <span>{teamBMeta.name}</span>
-              </div>
-              {renderRecentMatchRows(data.recent.teamB.items, teamBMeta, 'teamB')}
-            </div>
-          </div>
-        </ContainerContent>
-      </Container>
-      </>
+        <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {renderRecentContainer(data.teamA, teamAMeta, data.recent.teamA.items, 'teamA')}
+          {renderRecentContainer(data.teamB, teamBMeta, data.recent.teamB.items, 'teamB')}
+        </div>
       )}
 
       {showH2H && (
@@ -665,136 +656,10 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
       </>
       )}
       {showTopPlayers && (
-      <>
-      <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
-        <ContainerHeader>
-          <div className="flex items-center gap-2">
-            <ContainerTitle>{teamAMeta.name} 득점·도움 순위</ContainerTitle>
-            <UnifiedSportsImageClient
-              src={getTeamLogo(data.teamA)}
-              alt={teamAMeta.name}
-              width={20}
-              height={20}
-              fit="contain"
-              className="h-5 w-5"
-            />
-          </div>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-            득점
-          </div>
-          <div className="mb-4">
-            {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
-            {renderTopPlayerRows(data.topPlayers.teamA.topScorers, 'goals')}
-          </div>
-
-          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-            도움
-          </div>
-          {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
-          {renderTopPlayerRows(data.topPlayers.teamA.topAssist, 'assists')}
-        </ContainerContent>
-      </Container>
-
-      <Container className="bg-white dark:bg-[#1D1D1D] md:hidden">
-        <ContainerHeader>
-          <div className="flex items-center gap-2">
-            <UnifiedSportsImageClient
-              src={getTeamLogo(data.teamB)}
-              alt={teamBMeta.name}
-              width={20}
-              height={20}
-              fit="contain"
-              className="h-5 w-5"
-            />
-            <ContainerTitle>팀 탑 플레이어 - {teamBMeta.name}</ContainerTitle>
-          </div>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-            득점
-          </div>
-          <div className="mb-4">
-            {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
-            {renderTopPlayerRows(data.topPlayers.teamB.topScorers, 'goals')}
-          </div>
-
-          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-            도움
-          </div>
-          {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
-          {renderTopPlayerRows(data.topPlayers.teamB.topAssist, 'assists')}
-        </ContainerContent>
-      </Container>
-
-      <Container className="bg-white dark:bg-[#1D1D1D] hidden md:block">
-        <ContainerHeader>
-          <ContainerTitle>팀 득점·도움 순위</ContainerTitle>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
-            <div>
-              <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="mb-3 flex items-center justify-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:justify-end">
-                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
-                <UnifiedSportsImageClient
-                  src={getTeamLogo(data.teamA)}
-                  alt={teamAMeta.name}
-                  width={20}
-                  height={20}
-                  fit="contain"
-                  className="h-5 w-5"
-                />
-              </Link>
-
-              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-                득점
-              </div>
-              <div className="mb-4">
-                {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
-                {renderTopPlayerRows(data.topPlayers.teamA.topScorers, 'goals')}
-              </div>
-
-              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-                도움
-              </div>
-              {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
-              {renderTopPlayerRows(data.topPlayers.teamA.topAssist, 'assists')}
-            </div>
-
-            <div className="hidden w-px bg-black/5 dark:bg-white/10 md:block" />
-
-            <div>
-              <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="mb-3 flex items-center justify-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:justify-start">
-                <UnifiedSportsImageClient
-                  src={getTeamLogo(data.teamB)}
-                  alt={teamBMeta.name}
-                  width={20}
-                  height={20}
-                  fit="contain"
-                  className="h-5 w-5"
-                />
-                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
-              </Link>
-
-              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-                득점
-              </div>
-              <div className="mb-4">
-                {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
-                {renderTopPlayerRows(data.topPlayers.teamB.topScorers, 'goals', 'right')}
-              </div>
-
-              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
-                도움
-              </div>
-              {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
-              {renderTopPlayerRows(data.topPlayers.teamB.topAssist, 'assists', 'right')}
-            </div>
-          </div>
-        </ContainerContent>
-      </Container>
-      </>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {renderTopPlayersContainer(data.teamA, teamAMeta, data.topPlayers.teamA)}
+          {renderTopPlayersContainer(data.teamB, teamBMeta, data.topPlayers.teamB, 'right')}
+        </div>
       )}
     </>
   );

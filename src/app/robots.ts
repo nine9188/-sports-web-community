@@ -32,6 +32,21 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
           '/ui','/*?from=*','/*?sort=*',
         ],
       },
+      {
+        userAgent: 'GPTBot',
+        allow: ['/', '/livescore/football', '/livescore/football/leagues'],
+        disallow: [
+          '/livescore/football/match/',
+          '/livescore/football/player/',
+          '/livescore/football/team/',
+          '/livescore/football/*?*',
+          '/*_rsc=*',
+        ],
+      },
+      {
+        userAgent: 'OAI-SearchBot',
+        allow: '/',
+      },
       { userAgent: 'SERankingBot', disallow: '/' },
     ],
     host: new URL(siteConfig.url).host,

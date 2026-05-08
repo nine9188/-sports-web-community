@@ -150,206 +150,98 @@ export default async function TransfersPageContent({
             </div>
           </ContainerHeader>
 
-          {/* 데스크탑 테이블 */}
-          <div className="hidden md:block bg-white dark:bg-[#1D1D1D]">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-[28%]" />
-                <col className="w-[38%]" />
-                <col className="w-[16%]" />
-                <col className="w-[18%]" />
-              </colgroup>
-              <thead className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-                <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">선수</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적 경로</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">이적료/타입</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">날짜</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
-                {transfers.map((transfer, index) => (
-                  <tr key={`${transfer.player.id}-${index}`} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                    {/* 선수 정보 - 4590 표준: 서버에서 전달받은 Storage URL 사용 */}
-                    <td className="px-3 py-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex-shrink-0 w-9 h-9 relative">
-                          <Image
-                            src={playerPhotoUrls[transfer.player.id] || PLAYER_PLACEHOLDER}
-                            alt={`${transfer.player.name} 사진`}
-                            width={36}
-                            height={36}
-                            className="w-9 h-9 rounded-full object-cover border-2 border-gray-200 bg-gray-50"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
-                            className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate block"
-                          >
-                            {playerKoreanNames[transfer.player.id] || transfer.player.name}
-                          </Link>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* 이적 경로 */}
-                    <td className="px-3 py-3">
-                      <div className="flex items-center space-x-1.5">
-                        <div className="flex items-center space-x-1 min-w-0 flex-1">
-                          <TeamLogo
-                            teamName={transfer.transfers[0]?.teams?.out?.name || 'Unknown'}
-                            logoUrl={teamLogoUrls[transfer.transfers[0]?.teams?.out?.id || 0]}
-                            size={20}
-                          />
-                          <Link
-                            href={teamUrl(
-                              transfer.transfers[0]?.teams?.out?.id || 0,
-                              getTeamSlugFromName(transfer.transfers[0]?.teams?.out?.name || '')
-                            )}
-                            className="text-[13px] text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
-                          >
-                            {(() => {
-                              const teamId = transfer.transfers[0]?.teams?.out?.id || 0;
-                              const displayName = getTeamDisplayName(teamId);
-                              return displayName.startsWith('팀 ') ? transfer.transfers[0]?.teams?.out?.name || 'Unknown' : displayName;
-                            })()}
-                          </Link>
-                        </div>
-
-                        <div className="flex-shrink-0">
-                          <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
-                        </div>
-
-                        <div className="flex items-center space-x-1 min-w-0 flex-1">
-                          <TeamLogo
-                            teamName={transfer.transfers[0]?.teams?.in?.name || 'Unknown'}
-                            logoUrl={teamLogoUrls[transfer.transfers[0]?.teams?.in?.id || 0]}
-                            size={20}
-                          />
-                          <Link
-                            href={teamUrl(
-                              transfer.transfers[0]?.teams?.in?.id || 0,
-                              getTeamSlugFromName(transfer.transfers[0]?.teams?.in?.name || '')
-                            )}
-                            className="text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate font-medium"
-                          >
-                            {(() => {
-                              const teamId = transfer.transfers[0]?.teams?.in?.id || 0;
-                              const displayName = getTeamDisplayName(teamId);
-                              return displayName.startsWith('팀 ') ? transfer.transfers[0]?.teams?.in?.name || 'Unknown' : displayName;
-                            })()}
-                          </Link>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* 이적료/타입 */}
-                    <td className="px-3 py-3">
-                      {transfer.transfers[0]?.type && (
-                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
-                          {formatTransferType(transfer.transfers[0].type)}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* 날짜 */}
-                    <td className="px-3 py-3 text-[13px] text-gray-700 dark:text-gray-300">
-                      {transfer.transfers[0]?.date || 'N/A'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="hidden grid-cols-[28%_38%_16%_18%] border-b border-black/5 bg-[#F5F5F5] text-xs font-medium uppercase tracking-wider text-gray-700 dark:border-white/10 dark:bg-[#262626] dark:text-gray-300 md:grid">
+            <div className="px-3 py-3">선수</div>
+            <div className="px-3 py-3">이적 경로</div>
+            <div className="px-3 py-3">이적료/타입</div>
+            <div className="px-3 py-3">날짜</div>
           </div>
 
-          {/* 모바일 레이아웃 */}
-          <div className="block md:hidden divide-y divide-black/5 dark:divide-white/10 bg-white dark:bg-[#1D1D1D]">
+          <div className="divide-y divide-black/5 bg-white dark:divide-white/10 dark:bg-[#1D1D1D]">
             {transfers.map((transfer, index) => {
               const latestTransfer = transfer.transfers[0];
               const transferDate = new Date(latestTransfer.date);
+              const playerName = playerKoreanNames[transfer.player.id] || transfer.player.name;
+              const outTeamName = (() => {
+                const displayName = getTeamDisplayName(latestTransfer.teams.out.id);
+                return displayName.startsWith('팀 ') ? latestTransfer.teams.out.name : displayName;
+              })();
+              const inTeamName = (() => {
+                const displayName = getTeamDisplayName(latestTransfer.teams.in.id);
+                return displayName.startsWith('팀 ') ? latestTransfer.teams.in.name : displayName;
+              })();
 
               return (
-                <div key={`${transfer.player.id}-${index}`} className="p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                  {/* 첫 번째 줄 - 4590 표준: 서버에서 전달받은 Storage URL 사용 */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-8 h-8 relative">
-                        <Image
-                          src={playerPhotoUrls[transfer.player.id] || PLAYER_PLACEHOLDER}
-                          alt={`${transfer.player.name} 사진`}
-                          width={32}
-                          height={32}
-                          className="w-8 h-8 rounded-full object-cover border border-gray-200 bg-gray-50"
-                        />
-                      </div>
+                <div
+                  key={`${transfer.player.id}-${index}`}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-2 p-3 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:grid-cols-[28%_38%_16%_18%] md:items-center md:gap-0 md:py-3"
+                >
+                  <div className="flex min-w-0 items-center space-x-2">
+                    <div className="relative h-8 w-8 flex-shrink-0 md:h-9 md:w-9">
+                      <Image
+                        src={playerPhotoUrls[transfer.player.id] || PLAYER_PLACEHOLDER}
+                        alt={`${transfer.player.name} 사진`}
+                        width={36}
+                        height={36}
+                        className="h-8 w-8 rounded-full border border-gray-200 bg-gray-50 object-cover md:h-9 md:w-9 md:border-2"
+                      />
+                    </div>
 
+                    <div className="min-w-0">
                       <Link
                         href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
-                        className={`${(playerKoreanNames[transfer.player.id] || transfer.player.name).length > 15 ? 'text-xs' : 'text-[13px]'} font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate`}
+                        className={`${playerName.length > 15 ? 'text-xs' : 'text-[13px]'} block truncate font-semibold text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:font-medium`}
                       >
-                        {playerKoreanNames[transfer.player.id] || transfer.player.name}
+                        {playerName}
                       </Link>
-
                       {transfer.player.nationality && (
-                        <span className="text-xs text-gray-700 dark:text-gray-300 flex-shrink-0">
+                        <span className="text-xs text-gray-700 dark:text-gray-300 md:hidden">
                           {transfer.player.nationality}
                         </span>
                       )}
                     </div>
+                  </div>
 
-                    <div className="text-xs text-gray-700 dark:text-gray-300 flex-shrink-0">
-                      {format(transferDate, 'MM/dd', { locale: ko })}
+                  <div className="text-xs text-gray-700 dark:text-gray-300 md:order-4 md:px-3 md:text-[13px]">
+                    <span className="md:hidden">{format(transferDate, 'MM/dd', { locale: ko })}</span>
+                    <span className="hidden md:inline">{latestTransfer.date || 'N/A'}</span>
+                  </div>
+
+                  <div className="col-start-1 row-start-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 md:order-2 md:col-auto md:row-auto md:px-3">
+                    <div className="flex min-w-0 items-center space-x-1">
+                      <TeamLogo teamName={latestTransfer.teams.out.name} logoUrl={teamLogoUrls[latestTransfer.teams.out.id]} size={20} />
+                      <Link
+                        href={teamUrl(latestTransfer.teams.out.id, getTeamSlugFromName(latestTransfer.teams.out.name))}
+                        className="truncate text-xs text-gray-700 transition-colors hover:underline dark:text-gray-300 md:text-[13px]"
+                        title={latestTransfer.teams.out.name}
+                      >
+                        {outTeamName}
+                      </Link>
+                    </div>
+
+                    <svg className="h-3 w-3 flex-shrink-0 text-gray-400 md:h-3.5 md:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+
+                    <div className="flex min-w-0 items-center space-x-1">
+                      <TeamLogo teamName={latestTransfer.teams.in.name} logoUrl={teamLogoUrls[latestTransfer.teams.in.id]} size={20} />
+                      <Link
+                        href={teamUrl(latestTransfer.teams.in.id, getTeamSlugFromName(latestTransfer.teams.in.name))}
+                        className="truncate text-xs text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:text-[13px] md:font-medium"
+                        title={latestTransfer.teams.in.name}
+                      >
+                        {inTeamName}
+                      </Link>
                     </div>
                   </div>
 
-                  {/* 두 번째 줄 */}
-                  <div className="flex items-center justify-between">
-                    <div className="grid grid-cols-7 gap-1 items-center flex-1">
-                      <div className="col-span-3 flex items-center space-x-1 min-w-0">
-                        <TeamLogo teamName={latestTransfer.teams.out.name} logoUrl={teamLogoUrls[latestTransfer.teams.out.id]} size={16} />
-                        <Link
-                          href={teamUrl(latestTransfer.teams.out.id, getTeamSlugFromName(latestTransfer.teams.out.name))}
-                          className="text-xs text-gray-700 dark:text-gray-300 hover:underline transition-colors truncate"
-                          title={latestTransfer.teams.out.name}
-                        >
-                          {(() => {
-                            const displayName = getTeamDisplayName(latestTransfer.teams.out.id);
-                            return displayName.startsWith('팀 ') ? latestTransfer.teams.out.name : displayName;
-                          })()}
-                        </Link>
-                      </div>
-
-                      <div className="col-span-1 flex justify-center">
-                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-
-                      <div className="col-span-3 flex items-center space-x-1 min-w-0">
-                        <TeamLogo teamName={latestTransfer.teams.in.name} logoUrl={teamLogoUrls[latestTransfer.teams.in.id]} size={16} />
-                        <Link
-                          href={teamUrl(latestTransfer.teams.in.id, getTeamSlugFromName(latestTransfer.teams.in.name))}
-                          className="text-xs text-gray-900 dark:text-[#F0F0F0] hover:underline transition-colors truncate"
-                          title={latestTransfer.teams.in.name}
-                        >
-                          {(() => {
-                            const displayName = getTeamDisplayName(latestTransfer.teams.in.id);
-                            return displayName.startsWith('팀 ') ? latestTransfer.teams.in.name : displayName;
-                          })()}
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="text-xs flex-shrink-0 ml-2 w-16 flex justify-end">
-                      {latestTransfer.type && latestTransfer.type !== 'N/A' && (
-                        <span className="px-1.5 py-0.5 rounded-full text-xs font-medium text-center min-w-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]">
-                          {formatTransferTypeMobile(latestTransfer.type)}
-                        </span>
-                      )}
-                    </div>
+                  <div className="col-start-2 row-start-2 ml-2 flex w-16 justify-end md:order-3 md:col-auto md:row-auto md:ml-0 md:w-auto md:px-3 md:justify-start">
+                    {latestTransfer.type && latestTransfer.type !== 'N/A' && (
+                      <span className="inline-flex min-w-0 rounded-full bg-[#F5F5F5] px-1.5 py-0.5 text-center text-xs font-medium text-gray-900 dark:bg-[#262626] dark:text-[#F0F0F0] md:px-2 md:py-1">
+                        <span className="md:hidden">{formatTransferTypeMobile(latestTransfer.type)}</span>
+                        <span className="hidden md:inline">{formatTransferType(latestTransfer.type)}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               );
