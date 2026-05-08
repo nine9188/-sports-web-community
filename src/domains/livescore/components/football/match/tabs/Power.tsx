@@ -61,6 +61,11 @@ interface PowerProps {
 }
 
 type PowerData = NonNullable<PowerProps['data']>;
+type RecentItem = PowerData['recent']['teamA']['items'][number];
+type TeamMeta = { name: string; slugName: string };
+type TopScorer = PowerData['topPlayers']['teamA']['topScorers'][number];
+type TopAssist = PowerData['topPlayers']['teamA']['topAssist'][number];
+type PowerStanding = StandingsData['standings']['league']['standings'][number][number];
 
 function createEmptyPowerData(teamA: number, teamB: number): PowerData {
   const emptySummary = { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 };
@@ -88,6 +93,12 @@ function createEmptyPowerData(teamA: number, teamB: number): PowerData {
     leagueLogoUrls: {},
     playerPhotoUrls: {},
   };
+}
+
+function findStandingForTeam(standings: StandingsData | null | undefined, teamId: number): PowerStanding | undefined {
+  return standings?.standings?.league?.standings
+    ?.flat()
+    .find((standing) => standing.team.id === teamId);
 }
 
 export default function Power({ matchId, data: initialData, homeTeam, awayTeam, playerKoreanNames = {}, mode = 'all' }: PowerProps) {
@@ -216,6 +227,97 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
     return renderInlineState(isTopPlayersLoading ? LOADING_TEXT : emptyMessage);
   };
 
+  const getResultClass = (result: RecentItem['result']) => {
+    if (result === 'W') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+    if (result === 'D') return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+  };
+
+  const renderRecentMatchRows = (items: RecentItem[], teamMeta: TeamMeta, side: 'teamA' | 'teamB') => (
+    <div className="space-y-1.5">
+      {isRecentLoading
+        ? renderInlineState(LOADING_TEXT)
+        : items.length === 0
+          ? renderInlineState('최근 경기 데이터가 없습니다.')
+          : null}
+      {items.slice(0, 5).map((it) => {
+        const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
+        const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
+        const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
+        const href = side === 'teamA'
+          ? fixtureHref(it.fixtureId, teamMeta.slugName, it.opponent.name)
+          : fixtureHref(it.fixtureId, it.opponent.name, teamMeta.slugName);
+
+        return (
+          <Link
+            key={it.fixtureId}
+            href={href}
+            className="block rounded-md p-1 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+          >
+            <div className="flex items-center gap-1.5 text-xs">
+              {it.venue === 'home' ? (
+                <>
+                  <span className="flex-1 truncate text-right text-gray-900 dark:text-[#F0F0F0]">{teamMeta.name}</span>
+                  <span className={`flex-shrink-0 rounded px-2 py-1 font-semibold ${getResultClass(it.result)}`}>{it.score.for}-{it.score.against}</span>
+                  <span className="flex-1 truncate text-gray-900 dark:text-[#F0F0F0]">{finalName}</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 truncate text-right text-gray-900 dark:text-[#F0F0F0]">{finalName}</span>
+                  <span className={`flex-shrink-0 rounded px-2 py-1 font-semibold ${getResultClass(it.result)}`}>{it.score.against}-{it.score.for}</span>
+                  <span className="flex-1 truncate text-gray-900 dark:text-[#F0F0F0]">{teamMeta.name}</span>
+                </>
+              )}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  const renderTopPlayerRows = (
+    players: Array<TopScorer | TopAssist>,
+    valueKey: 'goals' | 'assists',
+    align: 'left' | 'right' = 'left'
+  ) => (
+    <div className="space-y-1.5">
+      {players.map((player, index) => {
+        const koreanName = playerKoreanNames[player.playerId];
+        const displayName = koreanName || player.name || `#${player.playerId}`;
+        const value = valueKey === 'goals' ? (player as TopScorer).goals : (player as TopAssist).assists;
+        const content = (
+          <>
+            <div className={`flex min-w-0 flex-1 items-center gap-2 ${align === 'right' ? 'md:justify-end' : ''}`}>
+              <UnifiedSportsImageClient
+                src={data.playerPhotoUrls?.[player.playerId] || PLAYER_PLACEHOLDER}
+                alt="player"
+                width={32}
+                height={32}
+                fit="cover"
+                variant="circle"
+                className={align === 'right' ? 'md:order-2' : undefined}
+              />
+              <span className={`truncate text-[13px] leading-snug text-gray-900 dark:text-[#F0F0F0] ${align === 'right' ? 'md:order-1' : ''}`}>
+                {displayName}
+              </span>
+            </div>
+            <span className="flex-shrink-0 text-base font-semibold text-gray-900 dark:text-white">{value}</span>
+          </>
+        );
+
+        return (
+          <Link
+            key={`${valueKey}-${player.playerId}-${index}`}
+            href={playerHref(player.playerId, player.name)}
+            className={`flex items-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${align === 'right' ? 'justify-between md:flex-row-reverse' : 'justify-between'}`}
+          >
+            {content}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
   // 바 차트 너비 정규화는 각 섹션에서 상대 비교로 처리
 
   return (
@@ -244,8 +346,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             </Link>
             {data.standings?.standings?.league?.standings ? (
               (() => {
-                const group = data.standings!.standings.league.standings[0] || []
-                const a = group.find(s => s.team.id === data.teamA)
+                const a = findStandingForTeam(data.standings, data.teamA)
                 return (
                   <div className="text-[11px] text-gray-500 dark:text-gray-400">
                     <span>{a?.rank ? `${a.rank}위` : '-'}·{a ? `${a.all.win}승 ${a.all.draw}무 ${a.all.lose}패` : '0승 0무 0패'}</span>
@@ -271,8 +372,7 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
             </Link>
             {data.standings?.standings?.league?.standings ? (
               (() => {
-                const group = data.standings!.standings.league.standings[0] || []
-                const b = group.find(s => s.team.id === data.teamB)
+                const b = findStandingForTeam(data.standings, data.teamB)
                 return (
                   <div className="text-[11px] text-gray-500 dark:text-gray-400">
                     <span>{b?.rank ? `${b.rank}위` : '-'}·{b ? `${b.all.win}승 ${b.all.draw}무 ${b.all.lose}패` : '0승 0무 0패'}</span>
@@ -359,61 +459,15 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
               width={20}
               height={20}
               fit="contain"
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
           </div>
         </ContainerHeader>
         <ContainerContent>
-          <div className="space-y-1.5">
-            {isRecentLoading
-              ? renderInlineState(LOADING_TEXT)
-              : data.recent.teamA.items.length === 0
-                ? renderInlineState('최근 경기 데이터가 없습니다.')
-                : null}
-            {data.recent.teamA.items.slice(0, 5).map((it) => {
-              const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
-              const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
-              const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
-              const bgColor = it.result === 'W'
-                ? 'bg-green-100 dark:bg-green-900/30'
-                : it.result === 'D'
-                ? 'bg-yellow-100 dark:bg-yellow-900/30'
-                : 'bg-red-100 dark:bg-red-900/30';
-              const textColor = it.result === 'W'
-                ? 'text-green-800 dark:text-green-400'
-                : it.result === 'D'
-                ? 'text-yellow-800 dark:text-yellow-400'
-                : 'text-red-800 dark:text-red-400';
-
-              return (
-                <Link
-                  key={it.fixtureId}
-                  href={fixtureHref(it.fixtureId, teamAMeta.slugName, it.opponent.name)}
-                  className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-1.5 text-xs">
-                    {it.venue === 'home' ? (
-                      <>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamAMeta.name}</span>
-                        <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
-                        <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamAMeta.name}</span>
-                      </>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          {renderRecentMatchRows(data.recent.teamA.items, teamAMeta, 'teamA')}
         </ContainerContent>
       </Container>
 
-      {/* 최근 경기 - Team B (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
@@ -424,175 +478,55 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
               width={20}
               height={20}
               fit="contain"
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
           </div>
         </ContainerHeader>
         <ContainerContent>
-          <div className="space-y-1.5">
-            {isRecentLoading
-              ? renderInlineState(LOADING_TEXT)
-              : data.recent.teamB.items.length === 0
-                ? renderInlineState('최근 경기 데이터가 없습니다.')
-                : null}
-            {data.recent.teamB.items.slice(0, 5).map((it) => {
-              const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
-              const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
-              const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
-              const bgColor = it.result === 'W'
-                ? 'bg-green-100 dark:bg-green-900/30'
-                : it.result === 'D'
-                ? 'bg-yellow-100 dark:bg-yellow-900/30'
-                : 'bg-red-100 dark:bg-red-900/30';
-              const textColor = it.result === 'W'
-                ? 'text-green-800 dark:text-green-400'
-                : it.result === 'D'
-                ? 'text-yellow-800 dark:text-yellow-400'
-                : 'text-red-800 dark:text-red-400';
-
-              return (
-                <Link
-                  key={it.fixtureId}
-                  href={fixtureHref(it.fixtureId, it.opponent.name, teamBMeta.slugName)}
-                  className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-1.5 text-xs">
-                    {it.venue === 'home' ? (
-                      <>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamBMeta.name}</span>
-                        <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
-                        <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
-                        <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamBMeta.name}</span>
-                      </>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          {renderRecentMatchRows(data.recent.teamB.items, teamBMeta, 'teamB')}
         </ContainerContent>
       </Container>
 
-      {/* 최근 경기 (데스크탑) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 hidden md:block">
         <ContainerHeader>
           <ContainerTitle>최근 경기</ContainerTitle>
         </ContainerHeader>
         <ContainerContent>
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
-            {/* Team A 최근 경기 */}
+          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
             <div>
-              <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamAMeta.name}</div>
-              <div className="space-y-1.5">
-                {isRecentLoading
-                  ? renderInlineState(LOADING_TEXT)
-                  : data.recent.teamA.items.length === 0
-                    ? renderInlineState('최근 경기 데이터가 없습니다.')
-                    : null}
-                {data.recent.teamA.items.slice(0, 5).map((it) => {
-                  const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
-                  const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
-                  const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
-                  const bgColor = it.result === 'W'
-                    ? 'bg-green-100 dark:bg-green-900/30'
-                    : it.result === 'D'
-                    ? 'bg-yellow-100 dark:bg-yellow-900/30'
-                    : 'bg-red-100 dark:bg-red-900/30';
-                  const textColor = it.result === 'W'
-                    ? 'text-green-800 dark:text-green-400'
-                    : it.result === 'D'
-                    ? 'text-yellow-800 dark:text-yellow-400'
-                    : 'text-red-800 dark:text-red-400';
-
-                  return (
-                    <Link
-                      key={it.fixtureId}
-                      href={fixtureHref(it.fixtureId, teamAMeta.slugName, it.opponent.name)}
-                      className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <div className="flex items-center gap-1.5 text-xs">
-                        {it.venue === 'home' ? (
-                          <>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamAMeta.name}</span>
-                            <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
-                            <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamAMeta.name}</span>
-                          </>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
+              <div className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <span>{teamAMeta.name}</span>
+                <UnifiedSportsImageClient
+                  src={getTeamLogo(data.teamA)}
+                  alt={teamAMeta.name}
+                  width={20}
+                  height={20}
+                  fit="contain"
+                  className="h-5 w-5"
+                />
               </div>
+              {renderRecentMatchRows(data.recent.teamA.items, teamAMeta, 'teamA')}
             </div>
 
-            {/* 구분선 */}
-            <div className="w-px bg-black/5 dark:bg-white/10"></div>
+            <div className="hidden w-px bg-black/5 dark:bg-white/10 md:block" />
 
-            {/* Team B 최근 경기 */}
             <div>
-              <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">{teamBMeta.name}</div>
-              <div className="space-y-1.5">
-                {isRecentLoading
-                  ? renderInlineState(LOADING_TEXT)
-                  : data.recent.teamB.items.length === 0
-                    ? renderInlineState('최근 경기 데이터가 없습니다.')
-                    : null}
-                {data.recent.teamB.items.slice(0, 5).map((it) => {
-                  const opponentName = it.opponent.name || `팀 #${it.opponent.id}`;
-                  const displayName = getTeamDisplayName(it.opponent.id || 0, { language: 'ko' });
-                  const finalName = displayName.startsWith('팀 ') ? opponentName : displayName;
-                  const bgColor = it.result === 'W'
-                    ? 'bg-green-100 dark:bg-green-900/30'
-                    : it.result === 'D'
-                    ? 'bg-yellow-100 dark:bg-yellow-900/30'
-                    : 'bg-red-100 dark:bg-red-900/30';
-                  const textColor = it.result === 'W'
-                    ? 'text-green-800 dark:text-green-400'
-                    : it.result === 'D'
-                    ? 'text-yellow-800 dark:text-yellow-400'
-                    : 'text-red-800 dark:text-red-400';
-
-                  return (
-                    <Link
-                      key={it.fixtureId}
-                      href={fixtureHref(it.fixtureId, it.opponent.name, teamBMeta.slugName)}
-                      className="block p-1 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <div className="flex items-center gap-1.5 text-xs">
-                        {it.venue === 'home' ? (
-                          <>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{teamBMeta.name}</span>
-                            <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.for}-{it.score.against}</span>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{finalName}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1 text-right">{finalName}</span>
-                            <span className={`px-2 py-1 rounded font-semibold flex-shrink-0 ${bgColor} ${textColor}`}>{it.score.against}-{it.score.for}</span>
-                            <span className="text-gray-900 dark:text-[#F0F0F0] truncate flex-1">{teamBMeta.name}</span>
-                          </>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
+              <div className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <UnifiedSportsImageClient
+                  src={getTeamLogo(data.teamB)}
+                  alt={teamBMeta.name}
+                  width={20}
+                  height={20}
+                  fit="contain"
+                  className="h-5 w-5"
+                />
+                <span>{teamBMeta.name}</span>
               </div>
+              {renderRecentMatchRows(data.recent.teamB.items, teamBMeta, 'teamB')}
             </div>
           </div>
         </ContainerContent>
       </Container>
-
       </>
       )}
 
@@ -732,7 +666,6 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
       )}
       {showTopPlayers && (
       <>
-      {/* 팀 탑 플레이어 - Team A (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4 md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
@@ -743,70 +676,27 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
               width={20}
               height={20}
               fit="contain"
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
           </div>
         </ContainerHeader>
         <ContainerContent>
-          {/* 득점 헤더 */}
-          <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
             득점
           </div>
-
-          {/* 득점왕 목록 */}
-          <div className="space-y-1.5 mb-4">
+          <div className="mb-4">
             {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
-            {data.topPlayers.teamA.topScorers.map((playerA, index) => {
-              const playerAKoreanName = playerKoreanNames[playerA.playerId];
-              const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
-
-              return (
-                <Link
-                  key={`scorer-a-mobile-${index}`}
-                  href={playerHref(playerA.playerId, playerA.name)}
-                  className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
-                  </div>
-                  <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
-                </Link>
-              );
-            })}
+            {renderTopPlayerRows(data.topPlayers.teamA.topScorers, 'goals')}
           </div>
 
-          {/* 도움 헤더 */}
-          <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
             도움
           </div>
-
-          {/* 도움왕 목록 */}
-          <div className="space-y-1.5">
-            {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
-            {data.topPlayers.teamA.topAssist.map((playerA, index) => {
-              const playerAKoreanName = playerKoreanNames[playerA.playerId];
-              const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
-
-              return (
-                <Link
-                  key={`assist-a-mobile-${index}`}
-                  href={playerHref(playerA.playerId, playerA.name)}
-                  className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
-                  </div>
-                  <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
-                </Link>
-              );
-            })}
-          </div>
+          {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
+          {renderTopPlayerRows(data.topPlayers.teamA.topAssist, 'assists')}
         </ContainerContent>
       </Container>
 
-      {/* 팀 탑 플레이어 - Team B (모바일) */}
       <Container className="bg-white dark:bg-[#1D1D1D] md:hidden">
         <ContainerHeader>
           <div className="flex items-center gap-2">
@@ -816,80 +706,36 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
               width={20}
               height={20}
               fit="contain"
-              className="w-5 h-5"
+              className="h-5 w-5"
             />
             <ContainerTitle>팀 탑 플레이어 - {teamBMeta.name}</ContainerTitle>
           </div>
         </ContainerHeader>
         <ContainerContent>
-          {/* 득점 헤더 */}
-          <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
             득점
           </div>
-
-          {/* 득점왕 목록 */}
-          <div className="space-y-1.5 mb-4">
+          <div className="mb-4">
             {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
-            {data.topPlayers.teamB.topScorers.map((playerB, index) => {
-              const playerBKoreanName = playerKoreanNames[playerB.playerId];
-              const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
-
-              return (
-                <Link
-                  key={`scorer-b-mobile-${index}`}
-                  href={playerHref(playerB.playerId, playerB.name)}
-                  className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                  </div>
-                  <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
-                </Link>
-              );
-            })}
+            {renderTopPlayerRows(data.topPlayers.teamB.topScorers, 'goals')}
           </div>
 
-          {/* 도움 헤더 */}
-          <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+          <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
             도움
           </div>
-
-          {/* 도움왕 목록 */}
-          <div className="space-y-1.5">
-            {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
-            {data.topPlayers.teamB.topAssist.map((playerB, index) => {
-              const playerBKoreanName = playerKoreanNames[playerB.playerId];
-              const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
-
-              return (
-                <Link
-                  key={`assist-b-mobile-${index}`}
-                  href={playerHref(playerB.playerId, playerB.name)}
-                  className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                    <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                  </div>
-                  <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
-                </Link>
-              );
-            })}
-          </div>
+          {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
+          {renderTopPlayerRows(data.topPlayers.teamB.topAssist, 'assists')}
         </ContainerContent>
       </Container>
 
-      {/* 팀 탑 플레이어 (데스크탑) */}
       <Container className="bg-white dark:bg-[#1D1D1D] hidden md:block">
         <ContainerHeader>
           <ContainerTitle>팀 득점·도움 순위</ContainerTitle>
         </ContainerHeader>
         <ContainerContent>
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
-            {/* Team A 섹션 */}
+          <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr]">
             <div>
-              <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="flex items-center justify-end gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
+              <Link href={teamHref(data.teamA, teamAMeta.slugName)} className="mb-3 flex items-center justify-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:justify-end">
                 <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamAMeta.name}</span>
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamA)}
@@ -897,139 +743,53 @@ export default function Power({ matchId, data: initialData, homeTeam, awayTeam, 
                   width={20}
                   height={20}
                   fit="contain"
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                 />
               </Link>
 
-              {/* 득점 헤더 */}
-              <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
                 득점
               </div>
-
-              {/* 득점왕 목록 */}
-              <div className="space-y-1.5 mb-4">
+              <div className="mb-4">
                 {renderTopPlayersListState(data.topPlayers.teamA.topScorers.length === 0, '득점 데이터가 없습니다.')}
-                {data.topPlayers.teamA.topScorers.map((playerA, index) => {
-                  const playerAKoreanName = playerKoreanNames[playerA.playerId];
-                  const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
-
-                  return (
-                    <Link
-                      key={`scorer-a-desktop-${index}`}
-                      href={playerHref(playerA.playerId, playerA.name)}
-                      className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
-                      </div>
-                      <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.goals}</span>
-                    </Link>
-                  );
-                })}
+                {renderTopPlayerRows(data.topPlayers.teamA.topScorers, 'goals')}
               </div>
 
-              {/* 도움 헤더 */}
-              <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
                 도움
               </div>
-
-              {/* 도움왕 목록 */}
-              <div className="space-y-1.5">
-                {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
-                {data.topPlayers.teamA.topAssist.map((playerA, index) => {
-                  const playerAKoreanName = playerKoreanNames[playerA.playerId];
-                  const playerADisplayName = playerAKoreanName || playerA?.name || `#${playerA?.playerId}`;
-
-                  return (
-                    <Link
-                      key={`assist-a-desktop-${index}`}
-                      href={playerHref(playerA.playerId, playerA.name)}
-                      className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerA.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerADisplayName}</span>
-                      </div>
-                      <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerA.assists}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              {renderTopPlayersListState(data.topPlayers.teamA.topAssist.length === 0, '도움 데이터가 없습니다.')}
+              {renderTopPlayerRows(data.topPlayers.teamA.topAssist, 'assists')}
             </div>
 
-            {/* 구분선 */}
-            <div className="w-px bg-black/5 dark:bg-white/10"></div>
+            <div className="hidden w-px bg-black/5 dark:bg-white/10 md:block" />
 
-            {/* Team B 섹션 */}
             <div>
-              <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="flex items-center justify-start gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors mb-3">
+              <Link href={teamHref(data.teamB, teamBMeta.slugName)} className="mb-3 flex items-center justify-center gap-2 rounded-md p-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:justify-start">
                 <UnifiedSportsImageClient
                   src={getTeamLogo(data.teamB)}
                   alt={teamBMeta.name}
                   width={20}
                   height={20}
                   fit="contain"
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                 />
                 <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{teamBMeta.name}</span>
               </Link>
 
-              {/* 득점 헤더 */}
-              <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
                 득점
               </div>
-
-              {/* 득점왕 목록 */}
-              <div className="space-y-1.5 mb-4">
+              <div className="mb-4">
                 {renderTopPlayersListState(data.topPlayers.teamB.topScorers.length === 0, '득점 데이터가 없습니다.')}
-                {data.topPlayers.teamB.topScorers.map((playerB, index) => {
-                  const playerBKoreanName = playerKoreanNames[playerB.playerId];
-                  const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
-
-                  return (
-                    <Link
-                      key={`scorer-b-desktop-${index}`}
-                      href={playerHref(playerB.playerId, playerB.name)}
-                      className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.goals}</span>
-                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                      </div>
-                    </Link>
-                  );
-                })}
+                {renderTopPlayerRows(data.topPlayers.teamB.topScorers, 'goals', 'right')}
               </div>
 
-              {/* 도움 헤더 */}
-              <div className="text-center text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 py-1 bg-[#F5F5F5] dark:bg-[#262626] rounded-md">
+              <div className="mb-2 rounded-md bg-[#F5F5F5] py-1 text-center text-xs font-semibold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
                 도움
               </div>
-
-              {/* 도움왕 목록 */}
-              <div className="space-y-1.5">
-                {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
-                {data.topPlayers.teamB.topAssist.map((playerB, index) => {
-                  const playerBKoreanName = playerKoreanNames[playerB.playerId];
-                  const playerBDisplayName = playerBKoreanName || playerB?.name || `#${playerB?.playerId}`;
-
-                  return (
-                    <Link
-                      key={`assist-b-desktop-${index}`}
-                      href={playerHref(playerB.playerId, playerB.name)}
-                      className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                    >
-                      <span className="text-gray-900 dark:text-white font-semibold flex-shrink-0 text-base">{playerB.assists}</span>
-                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                        <span className="text-[13px] leading-snug truncate text-gray-900 dark:text-[#F0F0F0]">{playerBDisplayName}</span>
-                        <UnifiedSportsImageClient src={data.playerPhotoUrls?.[playerB.playerId] || PLAYER_PLACEHOLDER} alt="player" width={32} height={32} fit="cover" variant="circle" />
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+              {renderTopPlayersListState(data.topPlayers.teamB.topAssist.length === 0, '도움 데이터가 없습니다.')}
+              {renderTopPlayerRows(data.topPlayers.teamB.topAssist, 'assists', 'right')}
             </div>
           </div>
         </ContainerContent>

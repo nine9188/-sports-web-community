@@ -191,11 +191,11 @@ export default function HeaderClient({
 
   // 인증 상태에 따른 렌더링 결정
   const renderNotificationBell = useMemo(() => {
+    if (!userData) return null;
+
     return (
       <div className="w-10 h-10 flex items-center justify-center">
-        {userData && (
-          <NotificationBell userId={userData.id} />
-        )}
+        <NotificationBell userId={userData.id} />
       </div>
     );
   }, [userData]);

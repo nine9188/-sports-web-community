@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: LeaguePageProps) {
   return buildMetadata({
     title: `${displayName} 순위 - 팀 순위 및 리그 순위`,
     description: `${displayName}${league.country ? ` (${league.country})` : ''} 리그 순위, 팀 순위, 득점 순위와 도움 순위를 4590 Football에서 확인하세요.`,
-    path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10))}`,
+    path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10), league.name)}`,
     keywords: [
       `${displayName} 순위`,
       `${displayName} 득점 순위`,
@@ -74,13 +74,13 @@ export async function generateMetadata({ params }: LeaguePageProps) {
 async function LeaguePageContent({ id }: { id: string }) {
   const perf = createLeaguePerfTrace(id);
   const leagueId = parseInt(id, 10);
-  const leagueSlug = getLeagueSlug(leagueId);
 
   const league = await perf.mark('league-details', () => fetchLeagueDetails(id));
   const leagueMapping = await perf.mark('league-mapping', () => getLeagueById(leagueId));
   if (!league) {
     notFound();
   }
+  const leagueSlug = getLeagueSlug(leagueId, league.name);
   const displayName = leagueMapping?.name_ko || league.name;
 
   const isCup = league.type === 'Cup';
@@ -243,7 +243,15 @@ async function LeagueRankingsSectionBlock({ leagueId }: { leagueId: number }) {
 }
 
 export default async function LeaguePage({ params }: LeaguePageProps) {
-  const { id } = await params;
+  const { id, slug } = await params;
+  const leagueId = parseInt(id, 10);
+  const league = await fetchLeagueDetails(id);
+  const canonicalSlug = getLeagueSlug(leagueId, league?.name);
+
+  if (slug !== canonicalSlug) {
+    permanentRedirect(`/livescore/football/leagues/${id}/${canonicalSlug}`);
+  }
+
   return await LeaguePageContent({ id });
 }
 

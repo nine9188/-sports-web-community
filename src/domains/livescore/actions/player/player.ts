@@ -5,6 +5,7 @@ import { PlayerData } from '@/domains/livescore/types/player';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 import type { Database } from '@/shared/lib/supabase/types';
+import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
 
 type PlayerDbRow = Database['public']['Tables']['football_players']['Row'];
 type PlayerDataWithSync = PlayerData & {
@@ -134,6 +135,10 @@ interface ApiPlayerResponse {
   }>;
 }
 
+interface ApiPlayerProfileResponse {
+  player?: ApiPlayerResponse['player'];
+}
+
 /**
  * 선수 기본 정보 가져오기
  * @param id 선수 ID
@@ -148,11 +153,14 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
     const currentSeason = getCurrentSeason();
     const dbPlayerData = await fetchPlayerDataFromDb(id);
     if (dbPlayerData && hasPlayerBio(dbPlayerData) && !isPlayerProfileStale(dbPlayerData)) {
-      return dbPlayerData;
+      const freshApiPlayerData = await fetchFreshPlayerDataFromApi(id);
+      return freshApiPlayerData
+        ? mergePlayerProfileFromApi(dbPlayerData, freshApiPlayerData)
+        : dbPlayerData;
     }
 
     // 여러 시즌에서 선수 데이터 시도
-    const seasonsToTry = [currentSeason, currentSeason - 1, currentSeason + 1];
+    const seasonsToTry = getPlayerSeasonCandidates(currentSeason);
     
     for (const season of seasonsToTry) {
       try {
@@ -175,6 +183,11 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
     }
 
     // 모든 시즌에서 실패한 경우 - 기본 데이터 반환
+    const profileOnlyData = await fetchPlayerProfileFromApi(id);
+    if (profileOnlyData) {
+      return profileOnlyData;
+    }
+
     if (dbPlayerData) {
       return dbPlayerData;
     }
@@ -229,10 +242,37 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
  * 리그 우선순위 정의 (숫자가 작을수록 우선순위가 높음)
  */
 function getCurrentSeason(): number {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  return month >= 6 ? year : year - 1;
+  return getDefaultPlayerSeason();
+}
+
+async function fetchFreshPlayerDataFromApi(id: string): Promise<PlayerData | null> {
+  for (const season of getPlayerSeasonCandidates()) {
+    try {
+      const playerData = await fetchFromFootballApi('players', { id, season });
+      if (playerData?.response?.[0]?.statistics?.length) {
+        return formatPlayerData(playerData.response[0], season);
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+async function fetchPlayerProfileFromApi(id: string): Promise<PlayerData | null> {
+  try {
+    const profileData = await fetchFromFootballApi('players/profiles', { player: id });
+    const profile = profileData?.response?.[0] as ApiPlayerProfileResponse | undefined;
+
+    if (!profile?.player?.id) {
+      return null;
+    }
+
+    return formatPlayerProfileData(profile);
+  } catch {
+    return null;
+  }
 }
 
 function getApiRawPlayer(row: PlayerDbRow): RawPlayerData {
@@ -349,6 +389,31 @@ function hasApiPlayerProfile(apiPlayer?: ApiPlayerResponse['player']): boolean {
     apiPlayer?.birth?.country ||
     apiPlayer?.nationality
   ));
+}
+
+function formatPlayerProfileData(profile: ApiPlayerProfileResponse): PlayerData {
+  const player = profile.player;
+
+  return {
+    info: {
+      id: player?.id || 0,
+      name: player?.name || '',
+      firstname: player?.firstname || '',
+      lastname: player?.lastname || '',
+      age: player?.age || 0,
+      birth: {
+        date: player?.birth?.date || '',
+        place: player?.birth?.place || '',
+        country: player?.birth?.country || '',
+      },
+      nationality: player?.nationality || '',
+      height: player?.height || '',
+      weight: player?.weight || '',
+      injured: player?.injured || false,
+      photo: player?.photo || '',
+    },
+    statistics: [],
+  };
 }
 
 async function persistPlayerProfileFromApi(

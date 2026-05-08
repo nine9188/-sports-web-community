@@ -43,7 +43,7 @@ export default function LeagueCard({ leagueId, name, leagueLogoUrl, leagueLogoDa
 
   return (
     <Link
-      href={leagueUrl(leagueId, getLeagueSlug(leagueId))}
+      href={leagueUrl(leagueId, getLeagueSlug(leagueId, name))}
       className="group flex flex-col items-center rounded-md hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors p-2 pb-2.5 border-b border-dashed border-gray-300 dark:border-gray-600"
     >
       <UnifiedSportsImageClient

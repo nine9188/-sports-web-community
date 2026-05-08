@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
 import { getMajorLeagueIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQuality';
 import { siteConfig } from '@/shared/config';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
@@ -210,6 +211,16 @@ export async function getTeamSitemap(id: string | number): Promise<MetadataRoute
     changeFrequency: 'weekly',
     priority: 0.6,
   }));
+}
+
+export async function getTransferTeamSitemap(): Promise<MetadataRoute.Sitemap> {
+  const groups = await getTransferLeagueTeamGroups();
+
+  return groups.flatMap((group) => group.teams.map((team): SitemapEntry => ({
+    url: siteUrl(`/transfers/team/${team.id}/${team.slug}`),
+    changeFrequency: 'weekly',
+    priority: 0.5,
+  })));
 }
 
 export async function getPlayerSitemapCount(): Promise<number> {

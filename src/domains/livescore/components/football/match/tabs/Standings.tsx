@@ -182,10 +182,16 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
     : leagueLogoUrls[leagueId] || standings.logo || LEAGUE_PLACEHOLDER;
   const homeTeamId = matchData.homeTeam?.id;
   const awayTeamId = matchData.awayTeam?.id;
+  const displayedGroups = standings.standings.length > 1
+    ? standings.standings.filter((group) =>
+        group.some((standing) => standing.team.id === homeTeamId || standing.team.id === awayTeamId)
+      )
+    : standings.standings;
+  const groupsToRender = displayedGroups.length > 0 ? displayedGroups : standings.standings;
 
   return (
     <div className="w-full space-y-4">
-      {standings.standings.map((group, groupIndex) => (
+      {groupsToRender.map((group, groupIndex) => (
         <Container key={groupIndex} className="bg-white dark:bg-[#1D1D1D] overflow-hidden">
           <ContainerHeader>
             <div className="flex items-center gap-3">
@@ -196,7 +202,10 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
                 height={24}
                 className="object-contain w-6 h-6"
               />
-              <ContainerTitle>{leagueName}</ContainerTitle>
+              <ContainerTitle>
+                {leagueName}
+                {group[0]?.group ? ` - ${group[0].group}` : ''}
+              </ContainerTitle>
             </div>
           </ContainerHeader>
           <ContainerContent className="p-0">

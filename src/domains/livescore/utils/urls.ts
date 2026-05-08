@@ -24,3 +24,8 @@ export function matchUrl(id: EntityId, slug?: string): string {
   const s = slug ? `/${slug}` : '';
   return `/livescore/football/match/${id}${s}`;
 }
+
+export function transferTeamUrl(id: EntityId, slug?: string): string {
+  const s = slug ? `/${slug}` : '';
+  return `/transfers/team/${id}${s}`;
+}

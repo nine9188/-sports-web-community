@@ -39,6 +39,12 @@ interface PlayerHeaderProps {
   playerKoreanName?: string | null;
   playerPhotoUrl?: string;
   teamLogoUrl?: string;
+  currentTeamLeague?: {
+    id: number;
+    name: string;
+    country?: string;
+    season: number;
+  };
 }
 
 const PlayerHeader = memo(function PlayerHeader({
@@ -46,7 +52,8 @@ const PlayerHeader = memo(function PlayerHeader({
   initialData,
   playerKoreanName,
   playerPhotoUrl = PLAYER_PLACEHOLDER,
-  teamLogoUrl = TEAM_PLACEHOLDER
+  teamLogoUrl = TEAM_PLACEHOLDER,
+  currentTeamLeague
 }: PlayerHeaderProps) {
   const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
   const { data: playerData, isLoading, error } = usePlayerInfo(playerId, {
@@ -82,6 +89,7 @@ const PlayerHeader = memo(function PlayerHeader({
 
   const statistics = displayData.statistics || [];
   const playerStats: PlayerStatistic | null = statistics.length > 0 ? statistics[0] : null;
+  const displayLeague = currentTeamLeague || playerStats?.league;
   const position = playerStats?.games?.position || '';
   const mainTeamStats = playerStats?.team ? { team: playerStats.team } : null;
 
@@ -142,10 +150,10 @@ const PlayerHeader = memo(function PlayerHeader({
                 </span>
               )}
             </div>
-            {playerStats?.league?.id && playerStats.league.name && (
+            {displayLeague?.id && displayLeague.name && (
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 truncate">
-                {getLeagueKoreanName(playerStats.league.name)}
-                {playerStats.league.country ? ` · ${playerStats.league.country}` : ''}
+                {getLeagueKoreanName(displayLeague.name)}
+                {displayLeague.country ? ` · ${displayLeague.country}` : ''}
               </p>
             )}
           </div>

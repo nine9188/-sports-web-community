@@ -1,5 +1,15 @@
 import { StandingDisplay, StandingItem } from '../../../../../../types/standings';
 
+function getTeamGroupName(standings: StandingItem[], teamId: number): string | undefined {
+  return standings.find((standing) => standing?.team?.id === teamId)?.group;
+}
+
+function filterToTeamGroup(standings: StandingItem[], teamId: number): StandingItem[] {
+  const groupName = getTeamGroupName(standings, teamId);
+  if (!groupName) return standings;
+  return standings.filter((standing) => standing.group === groupName);
+}
+
 /**
  * 특정 팀의 순위 정보를 찾는 함수
  */
@@ -225,7 +235,7 @@ export function getDisplayStandings(
   
   if (!targetLeague || !targetLeague.standings || !Array.isArray(targetLeague.standings)) return [];
   
-  const allStandings = targetLeague.standings;
+  const allStandings = filterToTeamGroup(targetLeague.standings, teamId);
   
   if (!currentTeamStanding) return allStandings.slice(0, 5); // 현재 팀 순위 없으면 상위 5개 표시
   

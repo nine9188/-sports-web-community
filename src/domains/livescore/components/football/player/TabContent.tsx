@@ -47,6 +47,7 @@ const FixturesTab = memo(function FixturesTab({
     data: FixtureData[];
     status?: string;
     message?: string;
+    seasonUsed?: number;
     completeness?: {
       total: number;
       success: number;
@@ -61,7 +62,8 @@ const FixturesTab = memo(function FixturesTab({
   const safeFixturesData = useMemo(() => ({
     data: fixturesData?.data || [],
     status: fixturesData?.status || 'error',
-    message: fixturesData?.message || '경기 기록이 없습니다.'
+    message: fixturesData?.message || '경기 기록이 없습니다.',
+    seasonUsed: fixturesData?.seasonUsed,
   }), [fixturesData]);
 
   return (

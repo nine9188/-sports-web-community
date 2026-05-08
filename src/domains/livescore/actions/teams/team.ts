@@ -192,6 +192,34 @@ type TeamDbRow = {
   } | null;
 };
 
+interface LeagueResponse {
+  league: {
+    id: number;
+    name: string;
+    type: string;
+  };
+  seasons?: Array<{
+    year: number;
+    current: boolean;
+  }>;
+}
+
+function isUsableLeagueSeason(league: LeagueResponse, season: number): boolean {
+  const seasonInfo = league.seasons?.find((item) => item.year === season);
+  return seasonInfo ? seasonInfo.current !== false : true;
+}
+
+function findMainLeague(leagues: LeagueResponse[], season: number) {
+  return leagues.find(
+    (league) => isUsableLeagueSeason(league, season) &&
+      league.league.type === 'League' &&
+      !league.league.name.includes('Champions') &&
+      !league.league.name.includes('Europa') &&
+      !league.league.name.includes('Conference') &&
+      !league.league.name.includes('Friendlies')
+  );
+}
+
 function buildTeamInfoFromDb(row: TeamDbRow): TeamInfo {
   return {
     team: {
@@ -237,6 +265,8 @@ export interface TeamFullDataResponse {
   standings?: { success: boolean; data?: Standing[]; message: string };
   transfers?: { success: boolean; data?: TeamTransfersData; message: string };
   matchesMode?: 'season' | 'recent';
+  transfersMode?: 'full' | 'preview';
+  squadMode?: 'full' | 'preview';
   // 4590 표준: 이미지 Storage URL
   playerPhotoUrls?: Record<number, string>;
   teamLogoUrls?: Record<number, string>;
@@ -334,40 +364,24 @@ async function fetchTeamData(
     currentSeason = currentSeason ?? await perf.mark('db:current-season', () => getCurrentSeasonForLeague(leagueId));
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
-    if (!dbLeagueFound) {
-      interface LeagueResponse {
-        league: {
-          id: number;
-          name: string;
-          type: string;
-        };
-      }
-
-      const findMainLeague = (leagues: LeagueResponse[]) =>
-        leagues.find(
-          (league) => league.league.type === 'League' &&
-            !league.league.name.includes('Champions') &&
-            !league.league.name.includes('Europa') &&
-            !league.league.name.includes('Conference')
-        );
-
+    {
       const currentYear = new Date().getFullYear();
       const europeanSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
-      const seasonsToTry = [...new Set([currentYear, europeanSeason])];
+      const seasonsToTry = [...new Set([currentYear, currentSeason, europeanSeason].filter((season): season is number => typeof season === 'number'))];
 
       for (const season of seasonsToTry) {
         try {
-          const leaguesData = await perf.mark(`api:leagues:fallback:${season}`, () => fetchFromFootballApi('leagues', { team: teamId, season }));
+          const leaguesData = await perf.mark(`api:leagues:current:${season}`, () => fetchFromFootballApi('leagues', { team: teamId, season }));
           const leagues = (leaguesData.response || []) as LeagueResponse[];
-          const mainLeague = findMainLeague(leagues);
+          const mainLeague = findMainLeague(leagues, season);
 
           if (mainLeague) {
             leagueId = mainLeague.league.id;
-            currentSeason = await perf.mark('db:current-season:fallback', () => getCurrentSeasonForLeague(leagueId));
+            currentSeason = season;
             break;
-          } else if (leagues.length > 0) {
+          } else if (!dbLeagueFound && leagues.length > 0) {
             leagueId = leagues[0].league.id;
-            currentSeason = await perf.mark('db:current-season:fallback', () => getCurrentSeasonForLeague(leagueId));
+            currentSeason = season;
             break;
           }
         } catch {
@@ -823,6 +837,8 @@ export const fetchTeamFullData = cache(
       const promises: Promise<unknown>[] = [];
       const dataTypes: string[] = [];
       let resolvedMatchesMode: 'season' | 'recent' | undefined;
+      let resolvedTransfersMode: 'full' | undefined;
+      let resolvedSquadMode: 'full' | undefined;
 
       if (options.fetchMatches) {
         const matchMode = options.fetchMatchesMode ?? 'season';
@@ -839,6 +855,7 @@ export const fetchTeamFullData = cache(
       }
 
       if (options.fetchSquad) {
+        resolvedSquadMode = 'full';
         promises.push(perf.mark('data:squad', () => getTeamSquad(teamId)));
         dataTypes.push('squad');
       }
@@ -854,6 +871,7 @@ export const fetchTeamFullData = cache(
       }
 
       if (options.fetchTransfers) {
+        resolvedTransfersMode = 'full';
         promises.push(perf.mark('data:transfers', () => getTeamTransfers(teamId)));
         dataTypes.push('transfers');
       }
@@ -866,7 +884,9 @@ export const fetchTeamFullData = cache(
         success: true,
         message: '팀 데이터를 성공적으로 가져왔습니다',
         teamData,
-        matchesMode: resolvedMatchesMode
+        matchesMode: resolvedMatchesMode,
+        transfersMode: resolvedTransfersMode,
+        squadMode: resolvedSquadMode
       };
 
       // 결과 매핑

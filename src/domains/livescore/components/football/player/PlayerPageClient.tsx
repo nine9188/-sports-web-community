@@ -91,7 +91,7 @@ export default function PlayerPageClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const currentLeagueId = initialData.playerData?.statistics?.[0]?.league?.id || 39;
+  const currentLeagueId = initialData.playerData?.statistics?.[0]?.league?.id;
 
   // Heavy secondary tabs are prefetched selectively to keep tab transitions fast.
 
@@ -160,6 +160,8 @@ export default function PlayerPageClient({
     }
 
     if (tabId === 'rankings') {
+      if (!currentLeagueId) return;
+
       const queryKey = ['player-ranking', currentLeagueId, 'topscorers'] as const;
       if (queryClient.getQueryData(queryKey)) return;
 
@@ -196,6 +198,7 @@ export default function PlayerPageClient({
         playerKoreanName={playerKoreanName}
         playerPhotoUrl={initialData.playerPhotoUrl}
         teamLogoUrl={initialData.teamLogoUrl}
+        currentTeamLeague={initialData.currentTeamLeague}
       />
 
       {/* 배너 광고 */}

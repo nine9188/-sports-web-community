@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { getTeamsByIds, getLeagueIdByTeamId } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { resolveCurrentTeamMainLeague } from './currentLeague';
 
 // API 응답에 나타나는 리그 정보 인터페이스
 interface LeagueInfo {
@@ -25,6 +26,7 @@ interface TeamInfo {
 
 // API 응답에 나타나는 스탠딩 항목 인터페이스
 interface StandingItem {
+  group?: string;
   rank: number;
   team: TeamInfo;
   all: {
@@ -90,16 +92,26 @@ export async function fetchTeamStandings(teamId: string): Promise<StandingsRespo
       throw new Error('팀 ID는 필수입니다');
     }
 
-    // 팀 소속 리그 기반 시즌 계산 (캘린더 시즌 vs 유럽식 시즌)
     const teamIdNum = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
-    const leagueId = await getLeagueIdByTeamId(teamIdNum);
-    const season = await getCurrentSeasonForLeague(leagueId ?? 0);
+    const currentMainLeague = await resolveCurrentTeamMainLeague(teamIdNum);
+    const leagueId = currentMainLeague ? currentMainLeague.leagueId : await getLeagueIdByTeamId(teamIdNum);
+    const season = currentMainLeague?.season ?? await getCurrentSeasonForLeague(leagueId ?? 0);
 
     // 팀의 리그 정보를 가져옵니다
     const leaguesData = await fetchFromFootballApi('leagues', { team: teamId, season });
 
     // 모든 관련 리그 찾기
-    const relevantLeagues = leaguesData.response?.filter((league: ApiLeagueResponse) => {
+    const relevantLeagues = currentMainLeague
+      ? [{
+          league: {
+            id: currentMainLeague.leagueId,
+            name: currentMainLeague.name,
+            type: 'League',
+            logo: '',
+            season: currentMainLeague.season,
+          },
+        } as ApiLeagueResponse]
+      : leaguesData.response?.filter((league: ApiLeagueResponse) => {
       // 리그 타입이나 이름으로 필터링
       const isRelevant = (
         league.league.type === 'League' || // 정규 리그

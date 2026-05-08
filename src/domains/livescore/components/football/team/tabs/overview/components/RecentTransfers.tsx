@@ -81,53 +81,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                   href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
-                  {/* 데스크톱: 가로 레이아웃 */}
-                  <div className="hidden md:flex gap-2">
-                    <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0 self-center">
-                      <UnifiedSportsImageClient
-                        src={getPlayerPhoto(transfer.player.id)}
-                        alt={transfer.player.name}
-                        width={32}
-                        height={32}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
-                        </p>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <div className="w-5 h-5 flex-shrink-0">
-                            <UnifiedSportsImageClient
-                              src={getTeamLogo(transfer.fromTeam.id)}
-                              alt={transfer.fromTeam.name}
-                              width={20}
-                              height={20}
-                              fit="contain"
-                              className="w-full h-full"
-                            />
-                          </div>
-                          <span className="text-[13px] text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
-                            {teamName(transfer.fromTeam.id, transfer.fromTeam.name)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {formatDateDot(transfer.date)}
-                        </span>
-                        {formatType(transfer.type) && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                            {formatType(transfer.type)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 모바일: 이미지 왼쪽, 텍스트 오른쪽 세로 배치 */}
-                  <div className="md:hidden flex gap-2">
+                  <div className="flex gap-2">
                     <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
                       <UnifiedSportsImageClient
                         src={getPlayerPhoto(transfer.player.id)}
@@ -139,12 +93,24 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
+                        <p className="text-xs md:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
                           {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
-                          {teamName(transfer.fromTeam.id, transfer.fromTeam.name)}
-                        </span>
+                        <div className="flex items-center gap-1 flex-shrink-0 min-w-0">
+                          <div className="hidden md:block w-5 h-5 flex-shrink-0">
+                            <UnifiedSportsImageClient
+                              src={getTeamLogo(transfer.fromTeam.id)}
+                              alt={transfer.fromTeam.name}
+                              width={20}
+                              height={20}
+                              fit="contain"
+                              className="w-full h-full"
+                            />
+                          </div>
+                          <span className="text-xs md:text-[13px] text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
+                            {teamName(transfer.fromTeam.id, transfer.fromTeam.name)}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
                         <span>{formatDateDot(transfer.date)}</span>
@@ -175,53 +141,7 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                   href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
                   className="block px-3 py-2 cursor-pointer hover:bg-[#F5F5F5] dark:hover:bg-[#333333] transition-colors"
                 >
-                  {/* 데스크톱: 가로 레이아웃 */}
-                  <div className="hidden md:flex gap-2">
-                    <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0 self-center">
-                      <UnifiedSportsImageClient
-                        src={getPlayerPhoto(transfer.player.id)}
-                        alt={transfer.player.name}
-                        width={32}
-                        height={32}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {playerKoreanNames[transfer.player.id] || transfer.player.name}
-                        </p>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <div className="w-5 h-5 flex-shrink-0">
-                            <UnifiedSportsImageClient
-                              src={getTeamLogo(transfer.toTeam.id)}
-                              alt={transfer.toTeam.name}
-                              width={20}
-                              height={20}
-                              fit="contain"
-                              className="w-full h-full"
-                            />
-                          </div>
-                          <span className="text-[13px] text-gray-500 dark:text-gray-400 truncate max-w-[100px]">
-                            {teamName(transfer.toTeam.id, transfer.toTeam.name)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {formatDateDot(transfer.date)}
-                        </span>
-                        {formatType(transfer.type) && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                            {formatType(transfer.type)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 모바일: 이미지 왼쪽, 텍스트 오른쪽 세로 배치 */}
-                  <div className="md:hidden flex gap-2">
+                  <div className="flex gap-2">
                     <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
                       <UnifiedSportsImageClient
                         src={getPlayerPhoto(transfer.player.id)}
@@ -233,12 +153,24 @@ export default function RecentTransfers({ transfers, onTabChange, playerKoreanNa
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
+                        <p className="text-xs md:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
                           {playerKoreanNames[transfer.player.id] || transfer.player.name}
                         </p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
-                          {teamName(transfer.toTeam.id, transfer.toTeam.name)}
-                        </span>
+                        <div className="flex items-center gap-1 flex-shrink-0 min-w-0">
+                          <div className="hidden md:block w-5 h-5 flex-shrink-0">
+                            <UnifiedSportsImageClient
+                              src={getTeamLogo(transfer.toTeam.id)}
+                              alt={transfer.toTeam.name}
+                              width={20}
+                              height={20}
+                              fit="contain"
+                              className="w-full h-full"
+                            />
+                          </div>
+                          <span className="text-xs md:text-[13px] text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
+                            {teamName(transfer.toTeam.id, transfer.toTeam.name)}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
                         <span>{formatDateDot(transfer.date)}</span>

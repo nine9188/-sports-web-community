@@ -101,6 +101,7 @@ export default function StandingsPreview({
         </div>
         <ContainerTitle>
           {getLeagueKoreanName(displayLeagueInfo?.name || leagueInfo.name || safeLeague.name) || '리그 순위'}
+          {currentTeamStanding?.group ? ` - ${currentTeamStanding.group}` : ''}
         </ContainerTitle>
       </ContainerHeader>
       <div className="overflow-hidden">

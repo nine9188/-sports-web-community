@@ -5,6 +5,7 @@ import { unstable_cache } from 'next/cache';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
 
 interface ApiPlayerFixtureStats {
   games?: {
@@ -122,10 +123,7 @@ async function memoryCached<T>(key: string, task: () => Promise<T>): Promise<T> 
 }
 
 function getCurrentSeason(): number {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  return month >= 6 ? year : year - 1;
+  return getDefaultPlayerSeason();
 }
 
 async function fetchPlayerFixtureContextFromDb(
@@ -208,8 +206,6 @@ async function fetchTeamFixtureIdsFromApi(teamId: number, season: number): Promi
   const fixturesData = await fetchFromFootballApi('fixtures', {
     team: teamId,
     season,
-    from: `${season}-07-01`,
-    to: `${season + 1}-06-30`,
   });
 
   const fixtures: ApiFixture[] = fixturesData.response || [];
@@ -343,8 +339,19 @@ async function fetchPlayerFixturesUncached(
   const currentSeason = getCurrentSeason();
 
   try {
-    const dbContext = await fetchPlayerFixtureContextFromDb(playerId, currentSeason);
-    const apiTeamId = await fetchPlayerTeamIdFromApi(playerId, currentSeason);
+    let dbContext: PlayerFixtureContext | null = null;
+    let apiTeamId: number | null = null;
+    let seasonUsed = currentSeason;
+
+    for (const season of getPlayerSeasonCandidates(currentSeason)) {
+      dbContext = await fetchPlayerFixtureContextFromDb(playerId, season);
+      apiTeamId = await fetchPlayerTeamIdFromApi(playerId, season);
+      if (apiTeamId || dbContext?.teamId) {
+        seasonUsed = season;
+        break;
+      }
+    }
+
     const teamId = apiTeamId || dbContext?.teamId;
 
     if (!teamId) {
@@ -357,7 +364,7 @@ async function fetchPlayerFixturesUncached(
     // too sparse, or the API player team differs from the DB team, use the API
     // fixture list so the tab does not silently truncate or search the wrong team.
     if (fixtureIds.length < 15) {
-      const apiFixtureIds = await fetchCachedTeamFixtureIdsFromApi(teamId, currentSeason);
+      const apiFixtureIds = await fetchCachedTeamFixtureIdsFromApi(teamId, seasonUsed);
 
       if (apiFixtureIds.length > fixtureIds.length) {
         fixtureIds = apiFixtureIds;
@@ -368,8 +375,8 @@ async function fetchPlayerFixturesUncached(
       return {
         data: [],
         status: 'success',
-        message: `${currentSeason} 시즌 경기 기록이 없습니다.`,
-        seasonUsed: currentSeason,
+        message: `${seasonUsed} 시즌 경기 기록이 없습니다.`,
+        seasonUsed,
       };
     }
 
@@ -416,9 +423,9 @@ async function fetchPlayerFixturesUncached(
       data: sortedFixtures,
       status: isComplete ? 'success' : 'partial',
       message: isComplete
-        ? (limitedFixtures.length > 0 ? '경기 기록을 찾았습니다.' : `${currentSeason} 시즌 경기 기록이 없습니다.`)
+        ? (limitedFixtures.length > 0 ? '경기 기록을 찾았습니다.' : `${seasonUsed} 시즌 경기 기록이 없습니다.`)
         : `일부 경기 데이터 로딩 실패 (${failedFixtureIds.length}건)`,
-      seasonUsed: currentSeason,
+      seasonUsed,
       completeness: {
         total: fixtureIds.length,
         success: limitedFixtures.length,

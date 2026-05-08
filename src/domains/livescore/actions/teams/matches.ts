@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { getTeamsByIds, getLeagueIdByTeamId } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { resolveCurrentTeamMainLeague } from './currentLeague';
 
 // 경기 정보 인터페이스 (기본)
 export interface Match {
@@ -154,9 +155,10 @@ export async function fetchTeamMatchesUnified(
 
     const teamIdNum = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
 
-    // 팀 소속 리그 기반 시즌 계산 (캘린더 시즌 vs 유럽식 시즌)
-    const leagueId = await getLeagueIdByTeamId(teamIdNum);
-    const season = customSeason ?? await getCurrentSeasonForLeague(leagueId ?? 0);
+    // DB mapping can lag behind promoted/relegated teams, so prefer API current league.
+    const currentMainLeague = customSeason ? null : await resolveCurrentTeamMainLeague(teamIdNum);
+    const leagueId = currentMainLeague ? currentMainLeague.leagueId : await getLeagueIdByTeamId(teamIdNum);
+    const season = customSeason ?? currentMainLeague?.season ?? await getCurrentSeasonForLeague(leagueId ?? 0);
 
     let matches: Match[] = [];
 

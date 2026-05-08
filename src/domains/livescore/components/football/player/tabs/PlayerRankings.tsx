@@ -40,7 +40,7 @@ interface PlayerRankingsProps {
 
 export default function PlayerRankings({
   playerId,
-  leagueId = 39,
+  leagueId,
   rankingsData,
   playerKoreanNames = {},
   playerPhotoUrls: initialPlayerPhotoUrls = {},
@@ -59,6 +59,27 @@ export default function PlayerRankings({
     { id: 'topRedCards', label: '최다 레드카드' },
     { id: 'topYellowCards', label: '최다 옐로카드' },
   ];
+
+  const rankingLabels: Record<string, string> = {
+    topScorers: '최다 득점',
+    topAssists: '최다 도움',
+    mostGamesScored: '최다 득점 경기',
+    leastPlayTime: '최다 출전 시간',
+    topRedCards: '최다 퇴장',
+    topYellowCards: '최다 경고',
+  };
+  const displayRankingTypes = rankingTypes.map((tab) => ({
+    ...tab,
+    label: rankingLabels[tab.id] || tab.label,
+  }));
+
+  const emptyRankingsState = (
+    <PlayerTabEmptyState title="순위" message="순위 데이터가 없습니다." />
+  );
+
+  if (!leagueId) {
+    return emptyRankingsState;
+  }
 
   // 현재 서브탭에 필요한 API 타입
   const apiType = SUB_TAB_TO_API[rankingType];
@@ -156,7 +177,7 @@ export default function PlayerRankings({
     <div className="space-y-4">
       <h2 className="sr-only">시즌 랭킹</h2>
       <TabList
-        tabs={rankingTypes}
+        tabs={displayRankingTypes}
         activeTab={rankingType}
         onTabChange={setRankingType}
         onTabIntent={prefetchRankingType}
@@ -174,7 +195,7 @@ export default function PlayerRankings({
       ) : (
       <div className={isFetching && !isLoading ? 'opacity-70 transition-opacity' : undefined}>
           {/* 상위 3위 메달 디스플레이 */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
             {currentRankings.slice(0, 3).map((player: PlayerRanking, index: number) => {
               const cardContent = player ? (
                 <>
@@ -191,11 +212,11 @@ export default function PlayerRankings({
                       className="w-full h-full"
                     />
                   </div>
-                  <div className="text-center">
+                  <div className="min-w-0 text-left sm:text-center">
                     <div className="font-bold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                       {resolvedPlayerKoreanNames[player.player.id] || player.player.name}
                     </div>
-                    <div className="flex items-center justify-center gap-1 mt-1">
+                    <div className="mt-1 flex items-center justify-start gap-1 sm:justify-center">
                       <UnifiedSportsImageClient
                         src={getTeamLogo(player.statistics[0].team.id)}
                         alt={player.statistics[0].team.name}
@@ -222,14 +243,14 @@ export default function PlayerRankings({
                 <Link
                   key={player.player.id}
                   href={playerUrl(player.player.id, getPlayerSlugFromName(player.player.name))}
-                  className="relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 flex flex-col items-center min-h-[180px] cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
+                  className="relative flex min-h-[92px] items-center gap-3 rounded-lg border border-black/7 bg-white p-3 pl-10 transition-colors hover:bg-[#EAEAEA] dark:border-0 dark:bg-[#1D1D1D] dark:hover:bg-[#333333] sm:min-h-[180px] sm:flex-col sm:justify-center sm:pl-3"
                 >
                   {cardContent}
                 </Link>
               ) : (
                 <div
                   key={`empty-${index}`}
-                  className="relative bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-0 p-3 flex flex-col items-center min-h-[180px]"
+                  className="relative flex min-h-[92px] items-center gap-3 rounded-lg border border-black/7 bg-white p-3 pl-10 dark:border-0 dark:bg-[#1D1D1D] sm:min-h-[180px] sm:flex-col sm:justify-center sm:pl-3"
                 >
                   {cardContent}
                 </div>
@@ -237,79 +258,72 @@ export default function PlayerRankings({
             })}
           </div>
 
-          {/* 4-20위 테이블 */}
+          {/* 4-20위 리스트 */}
           <Container className="mt-4 min-h-[300px] bg-white dark:bg-[#1D1D1D]">
             <ContainerContent className="!p-0 overflow-hidden">
-              <table className="w-full table-fixed">
-                <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-                  <tr>
-                    <th className="pl-3 pr-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 w-8 border-b border-black/5 dark:border-white/10">#</th>
-                    <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10">선수</th>
-                    <th className="px-1 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10">소속</th>
-                    <th className="pl-1 pr-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 w-12 border-b border-black/5 dark:border-white/10">기록</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-[#1D1D1D]">
-                  {currentRankings.slice(3).length > 0 ? (
-                    currentRankings.slice(3).map((player: PlayerRanking, index: number) => (
-                      <tr
+              {currentRankings.slice(3).length > 0 ? (
+                <div className="divide-y divide-black/5 dark:divide-white/10">
+                  {currentRankings.slice(3).map((player: PlayerRanking, index: number) => {
+                    const href = playerUrl(player.player.id, getPlayerSlugFromName(player.player.name));
+                    const displayName = resolvedPlayerKoreanNames[player.player.id] || player.player.name;
+                    const team = player.statistics[0].team;
+                    const teamName = getTeamById(team.id)?.name_ko || team.name;
+                    const isCurrentPlayer = player.player.id === playerId;
+
+                    return (
+                      <Link
                         key={player.player.id}
-                        className={`hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors border-b border-black/5 dark:border-white/10 ${
-                          player.player.id === playerId ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
+                        href={href}
+                        className={`grid grid-cols-[1.5rem_minmax(0,1.35fr)_minmax(0,1fr)_auto] items-center gap-1.5 px-3 py-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:grid-cols-[2.25rem_minmax(0,1.2fr)_minmax(0,1fr)_auto] md:gap-3 md:px-4 md:py-3 ${
+                          isCurrentPlayer ? 'bg-[#F5F5F5] dark:bg-[#262626]' : ''
                         }`}
-                        onClick={() => router.push(playerUrl(player.player.id, getPlayerSlugFromName(player.player.name)))}
+                        onMouseEnter={() => router.prefetch(href)}
+                        onFocus={() => router.prefetch(href)}
                       >
-                        <td className="pl-3 pr-1 py-2 text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                        <span className="text-center text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
                           {index + 4}
-                        </td>
-                        <td className="px-1 py-2">
-                          <Link href={playerUrl(player.player.id, getPlayerSlugFromName(player.player.name))} className="flex items-center min-w-0 gap-1.5">
-                            <div className="flex-shrink-0 w-6 h-6">
-                              <UnifiedSportsImageClient
-                                src={getPlayerPhoto(player.player.id)}
-                                alt={player.player.name}
-                                width={24}
-                                height={24}
-                                variant="circle"
-                                className="w-full h-full"
-                              />
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
-                              {resolvedPlayerKoreanNames[player.player.id] || player.player.name}
-                            </span>
-                          </Link>
-                        </td>
-                        <td className="px-1 py-2">
-                          <div className="flex items-center min-w-0 gap-1">
-                            <div className="flex-shrink-0 w-5 h-5">
-                              <UnifiedSportsImageClient
-                                src={getTeamLogo(player.statistics[0].team.id)}
-                                alt={player.statistics[0].team.name}
-                                width={20}
-                                height={20}
-                                fit="contain"
-                                className="w-full h-full"
-                              />
-                            </div>
-                            <span className="text-xs sm:text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate">
-                              {getTeamById(player.statistics[0].team.id)?.name_ko || player.statistics[0].team.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="pl-1 pr-3 py-2 text-right text-xs sm:text-[13px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        </span>
+
+                        <div className="flex min-w-0 items-center gap-1.5 md:gap-2">
+                          <UnifiedSportsImageClient
+                            src={getPlayerPhoto(player.player.id)}
+                            alt={player.player.name}
+                            width={32}
+                            height={32}
+                            variant="circle"
+                            className="h-8 w-8 flex-shrink-0"
+                          />
+                          <span className="truncate text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                            {displayName}
+                          </span>
+                        </div>
+
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <UnifiedSportsImageClient
+                            src={getTeamLogo(team.id)}
+                            alt={team.name}
+                            width={20}
+                            height={20}
+                            fit="contain"
+                            className="h-5 w-5 flex-shrink-0"
+                          />
+                          <span className="truncate text-xs text-gray-500 dark:text-gray-400 md:text-[13px]">
+                            {teamName}
+                          </span>
+                        </div>
+
+                        <span className="whitespace-nowrap text-right text-xs font-bold text-gray-900 dark:text-[#F0F0F0] md:text-[13px]">
                           {getRankingValue(player, rankingType)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-3 py-4 text-center text-gray-500 dark:text-gray-400">
-                        데이터가 없습니다
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="px-3 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                  데이터가 없습니다
+                </div>
+              )}
             </ContainerContent>
           </Container>
       </div>

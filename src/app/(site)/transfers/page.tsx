@@ -1,28 +1,30 @@
-import { Container, ContainerHeader } from '@/shared/components/ui';
+import Link from 'next/link';
+import { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { getTeamsByLeagueId } from '@/domains/livescore/actions/teamLeagueData';
-import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
-import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
-import { ensureAssetsCached } from '@/domains/livescore/actions/images';
-import TransfersPageContent from '@/domains/livescore/components/football/transfers/TransfersPageContent';
+import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
+import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
+import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { transferTeamUrl } from '@/domains/livescore/utils/urls';
+import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
+import { TransferFilters } from '@/domains/livescore/components/football/transfers';
+import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 
-export async function generateMetadata() {
+export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: '축구 이적 소식 - 영입·방출·루머',
-    description: 'EPL, 라리가, 세리에A, 분데스리가, K리그 등 최신 축구 이적 소식과 이적 시장 루머. 선수 영입, 방출, 임대 정보를 확인하세요. 축구 커뮤니티 4590 Football.',
+    title: '축구 이적시장 - 팀별 영입·방출 내역',
+    description: '프리미어리그, 라리가, 세리에A, 분데스리가, K리그 등 주요 리그의 팀별 축구 이적시장 정보를 확인하세요.',
     path: '/transfers',
-    keywords: ['축구 이적', '이적시장', '이적 시장 루머', 'EPL 이적', '프리미어리그 이적', '선수 영입', '해외축구 이적', '축구 커뮤니티', '4590', '4590football'],
+    keywords: ['축구 이적', '이적시장', '팀별 이적', '선수 영입', '선수 방출', '해외축구 이적', 'K리그 이적', '4590football'],
   });
 }
 
 interface TransfersPageProps {
   searchParams: Promise<{
-    league?: string;
     team?: string;
-    season?: string;
     type?: 'in' | 'out' | 'all';
     page?: string;
   }>;
@@ -31,84 +33,98 @@ interface TransfersPageProps {
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
   const params = await searchParams;
 
-  // URL 파라미터를 필터 객체로 변환 (기본값: 프리미어리그 + 가나다순 첫 번째 팀)
-  const defaultLeague = 39;
-  const leagueId = params.league ? parseInt(params.league) : defaultLeague;
-
-  // 기본 팀: 해당 리그의 가나다순 첫 번째 팀
-  let defaultTeam: number | undefined;
-  if (!params.team && !params.league) {
-    const teams = await getTeamsByLeagueId(leagueId);
-    const sorted = [...teams].sort((a, b) => (a.name_ko || a.name_en).localeCompare(b.name_ko || b.name_en, 'ko'));
-    defaultTeam = sorted[0]?.id;
+  if (params.team) {
+    const teamId = parseInt(params.team, 10);
+    const team = Number.isFinite(teamId) ? await getTeamById(teamId) : null;
+    if (team) {
+      const query = new URLSearchParams();
+      if (params.type && params.type !== 'all') query.set('type', params.type);
+      if (params.page) query.set('page', params.page);
+      const queryString = query.toString();
+      if (team.is_active === true && team.slug && team.league_id && TRANSFER_LEAGUE_IDS.includes(team.league_id)) {
+        permanentRedirect(`${transferTeamUrl(team.id, team.slug)}${queryString ? `?${queryString}` : ''}`);
+      }
+    }
   }
 
-  const filters = {
-    league: leagueId,
-    team: params.team ? parseInt(params.team) : defaultTeam,
-    season: params.season ? parseInt(params.season) : undefined,
-    type: params.type !== 'all' ? params.type : undefined
-  };
+  const groupedTeams = await getTransferLeagueTeamGroups();
+  const supportedTeams = groupedTeams.flatMap((group) => group.teams);
+  const filterLeagueTeamGroups = groupedTeams.map((group) => ({
+    leagueId: group.league.id,
+    teams: group.teams.map((team) => ({
+      id: team.id,
+      name_ko: team.name_ko,
+      name_en: team.name_en,
+      slug: team.slug,
+    })),
+  }));
 
-  const currentPage = parseInt(params.page || '1');
-
-  // 서버에서 데이터 로드 (캐시 적용됨)
-  const transfersData = await fetchTransfersFullData(filters, currentPage, 20);
-
-  // 선수/팀 ID 수집
-  const playerIds = transfersData.transfers.map(t => t.player.id).filter(Boolean);
-  const teamIds = transfersData.transfers.flatMap(t => [
-    t.transfers[0]?.teams?.in?.id,
-    t.transfers[0]?.teams?.out?.id
-  ]).filter((id): id is number => Boolean(id && id > 0));
-
-  // 4590 표준: 선수 한글명 + 이미지 URL 일괄 조회
-  const [playerKoreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
-    playerIds.length > 0 ? getPlayersKoreanNames(playerIds) : {},
-    playerIds.length > 0 ? getPlayerPhotoUrls(playerIds) : {},
-    teamIds.length > 0 ? ensureAssetsCached('team_logo', [...new Set(teamIds)]) : {},
-  ]);
+  const breadcrumbSchema = buildBreadcrumbJsonLd({
+    items: [
+      { name: '홈', url: '/' },
+      { name: '이적시장', url: '/transfers' },
+    ],
+  });
 
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
       <TrackPageVisit id="transfers" slug="transfers" name="이적시장" />
-      {/* 헤더 섹션 */}
+
       <Container>
         <ContainerHeader>
           <div className="flex items-center justify-between w-full">
-            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
-            <div className="hidden md:flex items-center space-x-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">매주 업데이트</span>
-            </div>
+            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">축구 이적시장</h1>
+            <span className="hidden md:inline text-xs text-gray-500 dark:text-gray-400">팀별 영입·방출 내역</span>
           </div>
         </ContainerHeader>
-
-        {/* 설명 섹션 */}
-        <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D] space-y-2">
+        <div className="px-4 py-4 bg-white dark:bg-[#1D1D1D] space-y-2">
           <p className="text-[13px] text-gray-700 dark:text-gray-300">
-            리그와 팀을 선택하면 최신 이적 소식을 확인할 수 있습니다
+            프리미어리그, 라리가, 세리에A, 분데스리가, K리그 등 주요 리그의 팀별 이적시장 정보를 확인하세요.
           </p>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            <span className="font-medium text-gray-700 dark:text-gray-300">17개 리그 지원</span>
-            {' '}프리미어리그 · 라리가 · 세리에A · 분데스리가 · 리그1 · K리그1 · 챔피언십 · 에레디비시 · 프리메이라리가 · J1리그 · MLS · 사우디 프로리그 · 브라질레이랑 · 덴마크 수페르리가 · 중국 슈퍼리그 · 리가MX · 스코틀랜드 프리미어십
-          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {groupedTeams.length}개 리그, {supportedTeams.length}개 팀의 이적시장 페이지를 제공합니다.
+          </p>
         </div>
       </Container>
 
-      {/* 배너 광고 */}
       <div className="mt-4">
         <AdBanner />
       </div>
 
-      {/* 메인 콘텐츠 */}
       <div className="mt-4">
-        <TransfersPageContent
-          initialData={transfersData}
-          playerKoreanNames={playerKoreanNames}
-          playerPhotoUrls={playerPhotoUrls}
-          teamLogoUrls={teamLogoUrls}
-          currentFilters={filters}
-        />
+        <TransferFilters currentFilters={{}} leagueTeamGroups={filterLeagueTeamGroups} />
+      </div>
+
+      <div className="mt-4 space-y-4">
+        {groupedTeams.map(({ league, teams: leagueTeams }) => {
+          if (!league) return null;
+
+          return (
+            <Container key={league.id}>
+              <ContainerHeader>
+                <div className="flex items-center justify-between w-full">
+                  <ContainerTitle>{league.name_ko || league.name}</ContainerTitle>
+                  <span className="text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
+                    {leagueTeams.length}팀
+                  </span>
+                </div>
+              </ContainerHeader>
+              <div className="bg-white dark:bg-[#1D1D1D] p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {leagueTeams.map((team) => (
+                  <Link
+                    key={team.id}
+                    href={transferTeamUrl(team.id, team.slug || getTeamSlugFromName(team.name_en || team.name_ko))}
+                    className="flex items-center justify-between gap-2 rounded border border-black/5 dark:border-white/10 px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
+                  >
+                    <span className="truncate">{team.name_ko || team.name_en}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">이적시장</span>
+                  </Link>
+                ))}
+              </div>
+            </Container>
+          );
+        })}
       </div>
     </div>
   );

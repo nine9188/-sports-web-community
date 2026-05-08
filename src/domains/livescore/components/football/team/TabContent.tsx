@@ -39,6 +39,9 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
 
   // 데이터 추출
   const { teamData, matches, squad, playerStats, standings, transfers, playerPhotoUrls, teamLogoUrls, coachPhotoUrls, leagueLogoUrls, leagueLogoDarkUrls } = initialData;
+  const hasSeasonMatches = initialData.matchesMode === 'season';
+  const hasFullTransfers = initialData.transfersMode === 'full';
+  const hasFullSquad = initialData.squadMode === 'full';
 
   // API 매치 데이터를 UI 매치 데이터로 변환
   const convertMatchesForOverview = useCallback((matchesArray: ApiMatch[] | undefined | null): UIMatch[] | undefined => {
@@ -98,8 +101,8 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
       return (
         <Squad
           teamId={numericTeamId}
-          initialSquad={squad?.data}
-          initialStats={playerStats?.data}
+          initialSquad={hasFullSquad ? squad?.data : undefined}
+          initialStats={hasFullSquad ? playerStats?.data : undefined}
           isLoading={false}
           error={null}
           playerKoreanNames={playerKoreanNames}
@@ -133,7 +136,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
     case 'fixtures':
       return (
         <FixturesTab
-          matches={convertMatchesForOverview(matches?.data)}
+          matches={hasSeasonMatches ? convertMatchesForOverview(matches?.data) : undefined}
           teamId={numericTeamId}
           teamLogoUrls={teamLogoUrls}
           leagueLogoUrls={leagueLogoUrls}
@@ -145,7 +148,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
       return (
         <TransfersTab
           teamId={numericTeamId}
-          transfers={transfers?.data}
+          transfers={hasFullTransfers ? transfers?.data : undefined}
           playerKoreanNames={playerKoreanNames}
           playerPhotoUrls={playerPhotoUrls}
           teamLogoUrls={teamLogoUrls}

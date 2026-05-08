@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { ComponentProps } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { TransfersFullDataResponse, TransferFilters } from '@/domains/livescore/actions/transfers';
@@ -74,6 +75,7 @@ interface TransfersPageContentProps {
   playerPhotoUrls: Record<number, string>;
   teamLogoUrls: Record<number, string>;
   currentFilters: TransferFilters;
+  leagueTeamGroups?: ComponentProps<typeof TransferFiltersComponent>['leagueTeamGroups'];
 }
 
 export default async function TransfersPageContent({
@@ -81,7 +83,8 @@ export default async function TransfersPageContent({
   playerKoreanNames,
   playerPhotoUrls,
   teamLogoUrls,
-  currentFilters
+  currentFilters,
+  leagueTeamGroups
 }: TransfersPageContentProps) {
   const { transfers, totalCount, currentPage, totalPages, success } = initialData;
 
@@ -116,7 +119,7 @@ export default async function TransfersPageContent({
   return (
     <div className="space-y-4 pb-0">
       {/* 필터 섹션 */}
-      <TransferFiltersComponent currentFilters={currentFilters} />
+      <TransferFiltersComponent currentFilters={currentFilters} leagueTeamGroups={leagueTeamGroups} />
 
       {/* 이적 목록 */}
       {transfers.length === 0 ? (

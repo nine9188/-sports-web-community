@@ -344,9 +344,162 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     ...(awayLineup.substitutes?.map(item => item.player) || [])
   ];
 
+  const renderTeamHeader = (team: typeof homeTeam, formation?: string) => (
+    <div className="flex items-center gap-2 border-b border-black/5 bg-[#F5F5F5] px-4 py-3 dark:border-white/10 dark:bg-[#262626]">
+      <UnifiedSportsImageClient
+        src={getTeamLogo(team.id)}
+        alt={`${getTeamDisplayName(team.id, team.name)} 로고`}
+        size="sm"
+        variant="square"
+        priority={true}
+        fit="contain"
+      />
+      <span className="min-w-0 truncate text-[13px] font-medium text-gray-900 dark:text-gray-100">
+        {getTeamDisplayName(team.id, team.name)}
+      </span>
+      {formation && (
+        <span className="ml-auto flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+          {formation}
+        </span>
+      )}
+    </div>
+  );
+
+  const renderPlayerRow = (
+    player: Player,
+    index: number,
+    team: typeof homeTeam,
+    allPlayers: Player[],
+    priority = false
+  ) => (
+    <li
+      key={`${team.id}-${player.id || player.name}-${index}`}
+      className="flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"
+      onClick={() => handlePlayerClick(player, team.id, team.name, allPlayers)}
+    >
+      <div className="relative flex-shrink-0">
+        {player.id ? (
+          <UnifiedSportsImageClient
+            src={player.photo || PLAYER_PLACEHOLDER}
+            alt={`${player.name} 선수 사진`}
+            size="lg"
+            variant="circle"
+            priority={priority}
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F5F5] text-[13px] font-bold text-gray-700 dark:bg-[#262626] dark:text-gray-300">
+            {player.number || '-'}
+          </div>
+        )}
+        {isCaptain(player.id, player.captain) && (
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-yellow-400 text-xs font-bold text-white">
+            C
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs text-gray-900 dark:text-gray-100">
+          {renderPlayerName(player)}
+          {isCaptain(player.id, player.captain) && (
+            <span className="ml-1 text-xs font-semibold text-yellow-600 dark:text-yellow-400">(주장)</span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center text-xs text-gray-500 dark:text-gray-400">
+          {player.pos || '-'} {player.number}
+          <PlayerEvents player={player} events={events} />
+        </div>
+      </div>
+    </li>
+  );
+
+  const renderLineupList = (
+    players: TeamLineup['startXI'],
+    team: typeof homeTeam,
+    allPlayers: Player[],
+    emptyMessage: string,
+    prioritizeImages = false
+  ) => (
+    <ul className="divide-y divide-black/5 dark:divide-white/10">
+      {(!players || players.length === 0) ? (
+        <li>
+          <LineupInlineEmpty message={isLineupsLoading ? '불러오는 중...' : emptyMessage} />
+        </li>
+      ) : (
+        players.map((item, index) => renderPlayerRow(item.player, index, team, allPlayers, prioritizeImages && index < 5))
+      )}
+    </ul>
+  );
+
+  const renderCoach = (coach: TeamLineup['coach'] | undefined) => (
+    <div className="flex items-center gap-3 px-4 py-2">
+      {coach?.id ? (
+        <UnifiedSportsImageClient
+          src={coach.photo || COACH_PLACEHOLDER}
+          alt={`${coach.name || '감독'} 사진`}
+          size="lg"
+          variant="circle"
+        />
+      ) : (
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-black/7 bg-[#F5F5F5] dark:border-white/10 dark:bg-[#262626]">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs text-gray-900 dark:text-gray-100">{coach?.name || '정보 없음'}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">감독</div>
+      </div>
+    </div>
+  );
+
+  const renderLineupPanel = (
+    title: string,
+    content: React.ReactNode
+  ) => (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader>
+        <ContainerTitle>{title}</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent className="p-0">
+        {content}
+      </ContainerContent>
+    </Container>
+  );
+
+  const renderTeamLineupColumn = (
+    team: typeof homeTeam,
+    lineup: TeamLineup,
+    allPlayers: Player[]
+  ) => (
+    <div className="flex flex-col gap-4">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
+        <ContainerContent className="p-0">
+          {renderTeamHeader(team, lineup.formation)}
+        </ContainerContent>
+      </Container>
+      {renderLineupPanel(
+        '선발 라인업',
+        renderLineupList(lineup.startXI, team, allPlayers, '선발 라인업 데이터가 없습니다.', true)
+      )}
+      {renderLineupPanel(
+        '교체 선수',
+        renderLineupList(lineup.substitutes, team, allPlayers, '교체 선수 데이터가 없습니다.')
+      )}
+      {renderLineupPanel(
+        '감독',
+        (lineup.coach?.name || isLineupsLoading)
+          ? renderCoach(lineup.coach)
+          : <LineupInlineEmpty message="감독 데이터가 없습니다." />
+      )}
+    </div>
+  );
+
   // 포메이션 데이터 준비
   const homeFormationData = prepareFormationData(homeLineup);
   const awayFormationData = prepareFormationData(awayLineup);
+  const hasFormationPlayers = (homeLineup.startXI?.length || 0) > 0 || (awayLineup.startXI?.length || 0) > 0;
+  const isFormationLoading = isLineupsLoading && !hasFormationPlayers;
   
   return (
     <div>
@@ -363,10 +516,18 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             awayTeamDisplayName={getTeamDisplayName(awayTeam.id, awayTeam.name)}
             homeTeamLogoUrl={getTeamLogo(homeTeam.id)}
             awayTeamLogoUrl={getTeamLogo(awayTeam.id)}
-            isLoading={isLineupsLoading}
+            isLoading={isFormationLoading}
           />
         </div>
       )}
+
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {renderTeamLineupColumn(homeTeam, homeLineup, homeAllPlayers)}
+        {renderTeamLineupColumn(awayTeam, awayLineup, awayAllPlayers)}
+      </div>
+
+      {false && (
+      <>
       
       {/* 데스크톱: 기존 테이블 레이아웃 */}
       <div className="hidden md:block">
@@ -666,7 +827,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     <div className="flex items-center gap-3">
                       {homeLineup.coach?.id ? (
                         <UnifiedSportsImageClient
-                          src={homeLineup.coach.photo || COACH_PLACEHOLDER}
+                          src={homeLineup.coach?.photo || COACH_PLACEHOLDER}
                           alt={`${homeLineup.coach?.name || '감독'} 사진`}
                           size="lg"
                           variant="circle"
@@ -688,7 +849,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                     <div className="flex items-center gap-3">
                       {awayLineup.coach?.id ? (
                         <UnifiedSportsImageClient
-                          src={awayLineup.coach.photo || COACH_PLACEHOLDER}
+                          src={awayLineup.coach?.photo || COACH_PLACEHOLDER}
                           alt={`${awayLineup.coach?.name || '감독'} 사진`}
                           size="lg"
                           variant="circle"
@@ -867,7 +1028,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <div className="flex items-center gap-3 py-2 px-4">
                   {homeLineup.coach?.id ? (
                     <UnifiedSportsImageClient
-                      src={homeLineup.coach.photo || COACH_PLACEHOLDER}
+                      src={homeLineup.coach?.photo || COACH_PLACEHOLDER}
                       alt={`${homeLineup.coach?.name || '감독'} 사진`}
                       size="lg"
                       variant="circle"
@@ -1037,7 +1198,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <div className="flex items-center gap-3 py-2 px-4">
                   {awayLineup.coach?.id ? (
                     <UnifiedSportsImageClient
-                      src={awayLineup.coach.photo || COACH_PLACEHOLDER}
+                      src={awayLineup.coach?.photo || COACH_PLACEHOLDER}
                       alt={`${awayLineup.coach?.name || '감독'} 사진`}
                       size="lg"
                       variant="circle"
@@ -1069,6 +1230,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
         </div>
       </div>
       
+      </>
+      )}
+
       {/* 선수 통계 모달 */}
       {selectedPlayer && (
         <PlayerStatsModal

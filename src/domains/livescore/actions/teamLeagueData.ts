@@ -28,6 +28,8 @@ export interface TeamData {
   country_en: string | null;
   code: string | null;
   league_id: number | null;
+  slug?: string | null;
+  is_active?: boolean | null;
   conference: string | null; // MLS East/West 등
 }
 
@@ -53,7 +55,7 @@ const _getAllTeamsImpl = unstable_cache(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('football_teams')
-      .select('team_id, name, name_ko, country, country_ko, code, league_id, conference')
+      .select('team_id, name, name_ko, country, country_ko, code, league_id, conference, slug, is_active')
       .not('name_ko', 'is', null);
 
     if (error) {
@@ -61,7 +63,7 @@ const _getAllTeamsImpl = unstable_cache(
       return [];
     }
 
-    return (data || []).map((row: { team_id: number; name: string | null; name_ko: string | null; country: string | null; country_ko: string | null; code: string | null; league_id: number | null; conference: string | null }) => ({
+    return (data || []).map((row: { team_id: number; name: string | null; name_ko: string | null; country: string | null; country_ko: string | null; code: string | null; league_id: number | null; conference: string | null; slug: string | null; is_active: boolean | null }) => ({
       id: row.team_id,
       name_ko: row.name_ko ?? row.name ?? '',
       name_en: row.name ?? '',
@@ -70,6 +72,8 @@ const _getAllTeamsImpl = unstable_cache(
       code: row.code,
       league_id: row.league_id,
       conference: row.conference,
+      slug: row.slug,
+      is_active: row.is_active,
     }));
   },
   ['football-teams-all'],

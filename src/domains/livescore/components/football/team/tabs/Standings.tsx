@@ -204,6 +204,27 @@ function Standings({
     return standings;
   }, [teamId]);
 
+  const processTeamGroupStandings = useCallback((standings: Standing[]) => {
+    return standings.map((league) => {
+      const standingsGroups = league.league?.standings || [];
+      if (standingsGroups.length <= 1) return league;
+
+      const teamGroup = standingsGroups.find((group) =>
+        Array.isArray(group) && group.some((standing: StandingItem) => standing.team?.id === teamId)
+      );
+
+      if (!teamGroup) return league;
+
+      return {
+        ...league,
+        league: {
+          ...league.league,
+          standings: [teamGroup],
+        },
+      };
+    });
+  }, [teamId]);
+
   // 로딩 상태 처리
   if (externalLoading || standingsQuery.isLoading) {
     return <StandingsLoading />;
@@ -222,7 +243,7 @@ function Standings({
   }
 
   // MLS 리그 처리 적용 후 우선순위로 정렬
-  const processedStandings = processMlsStandings(loadedStandings).sort((a, b) => {
+  const processedStandings = processTeamGroupStandings(processMlsStandings(loadedStandings)).sort((a, b) => {
     const priorityA = getLeaguePriority(a.league?.id || 0);
     const priorityB = getLeaguePriority(b.league?.id || 0);
     return priorityA - priorityB;
@@ -255,6 +276,7 @@ function Standings({
                 )}
                 <ContainerTitle>
                   {getLeagueKoreanName(leagueInfo.name) || '리그 순위'}
+                  {standingsData.length === 1 && standingsData[0]?.[0]?.group ? ` - ${standingsData[0][0].group}` : ''}
                 </ContainerTitle>
               </div>
             </ContainerHeader>

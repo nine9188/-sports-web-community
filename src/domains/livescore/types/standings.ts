@@ -4,11 +4,14 @@ export interface StandingDisplay {
     id: number;
     name: string;
     logo: string;
+    country?: string;
+    flag?: string;
   };
   standings: Array<StandingItem>;
 }
 
 export interface StandingItem {
+  group?: string;
   rank: number;
   team: {
     id: number;

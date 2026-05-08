@@ -136,6 +136,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         data: overviewPlayerRankings.playerStats,
         message: overviewPlayerRankings.message,
       };
+      initialData.squadMode = 'preview';
       initialData.playerPhotoUrls = {
         ...(initialData.playerPhotoUrls || {}),
         ...overviewPlayerRankings.playerPhotoUrls,
@@ -148,6 +149,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         data: overviewTransfers.transfers,
         message: overviewTransfers.message,
       };
+      initialData.transfersMode = 'preview';
       initialData.playerPhotoUrls = {
         ...(initialData.playerPhotoUrls || {}),
         ...overviewTransfers.playerPhotoUrls,
@@ -255,7 +257,8 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const teamSlug = slug || (team?.name ? slugify(team.name) : '') || 'team';
     const teamUrl = `${siteConfig.url}/livescore/football/team/${id}/${teamSlug}`;
     const leagueId = leagueIdFromData;
-    const leagueUrl = leagueId ? `${siteConfig.url}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}` : undefined;
+    const leagueNameForSlug = initialData.standings?.data?.[0]?.league?.name || leagueMapping?.name_ko;
+    const leagueUrl = leagueId ? `${siteConfig.url}/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId, leagueNameForSlug)}` : undefined;
     const teamLogoUrl = initialData.teamLogoUrls?.[Number(id)] || team?.logo;
     const teamLogoJsonLdUrl = isUsableJsonLdImage(teamLogoUrl) ? absoluteSiteUrl(teamLogoUrl) : undefined;
     const venueImageJsonLdUrl = isUsableJsonLdImage(initialData.venueImageUrl || venue?.image)

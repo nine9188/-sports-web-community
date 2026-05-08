@@ -159,7 +159,9 @@ export default function PlayerStats({
                         <h2 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
                         </h2>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          ({[stat.league.season, stat.league.country].filter(Boolean).join(' · ')})
+                        </span>
                       </div>
                       <Link
                         href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
@@ -373,7 +375,9 @@ export default function PlayerStats({
                         <h2 className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">
                           {getLeagueKoreanName(stat.league.name) || stat.league.name}
                         </h2>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({stat.league.country})</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          ({[stat.league.season, stat.league.country].filter(Boolean).join(' · ')})
+                        </span>
                       </div>
                       <Link
                         href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}

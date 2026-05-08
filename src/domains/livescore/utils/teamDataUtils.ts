@@ -91,7 +91,8 @@ export interface StandingDisplay {
     country?: string;
     flag?: string;
   };
-  standings: Array<{
+    standings: Array<{
+    group?: string;
     rank: number;
     team: {
       id: number;
@@ -117,6 +118,7 @@ export interface StandingDisplay {
 
 // Standing 항목 타입
 interface StandingItem {
+  group?: string;
   rank: number;
   team: {
     id: number;

@@ -314,6 +314,10 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
   }
 
   const { fixture, league, homeTeam, awayTeam } = matchInfo;
+  const mappedLeagueName = league?.id ? getLeagueName(league.id) : '';
+  const displayLeagueName = mappedLeagueName && mappedLeagueName !== '알 수 없는 리그'
+    ? mappedLeagueName
+    : (league?.name_ko || league?.name || mappedLeagueName);
 
   return (
     <div className="w-full">
@@ -338,7 +342,7 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
             </div>
             <span className="text-xs md:text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] truncate">
               {/* 리그 ID로 한국어 이름 가져오기 */}
-              {league?.id ? getLeagueName(league.id) : (league?.name_ko || league?.name)}
+              {displayLeagueName}
             </span>
           </div>
 

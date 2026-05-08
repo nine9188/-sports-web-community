@@ -1,20 +1,20 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
+import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { wdlDraw, wdlLose, wdlWin } from '@/shared/styles/badge';
 import { getMatchSlug } from '@/domains/livescore/utils/slugs';
 import { matchUrl } from '@/domains/livescore/utils/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const DISPLAY_LIMIT = 5;
 
-// Match item types.
 export interface Match {
   fixture: {
     id: number;
@@ -53,15 +53,14 @@ interface MatchItemsProps {
   matches: Match[] | undefined;
   teamId: number;
   onTabChange?: (tab: string, subTab?: string) => void;
-  // 4590 storage image URLs passed from the server.
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
   recentLoading?: boolean;
   upcomingLoading?: boolean;
-  leagueLogoDarkUrls?: Record<number, string>;  // Dark mode league logos.
+  leagueLogoDarkUrls?: Record<number, string>;
 }
 
-const DISPLAY_LIMIT = 5;
+type ResultType = 'W' | 'L' | 'D';
 
 export default function MatchItems({
   matches,
@@ -71,12 +70,9 @@ export default function MatchItems({
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {},
   recentLoading = false,
-  upcomingLoading = false
+  upcomingLoading = false,
 }: MatchItemsProps) {
-  const router = useRouter();
   const { getLeagueKoreanName } = useTeamLeague();
-
-  // Track dark mode so league logos can switch variants.
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -92,7 +88,6 @@ export default function MatchItems({
     return () => observer.disconnect();
   }, []);
 
-  // 4590 storage URL mapping.
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getLeagueLogo = (id: number) => {
     if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
@@ -100,7 +95,6 @@ export default function MatchItems({
   };
   const getMatchHref = (match: Match) => matchUrl(match.fixture.id, getMatchSlug(match.teams.home.name, match.teams.away.name));
 
-  // Recent finished matches, newest first.
   const recentMatches = useMemo(() => {
     if (!matches) return [];
     return matches
@@ -117,7 +111,6 @@ export default function MatchItems({
       .slice(0, DISPLAY_LIMIT);
   }, [matches]);
 
-  // Upcoming matches, soonest first.
   const upcomingMatches = useMemo(() => {
     if (!matches) return [];
     return matches
@@ -139,279 +132,153 @@ export default function MatchItems({
       .slice(0, DISPLAY_LIMIT);
   }, [matches]);
 
-  // Use null when match data is unavailable.
   if ((!matches || matches.length === 0) && !recentLoading && !upcomingLoading) {
     return null;
   }
 
+  const getTeamResult = (match: Match): ResultType => {
+    const isHomeTeam = match.teams.home.id === teamId;
+    const team = isHomeTeam ? match.teams.home : match.teams.away;
+    const opponent = isHomeTeam ? match.teams.away : match.teams.home;
+
+    if (team.winner) return 'W';
+    if (opponent.winner) return 'L';
+    return 'D';
+  };
+
+  const getResultClass = (result: ResultType) => {
+    if (result === 'W') return wdlWin;
+    if (result === 'L') return wdlLose;
+    return wdlDraw;
+  };
+
+  const renderMatchRows = (
+    list: Match[],
+    type: 'recent' | 'upcoming',
+    isLoading: boolean
+  ) => {
+    const isRecent = type === 'recent';
+
+    if (list.length === 0) {
+      return (
+        <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
+          {isLoading
+            ? '불러오는 중...'
+            : isRecent
+              ? '최근 경기 정보가 없습니다'
+              : '예정된 경기 정보가 없습니다'}
+        </div>
+      );
+    }
+
+    return list.map(match => {
+      const href = getMatchHref(match);
+      const result = getTeamResult(match);
+
+      return (
+        <Link
+          key={match.fixture.id}
+          href={href}
+          className="block px-3 py-2.5 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:px-4 md:py-3"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400 md:text-xs">
+            <span className="whitespace-nowrap">
+              {format(new Date(match.fixture.date), isRecent ? 'M월 d일 (E)' : 'M월 d일 (E) HH:mm', { locale: ko })}
+            </span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate">{getLeagueKoreanName(match.league.name)}</span>
+              <span className="h-4 w-4 flex-shrink-0 md:h-[18px] md:w-[18px]">
+                <UnifiedSportsImageClient
+                  src={getLeagueLogo(match.league.id)}
+                  alt={match.league.name}
+                  width={18}
+                  height={18}
+                  className="h-full w-full object-contain"
+                />
+              </span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+              <span className={`truncate text-right text-xs text-gray-900 dark:text-[#F0F0F0] md:text-[13px] ${match.teams.home.id === teamId ? 'font-bold' : 'font-medium'}`}>
+                {match.teams.home.name}
+              </span>
+              <UnifiedSportsImageClient
+                src={getTeamLogo(match.teams.home.id)}
+                alt={match.teams.home.name}
+                width={24}
+                height={24}
+                className="h-6 w-6 flex-shrink-0 object-contain"
+              />
+            </div>
+
+            <span className={`inline-flex h-6 min-w-11 flex-shrink-0 items-center justify-center rounded-md px-2 text-xs font-bold md:h-7 md:min-w-12 md:text-[13px] ${
+              isRecent
+                ? getResultClass(result)
+                : 'bg-[#EAEAEA] text-gray-900 dark:bg-[#333333] dark:text-[#F0F0F0]'
+            }`}>
+              {isRecent ? `${match.goals.home ?? '-'} - ${match.goals.away ?? '-'}` : 'VS'}
+            </span>
+
+            <div className="flex min-w-0 flex-1 items-center justify-start gap-1.5">
+              <UnifiedSportsImageClient
+                src={getTeamLogo(match.teams.away.id)}
+                alt={match.teams.away.name}
+                width={24}
+                height={24}
+                className="h-6 w-6 flex-shrink-0 object-contain"
+              />
+              <span className={`truncate text-left text-xs text-gray-900 dark:text-[#F0F0F0] md:text-[13px] ${match.teams.away.id === teamId ? 'font-bold' : 'font-medium'}`}>
+                {match.teams.away.name}
+              </span>
+            </div>
+          </div>
+        </Link>
+      );
+    });
+  };
+
+  const renderMoreButton = (subTab: 'recent' | 'upcoming', label: string) => {
+    if (!onTabChange) return null;
+
+    return (
+      <Button
+        variant="secondary"
+        onClick={() => onTabChange('fixtures', subTab)}
+        className="w-full rounded-none border-t border-black/5 dark:border-white/10 md:rounded-b-lg"
+      >
+        <div className="flex items-center justify-center gap-1">
+          <span className="text-[13px] font-medium">{label}</span>
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </Button>
+    );
+  };
+
   return (
     <div className="space-y-4">
-      {/* Recent match results */}
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader>
           <ContainerTitle>최근 경기</ContainerTitle>
         </ContainerHeader>
-        <div className="overflow-hidden">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-14 md:w-20" />
-                <col className="w-8 md:w-32" />
-                <col />
-                <col className="w-12 md:w-20" />
-              </colgroup>
-              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">리그</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">경기</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">결과</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5 dark:divide-white/10">
-                {recentMatches.length > 0 ? recentMatches.map(match => (
-                  <tr
-                    key={match.fixture.id}
-                    className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                    onMouseEnter={() => router.prefetch(getMatchHref(match))}
-                    onFocus={() => router.prefetch(getMatchHref(match))}
-                    onClick={() => router.push(getMatchHref(match))}
-                  >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                      <Link href={getMatchHref(match)}>
-                        {format(new Date(match.fixture.date), 'MM.dd', { locale: ko })}
-                      </Link>
-                    </td>
-                    <td className="p-0 md:px-2">
-                      <div className="flex justify-start items-center gap-1 md:gap-2">
-                        <div className="w-5 h-5 relative flex-shrink-0">
-                          <UnifiedSportsImageClient
-                            src={getLeagueLogo(match.league.id)}
-                            alt={match.league.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-full h-full"
-                          />
-                        </div>
-                        <span className="hidden md:block text-xs text-gray-900 dark:text-[#F0F0F0]">
-                          {getLeagueKoreanName(match.league.name)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-0 md:px-2">
-                      <Link href={getMatchHref(match)} className="flex items-center justify-between">
-                        <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
-                            {match.teams.home.name}
-                          </span>
-                          <UnifiedSportsImageClient
-                            src={getTeamLogo(match.teams.home.id)}
-                            alt={match.teams.home.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-5 h-5 flex-shrink-0"
-                          />
-                        </div>
-
-                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
-                          {match.goals.home}-{match.goals.away}
-                        </div>
-
-                        <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <UnifiedSportsImageClient
-                            src={getTeamLogo(match.teams.away.id)}
-                            alt={match.teams.away.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-5 h-5 flex-shrink-0"
-                          />
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
-                            {match.teams.away.name}
-                          </span>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="px-1 py-1 md:px-2 md:py-2 text-center w-10 md:w-16">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-medium
-                        ${match.teams.home.id === teamId ?
-                          (match.teams.home.winner ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
-                            match.teams.away.winner ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400' :
-                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400') :
-                          (match.teams.away.winner ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' :
-                            match.teams.home.winner ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400' :
-                            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400')
-                        }`}
-                      >
-                        {match.teams.home.id === teamId ?
-                          (match.teams.home.winner ? 'W' :
-                            match.teams.away.winner ? 'L' : 'D') :
-                          (match.teams.away.winner ? 'W' :
-                            match.teams.home.winner ? 'L' : 'D')
-                        }
-                      </span>
-                    </td>
-                  </tr>
-                )) : recentLoading ? (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-center text-gray-500 dark:text-gray-400">불러오는 중...</td>
-                  </tr>
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-center text-gray-500 dark:text-gray-400">최근 경기 정보가 없습니다</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-      {/* Recent matches link */}
-      {onTabChange && (
-        <Button
-          variant="secondary"
-          onClick={() => onTabChange('fixtures', 'recent')}
-          className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
-        >
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-[13px] font-medium">최근 경기 전체보기</span>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </Button>
-      )}
+        <div className="divide-y divide-black/5 dark:divide-white/10">
+          {renderMatchRows(recentMatches, 'recent', recentLoading)}
+        </div>
+        {renderMoreButton('recent', '최근 경기 전체보기')}
       </Container>
 
-      {/* Upcoming matches */}
       <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader>
           <ContainerTitle>예정된 경기</ContainerTitle>
         </ContainerHeader>
-        <div className="overflow-hidden">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-20 md:w-28" />
-                <col className="w-8 md:w-32" />
-                <col />
-              </colgroup>
-              <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-                <tr className="h-10">
-                  <th className="p-0 md:p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">날짜</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">리그</th>
-                  <th className="p-0 md:p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">경기</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5 dark:divide-white/10">
-                {upcomingMatches.length > 0 ? upcomingMatches.map(match => (
-                  <tr
-                    key={match.fixture.id}
-                    className="h-12 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer transition-colors"
-                    onMouseEnter={() => router.prefetch(getMatchHref(match))}
-                    onFocus={() => router.prefetch(getMatchHref(match))}
-                    onClick={() => router.push(getMatchHref(match))}
-                  >
-                    <td className="p-0 md:px-2 text-xs whitespace-nowrap text-gray-900 dark:text-[#F0F0F0]">
-                      <Link href={getMatchHref(match)}>
-                        {format(new Date(match.fixture.date), 'MM.dd HH:mm', { locale: ko })}
-                      </Link>
-                    </td>
-                    <td className="p-0 md:px-2">
-                      <div className="flex justify-start items-center gap-1 md:gap-2">
-                        <div className="w-5 h-5 relative flex-shrink-0">
-                          <UnifiedSportsImageClient
-                            src={getLeagueLogo(match.league.id)}
-                            alt={match.league.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-full h-full"
-                          />
-                        </div>
-                        <span className="hidden md:block text-xs text-gray-900 dark:text-[#F0F0F0]">
-                          {getLeagueKoreanName(match.league.name)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-0 md:px-2">
-                      <Link href={getMatchHref(match)} className="flex items-center justify-between">
-                        <div className="flex-1 flex items-center justify-end gap-0 min-w-0">
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-right mr-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.home.id === teamId ? 'font-bold' : ''}`}>
-                            {match.teams.home.name}
-                          </span>
-                          <UnifiedSportsImageClient
-                            src={getTeamLogo(match.teams.home.id)}
-                            alt={match.teams.home.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-5 h-5 flex-shrink-0"
-                          />
-                        </div>
-
-                        <div className="w-10 text-center font-medium mx-1 flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]">
-                          VS
-                        </div>
-
-                        <div className="flex-1 flex items-center justify-start gap-0 min-w-0">
-                          <UnifiedSportsImageClient
-                            src={getTeamLogo(match.teams.away.id)}
-                            alt={match.teams.away.name}
-                            width={20}
-                            height={20}
-                            className="object-contain w-5 h-5 flex-shrink-0"
-                          />
-                          <span className={`truncate max-w-[100px] md:max-w-[180px] text-left ml-1 text-xs md:text-[13px] text-gray-900 dark:text-[#F0F0F0] ${match.teams.away.id === teamId ? 'font-bold' : ''}`}>
-                            {match.teams.away.name}
-                          </span>
-                        </div>
-                      </Link>
-                    </td>
-                  </tr>
-                )) : upcomingLoading ? (
-                  <tr>
-                    <td colSpan={3} className="py-4 text-center text-gray-500 dark:text-gray-400">불러오는 중...</td>
-                  </tr>
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="py-4 text-center text-gray-500 dark:text-gray-400">예정된 경기 정보가 없습니다</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-      {/* Upcoming matches link */}
-      {onTabChange && (
-        <Button
-          variant="secondary"
-          onClick={() => onTabChange('fixtures', 'upcoming')}
-          className="w-full rounded-none md:rounded-b-lg border-t border-black/5 dark:border-white/10"
-        >
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-[13px] font-medium">예정된 경기 전체보기</span>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
-        </Button>
-      )}
+        <div className="divide-y divide-black/5 dark:divide-white/10">
+          {renderMatchRows(upcomingMatches, 'upcoming', upcomingLoading)}
+        </div>
+        {renderMoreButton('upcoming', '예정된 경기 전체보기')}
       </Container>
     </div>
   );
-} 
+}

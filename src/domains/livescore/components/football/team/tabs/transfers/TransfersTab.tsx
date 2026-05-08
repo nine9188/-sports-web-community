@@ -154,123 +154,78 @@ export default function TransfersTab({ teamId, transfers, playerKoreanNames = {}
           className="mb-0 [&_button]:h-12"
         />
 
-        {/* 모바일: 카드 형식 */}
-        <div className="md:hidden divide-y divide-black/5 dark:divide-white/10">
+        <div className="hidden grid-cols-[6rem_minmax(0,1fr)_12rem_8rem] bg-[#F5F5F5] dark:bg-[#262626] md:grid">
+          <div className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">날짜</div>
+          <div className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">선수</div>
+          <div className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            {isInTab ? '이전 팀' : '이적 팀'}
+          </div>
+          <div className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">유형</div>
+        </div>
+
+        <div className="divide-y divide-black/5 dark:divide-white/10">
           {paginatedTransfers.length > 0 ? paginatedTransfers.map((transfer, index) => {
             const otherTeam = isInTab ? (transfer as TransferInRecord).fromTeam : (transfer as TransferOutRecord).toTeam;
             return (
-              <div key={`${transfer.player.id}-${index}`} className="px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
+              <div
+                key={`${transfer.player.id}-${index}`}
+                className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,100px)] items-center gap-x-2 gap-y-0.5 px-3 py-2 transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] md:grid-cols-[6rem_minmax(0,1fr)_12rem_8rem] md:gap-y-0 md:px-6"
+              >
+                <div className="order-1 row-span-2 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#F5F5F5] dark:bg-[#333333] md:hidden">
+                  <UnifiedSportsImageClient
+                    src={getPlayerPhoto(transfer.player.id)}
+                    alt={transfer.player.name}
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div className="order-4 col-start-2 text-[10px] text-gray-400 dark:text-gray-500 leading-tight md:order-none md:col-auto md:text-xs md:text-gray-500 md:dark:text-gray-400">
+                  {formatDateDot(transfer.date)}
+                </div>
+
+                <div className="order-2 col-start-2 flex min-w-0 items-center gap-2 md:order-none md:col-auto">
+                  <div className="hidden h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-[#F5F5F5] dark:bg-[#333333] md:block">
                     <UnifiedSportsImageClient
                       src={getPlayerPhoto(transfer.player.id)}
                       alt={transfer.player.name}
-                      width={32}
-                      height={32}
-                      className="object-cover w-full h-full"
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
                     />
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
-                        {displayPlayerKoreanNames[transfer.player.id] || transfer.player.name}
-                      </p>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight flex-shrink-0 max-w-[100px]">
-                        {teamName(otherTeam.id, otherTeam.name)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                      <span>{formatDateDot(transfer.date)}</span>
-                      {formatType(transfer.type) && <span>{formatType(transfer.type)}</span>}
-                    </div>
+                  <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0] truncate leading-tight">
+                    {displayPlayerKoreanNames[transfer.player.id] || transfer.player.name}
+                  </span>
+                </div>
+
+                <div className="order-3 col-start-3 flex min-w-0 items-center justify-end gap-1 md:order-none md:col-auto md:justify-start">
+                  <div className="hidden w-5 h-5 flex-shrink-0 md:block">
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(otherTeam.id, otherTeam.logo)}
+                      alt={otherTeam.name}
+                      width={20}
+                      height={20}
+                      fit="contain"
+                      className="w-full h-full"
+                    />
                   </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight md:text-gray-900 md:dark:text-[#F0F0F0]">
+                    {teamName(otherTeam.id, otherTeam.name)}
+                  </span>
+                </div>
+
+                <div className="order-5 col-start-3 text-right text-[10px] text-gray-400 dark:text-gray-500 leading-tight md:order-none md:col-auto md:text-left md:text-xs md:text-gray-500 md:dark:text-gray-400">
+                  {formatType(transfer.type)}
                 </div>
               </div>
             );
           }) : (
-            <div className="py-8 text-center text-gray-500 dark:text-gray-400 text-xs">
+            <div className="py-8 text-center text-xs text-gray-500 dark:text-gray-400">
               {isInTab ? '영입 정보가 없습니다' : '방출 정보가 없습니다'}
             </div>
           )}
-        </div>
-
-        {/* 데스크톱: 테이블 형식 */}
-        <div className="hidden md:block overflow-hidden">
-          <table className="w-full">
-            <colgroup>
-              <col className="w-24" />
-              <col />
-              <col className="w-48" />
-              <col className="w-32" />
-            </colgroup>
-            <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
-              <tr className="h-10">
-                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">날짜</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">선수</th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {isInTab ? '이전 팀' : '이적 팀'}
-                </th>
-                <th className="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">유형</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-black/5 dark:divide-white/10">
-              {paginatedTransfers.length > 0 ? paginatedTransfers.map((transfer, index) => {
-                const otherTeam = isInTab ? (transfer as TransferInRecord).fromTeam : (transfer as TransferOutRecord).toTeam;
-                return (
-                  <tr
-                    key={`${transfer.player.id}-${index}`}
-                    className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors"
-                  >
-                    <td className="px-6 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {formatDateDot(transfer.date)}
-                    </td>
-                    <td className="px-6 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#333333] rounded-full overflow-hidden flex-shrink-0">
-                          <UnifiedSportsImageClient
-                            src={getPlayerPhoto(transfer.player.id)}
-                            alt={transfer.player.name}
-                            width={40}
-                            height={40}
-                            className="object-cover w-full h-full"
-                          />
-                        </div>
-                        <span className="text-xs font-medium text-gray-900 dark:text-[#F0F0F0]">
-                          {displayPlayerKoreanNames[transfer.player.id] || transfer.player.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 flex-shrink-0">
-                          <UnifiedSportsImageClient
-                            src={getTeamLogo(otherTeam.id, otherTeam.logo)}
-                            alt={otherTeam.name}
-                            width={20}
-                            height={20}
-                            fit="contain"
-                            className="w-full h-full"
-                          />
-                        </div>
-                        <span className="text-xs text-gray-900 dark:text-[#F0F0F0] truncate">
-                          {teamName(otherTeam.id, otherTeam.name)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {formatType(transfer.type)}
-                    </td>
-                  </tr>
-                );
-              }) : (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-400">
-                    {isInTab ? '영입 정보가 없습니다' : '방출 정보가 없습니다'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       </Container>
 

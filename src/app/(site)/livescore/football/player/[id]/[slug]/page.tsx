@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
+import { resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import {
@@ -148,6 +149,12 @@ function isNextNotFoundError(error: unknown): boolean {
 async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; slug: string; tab: string }) {
   try {
     if (isFallbackPlayerSlug(playerId, slug)) {
+      const canonicalSlug = await resolvePlayerCanonicalSlug(playerId);
+      if (canonicalSlug) {
+        const tabParam = tab && tab !== 'stats' ? `?tab=${tab}` : '';
+        permanentRedirect(`/livescore/football/player/${playerId}/${canonicalSlug}${tabParam}`);
+      }
+
       return notFound();
     }
 
@@ -336,10 +343,6 @@ export default async function PlayerPage({
 }) {
   const { id: playerId, slug } = await params;
   const { tab = 'stats' } = await searchParams;
-
-  if (isFallbackPlayerSlug(playerId, slug)) {
-    notFound();
-  }
 
   return await PlayerPageContent({ playerId, slug, tab });
 }

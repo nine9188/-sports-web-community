@@ -85,7 +85,7 @@ export default function LeagueInfo({ leagueData, boardId, boardSlug, isLoggedIn 
         </div>
         <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{leagueData.name}</span>
         <Link
-          href={leagueUrl(leagueData.id, getLeagueSlug(leagueData.id))}
+          href={leagueUrl(leagueData.id, getLeagueSlug(leagueData.id, leagueData.name))}
           className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
         >
           리그 정보 →

@@ -205,7 +205,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const matchSlug = canonicalSlug;
     const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}/${matchSlug}`;
     const leagueUrl = match?.league?.id
-      ? `${siteConfig.url}/livescore/football/leagues/${match.league.id}/${getLeagueSlug(match.league.id)}`
+      ? `${siteConfig.url}/livescore/football/leagues/${match.league.id}/${getLeagueSlug(match.league.id, match.league.name)}`
       : undefined;
     const homeTeamUrl = match?.teams.home.id && match.teams.home.name
       ? `${siteConfig.url}/livescore/football/team/${match.teams.home.id}/${getTeamSlugFromName(match.teams.home.name)}`
@@ -251,6 +251,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
         url: matchUrl,
         price: '0',
         priceCurrency: 'KRW',
+        validFrom: matchStartDate,
         availability: 'https://schema.org/InStock',
       },
       ...((venueName || venueCity || venueCountry) && { location: {
