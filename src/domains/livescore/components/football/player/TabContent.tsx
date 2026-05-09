@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { usePlayerTabData, PlayerTabType } from '@/domains/livescore/hooks';
+import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import { PlayerStatistic, FixtureData, TransferData, InjuryData, TrophyData, RankingsData } from '@/domains/livescore/types/player';
 import PlayerStats from './tabs/PlayerStats';
@@ -40,7 +40,8 @@ const StatsTab = memo(function StatsTab({
 
 const FixturesTab = memo(function FixturesTab({
   playerId,
-  fixturesData
+  fixturesData,
+  initialPage = 1,
 }: {
   playerId: number;
   fixturesData: {
@@ -57,7 +58,8 @@ const FixturesTab = memo(function FixturesTab({
     teamLogoUrls?: Record<number, string>;
     leagueLogoUrls?: Record<number, string>;
     leagueLogoDarkUrls?: Record<number, string>;
-  }
+  };
+  initialPage?: number;
 }) {
   const safeFixturesData = useMemo(() => ({
     data: fixturesData?.data || [],
@@ -76,6 +78,7 @@ const FixturesTab = memo(function FixturesTab({
       teamLogoUrls={fixturesData?.teamLogoUrls || {}}
       leagueLogoUrls={fixturesData?.leagueLogoUrls || {}}
       leagueLogoDarkUrls={fixturesData?.leagueLogoDarkUrls || {}}
+      initialPage={initialPage}
     />
   );
 });
@@ -240,6 +243,7 @@ interface TabContentProps {
   currentTab: PlayerTabType;
   initialData?: Partial<PlayerFullDataResponse>;
   rankingsKoreanNames?: Record<number, string | null>;
+  initialPage?: number;
 }
 
 // ============================================
@@ -250,61 +254,33 @@ export default function TabContent({
   playerId,
   currentTab,
   initialData,
-  rankingsKoreanNames = {}
+  rankingsKoreanNames = {},
+  initialPage = 1,
 }: TabContentProps) {
-  // React Query 훅으로 데이터 관리
-  const {
-    statsData,
-    fixturesData,
-    transfersData,
-    trophiesData,
-    injuriesData,
-    rankingsData,
-    trophiesLeagueLogoUrls,
-    trophiesLeagueLogoDarkUrls,
-    transfersTeamLogoUrls,
-    injuriesTeamLogoUrls,
-    isLoading,
-    error,
-  } = usePlayerTabData({
-    playerId,
-    currentTab,
-    initialData,
-  });
+  const statsData = initialData?.statistics
+    ? {
+        seasons: initialData.seasons || [],
+        statistics: initialData.statistics,
+        teamLogoUrls: initialData.statisticsTeamLogoUrls || {},
+        leagueLogoUrls: initialData.statisticsLeagueLogoUrls || {},
+        leagueLogoDarkUrls: initialData.statisticsLeagueLogoDarkUrls || {},
+      }
+    : null;
+  const fixturesData = initialData?.fixtures || null;
+  const transfersData = initialData?.transfers || null;
+  const trophiesData = initialData?.trophies || null;
+  const injuriesData = initialData?.injuries || null;
+  const rankingsData = initialData?.rankings || null;
+  const trophiesLeagueLogoUrls = initialData?.trophiesLeagueLogoUrls || {};
+  const trophiesLeagueLogoDarkUrls = initialData?.trophiesLeagueLogoDarkUrls || {};
+  const transfersTeamLogoUrls = initialData?.transfersTeamLogoUrls || {};
+  const injuriesTeamLogoUrls = initialData?.injuriesTeamLogoUrls || {};
 
-  // 플레이어 ID를 숫자로 변환
   const playerIdNum = parseInt(playerId, 10);
-
-  const hasCurrentTabData = useMemo(() => {
-    switch (currentTab) {
-      case 'stats':
-        return Boolean(statsData?.statistics?.length);
-      case 'fixtures':
-        return Boolean(fixturesData);
-      case 'trophies':
-        return trophiesData !== null;
-      case 'transfers':
-        return transfersData !== null;
-      case 'injuries':
-        return injuriesData !== null;
-      case 'rankings':
-        return rankingsData !== null;
-      default:
-        return false;
-    }
-  }, [currentTab, statsData, fixturesData, transfersData, trophiesData, injuriesData, rankingsData]);
 
   // 현재 탭에 따라 컴포넌트 렌더링
   const renderTabContent = useMemo(() => {
     // 에러 상태 처리
-    if (error) {
-      return <ErrorDisplay message={error.message} />;
-    }
-
-    if (isLoading && !hasCurrentTabData) {
-      return <PlayerTabLoading tab={currentTab} />;
-    }
-
     switch (currentTab) {
       case 'stats': {
         const statistics = statsData?.statistics || [];
@@ -325,7 +301,7 @@ export default function TabContent({
 
       case 'fixtures': {
         const fixtures = fixturesData || { data: [], status: 'error', message: '경기 기록이 없습니다.' };
-        return <FixturesTab playerId={playerIdNum} fixturesData={fixtures} />;
+        return <FixturesTab playerId={playerIdNum} fixturesData={fixtures} initialPage={initialPage} />;
       }
 
       case 'trophies': {
@@ -388,11 +364,9 @@ export default function TabContent({
     transfersTeamLogoUrls,
     injuriesTeamLogoUrls,
     playerIdNum,
-    error,
-    isLoading,
-    hasCurrentTabData,
     initialData,
     rankingsKoreanNames,
+    initialPage,
   ]);
 
   return renderTabContent;

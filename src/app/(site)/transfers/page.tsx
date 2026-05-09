@@ -7,8 +7,7 @@ import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { transferTeamUrl } from '@/domains/livescore/utils/urls';
+import { getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { TransferFilters } from '@/domains/livescore/components/football/transfers';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
@@ -42,7 +41,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       if (params.page) query.set('page', params.page);
       const queryString = query.toString();
       if (team.is_active === true && team.slug && team.league_id && TRANSFER_LEAGUE_IDS.includes(team.league_id)) {
-        permanentRedirect(`${transferTeamUrl(team.id, team.slug)}${queryString ? `?${queryString}` : ''}`);
+        permanentRedirect(`${getTransferTeamHref(team)}${queryString ? `?${queryString}` : ''}`);
       }
     }
   }
@@ -114,7 +113,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
                 {leagueTeams.map((team) => (
                   <Link
                     key={team.id}
-                    href={transferTeamUrl(team.id, team.slug || getTeamSlugFromName(team.name_en || team.name_ko))}
+                    href={getTransferTeamHref(team)}
                     className="flex items-center justify-between gap-2 rounded border border-black/5 dark:border-white/10 px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
                   prefetch={false}
                   >

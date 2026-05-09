@@ -6,8 +6,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerRanking } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -44,7 +43,7 @@ const PlayerRow = memo(({
 
   return (
     <Link
-      href={playerUrl(ranking.player.id, getPlayerSlugFromName(ranking.player.name))}
+      href={getPlayerHref(ranking.player)}
       className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] transition-colors"
     prefetch={false}
     >

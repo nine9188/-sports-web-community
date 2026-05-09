@@ -6,8 +6,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { STANDINGS_LEGENDS, LEAGUE_IDS } from '@/domains/livescore/components/football/match/tabs/constants/standings';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -141,8 +140,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
   const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);
 
   const getTeamHref = useCallback((team?: StandingTeam['team']) => {
-    if (!team?.id) return teamUrl(0);
-    return teamUrl(team.id, team.name ? getTeamSlugFromName(team.name) : undefined);
+    return buildTeamHref(team || { id: 0 });
   }, []);
 
   if (!standings?.league?.standings || standings.league.standings.length === 0) {

@@ -6,8 +6,7 @@ import { PlayerStatistic } from '@/domains/livescore/types/player';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerHeader, ContainerContent } from '@/shared/components/ui';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder 상수
@@ -164,7 +163,7 @@ export default function PlayerStats({
                         </span>
                       </div>
                       <Link
-                        href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
+                        href={getTeamHref(stat.team)}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       prefetch={false}
                       >
@@ -381,7 +380,7 @@ export default function PlayerStats({
                         </span>
                       </div>
                       <Link
-                        href={teamUrl(stat.team.id, getTeamSlugFromName(stat.team.name))}
+                        href={getTeamHref(stat.team)}
                         className="flex items-center ml-auto gap-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors px-2 py-1 rounded outline-none focus:outline-none"
                       prefetch={false}
                       >

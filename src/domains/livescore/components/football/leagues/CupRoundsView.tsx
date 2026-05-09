@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { Container, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
+import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
 import type { CupRound, CupFixture } from '@/domains/livescore/actions/match/cupFixtures';
 
 // 기본 펼침 라운드 수 — 정렬상 상위 N개 (Final/Semi/QF/16강 레벨)
@@ -55,7 +54,7 @@ function FixtureRow({ fixture, isLast, isCurrent = false }: FixtureRowProps) {
   const statusLabel = STATUS_LABEL[status.short] || status.short || '';
   const dateTime = formatDateTime(fixture.date);
 
-  const href = matchUrl(fixture.id, getMatchSlug(home.name, away.name));
+  const href = getMatchHrefByTeams(fixture.id, home, away);
 
   const rowHover = isCurrent ? '' : 'hover:bg-[#F5F5F5] dark:hover:bg-[#262626]';
   const borderClass = isLast

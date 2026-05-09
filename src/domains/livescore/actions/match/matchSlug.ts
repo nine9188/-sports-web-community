@@ -2,7 +2,8 @@
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { fetchCachedMatchFullData } from './matchData';
-import { getMatchSlug, slugify } from '@/domains/livescore/utils/slugs';
+import { slugify } from '@/domains/livescore/utils/slugs';
+import { getMatchLinkSlug } from '@/domains/livescore/utils/entityLinks';
 
 type TeamSlugRow = {
   team_id: number;
@@ -121,9 +122,10 @@ export async function resolveCanonicalMatchSlug(fixtureId: number | string): Pro
     );
     if (fromIds) return fromIds;
 
-    const fromNames = getMatchSlug(
-      matchData.match.teams?.home?.name || '',
-      matchData.match.teams?.away?.name || ''
+    const fromNames = getMatchLinkSlug(
+      matchData.match.teams?.home || {},
+      matchData.match.teams?.away || {},
+      id
     );
     if (fromNames) return fromNames;
   }

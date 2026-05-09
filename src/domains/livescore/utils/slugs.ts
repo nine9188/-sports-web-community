@@ -9,7 +9,8 @@ export function slugify(text: string): string {
   return text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s-]/g, '')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N}_\s-]/gu, '')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')

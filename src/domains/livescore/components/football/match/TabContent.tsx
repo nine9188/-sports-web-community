@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Events from './tabs/Events';
 import Standings from './tabs/Standings';
 import Power from './tabs/Power';
@@ -11,21 +10,16 @@ import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import RelatedPosts from './sidebar/RelatedPosts';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
-import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
+import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
-import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
-import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
-import { isCupLeague } from '@/domains/livescore/actions/teamLeagueData';
-import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
 import type { SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 import HighlightBanner from './HighlightBanner';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { matchKeys } from '@/shared/constants/queryKeys';
 
 function convertToMatchPlayerStats(
   allPlayerStats: AllPlayerStatsResponse | null | undefined,
@@ -113,6 +107,7 @@ interface TabContentProps {
   homeBoardSlug?: string | null;
   awayBoardSlug?: string | null;
   playerKoreanNames?: PlayerKoreanNames;
+  lineupPlayerPhotoUrls?: Record<number, string>;
   cupRoundsData?: import('@/domains/livescore/actions/match/cupFixtures').CupRound[];
 }
 
@@ -130,94 +125,18 @@ export default function TabContent({
   homeBoardSlug,
   awayBoardSlug,
   playerKoreanNames = {},
+  lineupPlayerPhotoUrls,
   cupRoundsData,
 }: TabContentProps) {
   const { getTeamById } = useTeamLeague();
-  const needsEvents = currentTab === 'events' || currentTab === 'lineups';
-  const needsLineups = currentTab === 'lineups';
-  const needsStats = currentTab === 'stats';
-  const needsStandings = currentTab === 'standings';
-  const needsTabData = needsEvents || needsLineups || needsStats || needsStandings;
-  const hasInitialTabData =
-    (currentTab === 'events' && initialData.events !== undefined) ||
-    (currentTab === 'lineups' && initialData.lineups !== undefined && initialData.events !== undefined) ||
-    (currentTab === 'stats' && initialData.stats !== undefined) ||
-    (currentTab === 'standings' && initialData.standings !== undefined);
-
-  const tabDataQuery = useQuery({
-    queryKey: [...matchKeys.detail(matchId), currentTab, 'full-data'],
-    queryFn: () => fetchCachedMatchFullData(matchId, {
-      fetchEvents: needsEvents,
-      fetchLineups: needsLineups,
-      fetchStats: needsStats,
-      fetchStandings: needsStandings,
-    }),
-    enabled: Boolean(matchId) && needsTabData && !hasInitialTabData,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-  });
-
-  const activeData = tabDataQuery.data?.success ? tabDataQuery.data : initialData;
-  const isTabLoading = needsTabData && tabDataQuery.isPending;
+  const activeData = initialData;
+  const isTabLoading = false;
   const { events, lineups, stats, standings, homeTeam, awayTeam, matchData, teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl } = activeData;
   const fixture = matchData && typeof matchData === 'object' && 'fixture' in matchData
     ? (matchData as { fixture?: { status?: { short?: string } } }).fixture
     : undefined;
-  const rawLeague = matchData && typeof matchData === 'object' && 'league' in matchData
-    ? (matchData as { league?: { season?: number } }).league
-    : undefined;
-  const matchStatus = fixture?.status?.short;
-  const activeLeagueId = activeData.match?.league?.id;
-
-  const playerStatsQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.detail(matchId), 'all-player-stats-v2'] : ['match', 'all-player-stats-v2', 'missing-id'],
-    queryFn: () => fetchAllPlayerStats(matchId, matchStatus),
-    enabled: Boolean(matchId) && needsStats && !allPlayerStats?.success,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
-    refetchOnWindowFocus: false,
-  });
-  const resolvedAllPlayerStats = allPlayerStats ?? (playerStatsQuery.data?.success ? playerStatsQuery.data : null);
-  const cupRoundsQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.detail(matchId), 'cup-rounds', activeLeagueId, rawLeague?.season] : ['match', 'cup-rounds', 'missing-id'],
-    queryFn: async () => {
-      if (!activeLeagueId || !(await isCupLeague(activeLeagueId))) {
-        return [];
-      }
-
-      const response = await fetchCupFixturesByRound(activeLeagueId, rawLeague?.season);
-      return response.rounds;
-    },
-    enabled: currentTab === 'standings' && Boolean(activeLeagueId) && !cupRoundsData,
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60,
-    refetchOnWindowFocus: false,
-  });
-  const statsPlayerIds = useMemo(() => {
-    const ids = new Set<number>();
-    resolvedAllPlayerStats?.allPlayersData?.forEach((playerData) => {
-      const playerId = playerData.player?.id;
-      if (Number.isFinite(playerId) && playerId > 0) {
-        ids.add(playerId);
-      }
-    });
-    return Array.from(ids);
-  }, [resolvedAllPlayerStats]);
-
-  const koreanNamesQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.detail(matchId), 'stats-korean-names', statsPlayerIds.join(',')] : ['match', 'stats-korean-names', 'missing-id'],
-    queryFn: () => getPlayersKoreanNames(statsPlayerIds),
-    enabled: statsPlayerIds.length > 0,
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const mergedPlayerKoreanNames = useMemo(() => ({
-    ...playerKoreanNames,
-    ...(koreanNamesQuery.data || {}),
-  }), [playerKoreanNames, koreanNamesQuery.data]);
+  const resolvedAllPlayerStats = allPlayerStats ?? null;
+  const mergedPlayerKoreanNames = useMemo(() => ({ ...playerKoreanNames }), [playerKoreanNames]);
 
   if (!matchId) {
     return <EmptyState title="경기 정보 없음" message="경기 정보가 없습니다." />;
@@ -265,6 +184,7 @@ export default function TabContent({
           allPlayerStats={resolvedAllPlayerStats}
           playerKoreanNames={mergedPlayerKoreanNames}
           teamLogoUrls={teamLogoUrls}
+          playerPhotoUrls={lineupPlayerPhotoUrls}
           isLoading={isTabLoading}
         />
       );
@@ -280,7 +200,7 @@ export default function TabContent({
           playerKoreanNames={mergedPlayerKoreanNames}
           teamLogoUrls={teamLogoUrls}
           teamStatsLoading={isTabLoading}
-          playerStatsLoading={playerStatsQuery.isPending}
+          playerStatsLoading={false}
         />
       );
     }
@@ -297,8 +217,8 @@ export default function TabContent({
           teamLogoUrls={teamLogoUrls}
           leagueLogoUrls={leagueLogoUrls}
           leagueLogoDarkUrls={leagueLogoDarkUrls}
-          cupRoundsData={cupRoundsData ?? cupRoundsQuery.data}
-          isLoading={isTabLoading || cupRoundsQuery.isPending}
+          cupRoundsData={cupRoundsData}
+          isLoading={isTabLoading}
         />
       );
     }

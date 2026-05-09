@@ -44,7 +44,8 @@ interface ApiRankingItem {
  */
 export async function fetchPlayerRankings(
   playerId: number, 
-  leagueId: number = 39
+  leagueId: number = 39,
+  season?: number
 ): Promise<RankingsData> {
   try {
     if (!playerId || !leagueId) {
@@ -55,7 +56,7 @@ export async function fetchPlayerRankings(
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    const currentSeason = month >= 6 ? year : year - 1;
+    const currentSeason = season ?? (month >= 6 ? year : year - 1);
 
     // 필요한 순위 종류 정의
     const rankingTypes = [

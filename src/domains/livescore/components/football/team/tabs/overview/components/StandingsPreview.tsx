@@ -8,8 +8,7 @@ import { findTeamStanding, getDisplayStandings, getLeagueInfo, getLeagueForStand
 import FormDisplay from './FormDisplay';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, Button } from '@/shared/components/ui';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -77,7 +76,7 @@ export default function StandingsPreview({
   // 공통 스타일
   const tableHeaderStyle = "px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400";
   const tableCellStyle = "px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0]";
-  const getTeamHref = (id: number, name: string) => teamUrl(id, getTeamSlugFromName(name));
+  const buildTeamHref = (id: number, name: string) => getTeamHref({ id, name });
   
   // 순위 데이터가 없으면 렌더링하지 않음
   if (displayStandings.length === 0 || !leagueInfo) {
@@ -141,7 +140,7 @@ export default function StandingsPreview({
                 >
                   <td className={tableCellStyle}>{standing.rank}</td>
                   <td className={tableCellStyle}>
-                    <Link href={getTeamHref(standing.team.id, standing.team.name)} className="flex items-center gap-2" prefetch={false}>
+                    <Link href={buildTeamHref(standing.team.id, standing.team.name)} className="flex items-center gap-2" prefetch={false}>
                       <div className="w-5 h-5 relative flex-shrink-0">
                         <UnifiedSportsImageClient
                           src={getTeamLogo(standing.team.id, standing.team.logo)}

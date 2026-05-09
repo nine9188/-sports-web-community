@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { PenLine } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -72,7 +71,7 @@ export default function BoardTeamInfo({ teamData, boardId, boardSlug, isLoggedIn
         </div>
         <span className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">{team.name}</span>
         <Link
-          href={teamUrl(team.id, getTeamSlugFromName(team.name))}
+          href={getTeamHref(team)}
           className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex-shrink-0"
         prefetch={false}
         >

@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchEvent } from '@/domains/livescore/types/match';
@@ -12,11 +11,8 @@ import { mapEventToKoreanText } from '@/domains/livescore/constants/event-mappin
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { PlayerKoreanNames } from '../MatchPageClient';
-import { getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl, teamUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import MatchTabState from './MatchTabState';
-import { fetchCachedMatchEvents } from '@/domains/livescore/actions/match/eventData';
-import { matchKeys } from '@/shared/constants/queryKeys';
 
 // 이벤트 타입에 따른 아이콘 반환
 const getEventIcon = (type: string, detail: string) => {
@@ -72,16 +68,7 @@ interface EventsProps {
 // 메모이제이션을 적용하여 불필요한 리렌더링 방지
 function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogoUrls = {} }: EventsProps) {
   const { getTeamById } = useTeamLeague();
-  const eventsQuery = useQuery({
-    queryKey: matchId ? matchKeys.events(matchId) : ['match', 'events', 'missing-id'],
-    queryFn: () => fetchCachedMatchEvents(matchId || ''),
-    enabled: !!matchId && propsEvents === undefined,
-    staleTime: 15 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-  const [events, setEvents] = useState<MatchEvent[]>(propsEvents || eventsQuery.data?.data || []);
-  const [loading, setLoading] = useState(false);
-  const [error] = useState<string | null>(null);
+  const events = propsEvents || [];
   const [teamCache, setTeamCache] = useState<Record<number, TeamData>>({});
 
   // 이벤트 텍스트 내 선수 이름에 링크를 적용하는 헬퍼 함수
@@ -106,7 +93,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
               newElements.push(
                 <Link
                   key={`player-link-${event.player.id}-${i}-${idx}`} // 고유한 key 추가
-                  href={playerUrl(event.player.id, getPlayerSlugFromName(event.player.name))}
+                  href={getPlayerHref(event.player)}
                   className="hover:underline transition-all"
                 prefetch={false}
                 >
@@ -139,7 +126,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
               newElements.push(
                 <Link
                   key={`assist-link-${assistId}-${i}-${idx}`}
-                  href={playerUrl(assistId, getPlayerSlugFromName(englishAssistName))}
+                  href={getPlayerHref({ id: assistId, name: englishAssistName })}
                   className="hover:underline transition-all"
                 prefetch={false}
                 >
@@ -161,20 +148,6 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
   };
 
   // matchData prop이 변경될 때 이벤트 데이터 업데이트
-  useEffect(() => {
-    if (propsEvents) {
-      setEvents(propsEvents);
-      setLoading(false);
-    }
-  }, [propsEvents]);
-
-  useEffect(() => {
-    if (propsEvents === undefined && eventsQuery.data?.success) {
-      setEvents(eventsQuery.data.data || []);
-      setLoading(false);
-    }
-  }, [eventsQuery.data, propsEvents]);
-
   // 팀 정보 캐싱을 위한 hook
   useEffect(() => {
     // 이벤트에 등장하는 팀 ID를 수집
@@ -233,13 +206,13 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
   };
 
   // 로딩 상태 표시
-  if (loading || (propsEvents === undefined && eventsQuery.isLoading)) {
+  if (false) {
     return <MatchTabState title="경기 이벤트" message="불러오는 중..." />;
   }
   
   // 에러 상태 표시
-  if (error || eventsQuery.isError || (eventsQuery.data && !eventsQuery.data.success)) {
-    return <ErrorState message={error || eventsQuery.data?.error || '이벤트 데이터를 불러올 수 없습니다.'} />;
+  if (false) {
+    return <ErrorState message="이벤트 데이터를 불러올 수 없습니다." />;
   }
 
   if (!events.length) {
@@ -285,7 +258,7 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
                     {getEventIcon(event.type, event.detail)}
                   </div>
                   <Link
-                    href={teamUrl(event.team?.id || 0, getTeamSlugFromName(event.team?.name || ''))}
+                    href={getTeamHref(event.team || { id: 0 })}
                     className="flex items-center gap-1.5 group min-w-0"
                   prefetch={false}
                   >

@@ -1,7 +1,7 @@
 'use server';
 
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
+import { getPlayerLinkSlug } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeasonCandidates } from './currentSeason';
 
 type PlayerNameResponse = {
@@ -85,6 +85,6 @@ export async function resolvePlayerCanonicalSlug(playerId: string): Promise<stri
     await fetchPlayerNameFromProfile(playerId) ||
     await fetchPlayerNameFromStats(playerId);
 
-  const apiSlug = playerName ? getPlayerSlugFromName(playerName) : '';
+  const apiSlug = playerName ? getPlayerLinkSlug({ id: playerId, name: playerName }) : '';
   return isUsablePlayerSlug(apiSlug) ? apiSlug : null;
 }

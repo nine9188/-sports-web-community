@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
@@ -9,9 +10,7 @@ import { Container, ContainerContent, ContainerHeader, ContainerTitle, Paginatio
 import { wdlDraw, wdlLose, wdlWin } from '@/shared/styles/badge';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
-import { fetchPlayerFixtures } from '@/domains/livescore/actions/player/fixtures';
+import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
 import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -35,6 +34,7 @@ interface PlayerFixturesProps {
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
   leagueLogoDarkUrls?: Record<number, string>;
+  initialPage?: number;
 }
 
 type ResultType = 'W' | 'D' | 'L';
@@ -67,15 +67,18 @@ export default function PlayerFixtures({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {},
-}: PlayerFixturesProps) {  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
+  initialPage = 1,
+}: PlayerFixturesProps) {
+  const { getTeamById, getLeagueKoreanName } = useTeamLeague();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [pageFixturesData, setPageFixturesData] = useState(initialFixturesData);
-  const [isPageLoading, setIsPageLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const currentPage = initialPage;
 
   useEffect(() => {
     setPageFixturesData(initialFixturesData);
-    setCurrentPage(1);
   }, [initialFixturesData]);
 
   useEffect(() => {
@@ -96,32 +99,6 @@ export default function PlayerFixtures({
     observer.observe(document.documentElement, { attributes: true });
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (currentPage === 1) {
-      setPageFixturesData(initialFixturesData);
-      return;
-    }
-
-    let cancelled = false;
-    setIsPageLoading(true);
-
-    fetchPlayerFixtures(playerId, ITEMS_PER_PAGE, (currentPage - 1) * ITEMS_PER_PAGE)
-      .then((response) => {
-        if (!cancelled) {
-          setPageFixturesData(response);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsPageLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentPage, initialFixturesData, playerId]);
 
   const getTeamLogo = (teamId: number, fallback?: string) => teamLogoUrls[teamId] || fallback || TEAM_PLACEHOLDER;
   const getLeagueLogo = (leagueId: number, fallback?: string) => {
@@ -216,6 +193,17 @@ export default function PlayerFixtures({
     };
   }, [fixturesData]);
 
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('tab', 'fixtures');
+    if (page <= 1) {
+      params.delete('page');
+    } else {
+      params.set('page', String(page));
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   if (!fixturesData.data || fixturesData.data.length === 0) {
     return (
       <PlayerTabEmptyState
@@ -226,7 +214,7 @@ export default function PlayerFixtures({
   }
 
   return (
-    <div className={`space-y-4 ${isPageLoading ? 'pointer-events-none opacity-60' : ''}`}>
+    <div className="space-y-4">
       {groupedFixtures.map((leagueGroup) => (
         <Container key={leagueGroup.league.id} className="mb-4 bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader>
@@ -252,10 +240,7 @@ export default function PlayerFixtures({
           <ContainerContent className="!p-0">
             <div className="divide-y divide-black/5 dark:divide-white/10">
               {leagueGroup.fixtures.map((fixture) => {
-                const href = matchUrl(
-                  fixture.fixture.id,
-                  getMatchSlug(fixture.teams.home.name, fixture.teams.away.name)
-                );
+                const href = getMatchHref(fixture);
                 const playerTeamId = fixture.teams.playerTeamId;
                 const result = getMatchResult(fixture);
                 const stats = fixture.statistics;
@@ -333,7 +318,7 @@ export default function PlayerFixtures({
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
         mode="button"
         maxButtons={5}
       />

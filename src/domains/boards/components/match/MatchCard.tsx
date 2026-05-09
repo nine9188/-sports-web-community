@@ -6,8 +6,7 @@ import Image from 'next/image';
 import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
+import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -77,7 +76,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
   const leagueLogo = getLeagueLogo();
   const homeTeamLogo = getTeamLogo(homeTeamId);
   const awayTeamLogo = getTeamLogo(awayTeamId);
-  const href = matchUrl(actualMatchId, getMatchSlug(homeTeam.name, awayTeam.name));
+  const href = getMatchHrefByTeams(actualMatchId, homeTeam, awayTeam);
 
   const CardContent = () => (
     <>

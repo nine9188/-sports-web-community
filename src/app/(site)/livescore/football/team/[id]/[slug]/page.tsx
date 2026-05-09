@@ -69,18 +69,19 @@ export async function generateMetadata({
   });
 }
 
-// 유효한 탭 목록
+// URL에서 허용하는 팀 상세 탭 목록.
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
-/** 팀 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
+/** URL 탭 기준으로 필요한 팀 데이터를 서버에서 준비하고 렌더링합니다. */
 async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
   try {
-    // 유효한 탭인지 확인
+    // 유효하지 않은 탭은 기본 overview로 정규화합니다.
     const initialTab = VALID_TABS.includes(tab as TeamTabType)
       ? (tab as TeamTabType)
       : 'overview';
 
-    // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
+    // 현재 URL 탭에 필요한 데이터만 서버에서 준비합니다.
+    // 탭 이동은 App Router navigation으로 다시 서버를 실행합니다.
     const needsMatches = initialTab === 'fixtures';
     const needsSquad = initialTab === 'squad';
     const needsPlayerStats = ['squad', 'stats'].includes(initialTab);

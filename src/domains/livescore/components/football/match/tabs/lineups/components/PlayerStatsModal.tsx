@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { PlayerStatsData } from '@/domains/livescore/types/lineup';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -15,7 +14,6 @@ import {
   ContainerHeader,
   ContainerTitle,
   ContainerContent,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -29,6 +27,7 @@ interface PlayerStatsModalProps {
   playerId: number;
   playerInfo: {
     name: string;
+    name_en?: string | null;
     number: string;
     pos: string;
     photo?: string;
@@ -78,6 +77,12 @@ export default function PlayerStatsModal({
     penalty?: { saved?: number };
   };
   const showData = !!playerStats;
+  const playerHref = getPlayerHref({
+    id: playerId,
+    name: playerInfo.name_en || playerInfo.name,
+    name_en: playerInfo.name_en,
+    name_ko: playerInfo.name,
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -180,12 +185,13 @@ export default function PlayerStatsModal({
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 경기가 시작되지 않았거나 데이터가 아직 제공되지 않았습니다.
               </p>
-              <Button
-                variant="secondary"
-                onClick={onClose}
+              <Link
+                href={playerHref}
+                className="inline-flex items-center justify-center rounded-lg bg-[#262626] px-4 py-2.5 text-[13px] font-medium text-white shadow transition-colors hover:bg-[#3F3F3F] dark:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A]"
+                prefetch={false}
               >
-                닫기
-              </Button>
+                선수 정보 더보기
+              </Link>
             </div>
           )}
 
@@ -358,7 +364,7 @@ export default function PlayerStatsModal({
                 {/* 선수 상세 정보 링크 */}
                 <div className="mt-4">
                   <Link
-                    href={playerUrl(playerId, getPlayerSlugFromName(playerInfo.name))}
+                    href={playerHref}
                     className="block w-full py-2.5 px-3 bg-[#262626] dark:bg-[#3F3F3F] text-white font-medium rounded-lg shadow hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-[13px] text-center"
                   prefetch={false}
                   >

@@ -5,19 +5,20 @@ import { renderPlayerCard } from './playerCardRenderer';
 import { renderPredictionChart } from './predictionChartRenderer';
 
 /**
- * TipTap 노드를 HTML로 변환
+ * Render a TipTap node to HTML.
  */
 export function renderTipTapNode(node: TipTapNode): string {
-  // 경기 카드
   if (node.type === 'matchCard' && node.attrs) {
     const { matchId, matchData } = node.attrs;
+    const matchDataRecord = matchData as Record<string, unknown> | undefined;
+    const resolvedMatchId = matchId ?? matchDataRecord?.id;
+
     return renderMatchCard({
-      matchId: matchId as string,
-      matchData: matchData as Record<string, unknown>
+      matchId: resolvedMatchId as string | number | undefined,
+      matchData: matchDataRecord ?? {}
     });
   }
 
-  // 팀 카드
   if (node.type === 'teamCard' && node.attrs) {
     const { teamId, teamData } = node.attrs;
     return renderTeamCard({
@@ -26,7 +27,6 @@ export function renderTipTapNode(node: TipTapNode): string {
     });
   }
 
-  // 선수 카드
   if (node.type === 'playerCard' && node.attrs) {
     const { playerId, playerData } = node.attrs;
     return renderPlayerCard({
@@ -35,7 +35,6 @@ export function renderTipTapNode(node: TipTapNode): string {
     });
   }
 
-  // 예측 차트
   if (node.type === 'predictionChart' && node.attrs) {
     const { fixtureId, chartData } = node.attrs;
     return renderPredictionChart({
@@ -62,7 +61,6 @@ export function renderTipTapNode(node: TipTapNode): string {
     `;
   }
 
-  // 비디오 노드 처리
   if (node.type === 'video' && node.attrs?.src) {
     return `
       <div class="video-wrapper my-6">
@@ -79,12 +77,10 @@ export function renderTipTapNode(node: TipTapNode): string {
     `;
   }
 
-  // YouTube 노드 처리
   if (node.type === 'youtube' && node.attrs?.src) {
     const src = node.attrs.src as string;
-    // YouTube ID 추출
     let videoId = '';
-    const youtubeMatch = src.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    const youtubeMatch = src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
     if (youtubeMatch) {
       videoId = youtubeMatch[1];
     } else if (src.length === 11) {
@@ -108,14 +104,12 @@ export function renderTipTapNode(node: TipTapNode): string {
     }
   }
 
-  // 소셜 임베드 노드 처리 (YouTube URL 붙여넣기, Twitter, Instagram 등)
   if (node.type === 'socialEmbed' && node.attrs) {
     const platform = node.attrs.platform as string;
     const url = node.attrs.url as string;
 
-    // YouTube인 경우 iframe으로 렌더링
     if (platform === 'youtube' && url) {
-      const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+      const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
       const videoId = youtubeMatch ? youtubeMatch[1] : null;
 
       if (videoId) {
@@ -135,7 +129,6 @@ export function renderTipTapNode(node: TipTapNode): string {
       }
     }
 
-    // 페이스북인 경우 iframe으로 렌더링
     if (platform === 'facebook' && url) {
       const encodedUrl = encodeURIComponent(url);
       return `
@@ -154,7 +147,6 @@ export function renderTipTapNode(node: TipTapNode): string {
       `;
     }
 
-    // 다른 소셜 플랫폼 (Twitter, Instagram, TikTok, LinkedIn)
     return `
       <div data-type="social-embed" data-platform="${platform}" data-url="${url}" class="my-6">
         <div class="social-embed-placeholder p-4 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg text-center">
@@ -171,11 +163,9 @@ export function renderTipTapNode(node: TipTapNode): string {
       if (textNode.type === 'text' && textNode.text) {
         let text = textNode.text;
 
-        // 차트 마커 제거 (단순 텍스트로 처리)
         const chartMarkerRegex = /\[MATCH_STATS_CHART:(.*?)\]/g;
-        text = text.replace(chartMarkerRegex, '📊 경기 통계 차트');
+        text = text.replace(chartMarkerRegex, '경기 통계 차트');
 
-        // 텍스트 마크업 적용
         if (textNode.marks && Array.isArray(textNode.marks)) {
           textNode.marks.forEach((mark) => {
             if (mark.type === 'bold') {
@@ -233,7 +223,6 @@ export function renderTipTapNode(node: TipTapNode): string {
     return listContent;
   }
 
-  // blockquote 노드 처리
   if (node.type === 'blockquote' && Array.isArray(node.content)) {
     let quoteContent = '';
     node.content.forEach((childNode) => {
@@ -246,7 +235,7 @@ export function renderTipTapNode(node: TipTapNode): string {
 }
 
 /**
- * TipTap 문서를 HTML로 변환
+ * Render a TipTap document to HTML.
  */
 export function renderTipTapDoc(doc: TipTapDoc): string {
   if (!doc.content || !Array.isArray(doc.content)) {

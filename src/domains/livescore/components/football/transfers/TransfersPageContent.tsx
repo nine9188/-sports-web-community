@@ -8,8 +8,7 @@ import { formatTransferType } from '@/domains/livescore/types/transfers';
 import { Container, ContainerHeader, ContainerTitle, Pagination } from '@/shared/components/ui';
 import { TransferFilters as TransferFiltersComponent } from '@/domains/livescore/components/football/transfers';
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
-import { getPlayerSlugFromName, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl, teamUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: Placeholder URL
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -190,7 +189,7 @@ export default async function TransfersPageContent({
 
                     <div className="min-w-0">
                       <Link
-                        href={playerUrl(transfer.player.id, getPlayerSlugFromName(transfer.player.name))}
+                        href={getPlayerHref(transfer.player)}
                         prefetch={false}
                         className={`${playerName.length > 15 ? 'text-xs' : 'text-[13px]'} block truncate font-semibold text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:font-medium`}
                       >
@@ -213,7 +212,7 @@ export default async function TransfersPageContent({
                     <div className="flex min-w-0 items-center space-x-1">
                       <TeamLogo teamName={latestTransfer.teams.out.name} logoUrl={teamLogoUrls[latestTransfer.teams.out.id]} size={20} />
                       <Link
-                        href={teamUrl(latestTransfer.teams.out.id, getTeamSlugFromName(latestTransfer.teams.out.name))}
+                        href={getTeamHref(latestTransfer.teams.out)}
                         className="truncate text-xs text-gray-700 transition-colors hover:underline dark:text-gray-300 md:text-[13px]"
                         title={latestTransfer.teams.out.name}
                       prefetch={false}
@@ -229,7 +228,7 @@ export default async function TransfersPageContent({
                     <div className="flex min-w-0 items-center space-x-1">
                       <TeamLogo teamName={latestTransfer.teams.in.name} logoUrl={teamLogoUrls[latestTransfer.teams.in.id]} size={20} />
                       <Link
-                        href={teamUrl(latestTransfer.teams.in.id, getTeamSlugFromName(latestTransfer.teams.in.name))}
+                        href={getTeamHref(latestTransfer.teams.in)}
                         className="truncate text-xs text-gray-900 transition-colors hover:underline dark:text-[#F0F0F0] md:text-[13px] md:font-medium"
                         title={latestTransfer.teams.in.name}
                       prefetch={false}

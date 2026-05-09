@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
@@ -16,6 +16,7 @@ export default function TabNavigation({
   onTabChange,
 }: TabNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const tabs: TabItem[] = useMemo(() => {
     const basePath = pathname || `/livescore/football/team/${teamId}`;
@@ -32,8 +33,16 @@ export default function TabNavigation({
 
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab) return;
-    onTabChange?.(tabId);
-  }, [activeTab, onTabChange]);
+    if (onTabChange) {
+      onTabChange(tabId);
+      return;
+    }
+
+    const tab = tabs.find((item) => item.id === tabId);
+    if (tab?.href) {
+      router.push(tab.href);
+    }
+  }, [activeTab, onTabChange, router, tabs]);
 
   return (
     <TabList

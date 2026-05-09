@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next';
-import { getTeamSitemap, getTeamSitemapCount, sitemapPageCount } from '@/shared/seo/sitemap';
+import { getTeamSitemap } from '@/shared/seo/sitemap';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateSitemaps() {
-  return sitemapPageCount(await getTeamSitemapCount());
+  return [{ id: 0 }];
 }
 
 export default async function sitemap(props: {

@@ -2,6 +2,7 @@
 export interface WidgetTeam {
   id: number;
   name: string;
+  slug?: string | null;
   logo?: string;
 }
 

@@ -5,8 +5,7 @@ import { LeagueTeam } from '@/domains/livescore/actions/footballApi';
 import { ContainerContent } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -78,7 +77,7 @@ export default function LeagueTeamsList({ teams, isLoading = false, leagueId, te
 
     return (
       <Link
-        href={teamUrl(team.id, getTeamSlugFromName(team.name))}
+        href={getTeamHref(team)}
         className={`flex items-center gap-3 px-4 py-2.5 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors ${
           team.isWinner ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
         }`}

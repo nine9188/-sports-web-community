@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
-import { fetchCachedMatchFullData, MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
+import { fetchCachedMatchFullData } from '@/domains/livescore/actions/match/matchData';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound, permanentRedirect } from 'next/navigation';
-import { getLeagueSlug, getMatchSlug, getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
+import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { getMatchHrefByTeams, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
@@ -11,7 +12,13 @@ import { getTeamsByIds, getLeagueById, isCupLeague } from '@/domains/livescore/a
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
+import { getCachedSidebarExtrasData } from '@/domains/livescore/actions/match/sidebarData';
+import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
+import { fetchCachedMatchGoalEvents } from '@/domains/livescore/actions/match/eventData';
+import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
+import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
+import type { HeaderGoalEvent } from '@/domains/livescore/components/football/match/MatchHeader';
 
 function addHoursToIsoDate(isoDate: string, hours: number): string {
   const date = new Date(isoDate);
@@ -126,7 +133,9 @@ export async function generateMetadata({
   return buildMetadata({
     title,
     description,
-    path: `/livescore/football/match/${id}/${canonicalSlug || slug || getMatchSlug(match.teams.home.name, match.teams.away.name)}`,
+    path: canonicalSlug
+      ? `/livescore/football/match/${id}/${canonicalSlug}`
+      : getMatchHrefByTeams(id, match.teams.home, match.teams.away) || `/livescore/football/match/${id}/${slug}`,
     keywords: [
       `${homeTeam} ${awayTeam}`,
       `${homeTeam} ${score} ${awayTeam}`,
@@ -160,7 +169,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const matchData = await fetchCachedMatchFullData(matchId, {
       fetchEvents: initialTab === 'events' || initialTab === 'lineups',
       fetchLineups: initialTab === 'lineups',
-      fetchStats: false,
+      fetchStats: initialTab === 'stats',
       fetchStandings: initialTab === DEFAULT_TAB || initialTab === 'standings',
     });
 
@@ -208,10 +217,10 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       ? `${siteConfig.url}/livescore/football/leagues/${match.league.id}/${getLeagueSlug(match.league.id, match.league.name)}`
       : undefined;
     const homeTeamUrl = match?.teams.home.id && match.teams.home.name
-      ? `${siteConfig.url}/livescore/football/team/${match.teams.home.id}/${getTeamSlugFromName(match.teams.home.name)}`
+      ? `${siteConfig.url}${getTeamHref({ ...match.teams.home, slug: homeTeamMapping?.slug, name_en: homeTeamMapping?.name_en, name_ko: homeTeamMapping?.name_ko })}`
       : undefined;
     const awayTeamUrl = match?.teams.away.id && match.teams.away.name
-      ? `${siteConfig.url}/livescore/football/team/${match.teams.away.id}/${getTeamSlugFromName(match.teams.away.name)}`
+      ? `${siteConfig.url}${getTeamHref({ ...match.teams.away, slug: awayTeamMapping?.slug, name_en: awayTeamMapping?.name_en, name_ko: awayTeamMapping?.name_ko })}`
       : undefined;
     const homeTeamSchema = {
       '@type': 'SportsTeam',
@@ -293,7 +302,16 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       ? await isCupLeague(match.league.id)
       : false;
     const shouldLoadPowerData = initialTab === DEFAULT_TAB && match?.teams.home.id && match?.teams.away.id;
-    const [cupRoundsData, highlight, powerDataResult] = await Promise.all([
+    const shouldLoadPlayerStats = initialTab === 'stats' || initialTab === 'lineups';
+    const lineupPlayerIds = new Set<number>();
+    if (initialTab === 'lineups' && matchData.lineups?.response) {
+      const { home, away } = matchData.lineups.response;
+      home?.startXI?.forEach((item) => item.player?.id && lineupPlayerIds.add(item.player.id));
+      home?.substitutes?.forEach((item) => item.player?.id && lineupPlayerIds.add(item.player.id));
+      away?.startXI?.forEach((item) => item.player?.id && lineupPlayerIds.add(item.player.id));
+      away?.substitutes?.forEach((item) => item.player?.id && lineupPlayerIds.add(item.player.id));
+    }
+    const [cupRoundsData, highlight, powerDataResult, sidebarExtrasResult, allPlayerStats, goalEventsResult, lineupPlayerPhotoUrls] = await Promise.all([
       shouldLoadCupRounds && match?.league?.id
         ? fetchCupFixturesByRound(match.league.id, rawLeague?.season).then((result) => result.rounds)
         : Promise.resolve(undefined),
@@ -312,8 +330,67 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
             return null;
           })
         : Promise.resolve(null),
+      match?.id
+        ? getCachedSidebarExtrasData(
+            matchId,
+            match.teams.home.id,
+            match.teams.away.id,
+            rawData
+          ).catch((error) => {
+            console.error('[match-page] sidebar preload failed:', error);
+            return null;
+          })
+        : Promise.resolve(null),
+      shouldLoadPlayerStats
+        ? fetchAllPlayerStats(matchId, statusCode).catch((error) => {
+            console.error('[match-page] player stats preload failed:', error);
+            return null;
+          })
+        : Promise.resolve(null),
+      match?.id
+        ? fetchCachedMatchGoalEvents(matchId).catch((error) => {
+            console.error('[match-page] header goal events preload failed:', error);
+            return null;
+          })
+        : Promise.resolve(null),
+      lineupPlayerIds.size > 0
+        ? getPlayerPhotoUrls(Array.from(lineupPlayerIds), 'md').catch((error) => {
+            console.error('[match-page] lineup player photos preload failed:', error);
+            return {};
+          })
+        : Promise.resolve({}),
     ]);
     const initialPowerData = powerDataResult?.success ? powerDataResult.data : undefined;
+    const initialSidebarData = sidebarExtrasResult?.success ? sidebarExtrasResult.data : null;
+    const headerGoalEvents: HeaderGoalEvent[] = goalEventsResult?.success
+      ? (goalEventsResult.data || []).map((event) => {
+          const detail = event.detail?.toLowerCase() || '';
+          const goalKind = detail.includes('own goal')
+            ? 'ownGoal'
+            : detail.includes('penalty')
+              ? 'penalty'
+              : 'normal';
+          return { ...event, goalKind };
+        })
+      : [];
+    const statsPlayerIds = new Set<number>();
+    allPlayerStats?.allPlayersData?.forEach((playerData) => {
+      const playerId = playerData.player?.id;
+      if (Number.isFinite(playerId) && playerId > 0) {
+        statsPlayerIds.add(playerId);
+      }
+    });
+    headerGoalEvents.forEach((event) => {
+      if (event.player?.id) statsPlayerIds.add(event.player.id);
+      if (event.assist?.id) statsPlayerIds.add(event.assist.id);
+    });
+    lineupPlayerIds.forEach((playerId) => statsPlayerIds.add(playerId));
+    const playerKoreanNames = statsPlayerIds.size > 0
+      ? await getPlayersKoreanNames(Array.from(statsPlayerIds)).catch((error) => {
+          console.error('[match-page] stats Korean names preload failed:', error);
+          return {};
+        })
+      : {};
     const videoObjectSchema = buildVideoObjectJsonLd({
       highlight,
       matchUrl,
@@ -345,7 +422,12 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
           initialTab={initialTab}
           initialData={matchData}
           initialPowerData={initialPowerData}
+          allPlayerStats={allPlayerStats}
+          playerKoreanNames={playerKoreanNames}
+          headerGoalEvents={headerGoalEvents}
+          lineupPlayerPhotoUrls={lineupPlayerPhotoUrls}
           cupRoundsData={cupRoundsData}
+          initialSidebarData={initialSidebarData}
           highlight={highlight}
         />
       </>

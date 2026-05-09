@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -17,9 +16,6 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { formatDateDot } from '@/shared/utils/dateUtils';
 import { translateTransferType as formatType } from '@/domains/livescore/utils/transferUtils';
 import { PlayerKoreanNames } from '../../TeamPageClient';
-import { fetchTeamTransfersTabData } from '@/domains/livescore/actions/teams/team';
-import { teamKeys } from '@/shared/constants/queryKeys';
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
 import TeamTabEmptyState from '../TeamTabEmptyState';
 
 const ITEMS_PER_PAGE = 20;
@@ -38,8 +34,6 @@ interface TransfersTabProps {
   teamLogoUrls?: Record<number, string>;
 }
 
-type TransfersTabData = Awaited<ReturnType<typeof fetchTeamTransfersTabData>>;
-
 function TransfersLoading() {
   return (
     <Container className="bg-white dark:bg-[#1D1D1D]">
@@ -56,31 +50,16 @@ function TransfersLoading() {
 
 export default function TransfersTab({ teamId, transfers, playerKoreanNames = {}, playerPhotoUrls = {}, teamLogoUrls = {} }: TransfersTabProps) {
   const { getTeamDisplayName } = useTeamLeague();
-  const transfersQuery = useQuery<TransfersTabData>({
-    queryKey: [...teamKeys.detail(String(teamId)), 'transfers-tab'],
-    queryFn: () => fetchTeamTransfersTabData(String(teamId)),
-    enabled: !transfers || Object.keys(playerKoreanNames).length === 0,
-    ...CACHE_STRATEGIES.STATIC_DATA,
-  });
   /** 팀 한글명 (매핑 없으면 원본 반환) */
   const teamName = (id: number, fallback: string): string => {
     const display = getTeamDisplayName(id);
     return display.startsWith('팀 ') ? fallback : display;
   };
   // 4590 표준: URL 조회 헬퍼
-  const displayTransfers = transfers || transfersQuery.data?.transfers;
-  const displayPlayerKoreanNames: PlayerKoreanNames = {
-    ...playerKoreanNames,
-    ...(transfersQuery.data?.playerKoreanNames || {}),
-  };
-  const displayPlayerPhotoUrls: Record<number, string> = {
-    ...playerPhotoUrls,
-    ...(transfersQuery.data?.playerPhotoUrls || {}),
-  };
-  const displayTeamLogoUrls: Record<number, string> = {
-    ...teamLogoUrls,
-    ...(transfersQuery.data?.teamLogoUrls || {}),
-  };
+  const displayTransfers = transfers;
+  const displayPlayerKoreanNames = playerKoreanNames;
+  const displayPlayerPhotoUrls = playerPhotoUrls;
+  const displayTeamLogoUrls = teamLogoUrls;
 
   const getPlayerPhoto = (id: number) => displayPlayerPhotoUrls[id] || PLAYER_PLACEHOLDER;
   const getTeamLogo = (id: number, fallback?: string) => displayTeamLogoUrls[id] || fallback || TEAM_PLACEHOLDER;
@@ -130,10 +109,6 @@ export default function TransfersTab({ teamId, transfers, playerKoreanNames = {}
   }, [currentTransfers, currentPage]);
 
   // 데이터가 없으면 null 반환
-  if (!displayTransfers && (transfersQuery.isLoading || !transfersQuery.isError)) {
-    return <TransfersLoading />;
-  }
-
   if (!displayTransfers || (displayTransfers.in.length === 0 && displayTransfers.out.length === 0)) {
     return <TeamTabEmptyState title="이적 내역" message="이적 정보가 없습니다." />;
   }

@@ -76,7 +76,7 @@ const _getAllTeamsImpl = unstable_cache(
       is_active: row.is_active,
     }));
   },
-  ['football-teams-all'],
+  ['football-teams-all-v2-slugs'],
   { revalidate: 604800, tags: ['football-teams'] }
 );
 

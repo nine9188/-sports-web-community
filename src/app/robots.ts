@@ -1,26 +1,12 @@
 import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/shared/config';
-import {
-  getMatchSitemapCount,
-  getPlayerSitemapCount,
-  getPostSitemapCount,
-  getTeamSitemapCount,
-  sitemapPageCount,
-  siteUrl,
-} from '@/shared/seo/sitemap';
+import { siteUrl } from '@/shared/seo/sitemap';
 
-function generatedSitemapUrls(path: string, pages: Array<{ id: number }>) {
-  return pages.map(({ id }) => siteUrl(`${path}/sitemap/${id}.xml`));
+function generatedSitemapUrl(path: string) {
+  return siteUrl(`${path}/sitemap/0.xml`);
 }
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const [postPages, teamPages, playerPages, matchPages] = await Promise.all([
-    getPostSitemapCount().then(sitemapPageCount),
-    getTeamSitemapCount().then(sitemapPageCount),
-    getPlayerSitemapCount().then(sitemapPageCount),
-    getMatchSitemapCount().then(sitemapPageCount),
-  ]);
-
   return {
     rules: [
       {
@@ -53,11 +39,11 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     sitemap: [
       siteUrl('/sitemap.xml'),
       siteUrl('/boards/sitemap.xml'),
-      ...generatedSitemapUrls('/boards/posts', postPages),
+      generatedSitemapUrl('/boards/posts'),
       siteUrl('/livescore/football/leagues/sitemap.xml'),
-      ...generatedSitemapUrls('/livescore/football/team', teamPages),
-      ...generatedSitemapUrls('/livescore/football/player', playerPages),
-      ...generatedSitemapUrls('/livescore/football/match', matchPages),
+      generatedSitemapUrl('/livescore/football/team'),
+      generatedSitemapUrl('/livescore/football/player'),
+      generatedSitemapUrl('/livescore/football/match'),
       siteUrl('/shop/sitemap.xml'),
     ],
   };

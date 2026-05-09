@@ -7,8 +7,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { InjuryData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder URL
@@ -55,7 +54,7 @@ export default function PlayerInjuries({
                 </div>
                 
                 <Link
-                  href={teamUrl(injury.team.id, getTeamSlugFromName(injury.team.name))}
+                  href={getTeamHref(injury.team)}
                   className="flex items-center gap-2 mb-2 transition-opacity hover:opacity-70 outline-none focus:outline-none"
                 prefetch={false}
                 >

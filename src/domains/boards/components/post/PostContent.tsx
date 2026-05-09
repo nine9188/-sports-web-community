@@ -35,6 +35,7 @@ export default function PostContent({ processedHtml, meta }: PostContentProps) {
     const currentRef = contentRef.current;
     let observer: MutationObserver | undefined;
     let rafId: number;
+    const chartRoots: Array<{ unmount: () => void }> = [];
 
     // requestAnimationFrame 2번으로 레이아웃 안정 후 실행
     const runAfterPaint = (callback: () => void) => {
@@ -84,7 +85,10 @@ export default function PostContent({ processedHtml, meta }: PostContentProps) {
             import('react-dom/client'),
             import('@/domains/prediction/components/PredictionChart')
           ]).then(([{ createRoot }, { default: PredictionChart }]) => {
+            if (!currentRef.contains(element)) return;
+
             const root = createRoot(chartContainer);
+            chartRoots.push(root);
             root.render(
               React.createElement(PredictionChart, {
                 data: chartData,
@@ -113,6 +117,7 @@ export default function PostContent({ processedHtml, meta }: PostContentProps) {
 
     return () => {
       cancelAnimationFrame(rafId);
+      chartRoots.forEach((root) => root.unmount());
       if (observer) observer.disconnect();
       if (currentRef) cleanupMatchCardHover(currentRef);
     };

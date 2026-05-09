@@ -41,11 +41,13 @@ function groupMatchesByLeague(
       homeTeam: {
         id: homeId,
         name: match.teams?.home?.name || '홈팀',
+        slug: match.teams?.home?.slug,
         logo: match.teams?.home?.logo || TEAM_PLACEHOLDER,
       },
       awayTeam: {
         id: awayId,
         name: match.teams?.away?.name || '원정팀',
+        slug: match.teams?.away?.slug,
         logo: match.teams?.away?.logo || TEAM_PLACEHOLDER,
       },
       score: {

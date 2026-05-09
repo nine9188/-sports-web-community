@@ -23,6 +23,9 @@ export interface Match {
     home: {
       id: number;
       name: string;
+      name_en?: string | null;
+      name_ko?: string | null;
+      slug?: string | null;
       img: string;
       score: number | null;
       form?: string;
@@ -31,6 +34,9 @@ export interface Match {
     away: {
       id: number;
       name: string;
+      name_en?: string | null;
+      name_ko?: string | null;
+      slug?: string | null;
       img: string;
       score: number | null;
       form?: string;

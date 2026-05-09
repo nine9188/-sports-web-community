@@ -10,8 +10,7 @@ import { LEAGUE_IDS } from './constants/standings';
 import CupRoundsView from '@/domains/livescore/components/football/leagues/CupRoundsView';
 import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
 import MatchTabState from './MatchTabState';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -137,7 +136,7 @@ const Standings = memo(({ matchId, matchData, teamLogoUrls = {}, leagueLogoUrls 
   }, []);
 
   const getTeamHref = useCallback((team: Standing['team']) => {
-    return teamUrl(team.id, getTeamSlugFromName(team.name));
+    return buildTeamHref(team);
   }, []);
 
   const hasCupRounds = Boolean(cupRoundsData && cupRoundsData.length > 0);

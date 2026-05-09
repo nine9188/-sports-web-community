@@ -30,12 +30,18 @@ export async function transformMatches(matchesData: MatchData[]): Promise<Match[
         home: {
           id: match.teams.home.id,
           name: match.teams.home.name,
+          name_en: match.teams.home.name_en,
+          name_ko: match.teams.home.name_ko,
+          slug: match.teams.home.slug,
           img: match.teams.home.logo || PLACEHOLDER_TEAM,
           score: match.goals.home,
         },
         away: {
           id: match.teams.away.id,
           name: match.teams.away.name,
+          name_en: match.teams.away.name_en,
+          name_ko: match.teams.away.name_ko,
+          slug: match.teams.away.slug,
           img: match.teams.away.logo || PLACEHOLDER_TEAM,
           score: match.goals.away,
         },

@@ -38,12 +38,18 @@ export interface MatchData {
     home: {
       id: number;
       name: string;
+      name_en?: string | null;
+      name_ko?: string | null;
+      slug?: string | null;
       logo: string;
       winner: boolean | null;
     };
     away: {
       id: number;
       name: string;
+      name_en?: string | null;
+      name_ko?: string | null;
+      slug?: string | null;
       logo: string;
       winner: boolean | null;
     };
@@ -149,6 +155,8 @@ interface ApiPlayer {
 // API 설정
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
+const FOOTBALL_API_MAX_ATTEMPTS = 3;
+const FOOTBALL_API_RETRY_DELAYS_MS = [300, 1200];
 
 // ── 유틸리티 ──
 
@@ -156,6 +164,38 @@ const API_KEY = process.env.FOOTBALL_API_KEY || '';
 function toKstDateString(baseUtc: Date): string {
   const kst = new Date(baseUtc.getTime() + 9 * 60 * 60 * 1000);
   return kst.toISOString().split('T')[0];
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function footballApiErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function isRetryableFootballApiError(error: unknown): boolean {
+  const text = footballApiErrorText(error).toLowerCase();
+
+  return [
+    'fetch failed',
+    'network',
+    'timeout',
+    'timed out',
+    'econnreset',
+    'etimedout',
+    'enotfound',
+    '502',
+    '503',
+    '504',
+  ].some((needle) => text.includes(needle));
 }
 
 // MultiDayMatches 결과 타입 정의
@@ -238,7 +278,8 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
     return 300; // 5분
   };
 
-  try {
+  for (let attempt = 1; attempt <= FOOTBALL_API_MAX_ATTEMPTS; attempt += 1) {
+    try {
     const response = await fetch(url, {
       headers: {
         'x-rapidapi-host': 'v3.football.api-sports.io',
@@ -268,9 +309,17 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
     }
 
     return data;
-  } catch (error) {
-    throw error;
+    } catch (error) {
+      if (attempt >= FOOTBALL_API_MAX_ATTEMPTS || !isRetryableFootballApiError(error)) {
+        throw error;
+      }
+
+      console.warn(`[API-Football] ${endpoint} retry ${attempt}/${FOOTBALL_API_MAX_ATTEMPTS - 1}:`, error);
+      await sleep(FOOTBALL_API_RETRY_DELAYS_MS[attempt - 1] ?? 1200);
+    }
   }
+
+  throw new Error(`API-Football request failed: ${endpoint}`);
 };
 
 // ── Raw 데이터 (이미지 해결 없음) ──
@@ -391,10 +440,16 @@ async function applyLocalizedNames(matches: MatchData[]): Promise<MatchData[]> {
       home: {
         ...match.teams.home,
         name: teamMap[match.teams.home.id]?.name_ko || match.teams.home.name,
+        name_en: teamMap[match.teams.home.id]?.name_en || match.teams.home.name,
+        name_ko: teamMap[match.teams.home.id]?.name_ko || null,
+        slug: teamMap[match.teams.home.id]?.slug || null,
       },
       away: {
         ...match.teams.away,
         name: teamMap[match.teams.away.id]?.name_ko || match.teams.away.name,
+        name_en: teamMap[match.teams.away.id]?.name_en || match.teams.away.name,
+        name_ko: teamMap[match.teams.away.id]?.name_ko || null,
+        slug: teamMap[match.teams.away.id]?.slug || null,
       },
     },
   }));

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -9,11 +8,7 @@ import { ErrorState } from '@/domains/livescore/components/common/CommonComponen
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 import TeamTabEmptyState from './TeamTabEmptyState';
 import { PlayerKoreanNames } from '../TeamPageClient';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl } from '@/domains/livescore/utils/urls';
-import { fetchTeamSquadTabData } from '@/domains/livescore/actions/teams/team';
-import { teamKeys } from '@/shared/constants/queryKeys';
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
+import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -66,8 +61,6 @@ interface SquadProps {
   coachPhotoUrls?: Record<number, string>;
 }
 
-type SquadTabData = Awaited<ReturnType<typeof fetchTeamSquadTabData>>;
-
 function SquadLoading() {
   return (
     <Container className="bg-white dark:bg-[#1D1D1D]">
@@ -90,31 +83,12 @@ export default function Squad({
   playerKoreanNames = {},
   playerPhotoUrls = {},
   coachPhotoUrls = {}
-}: SquadProps) {  const squadQuery = useQuery<SquadTabData>({
-    queryKey: [...teamKeys.squad(String(teamId)), 'tab'],
-    queryFn: () => fetchTeamSquadTabData(String(teamId)),
-    enabled: (
-      !initialSquad ||
-      initialSquad.length === 0 ||
-      Object.keys(playerKoreanNames).length === 0
-    ) && !externalLoading && !externalError,
-    ...CACHE_STRATEGIES.STABLE_DATA,
-  });
-
-  const displaySquad = initialSquad || squadQuery.data?.squad;
-  const displayStats = initialStats || squadQuery.data?.playerStats;
-  const displayPlayerKoreanNames: PlayerKoreanNames = {
-    ...playerKoreanNames,
-    ...(squadQuery.data?.playerKoreanNames || {}),
-  };
-  const displayPlayerPhotoUrls: Record<number, string> = {
-    ...playerPhotoUrls,
-    ...(squadQuery.data?.playerPhotoUrls || {}),
-  };
-  const displayCoachPhotoUrls: Record<number, string> = {
-    ...coachPhotoUrls,
-    ...(squadQuery.data?.coachPhotoUrls || {}),
-  };
+}: SquadProps) {
+  const displaySquad = initialSquad;
+  const displayStats = initialStats;
+  const displayPlayerKoreanNames = playerKoreanNames;
+  const displayPlayerPhotoUrls = playerPhotoUrls;
+  const displayCoachPhotoUrls = coachPhotoUrls;
 
   // 4590 표준: 헬퍼 함수
   const getPlayerPhoto = (id: number) => displayPlayerPhotoUrls[id] || PLAYER_PLACEHOLDER;
@@ -172,12 +146,12 @@ export default function Squad({
   }, [squad, displayPlayerKoreanNames]);
 
   // 로딩 상태 처리
-  if (externalLoading || (!displaySquad && squadQuery.isLoading)) {
+  if (externalLoading) {
     return <SquadLoading />;
   }
 
   // 에러 상태 처리
-  if (externalError || (!displaySquad && squadQuery.isError)) {
+  if (externalError) {
     return <ErrorState message={externalError || '선수단 정보를 불러올 수 없습니다'} />;
   }
 
@@ -232,7 +206,7 @@ export default function Squad({
                   <tbody className="divide-y divide-black/5 dark:divide-white/10">
                     {members.map(member => {
                       const playerStats = isPlayer ? (member as Player).stats : undefined;
-                      const href = playerUrl(member.id, getPlayerSlugFromName(member.name));
+                      const href = getPlayerHref(member);
 
                       return (
                         <tr

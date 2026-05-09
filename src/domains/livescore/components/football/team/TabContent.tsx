@@ -16,34 +16,30 @@ import { TransfersTab } from './tabs/transfers';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
 import { PlayerKoreanNames } from './TeamPageClient';
 
-// 탭 타입 정의
+// 팀 상세 탭 타입.
 type TabType = 'overview' | 'squad' | 'standings' | 'stats' | 'fixtures' | 'transfers';
 
-// 탭 컨텐츠 컴포넌트 props
 interface TabContentProps {
   teamId: string;
   tab: string;
   initialData: TeamFullDataResponse;
-  onTabChange?: (tab: string, subTab?: string) => void;
   playerKoreanNames?: PlayerKoreanNames;
 }
 
 /**
- * 팀 탭 컨텐츠 컴포넌트
- *
- * 서버에서 미리 로드된 데이터(initialData)를 받아 현재 탭에 맞는 컴포넌트를 렌더링합니다.
+ * 서버 페이지가 현재 URL 탭 기준으로 준비한 initialData를 받아
+ * 해당 탭 컴포넌트에 props로 전달합니다.
  */
-export default function TabContent({ teamId, tab, initialData, onTabChange, playerKoreanNames = {} }: TabContentProps) {
-  // 팀 ID를 숫자로 변환
+export default function TabContent({ teamId, tab, initialData, playerKoreanNames = {} }: TabContentProps) {
+  // 하위 탭 컴포넌트들은 number 팀 ID를 기대합니다.
   const numericTeamId = parseInt(teamId, 10);
 
-  // 데이터 추출
   const { teamData, matches, squad, playerStats, standings, transfers, playerPhotoUrls, teamLogoUrls, coachPhotoUrls, leagueLogoUrls, leagueLogoDarkUrls } = initialData;
   const hasSeasonMatches = initialData.matchesMode === 'season';
   const hasFullTransfers = initialData.transfersMode === 'full';
   const hasFullSquad = initialData.squadMode === 'full';
 
-  // API 매치 데이터를 UI 매치 데이터로 변환
+  // API 매치 응답을 팀 탭 UI가 쓰는 최소 구조로 변환합니다.
   const convertMatchesForOverview = useCallback((matchesArray: ApiMatch[] | undefined | null): UIMatch[] | undefined => {
     if (!matchesArray) return undefined;
 
@@ -66,7 +62,7 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
     }));
   }, []);
 
-  // 탭별 컴포넌트 렌더링 — initialData가 서버에서 이미 로드됨
+  // 탭별 컴포넌트는 서버에서 전달된 props만 렌더링합니다.
   const tabType = tab as TabType;
 
   switch (tabType) {
@@ -82,7 +78,6 @@ export default function TabContent({ teamId, tab, initialData, onTabChange, play
             playerStats={playerStats?.data}
             squad={squad?.data}
             transfers={transfers?.data}
-            onTabChange={onTabChange}
             isLoading={false}
             error={null}
             playerKoreanNames={playerKoreanNames}

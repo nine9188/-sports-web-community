@@ -5,17 +5,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { TeamCardProps } from '@/shared/types/teamCard';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
-// 4590 표준: placeholder 및 CDN URL (CDN은 /leagues/md/... 직접 경로)
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 const CDN_URL = 'https://cdn.4590football.com';
 
 export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps) {
-  // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false);
+
   useEffect(() => {
     const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
     checkDark();
@@ -30,7 +28,6 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
   const numericTeamId = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
   const leagueId = typeof league?.id === 'string' ? parseInt(league.id, 10) : league?.id;
 
-  // 4590 표준: CDN URL 직접 경로 (다크모드 지원)
   const getLeagueLogo = () => {
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
@@ -40,23 +37,16 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
     return `${CDN_URL}/leagues/md/${leagueId}.webp`;
   };
 
-  const getTeamLogo = () => {
-    if (!numericTeamId) return TEAM_PLACEHOLDER;
-    return `${CDN_URL}/teams/md/${numericTeamId}.webp`;
-  };
-
-  const leagueLogo = getLeagueLogo();
-  const teamLogo = logo ? getTeamLogo() : TEAM_PLACEHOLDER;
-  const href = teamUrl(numericTeamId, getTeamSlugFromName(name));
+  const teamLogo = logo && numericTeamId ? `${CDN_URL}/teams/md/${numericTeamId}.webp` : TEAM_PLACEHOLDER;
+  const href = getTeamHref({ ...teamData, id: numericTeamId });
 
   const CardContent = () => (
     <>
-      {/* 헤더: 리그 로고 + 리그명 */}
       <div className="league-header">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div className="league-logo-box">
             <Image
-              src={leagueLogo}
+              src={getLeagueLogo()}
               alt={leagueDisplayName}
               width={24}
               height={24}
@@ -68,7 +58,6 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
         </div>
       </div>
 
-      {/* 메인: 팀 로고 + 팀명 */}
       <div className="team-main">
         <div className="team-logo-box">
           <Image
@@ -83,7 +72,6 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
         <span className="team-name">{displayName}</span>
       </div>
 
-      {/* 푸터: 팀 정보 확인 */}
       <div className="match-footer">
         <span className="footer-link">팀 정보 확인</span>
       </div>

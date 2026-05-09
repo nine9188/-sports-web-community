@@ -13,8 +13,7 @@ import { Trophy, Users } from 'lucide-react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
+import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -129,7 +128,13 @@ const MatchItem = React.memo(function MatchItem({
 
   const homeTeamName = homeTeam?.name_ko || match.teams?.home?.name || '홈팀';
   const awayTeamName = awayTeam?.name_ko || match.teams?.away?.name || '원정팀';
-  const matchHref = matchUrl(match.id, getMatchSlug(match.teams?.home?.name || homeTeamName, match.teams?.away?.name || awayTeamName));
+  const matchHref = getMatchHref({
+    ...match,
+    teams: {
+      home: { ...match.teams?.home, name: match.teams?.home?.name || homeTeamName },
+      away: { ...match.teams?.away, name: match.teams?.away?.name || awayTeamName },
+    },
+  });
 
   // 경기 클릭 핸들러
 

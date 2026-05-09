@@ -7,8 +7,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { TransferData } from '@/domains/livescore/types/player';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import PlayerTabEmptyState from './PlayerTabEmptyState';
 
 // 4590 표준: placeholder 상수
@@ -84,7 +83,7 @@ export default function PlayerTransfers({
                 {/* 이전 팀 */}
                 <div className="flex-1 flex flex-col items-center">
                   <Link
-                    href={teamUrl(transfer.teams.from.id, getTeamSlugFromName(transfer.teams.from.name))}
+                    href={getTeamHref(transfer.teams.from)}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
                   prefetch={false}
                   >
@@ -125,7 +124,7 @@ export default function PlayerTransfers({
                 {/* 새로운 팀 */}
                 <div className="flex-1 flex flex-col items-center">
                   <Link
-                    href={teamUrl(transfer.teams.to.id, getTeamSlugFromName(transfer.teams.to.name))}
+                    href={getTeamHref(transfer.teams.to)}
                     className="flex flex-col items-center transition-opacity hover:opacity-70 outline-none focus:outline-none"
                   prefetch={false}
                   >

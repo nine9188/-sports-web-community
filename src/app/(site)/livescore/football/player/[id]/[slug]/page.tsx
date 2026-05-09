@@ -17,7 +17,8 @@ import {
 import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
-import { getTeamSlugFromName, slugify } from '@/domains/livescore/utils/slugs';
+import { slugify } from '@/domains/livescore/utils/slugs';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
 
 /**
@@ -146,7 +147,7 @@ function isNextNotFoundError(error: unknown): boolean {
 }
 
 /** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
-async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; slug: string; tab: string }) {
+async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: string; slug: string; tab: string; page?: string }) {
   try {
     if (isFallbackPlayerSlug(playerId, slug)) {
       const canonicalSlug = await resolvePlayerCanonicalSlug(playerId);
@@ -162,14 +163,18 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
     const initialTab = VALID_TABS.includes(tab as PlayerTabType)
       ? (tab as PlayerTabType)
       : 'stats';
+    const fixturePage = initialTab === 'fixtures'
+      ? Math.max(1, Number.parseInt(page || '1', 10) || 1)
+      : 1;
 
-    // 현재 탭 데이터만 SSR (나머지 탭은 클라이언트에서 on-demand 로드)
+    // 현재 URL 탭에 필요한 데이터만 서버에서 준비합니다.
+    // 탭 이동은 App Router navigation으로 다시 서버를 실행합니다.
     const initialData = await fetchPlayerFullData(playerId, {
       fetchSeasons: false,
       fetchStats: initialTab === 'stats',
       fetchFixtures: initialTab === 'fixtures',
       fixtureLimit: 15,
-      fixtureOffset: 0,
+      fixtureOffset: (fixturePage - 1) * 15,
       fetchTrophies: initialTab === 'trophies',
       fetchTransfers: initialTab === 'transfers',
       fetchInjuries: initialTab === 'injuries',
@@ -243,9 +248,13 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
     const playerSlug = slug || (playerInfo?.name ? slugify(playerInfo.name) : '') || 'player';
     const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
     const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
-    const teamSlugSource = currentTeamMapping?.name_en || currentTeam?.name || '';
     const teamUrl = currentTeam?.id && currentTeam?.name
-      ? `${siteConfig.url}/livescore/football/team/${currentTeam.id}/${getTeamSlugFromName(teamSlugSource) || 'team'}`
+      ? `${siteConfig.url}${getTeamHref({
+          ...currentTeam,
+          slug: currentTeamMapping?.slug,
+          name_en: currentTeamMapping?.name_en,
+          name_ko: currentTeamMapping?.name_ko,
+        })}`
       : undefined;
     const playerPhotoUrl = initialData.playerPhotoUrl || playerInfo?.photo;
     const playerPhotoJsonLdUrl = isUsableJsonLdImage(playerPhotoUrl)
@@ -320,6 +329,7 @@ async function PlayerPageContent({ playerId, slug, tab }: { playerId: string; sl
           initialData={initialData}
           playerKoreanName={playerKoreanName}
           rankingsKoreanNames={rankingsKoreanNames}
+          initialPage={fixturePage}
         />
       </>
     );
@@ -338,10 +348,10 @@ export default async function PlayerPage({
   searchParams
 }: {
   params: Promise<{ id: string; slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; page?: string }>;
 }) {
   const { id: playerId, slug } = await params;
-  const { tab = 'stats' } = await searchParams;
+  const { tab = 'stats', page } = await searchParams;
 
-  return await PlayerPageContent({ playerId, slug, tab });
+  return await PlayerPageContent({ playerId, slug, tab, page });
 }

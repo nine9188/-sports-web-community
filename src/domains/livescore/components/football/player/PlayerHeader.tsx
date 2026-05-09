@@ -3,8 +3,7 @@
 import React, { memo } from 'react';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Container, ContainerContent } from '@/shared/components/ui';
-import { ErrorState, PlayerProfileLoadingState } from '@/domains/livescore/components/common/CommonComponents';
-import { usePlayerInfo } from '@/domains/livescore/hooks';
+import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import type { PlayerStatistic, PlayerData } from '@/domains/livescore/types/player';
 
@@ -56,19 +55,8 @@ const PlayerHeader = memo(function PlayerHeader({
   currentTeamLeague
 }: PlayerHeaderProps) {
   const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
-  const { data: playerData, isLoading, error } = usePlayerInfo(playerId, {
-    enabled: !initialData,
-  });
 
-  const displayData = playerData || initialData;
-
-  if (!displayData && isLoading) {
-    return <PlayerProfileLoadingState />;
-  }
-
-  if (error) {
-    return <ErrorState message={error.message} />;
-  }
+  const displayData = initialData;
 
   if (!displayData || !displayData.info) {
     return <ErrorState message="선수 정보를 불러올 수 없습니다." />;

@@ -14,7 +14,7 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getPlayerPhotoUrl, getTeamLogoUrl, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
-import { resolveCurrentTeamMainLeague } from '@/domains/livescore/actions/teams/currentLeague';
+import { resolvePlayerSeasonContext } from './seasonContext';
 
 const PLAYER_STATS_CACHE_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -135,6 +135,29 @@ function getCurrentSeason(): number {
   // 항상 이전 시즌을 기본으로 사용
   // 7월 이후면 해당 연도, 아니면 이전 연도를 시즌으로 사용
   return month >= 6 ? year : year - 1;
+}
+
+async function fetchResolvedPlayerStatistics(playerId: number): Promise<PlayerStatistic[]> {
+  const resolved = await resolvePlayerSeasonContext(playerId);
+  const cachedStats = await fetchCachedPlayerStatisticsFromDb(playerId, resolved.season);
+  if (cachedStats?.length) {
+    return cachedStats;
+  }
+
+  const primaryStats = await fetchPlayerStatsFromApiAndPersist(playerId, resolved.season);
+  if (primaryStats?.length || resolved.strict) {
+    return primaryStats;
+  }
+
+  for (const season of getPlayerSeasonCandidates(resolved.season)) {
+    if (season === resolved.season) continue;
+    const stats = await fetchPlayerStatsFromApiAndPersist(playerId, season);
+    if (stats?.length) {
+      return stats;
+    }
+  }
+
+  return [];
 }
 
 /**
@@ -265,17 +288,7 @@ export const fetchPlayerStatsTabData = async (
       };
     }
 
-    const currentSeason = getCurrentSeason();
-    const cachedStatistics = await fetchCachedPlayerStatisticsFromDb(playerIdNum, currentSeason);
-    const statistics = cachedStatistics ?? await (async () => {
-      for (const season of getPlayerSeasonCandidates(currentSeason)) {
-        const stats = await fetchPlayerStatsFromApiAndPersist(playerIdNum, season);
-        if (stats?.length) {
-          return stats;
-        }
-      }
-      return [];
-    })();
+    const statistics = await fetchResolvedPlayerStatistics(playerIdNum);
 
     const teamLogoUrls: Record<number, string> = {};
     const leagueLogoUrls: Record<number, string> = {};
@@ -346,8 +359,6 @@ export const fetchPlayerFullData = async (
       season: options.season
     };
 
-    // 현재 시즌 계산
-    const currentSeason = getCurrentSeason();
     // 병렬로 처리할 API 호출 준비
     const apiPromises: {
       playerData?: Promise<PlayerData>;
@@ -376,18 +387,16 @@ export const fetchPlayerFullData = async (
 
     if (loadOptions.fetchStats) {
       apiPromises.statistics = (async () => {
-        const cachedStats = await fetchCachedPlayerStatisticsFromDb(playerIdNum, currentSeason);
-        if (cachedStats?.length) {
-          return cachedStats;
+        if (typeof loadOptions.season === 'number') {
+          const cachedStats = await fetchCachedPlayerStatisticsFromDb(playerIdNum, loadOptions.season);
+          if (cachedStats?.length) {
+            return cachedStats;
+          }
+
+          return fetchPlayerStatsFromApiAndPersist(playerIdNum, loadOptions.season);
         }
 
-        for (const season of getPlayerSeasonCandidates(loadOptions.season ?? currentSeason)) {
-          const stats = await fetchPlayerStatsFromApiAndPersist(playerIdNum, season);
-          if (stats?.length) {
-            return stats;
-          }
-        }
-        return [];
+        return fetchResolvedPlayerStatistics(playerIdNum);
       })();
     }
 
@@ -437,11 +446,12 @@ export const fetchPlayerFullData = async (
 
     if (loadOptions.fetchRankings) {
       apiPromises.rankings = apiPromises.playerData!.then(async (playerData) => {
-        const currentLeagueId = playerData?.statistics?.[0]?.league?.id;
+        const seasonContext = await resolvePlayerSeasonContext(playerIdNum);
+        const currentLeagueId = seasonContext.leagueId ?? playerData?.statistics?.[0]?.league?.id;
         if (!currentLeagueId) {
           return {};
         }
-        return fetchPlayerRankings(playerIdNum, currentLeagueId);
+        return fetchPlayerRankings(playerIdNum, currentLeagueId, seasonContext.season);
       });
     }
 
@@ -508,16 +518,14 @@ export const fetchPlayerFullData = async (
     const existingTeamLogoUrl = response.playerData.statistics?.[0]?.team?.logo;
     const statsLeague = response.playerData.statistics?.[0]?.league;
 
-    if (teamId) {
-      const currentTeamLeague = await resolveCurrentTeamMainLeague(teamId);
-      if (currentTeamLeague) {
-        response.currentTeamLeague = {
-          id: currentTeamLeague.leagueId,
-          name: currentTeamLeague.name,
-          country: statsLeague?.country,
-          season: currentTeamLeague.season,
-        };
-      }
+    const seasonContext = await resolvePlayerSeasonContext(playerIdNum);
+    if (seasonContext.leagueId && statsLeague?.name) {
+      response.currentTeamLeague = {
+        id: seasonContext.leagueId,
+        name: statsLeague.name,
+        country: statsLeague.country,
+        season: seasonContext.season,
+      };
     }
 
     const [playerPhotoUrl, teamLogoUrl] = await Promise.all([

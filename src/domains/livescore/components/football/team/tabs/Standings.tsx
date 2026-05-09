@@ -1,7 +1,6 @@
 'use client';
 
 import { memo, useCallback, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { Standing } from '@/domains/livescore/actions/teams/standings';
@@ -9,11 +8,7 @@ import { ErrorState } from '@/domains/livescore/components/common/CommonComponen
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui/container';
 import TeamTabEmptyState from './TeamTabEmptyState';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
-import { fetchTeamStandings } from '@/domains/livescore/actions/teams/standings';
-import { teamKeys } from '@/shared/constants/queryKeys';
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -32,8 +27,6 @@ interface StandingsProps {
   leagueLogoUrls?: Record<number, string>;
   leagueLogoDarkUrls?: Record<number, string>;  // 다크모드 리그 로고
 }
-
-type StandingsQueryData = Awaited<ReturnType<typeof fetchTeamStandings>>;
 
 // 4590 표준: 팀 로고 컴포넌트 - 메모이제이션
 const TeamLogo = memo(({ teamName, logoUrl }: { teamName: string; logoUrl: string }) => {
@@ -81,13 +74,8 @@ function Standings({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {}
-}: StandingsProps) {  const { getLeagueKoreanName } = useTeamLeague();
-  const standingsQuery = useQuery<StandingsQueryData>({
-    queryKey: [...teamKeys.standings(String(teamId)), 'tab'],
-    queryFn: () => fetchTeamStandings(String(teamId)),
-    enabled: !initialStandings || initialStandings.length === 0,
-    ...CACHE_STRATEGIES.STABLE_DATA,
-  });
+}: StandingsProps) {
+  const { getLeagueKoreanName } = useTeamLeague();
 
   // 다크모드 감지
   const [isDark, setIsDark] = useState(false);
@@ -138,7 +126,7 @@ function Standings({
 
   // 팀 링크 URL 생성
   const getTeamUrl = useCallback((clickedTeamId: number, teamName?: string) => {
-    return teamUrl(clickedTeamId, teamName ? getTeamSlugFromName(teamName) : undefined);
+    return getTeamHref({ id: clickedTeamId, name: teamName });
   }, []);
 
   // 리그 우선순위 정의
@@ -223,17 +211,17 @@ function Standings({
   }, [teamId]);
 
   // 로딩 상태 처리
-  if (externalLoading || standingsQuery.isLoading) {
+  if (externalLoading) {
     return <StandingsLoading />;
   }
 
   // 에러 상태 처리
-  if (externalError || standingsQuery.isError) {
+  if (externalError) {
     return <ErrorState message={externalError || '순위 데이터를 불러올 수 없습니다'} />;
   }
 
   // 데이터가 없는 경우
-  const loadedStandings = initialStandings || standingsQuery.data?.data;
+  const loadedStandings = initialStandings;
 
   if (!loadedStandings || loadedStandings.length === 0) {
     return <TeamTabEmptyState title="순위" message="순위 데이터가 없습니다." />;

@@ -44,12 +44,70 @@ type HomePostRow = {
 };
 
 const HOTDEAL_SLUGS = new Set<string>(HOTDEAL_BOARD_SLUGS);
+const HOME_WIDGET_QUERY_MAX_ATTEMPTS = 3;
+const HOME_WIDGET_QUERY_RETRY_DELAYS_MS = [250, 1000];
 
 type LogoMaps = {
   teamLogoMap?: Record<number, string>;
   leagueLogoMap?: Record<number, string>;
   leagueLogoDarkMap?: Record<number, string>;
 };
+
+type SupabaseQueryResult = {
+  data?: unknown;
+  count?: number | null;
+  error: unknown | null;
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function errorText(error: unknown): string {
+  if (!error) return '';
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function isRetryableQueryError(error: unknown): boolean {
+  const text = errorText(error).toLowerCase();
+
+  return [
+    'fetch failed',
+    'network',
+    'timeout',
+    'timed out',
+    'econnreset',
+    'etimedout',
+    'enotfound',
+    '502',
+    '503',
+    '504',
+  ].some((needle) => text.includes(needle));
+}
+
+async function runHomeWidgetQuery<T extends SupabaseQueryResult>(
+  label: string,
+  query: () => PromiseLike<T>
+): Promise<T> {
+  let result = await query();
+
+  for (let attempt = 1; result.error && attempt < HOME_WIDGET_QUERY_MAX_ATTEMPTS; attempt += 1) {
+    if (!isRetryableQueryError(result.error)) break;
+
+    console.warn(`[AllPostsWidget] ${label} retry ${attempt}/${HOME_WIDGET_QUERY_MAX_ATTEMPTS - 1}:`, result.error);
+    await sleep(HOME_WIDGET_QUERY_RETRY_DELAYS_MS[attempt - 1] ?? 1000);
+    result = await query();
+  }
+
+  return result;
+}
 
 function collectLogoIds(rows: HomePostRow[]) {
   const teamIds = new Set<number>();
@@ -128,7 +186,7 @@ const getHomeLatestPosts = unstable_cache(
   async (): Promise<Post[]> => {
     const supabase = getSupabaseAdmin();
 
-    const { data, error } = await supabase
+    const { data, error } = await runHomeWidgetQuery('latest posts query', () => supabase
       .from('posts')
       .select(`
         id,
@@ -164,7 +222,7 @@ const getHomeLatestPosts = unstable_cache(
       .eq('is_deleted', false)
       .eq('is_hidden', false)
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(20));
 
     if (error || !data) {
       console.error('[AllPostsWidget] latest posts query failed:', error);
@@ -186,7 +244,7 @@ const getHomeWidgetNotices = unstable_cache(
   async (): Promise<Post[]> => {
     const supabase = getSupabaseAdmin();
 
-    const { data, error } = await supabase
+    const { data, error } = await runHomeWidgetQuery('notices query', () => supabase
       .from('posts')
       .select(`
         id,
@@ -223,7 +281,7 @@ const getHomeWidgetNotices = unstable_cache(
       .eq('show_in_widget', true)
       .order('is_must_read', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(5));
 
     if (error || !data) {
       console.error('[AllPostsWidget] notices query failed:', error);

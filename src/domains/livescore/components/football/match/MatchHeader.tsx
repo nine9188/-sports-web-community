@@ -1,7 +1,6 @@
 'use client';
 
 import React, { memo, useMemo, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 
@@ -15,11 +14,7 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Container } from '@/shared/components/ui';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { PlayerKoreanNames } from './MatchPageClient';
-import { fetchCachedMatchGoalEvents } from '@/domains/livescore/actions/match/eventData';
-import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
-import { matchKeys } from '@/shared/constants/queryKeys';
+import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // MatchData 타입 정의
 interface MatchDataType {
@@ -75,7 +70,7 @@ interface MatchDataType {
   };
 }
 
-type HeaderGoalEvent = MatchEvent & {
+export type HeaderGoalEvent = MatchEvent & {
   goalKind: 'normal' | 'penalty' | 'ownGoal';
 };
 
@@ -97,7 +92,7 @@ interface MatchHeaderProps {
  * 서버에서 미리 로드된 데이터(initialData)를 받아 헤더를 렌더링합니다.
  * Context 의존성 제거로 더 단순하고 예측 가능한 동작.
  */
-const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEvents, children, teamLogoUrls = {}, leagueLogoUrl, leagueLogoDarkUrl }: MatchHeaderProps) => {
+const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, children, teamLogoUrls = {}, leagueLogoUrl, leagueLogoDarkUrl }: MatchHeaderProps) => {
   const { getLeagueName } = useTeamLeague();
   // initialData에서 데이터 추출
   const matchData = initialData.matchData;
@@ -125,7 +120,7 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
 
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const getTeamHref = (id: number, name?: string) => teamUrl(id, name ? getTeamSlugFromName(name) : undefined);
+  const getTeamHref = (id: number, name?: string) => buildTeamHref({ id, name });
   // 다크모드에 따른 리그 로고 URL 선택
   const getLeagueLogo = () => {
     const effectiveUrl = isDark && leagueLogoDarkUrl ? leagueLogoDarkUrl : leagueLogoUrl;
@@ -244,54 +239,10 @@ const MatchHeader = memo(({ matchId, initialData, playerKoreanNames = {}, goalEv
       return [];
     }) || [];
   }, [eventsData]);
-  const headerGoalsQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.events(matchId), 'header-goals'] : ['match', 'header-goals', 'missing-id'],
-    queryFn: async () => {
-      const result = await fetchCachedMatchGoalEvents(matchId || '');
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to load goal events');
-      }
-      return result.data || [];
-    },
-    enabled: !!matchId && !goalEvents && derivedGoalEvents.length === 0,
-    staleTime: 15 * 1000,
-    gcTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const queriedGoalEvents = useMemo<HeaderGoalEvent[]>(() => {
-    return (headerGoalsQuery.data || []).map((event) => {
-      const detail = event.detail?.toLowerCase() || '';
-      const goalKind = detail.includes('own goal')
-        ? 'ownGoal'
-        : detail.includes('penalty')
-          ? 'penalty'
-          : 'normal';
-      return { ...event, goalKind };
-    });
-  }, [headerGoalsQuery.data]);
-
-  const displayGoalEvents = goalEvents ?? (derivedGoalEvents.length > 0 ? derivedGoalEvents : queriedGoalEvents);
-  const goalPlayerIds = useMemo(() => {
-    const ids = new Set<number>();
-    displayGoalEvents.forEach((event) => {
-      if (event.player?.id) ids.add(event.player.id);
-      if (event.assist?.id) ids.add(event.assist.id);
-    });
-    return Array.from(ids);
-  }, [displayGoalEvents]);
-
-  const goalNamesQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.events(matchId), 'header-goal-names', goalPlayerIds.join(',')] : ['match', 'header-goal-names', 'missing-id'],
-    queryFn: () => getPlayersKoreanNames(goalPlayerIds),
-    enabled: goalPlayerIds.length > 0,
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-  });
+  const displayGoalEvents = goalEvents ?? derivedGoalEvents;
   const mergedPlayerKoreanNames = useMemo(() => ({
     ...playerKoreanNames,
-    ...(goalNamesQuery.data || {}),
-  }), [playerKoreanNames, goalNamesQuery.data]);
+  }), [playerKoreanNames]);
 
   const formatGoalMinute = (event: MatchEvent) => {
     const elapsed = event.time?.elapsed;

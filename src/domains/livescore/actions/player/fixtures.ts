@@ -5,7 +5,8 @@ import { unstable_cache } from 'next/cache';
 import { FixtureData } from '@/domains/livescore/types/player';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
+import { getPlayerSeasonCandidates } from './currentSeason';
+import { resolvePlayerSeasonContext } from './seasonContext';
 
 interface ApiPlayerFixtureStats {
   games?: {
@@ -90,7 +91,7 @@ type MemoryCacheEntry<T> = {
   value: T;
 };
 
-const PLAYER_FIXTURES_CACHE_VERSION = 'v3';
+const PLAYER_FIXTURES_CACHE_VERSION = 'v4';
 const MEMORY_CACHE_TTL_MS = 1000 * 60 * 60;
 const EMPTY_RESULT_MEMORY_CACHE_TTL_MS = 1000 * 30;
 const globalFixtureCache = globalThis as typeof globalThis & {
@@ -122,23 +123,24 @@ async function memoryCached<T>(key: string, task: () => Promise<T>): Promise<T> 
   return value;
 }
 
-function getCurrentSeason(): number {
-  return getDefaultPlayerSeason();
-}
-
 async function fetchPlayerFixtureContextFromDb(
   playerId: number,
-  season: number
+  season: number,
+  resolvedTeamId?: number | null
 ): Promise<PlayerFixtureContext | null> {
   try {
     const supabase = await getSupabaseServer();
-    const { data: playerRow } = await supabase
-      .from('football_players')
-      .select('team_id')
-      .eq('player_id', playerId)
-      .maybeSingle();
+    let teamId = resolvedTeamId;
+    if (!teamId) {
+      const { data: playerRow } = await supabase
+        .from('football_players')
+        .select('team_id')
+        .eq('player_id', playerId)
+        .maybeSingle();
 
-    const teamId = playerRow?.team_id;
+      teamId = playerRow?.team_id ?? null;
+    }
+
     if (!teamId) return null;
 
     const { data: fixtureRows, error } = await supabase
@@ -336,19 +338,25 @@ async function fetchPlayerFixturesUncached(
     return { data: [], status: 'error', message: '선수 ID가 필요합니다.' };
   }
 
-  const currentSeason = getCurrentSeason();
+  const seasonContext = await resolvePlayerSeasonContext(playerId);
 
   try {
     let dbContext: PlayerFixtureContext | null = null;
     let apiTeamId: number | null = null;
-    let seasonUsed = currentSeason;
+    let seasonUsed = seasonContext.season;
 
-    for (const season of getPlayerSeasonCandidates(currentSeason)) {
-      dbContext = await fetchPlayerFixtureContextFromDb(playerId, season);
-      apiTeamId = await fetchPlayerTeamIdFromApi(playerId, season);
-      if (apiTeamId || dbContext?.teamId) {
-        seasonUsed = season;
-        break;
+    dbContext = await fetchPlayerFixtureContextFromDb(playerId, seasonContext.season, seasonContext.teamId);
+    apiTeamId = seasonContext.strict ? null : await fetchPlayerTeamIdFromApi(playerId, seasonContext.season);
+
+    if (!seasonContext.strict && !apiTeamId && !dbContext?.teamId) {
+      for (const season of getPlayerSeasonCandidates(seasonContext.season)) {
+        if (season === seasonContext.season) continue;
+        dbContext = await fetchPlayerFixtureContextFromDb(playerId, season, seasonContext.teamId);
+        apiTeamId = await fetchPlayerTeamIdFromApi(playerId, season);
+        if (apiTeamId || dbContext?.teamId) {
+          seasonUsed = season;
+          break;
+        }
       }
     }
 

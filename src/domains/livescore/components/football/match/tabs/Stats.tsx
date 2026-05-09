@@ -7,8 +7,7 @@ import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matc
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 import { TeamStats, Team } from '@/domains/livescore/types/match';
 import { useState } from 'react';
@@ -422,10 +421,7 @@ const Stats = memo(({
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
-                  href={teamUrl(
-                    playerStatsData.data.homeTeam.id,
-                    getTeamSlugFromName(playerStatsData.data.homeTeam.name)
-                  )}
+                  href={getTeamHref(playerStatsData.data.homeTeam)}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 prefetch={false}
                 >
@@ -558,7 +554,7 @@ const Stats = memo(({
                             <tr key={`home-${player.playerId}`} className="hover:bg-[#F5F5F5] dark:hover:bg-[#262626]">
                               <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
                                 <Link 
-                                  href={`/livescore/football/player/${player.playerId}`}
+                                  href={getPlayerHref({ id: player.playerId, name: player.playerName })}
                                   className="flex items-center gap-1.5 hover:underline transition-all"
                                 prefetch={false}
                                 >
@@ -610,10 +606,7 @@ const Stats = memo(({
             <Container className="bg-white dark:bg-[#1D1D1D]">
               <ContainerHeader>
                 <Link
-                  href={teamUrl(
-                    playerStatsData.data.awayTeam.id,
-                    getTeamSlugFromName(playerStatsData.data.awayTeam.name)
-                  )}
+                  href={getTeamHref(playerStatsData.data.awayTeam)}
                   className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
                 prefetch={false}
                 >
@@ -746,7 +739,7 @@ const Stats = memo(({
                             <tr key={`away-${player.playerId}`} className="hover:bg-[#F5F5F5] dark:hover:bg-[#262626]">
                               <td className="sticky left-0 z-10 bg-white dark:bg-[#1D1D1D] px-2 py-2 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] w-32 min-w-[8rem] max-w-[8rem]">
                                 <Link 
-                                  href={`/livescore/football/player/${player.playerId}`}
+                                  href={getPlayerHref({ id: player.playerId, name: player.playerName })}
                                   className="flex items-center gap-1.5 hover:underline transition-all"
                                 prefetch={false}
                                 >

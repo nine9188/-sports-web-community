@@ -538,6 +538,9 @@ async function generateMatchPredictionPost(
   teamLogoMap: Record<number, string>,
   leagueLogoUrl: string
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
+  const teamMap = await getTeamsByIds([match.teams.home.id, match.teams.away.id])
+  const homeTeamMapping = teamMap[match.teams.home.id]
+  const awayTeamMapping = teamMap[match.teams.away.id]
   const homeNameKo = await getTeamNameKo(match.teams.home.id, match.teams.home.name)
   const awayNameKo = await getTeamNameKo(match.teams.away.id, match.teams.away.name)
   const leagueNameKo = await getLeagueNameKo(league.id, league.name)
@@ -705,12 +708,18 @@ async function generateMatchPredictionPost(
           home: {
             id: match.teams.home.id,
             name: homeNameKo,
+            name_en: homeTeamMapping?.name_en || match.teams.home.name,
+            name_ko: homeTeamMapping?.name_ko || homeNameKo,
+            slug: homeTeamMapping?.slug || null,
             logo: match.teams.home.logo,
             winner: null
           },
           away: {
             id: match.teams.away.id,
             name: awayNameKo,
+            name_en: awayTeamMapping?.name_en || match.teams.away.name,
+            name_ko: awayTeamMapping?.name_ko || awayNameKo,
+            slug: awayTeamMapping?.slug || null,
             logo: match.teams.away.logo,
             winner: null
           }

@@ -13,8 +13,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { StandingsData, League } from '../../types';
 import { useLeagueStandings } from '../../hooks/useLeagueQueries';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { teamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: placeholder 상수
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -98,7 +97,7 @@ export default function LeagueStandings({
   }, []);
 
   const getTeamHref = (team: { team_id: number; name: string }) => {
-    return teamUrl(team.team_id, getTeamSlugFromName(team.name));
+    return buildTeamHref(team);
   };
 
   // 현재 선택된 리그 정보

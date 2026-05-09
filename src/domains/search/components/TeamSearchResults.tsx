@@ -10,8 +10,7 @@ import { getTeamLogoUrls } from '@/domains/livescore/actions/images'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
 import { Button } from '@/shared/components/ui'
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs'
-import { teamUrl } from '@/domains/livescore/utils/urls'
+import { getTeamHref } from '@/domains/livescore/utils/entityLinks'
 
 const CACHE_DURATION = 5 * 60 * 1000
 
@@ -319,7 +318,7 @@ function TeamRowWithMatches({
   matchTeamLogoUrls: Record<number, string>
 }) {
   const router = useRouter()
-  const teamHref = teamUrl(team.team_id, getTeamSlugFromName(team.name || team.display_name))
+  const teamHref = getTeamHref(team)
 
   const handleTeamPageClick = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()

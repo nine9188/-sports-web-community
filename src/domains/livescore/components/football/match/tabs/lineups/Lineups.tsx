@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Formation from './Formation';
 import PlayerEvents from './components/PlayerEvents';
@@ -13,14 +12,7 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
-import { fetchCachedMatchLineups } from '@/domains/livescore/actions/match/lineupData';
-import { fetchCachedMatchEvents } from '@/domains/livescore/actions/match/eventData';
-import { fetchAllPlayerStats } from '@/domains/livescore/actions/match/playerStats';
-import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl } from '@/domains/livescore/utils/urls';
-import { matchKeys } from '@/shared/constants/queryKeys';
+import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
 
 // 4590 표준: Placeholder 상수
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
@@ -74,10 +66,11 @@ interface LineupsProps {
   playerKoreanNames?: PlayerKoreanNames;
   // 4590 표준: 서버에서 전달받은 Storage URL 맵
   teamLogoUrls?: Record<number, string>;
+  playerPhotoUrls?: Record<number, string>;
   isLoading?: boolean;
 }
 
-export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, isLoading = false }: LineupsProps) {
+export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, playerPhotoUrls = {}, isLoading = false }: LineupsProps) {
   const { getTeamById } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
@@ -100,35 +93,9 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   const matchStatus = matchData?.fixture?.status?.short;
   const initialLineups = matchData?.lineups?.response;
   const initialEvents = matchData?.events;
-  const hasInitialPlayerStats = Boolean(allPlayerStats?.success && allPlayerStats.allPlayersData?.length);
-
-  const lineupsQuery = useQuery({
-    queryKey: matchId ? matchKeys.lineups(matchId) : ['match', 'lineups', 'missing-id'],
-    queryFn: () => fetchCachedMatchLineups(matchId),
-    enabled: !!matchId && initialLineups === undefined,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const eventsQuery = useQuery({
-    queryKey: matchId ? matchKeys.events(matchId) : ['match', 'events', 'missing-id'],
-    queryFn: () => fetchCachedMatchEvents(matchId),
-    enabled: !!matchId && initialEvents === undefined,
-    staleTime: 15 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-
-  const playerStatsQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.detail(matchId), 'player-stats-v2'] : ['match', 'player-stats-v2', 'missing-id'],
-    queryFn: () => fetchAllPlayerStats(matchId, matchStatus),
-    enabled: !!matchId && !hasInitialPlayerStats,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const resolvedLineups = initialLineups ?? lineupsQuery.data?.response ?? null;
-  const resolvedEvents = initialEvents ?? eventsQuery.data?.data ?? [];
-  const resolvedPlayerStats = allPlayerStats ?? (playerStatsQuery.data?.success ? playerStatsQuery.data : null);
+  const resolvedLineups = initialLineups ?? null;
+  const resolvedEvents = initialEvents ?? [];
+  const resolvedPlayerStats = allPlayerStats ?? null;
 
   // 서버에서 프리로드된 데이터 사용 (클라이언트 fetch 제거)
   const playersRatings = resolvedPlayerStats?.ratings ?? {};
@@ -155,18 +122,10 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     return Array.from(ids);
   }, [rawLineups]);
 
-  const playerPhotosQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.lineups(matchId), 'player-photos', lineupPlayerIds.join(',')] : ['match', 'lineups', 'player-photos', 'missing-id'],
-    queryFn: () => getPlayerPhotoUrls(lineupPlayerIds, 'md'),
-    enabled: lineupPlayerIds.length > 0,
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-  });
-
   const lineups = useMemo(() => {
     if (!rawLineups) return null;
 
-    const photoMap = playerPhotosQuery.data || {};
+    const photoMap = playerPhotoUrls;
     const normalizePhoto = (player: Player) => (
       photoMap[player.id]
       || (player.photo?.includes('media.api-sports.io') ? PLAYER_PLACEHOLDER : player.photo)
@@ -192,20 +151,11 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
         substitutes: mergePlayers(rawLineups.away?.substitutes || []),
       },
     };
-  }, [rawLineups, playerPhotosQuery.data]);
-
-  const koreanNamesQuery = useQuery({
-    queryKey: matchId ? [...matchKeys.lineups(matchId), 'korean-names', lineupPlayerIds.join(',')] : ['match', 'lineups', 'korean-names', 'missing-id'],
-    queryFn: () => getPlayersKoreanNames(lineupPlayerIds),
-    enabled: lineupPlayerIds.length > 0,
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-  });
+  }, [rawLineups, playerPhotoUrls]);
 
   const mergedPlayerKoreanNames = useMemo(() => ({
     ...playerKoreanNames,
-    ...(koreanNamesQuery.data || {}),
-  }), [playerKoreanNames, koreanNamesQuery.data]);
+  }), [playerKoreanNames]);
 
   // 팀 이름 헬퍼 함수
   const getTeamDisplayName = (id: number, fallbackName: string): string => {
@@ -218,7 +168,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
 
     return (
       <Link
-        href={playerUrl(player.id, getPlayerSlugFromName(player.name))}
+        href={getPlayerHref(player)}
         className="hover:underline"
         prefetch={false}
         onClick={(event) => event.stopPropagation()}
@@ -333,7 +283,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   });
   const homeLineup = lineups?.home ?? createEmptyLineup(homeTeam);
   const awayLineup = lineups?.away ?? createEmptyLineup(awayTeam);
-  const isLineupsLoading = isLoading || (!lineups && (lineupsQuery.isLoading || lineupsQuery.isFetching));
+  const isLineupsLoading = isLoading;
 
   // 팀별 전체 선수 목록 (선발 + 교체) - 네비게이션용
   const homeAllPlayers: Player[] = [
@@ -1242,6 +1192,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
           playerId={selectedPlayer.id}
           playerInfo={{
             name: mergedPlayerKoreanNames[selectedPlayer.id] || selectedPlayer.name,
+            name_en: selectedPlayer.name,
             number: selectedPlayer.number,
             pos: selectedPlayer.pos,
             photo: selectedPlayer.photo,

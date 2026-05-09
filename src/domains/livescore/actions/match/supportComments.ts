@@ -5,10 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import { ReportResponse } from '@/domains/reports/types';
 
-// 팀 타입 정의
 export type TeamType = 'home' | 'away' | 'neutral';
 
-// 응원 댓글 인터페이스
+// ????????? ?癲ル슢?뤸뤃?????볥궙???
 export interface SupportComment {
   id: string;
   content: string;
@@ -33,15 +32,14 @@ export interface SupportComment {
   };
 }
 
-// 응원 댓글 목록 조회 (캐시 적용)
+// ????????? ?꿔꺂??袁ㅻ븶筌믠뫀萸???됰슦????(?????????쇨덫??
 export const getSupportComments = cache(async (matchId: string) => {
   try {
     const supabase = await getSupabaseServer();
     
-    // 현재 사용자 확인 (좋아요 상태 확인용)
+    // ????썹땟????????癲ル슢캉????(????щ였???????븐뻤???癲ル슢캉?????
     const { data: { user } } = await supabase.auth.getUser();
     
-    // 댓글 기본 정보 조회
     const { data: comments, error } = await supabase
       .from('match_support_comments')
       .select(`
@@ -56,7 +54,7 @@ export const getSupportComments = cache(async (matchId: string) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('응원 댓글 조회 오류:', error);
+      console.error('????????? ??됰슦????????怨몄뵒:', error);
       return { success: false, data: [], error: error.message };
     }
 
@@ -64,7 +62,6 @@ export const getSupportComments = cache(async (matchId: string) => {
       return { success: true, data: [], error: null };
     }
 
-    // 사용자 프로필 정보 별도 조회
     const userIds = [...new Set(comments.map(comment => comment.user_id))];
     const { data: profiles } = await supabase
       .from('profiles')
@@ -80,7 +77,6 @@ export const getSupportComments = cache(async (matchId: string) => {
       `)
       .in('id', userIds);
 
-    // 사용자별 좋아요 상태 확인
     let likedCommentIds = new Set<string>();
     if (user && comments.length > 0) {
       const commentIds = comments.map(comment => comment.id);
@@ -94,21 +90,19 @@ export const getSupportComments = cache(async (matchId: string) => {
       likedCommentIds = new Set(likes?.map(l => l.comment_id) || []);
     }
 
-    // 프로필 정보를 맵으로 변환
     const profileMap = new Map(profiles?.map(profile => [profile.id, profile]) || []);
 
-    // 댓글과 프로필 정보 결합
+    // ?????????썹땟怨⒲뀋???癲ル슢???ъ쒜??嚥▲굧?????
     const commentsWithProfiles: SupportComment[] = comments.map(comment => {
       const profile = profileMap.get(comment.user_id);
       
-      // 댓글 내용을 기반으로 상태 판단
       let isHidden = false;
       let isDeleted = false;
       
-      if (comment.content === '신고에 의해 삭제되었습니다.') {
+      if (comment.content === '????ャ렑???????????????嶺???????') {
         isDeleted = true;
         isHidden = false;
-      } else if (comment.content === '신고에 의해 일시 숨김처리 되었습니다. 7일 후 다시 확인됩니다.') {
+      } else if (comment.content === '????ャ렑????????????濚밸Ŧ援앾쭛?????꿔꺂??節뉖き????嶺??????? 7????????⑤베鍮??癲ル슢캉?????嶺뚮ㅎ????') {
         isHidden = true;
         isDeleted = false;
       }
@@ -121,9 +115,7 @@ export const getSupportComments = cache(async (matchId: string) => {
         created_at: comment.created_at,
         user_id: comment.user_id,
         is_liked: likedCommentIds.has(comment.id),
-        is_disliked: false, // dislike 상태는 별도로 확인
-        userAction: null, // 사용자 액션은 별도로 확인
-        is_hidden: isHidden,
+        is_disliked: false, // dislike ????븐뻤?????⑤슢?????븐쪎影??뱺??癲ル슢캉????        userAction: null, // ??????????Β?? ??⑤슢?????븐쪎影??뱺??癲ル슢캉????        is_hidden: isHidden,
         is_deleted: isDeleted,
         user_profile: profile ? {
           username: profile.username || undefined,
@@ -139,28 +131,27 @@ export const getSupportComments = cache(async (matchId: string) => {
 
     return { success: true, data: commentsWithProfiles, error: null };
   } catch (error) {
-    console.error('응원 댓글 조회 중 예외 발생:', error);
-    return { success: false, data: [], error: '응원 댓글을 불러오는 중 오류가 발생했습니다.' };
+    console.error('????????? ??됰슦????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
+    return { success: false, data: [], error: '??????????????곗뵯??????紐꾪닓 嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
   }
 });
 
-// 응원 댓글 작성
 export async function createSupportComment(
   matchId: string,
   teamType: TeamType,
-  content: string
+  content: string,
+  currentPath?: string
 ) {
   try {
     const supabase = await getSupabaseAction();
     
-    // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '로그인이 필요합니다.' };
+      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
     }
 
-    // 댓글 작성 (조인 없이 단순 insert)
+    // ??? ??????(??됰슦????????ㅼ굡????潁??insert)
     const { data, error } = await supabase
       .from('match_support_comments')
       .insert({
@@ -174,21 +165,20 @@ export async function createSupportComment(
       .single();
 
     if (error) {
-      console.error('응원 댓글 작성 오류:', error);
+      console.error('????????? ??????????怨몄뵒:', error);
       return { success: false, error: error.message };
     }
 
-    // 캐시 무효화
-    revalidatePath(`/livescore/football/match/${matchId}`);
+    revalidatePath(currentPath || `/livescore/football/match/${matchId}`);
 
     return { success: true, comment: data };
   } catch (error) {
-    console.error('응원 댓글 작성 중 예외 발생:', error);
-    return { success: false, error: '댓글 작성 중 오류가 발생했습니다.' };
+    console.error('????????? ??????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
+    return { success: false, error: '??? ??????嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
   }
 }
 
-// 응원 댓글 응답 타입
+// ????????? ???????????
 export interface MatchCommentLikeResponse {
   success: boolean;
   likes_count?: number;
@@ -197,27 +187,25 @@ export interface MatchCommentLikeResponse {
   error?: string;
 }
 
-// 응원 댓글 좋아요/취소 (별칭 함수 추가)
+// ????????? ????щ였?????????(??⑤슢???釉띾떛???潁?????ㅻ쿋??)
 export async function toggleCommentLike(commentId: string) {
   return await likeMatchComment(commentId);
 }
 
-// 응원 댓글 좋아요
+// ????????? ????щ였???
 export async function likeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
   try {
     const supabase = await getSupabaseAction();
 
-    // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다.'
+        error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????'
       };
     }
     
-    // 현재 댓글 정보 가져오기
     const { data: currentComment, error: commentFetchError } = await supabase
       .from('match_support_comments')
       .select('likes_count, dislikes_count')
@@ -227,15 +215,13 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     if (commentFetchError) {
       return {
         success: false,
-        error: `댓글 조회 오류: ${commentFetchError.message}`
+        error: `??? ??됰슦????????怨몄뵒: ${commentFetchError.message}`
       };
     }
     
-    // 현재 좋아요/싫어요 수
     let likesCount = currentComment.likes_count || 0;
     let dislikesCount = currentComment.dislikes_count || 0;
     
-    // 현재 사용자의 기존 액션 확인
     const { data: existingLikes } = await supabase
       .from('match_comment_likes')
       .select('*')
@@ -246,11 +232,9 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     let userAction: 'like' | 'dislike' | null = null;
     
     if (existingLike) {
-      // 기존 기록이 있는 경우
       const currentType = existingLike.type || 'like';
       
       if (currentType === 'like') {
-        // 이미 좋아요인 경우 취소
         await supabase
           .from('match_comment_likes')
           .delete()
@@ -259,7 +243,6 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
         likesCount = Math.max(0, likesCount - 1);
         userAction = null;
       } else {
-        // 싫어요 → 좋아요 변경
         await supabase
           .from('match_comment_likes')
           .update({ type: 'like' })
@@ -270,7 +253,7 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
         userAction = 'like';
       }
     } else {
-      // 새로운 좋아요 추가
+      // ????沅??????щ였??????ㅻ쿋??
       await supabase
         .from('match_comment_likes')
         .insert({
@@ -283,7 +266,6 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
       userAction = 'like';
     }
     
-    // 댓글 정보 업데이트
     await supabase
       .from('match_support_comments')
       .update({ 
@@ -300,30 +282,28 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     };
     
   } catch (error) {
-    console.error('좋아요 처리 오류:', error);
+    console.error('????щ였????꿔꺂??節뉖き??????怨몄뵒:', error);
     return {
       success: false,
-      error: '좋아요 처리 중 오류가 발생했습니다.'
+      error: '????щ였????꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.'
     };
   }
 }
 
-// 응원 댓글 싫어요
+// ????????? ??????
 export async function dislikeMatchComment(commentId: string): Promise<MatchCommentLikeResponse> {
   try {
     const supabase = await getSupabaseAction();
 
-    // 인증된 사용자 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다.'
+        error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????'
       };
     }
     
-    // 현재 댓글 정보 가져오기
     const { data: currentComment, error: commentFetchError } = await supabase
       .from('match_support_comments')
       .select('likes_count, dislikes_count')
@@ -333,15 +313,13 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     if (commentFetchError) {
       return {
         success: false,
-        error: `댓글 조회 오류: ${commentFetchError.message}`
+        error: `??? ??됰슦????????怨몄뵒: ${commentFetchError.message}`
       };
     }
     
-    // 현재 좋아요/싫어요 수
     let likesCount = currentComment.likes_count || 0;
     let dislikesCount = currentComment.dislikes_count || 0;
     
-    // 현재 사용자의 기존 액션 확인
     const { data: existingLikes } = await supabase
       .from('match_comment_likes')
       .select('*')
@@ -352,11 +330,9 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     let userAction: 'like' | 'dislike' | null = null;
     
     if (existingLike) {
-      // 기존 기록이 있는 경우
       const currentType = existingLike.type || 'like';
       
       if (currentType === 'dislike') {
-        // 이미 싫어요인 경우 취소
         await supabase
           .from('match_comment_likes')
           .delete()
@@ -365,7 +341,6 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
         dislikesCount = Math.max(0, dislikesCount - 1);
         userAction = null;
       } else {
-        // 좋아요 → 싫어요 변경
         await supabase
           .from('match_comment_likes')
           .update({ type: 'dislike' })
@@ -376,7 +351,7 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
         userAction = 'dislike';
       }
     } else {
-      // 새로운 싫어요 추가
+      // ????沅???????????ㅻ쿋??
       await supabase
         .from('match_comment_likes')
         .insert({
@@ -389,7 +364,6 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
       userAction = 'dislike';
     }
     
-    // 댓글 정보 업데이트
     await supabase
       .from('match_support_comments')
       .update({ 
@@ -406,32 +380,30 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     };
     
   } catch (error) {
-    console.error('싫어요 처리 오류:', error);
+    console.error('???????꿔꺂??節뉖き??????怨몄뵒:', error);
     return {
       success: false,
-      error: '싫어요 처리 중 오류가 발생했습니다.'
+      error: '???????꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.'
     };
   }
 }
 
-// 응원 댓글 좋아요/취소 (기존 함수명 유지)
+// ????????? ????щ였?????????(???뚯??????潁??臾믩븸????)
 export async function toggleSupportCommentLike(commentId: string) {
   return await likeMatchComment(commentId);
 }
 
-// 응원 댓글 삭제
-export async function deleteSupportComment(commentId: string) {
+// ????????? ????
+export async function deleteSupportComment(commentId: string, currentPath?: string) {
   try {
     const supabase = await getSupabaseAction();
     
-    // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '로그인이 필요합니다.' };
+      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
     }
 
-    // 댓글 소유자 확인
     const { data: comment, error: commentError } = await supabase
       .from('match_support_comments')
       .select('user_id, match_id')
@@ -439,14 +411,13 @@ export async function deleteSupportComment(commentId: string) {
       .single();
 
     if (commentError || !comment) {
-      return { success: false, error: '댓글을 찾을 수 없습니다.' };
+      return { success: false, error: '??????꿔꺂????????????ㅿ폍??????딅젩.' };
   }
 
     if (comment.user_id !== user.id) {
-      return { success: false, error: '본인의 댓글만 삭제할 수 있습니다.' };
+      return { success: false, error: '??⑤슢?뽫춯?????????????????????????딅젩.' };
     }
 
-    // 댓글 삭제
     const { error: deleteError } = await supabase
       .from('match_support_comments')
       .delete()
@@ -456,17 +427,16 @@ export async function deleteSupportComment(commentId: string) {
       return { success: false, error: deleteError.message };
     }
 
-    // 캐시 무효화
-    revalidatePath(`/livescore/football/match/${comment.match_id}`);
+    revalidatePath(currentPath || `/livescore/football/match/${comment.match_id}`);
 
     return { success: true };
   } catch (error) {
-    console.error('댓글 삭제 중 예외 발생:', error);
-    return { success: false, error: '댓글 삭제 중 오류가 발생했습니다.' };
+    console.error('??? ????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
+    return { success: false, error: '??? ????嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
   }
 }
 
-// 응원 댓글 신고
+// ????????? ????ャ렑??
 export async function reportSupportComment(
   commentId: string,
   reason: string,
@@ -475,14 +445,12 @@ export async function reportSupportComment(
   try {
     const supabase = await getSupabaseAction();
     
-    // 현재 사용자 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '로그인이 필요합니다.' };
+      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
     }
 
-    // 중복 신고 확인
     const { data: existingReport } = await supabase
       .from('reports')
       .select('id')
@@ -492,10 +460,9 @@ export async function reportSupportComment(
       .single();
 
     if (existingReport) {
-      return { success: false, error: '이미 신고한 댓글입니다.' };
+      return { success: false, error: '???? ????ャ렑???????????뉖뤁??' };
     }
 
-    // 신고 생성
     const { data, error } = await supabase
       .from('reports')
       .insert({
@@ -509,16 +476,15 @@ export async function reportSupportComment(
       .single();
 
     if (error) {
-      console.error('응원 댓글 신고 오류:', error);
-      return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
+      console.error('????????? ????ャ렑??????怨몄뵒:', error);
+      return { success: false, error: '????ャ렑???꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
     }
 
-    // 관련 페이지 캐시 갱신
-    revalidatePath('/admin/reports');
+    // ???援온??????볥궙?袁р뵾???? ???????醫딆┣???    revalidatePath('/admin/reports');
     
     return { success: true, data };
   } catch (error) {
-    console.error('응원 댓글 신고 중 예외 발생:', error);
-    return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
+    console.error('????????? ????ャ렑??嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
+    return { success: false, error: '????ャ렑???꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
   }
 } 

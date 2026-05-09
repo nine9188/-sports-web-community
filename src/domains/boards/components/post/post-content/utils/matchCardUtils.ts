@@ -72,6 +72,8 @@ export function updateMatchCardImages(container: HTMLElement): void {
   const matchCards = container.querySelectorAll('.match-card, .processed-match-card, .team-card, .player-card');
 
   matchCards.forEach((card) => {
+    normalizeStoredMatchCardLink(card);
+
     // 리그 로고 업데이트
     const leagueImg = card.querySelector('.league-logo-box img') as HTMLImageElement;
     if (leagueImg) {
@@ -84,6 +86,24 @@ export function updateMatchCardImages(container: HTMLElement): void {
       updateTeamImage(teamImg as HTMLImageElement, isDark);
     });
   });
+}
+
+function normalizeStoredMatchCardLink(card: Element): void {
+  if (!card.matches('.match-card, .processed-match-card')) return;
+
+  const matchId = card.getAttribute('data-match-id');
+  if (!matchId) return;
+
+  const link = card.querySelector('a[href^="/livescore/football/match/"]') as HTMLAnchorElement | null;
+  if (!link) return;
+
+  const href = link.getAttribute('href') || '';
+  const hasNonAsciiSlug = /^\/livescore\/football\/match\/\d+\/.+/.test(href) && /[^\x00-\x7F]/.test(href);
+
+  if (hasNonAsciiSlug) {
+    link.href = `/livescore/football/match/${matchId}`;
+    link.setAttribute('href', `/livescore/football/match/${matchId}`);
+  }
 }
 
 function updateLeagueImage(img: HTMLImageElement, isDark: boolean): void {

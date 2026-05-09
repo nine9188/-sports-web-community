@@ -8,6 +8,8 @@ import { siteConfig } from '@/shared/config';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 export const SITEMAP_PAGE_SIZE = 50000;
+const SITEMAP_QUERY_MAX_ATTEMPTS = 3;
+const SITEMAP_QUERY_RETRY_DELAYS_MS = [250, 1000];
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -56,6 +58,62 @@ type FixtureRow = {
 type ShopCategoryRow = {
   slug: string | null;
 };
+
+type SupabaseQueryResult = {
+  data?: unknown;
+  count?: number | null;
+  error: unknown | null;
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function errorText(error: unknown): string {
+  if (!error) return '';
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function isRetryableSitemapError(error: unknown): boolean {
+  const text = errorText(error).toLowerCase();
+
+  return [
+    'fetch failed',
+    'network',
+    'timeout',
+    'timed out',
+    'econnreset',
+    'etimedout',
+    'enotfound',
+    '503',
+    '502',
+    '504',
+  ].some((needle) => text.includes(needle));
+}
+
+async function runSitemapQuery<T extends SupabaseQueryResult>(
+  label: string,
+  query: () => PromiseLike<T>
+): Promise<T> {
+  let result = await query();
+
+  for (let attempt = 1; result.error && attempt < SITEMAP_QUERY_MAX_ATTEMPTS; attempt += 1) {
+    if (!isRetryableSitemapError(result.error)) break;
+
+    console.warn(`[sitemap] ${label} retry ${attempt}/${SITEMAP_QUERY_MAX_ATTEMPTS - 1}:`, result.error);
+    await sleep(SITEMAP_QUERY_RETRY_DELAYS_MS[attempt - 1] ?? 1000);
+    result = await query();
+  }
+
+  return result;
+}
 
 export function siteUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -107,10 +165,10 @@ export async function getLeagueSitemap(): Promise<MetadataRoute.Sitemap> {
 
 export async function getShopSitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  const { data, error } = await runSitemapQuery('shop_categories query', () => supabase
     .from('shop_categories')
     .select('slug')
-    .eq('is_active', true);
+    .eq('is_active', true));
 
   if (error) {
     console.error('[sitemap] shop_categories query failed:', error);
@@ -128,11 +186,11 @@ export async function getShopSitemap(): Promise<MetadataRoute.Sitemap> {
 
 export async function getPostSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
-  const { count, error } = await supabase
+  const { count, error } = await runSitemapQuery('posts count query', () => supabase
     .from('posts')
     .select('id', { count: 'exact', head: true })
     .eq('is_deleted', false)
-    .eq('is_hidden', false);
+    .eq('is_hidden', false));
 
   if (error) {
     console.error('[sitemap] posts count query failed:', error);
@@ -145,13 +203,13 @@ export async function getPostSitemapCount(): Promise<number> {
 export async function getPostSitemap(id: string | number): Promise<MetadataRoute.Sitemap> {
   const { from, to } = pageRange(id);
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  const { data, error } = await runSitemapQuery('posts page query', () => supabase
     .from('posts')
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
-    .range(from, to);
+    .range(from, to));
 
   if (error) {
     console.error('[sitemap] posts page query failed:', error);
@@ -175,11 +233,11 @@ export async function getPostSitemap(id: string | number): Promise<MetadataRoute
 
 export async function getTeamSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
-  const { count, error } = await supabase
+  const { count, error } = await runSitemapQuery('football_teams count query', () => supabase
     .from('football_teams')
     .select('team_id', { count: 'exact', head: true })
     .eq('is_active', true)
-    .not('slug', 'is', null);
+    .not('slug', 'is', null));
 
   if (error) {
     console.error('[sitemap] football_teams count query failed:', error);
@@ -192,13 +250,13 @@ export async function getTeamSitemapCount(): Promise<number> {
 export async function getTeamSitemap(id: string | number): Promise<MetadataRoute.Sitemap> {
   const { from, to } = pageRange(id);
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  const { data, error } = await runSitemapQuery('football_teams page query', () => supabase
     .from('football_teams')
     .select('team_id, slug, updated_at')
     .eq('is_active', true)
     .not('slug', 'is', null)
     .order('team_id', { ascending: true })
-    .range(from, to);
+    .range(from, to));
 
   if (error) {
     console.error('[sitemap] football_teams page query failed:', error);
@@ -225,11 +283,11 @@ export async function getTransferTeamSitemap(): Promise<MetadataRoute.Sitemap> {
 
 export async function getPlayerSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
-  const { count, error } = await supabase
+  const { count, error } = await runSitemapQuery('football_players count query', () => supabase
     .from('football_players')
     .select('player_id', { count: 'exact', head: true })
     .eq('is_active', true)
-    .not('slug', 'is', null);
+    .not('slug', 'is', null));
 
   if (error) {
     console.error('[sitemap] football_players count query failed:', error);
@@ -242,13 +300,13 @@ export async function getPlayerSitemapCount(): Promise<number> {
 export async function getPlayerSitemap(id: string | number): Promise<MetadataRoute.Sitemap> {
   const { from, to } = pageRange(id);
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  const { data, error } = await runSitemapQuery('football_players page query', () => supabase
     .from('football_players')
     .select('player_id, slug, updated_at, name, display_name, korean_name, team_id, team_name, position, number, age, photo_url')
     .eq('is_active', true)
     .not('slug', 'is', null)
     .order('player_id', { ascending: true })
-    .range(from, to);
+    .range(from, to));
 
   if (error) {
     console.error('[sitemap] football_players page query failed:', error);
@@ -268,11 +326,11 @@ export async function getPlayerSitemap(id: string | number): Promise<MetadataRou
 export async function getMatchSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
   const { fromDate, toDate } = matchDateWindow();
-  const { count, error } = await supabase
+  const { count, error } = await runSitemapQuery('fixtures count query', () => supabase
     .from('fixtures')
     .select('fixture_id', { count: 'exact', head: true })
     .gte('match_date', fromDate)
-    .lte('match_date', toDate);
+    .lte('match_date', toDate));
 
   if (error) {
     console.error('[sitemap] fixtures count query failed:', error);
@@ -286,13 +344,13 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
   const { from, to } = pageRange(id);
   const { fromDate, toDate } = matchDateWindow();
   const supabase = getSupabaseAdmin();
-  const { data: fixtures, error } = await supabase
+  const { data: fixtures, error } = await runSitemapQuery('fixtures page query', () => supabase
     .from('fixtures')
     .select('fixture_id, home_team_id, away_team_id, match_date, updated_at')
     .gte('match_date', fromDate)
     .lte('match_date', toDate)
     .order('match_date', { ascending: false })
-    .range(from, to);
+    .range(from, to));
 
   if (error) {
     console.error('[sitemap] fixtures page query failed:', error);
@@ -309,11 +367,11 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
 
   const teamSlugById = new Map<number, string>();
   if (teamIds.length) {
-    const { data: teams, error: teamsError } = await supabase
+    const { data: teams, error: teamsError } = await runSitemapQuery('fixture team slug query', () => supabase
       .from('football_teams')
       .select('team_id, slug')
       .in('team_id', teamIds)
-      .not('slug', 'is', null);
+      .not('slug', 'is', null));
 
     if (teamsError) {
       console.error('[sitemap] fixture team slug query failed:', teamsError);

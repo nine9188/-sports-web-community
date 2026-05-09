@@ -10,8 +10,7 @@ import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { ensureAssetsCached, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import TransfersPageContent from '@/domains/livescore/components/football/transfers/TransfersPageContent';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { transferTeamUrl } from '@/domains/livescore/utils/urls';
+import { getTeamLinkSlug, getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
@@ -31,7 +30,7 @@ async function getTeamContext(id: string, slug?: string) {
   const team = await getTeamById(teamId);
   if (!team) return null;
 
-  const expectedSlug = team.slug || getTeamSlugFromName(team.name_en || team.name_ko) || 'team';
+  const expectedSlug = getTeamLinkSlug(team);
   const league = team.league_id ? await getLeagueById(team.league_id) : null;
 
   return { teamId, team, league, expectedSlug, shouldRedirect: Boolean(slug && slug !== expectedSlug) };
@@ -58,7 +57,7 @@ export async function generateMetadata({ params }: TeamTransfersPageProps): Prom
   return buildMetadata({
     title: `${teamName} 이적시장`,
     description: `${leagueContext} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.`,
-    path: transferTeamUrl(context.teamId, context.expectedSlug),
+    path: getTransferTeamHref(context.team),
     keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, '축구 이적시장', '4590football'],
   });
 }
@@ -74,7 +73,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
     if (query.type && query.type !== 'all') redirectQuery.set('type', query.type);
     if (query.page) redirectQuery.set('page', query.page);
     const queryString = redirectQuery.toString();
-    permanentRedirect(`${transferTeamUrl(context.teamId, context.expectedSlug)}${queryString ? `?${queryString}` : ''}`);
+    permanentRedirect(`${getTransferTeamHref(context.team)}${queryString ? `?${queryString}` : ''}`);
   }
 
   const currentPage = parseInt(query.page || '1', 10);
@@ -110,7 +109,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
   ]);
 
   const teamName = context.team.name_ko || context.team.name_en;
-  const teamUrl = transferTeamUrl(context.teamId, context.expectedSlug);
+  const teamUrl = getTransferTeamHref(context.team);
   const breadcrumbSchema = buildBreadcrumbJsonLd({
     items: [
       { name: '홈', url: '/' },

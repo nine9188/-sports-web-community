@@ -8,8 +8,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { wdlDraw, wdlLose, wdlWin } from '@/shared/styles/badge';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
+import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -93,7 +92,7 @@ export default function MatchItems({
     if (isDark && leagueLogoDarkUrls[id]) return leagueLogoDarkUrls[id];
     return leagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
   };
-  const getMatchHref = (match: Match) => matchUrl(match.fixture.id, getMatchSlug(match.teams.home.name, match.teams.away.name));
+  const buildMatchHref = (match: Match) => getMatchHref(match);
 
   const recentMatches = useMemo(() => {
     if (!matches) return [];
@@ -172,7 +171,7 @@ export default function MatchItems({
     }
 
     return list.map(match => {
-      const href = getMatchHref(match);
+      const href = buildMatchHref(match);
       const result = getTeamResult(match);
 
       return (

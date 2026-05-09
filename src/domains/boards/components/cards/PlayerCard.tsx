@@ -3,10 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
-import { getPlayerSlugFromName } from '@/domains/livescore/utils/slugs';
-import { playerUrl } from '@/domains/livescore/utils/urls';
+import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
 
-// 4590 표준: placeholder 및 CDN URL (CDN은 /teams/md/... 직접 경로)
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const CDN_URL = 'https://cdn.4590football.com';
@@ -18,24 +16,12 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
   const teamId = typeof team?.id === 'string' ? parseInt(team.id, 10) : team?.id;
 
-  // 4590 표준: CDN URL 직접 경로
-  const getTeamLogo = () => {
-    if (!teamId) return TEAM_PLACEHOLDER;
-    return `${CDN_URL}/teams/md/${teamId}.webp`;
-  };
-
-  const getPlayerPhoto = () => {
-    if (!numericPlayerId) return PLAYER_PLACEHOLDER;
-    return `${CDN_URL}/players/md/${numericPlayerId}.webp`;
-  };
-
-  const teamLogo = team?.id ? getTeamLogo() : TEAM_PLACEHOLDER;
-  const playerPhoto = photo ? getPlayerPhoto() : PLAYER_PLACEHOLDER;
-  const href = playerUrl(numericPlayerId, getPlayerSlugFromName(name));
+  const teamLogo = teamId ? `${CDN_URL}/teams/md/${teamId}.webp` : TEAM_PLACEHOLDER;
+  const playerPhoto = photo && numericPlayerId ? `${CDN_URL}/players/md/${numericPlayerId}.webp` : PLAYER_PLACEHOLDER;
+  const href = getPlayerHref({ ...playerData, id: numericPlayerId });
 
   const CardContent = () => (
     <>
-      {/* 헤더: 팀 로고 + 팀명 */}
       <div className="league-header">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div className="league-logo-box">
@@ -51,7 +37,6 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
         </div>
       </div>
 
-      {/* 메인: 선수 사진 + 이름 */}
       <div className="player-main">
         <div className="player-photo">
           <Image
@@ -65,7 +50,6 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
         <span className="player-name">{displayName}</span>
       </div>
 
-      {/* 푸터: 선수 정보 확인 */}
       <div className="match-footer">
         <span className="footer-link">선수 정보 확인</span>
       </div>

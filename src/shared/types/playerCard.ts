@@ -1,16 +1,21 @@
 /**
- * 선수 카드 관련 타입 정의
+ * Shared player card types.
  */
 
-// 선수 카드에 표시될 데이터
 export interface PlayerCardData {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_ko?: string | null;
+  slug?: string | null;
   koreanName?: string;
   photo: string;
   team: {
     id: number;
     name: string;
+    name_en?: string | null;
+    name_ko?: string | null;
+    slug?: string | null;
     koreanName?: string;
     logo: string;
   };
@@ -25,20 +30,17 @@ export interface PlayerCardData {
   };
 }
 
-// Tiptap 노드 속성
 export interface PlayerCardAttrs {
   playerId: string | number;
   playerData: PlayerCardData;
 }
 
-// 컴포넌트 Props
 export interface PlayerCardProps {
   playerId: string | number;
   playerData: PlayerCardData;
   isEditable?: boolean;
 }
 
-// 렌더링 옵션
 export interface PlayerCardRenderOptions {
   useInlineStyles?: boolean;
   includeDataAttr?: boolean;

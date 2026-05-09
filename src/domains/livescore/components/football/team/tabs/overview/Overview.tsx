@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { usePathname, useRouter } from 'next/navigation';
 import { LoadingState, ErrorState } from '@/domains/livescore/components/common/CommonComponents';
 import StatsCards from './components/StatsCards';
 import SeasonHighlights from './components/SeasonHighlights';
@@ -15,21 +15,8 @@ import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
 import { PlayerKoreanNames } from '../../TeamPageClient';
-import {
-  fetchTeamOverviewPlayerRankingsData,
-  fetchTeamOverviewRecentMatchesData,
-  fetchTeamOverviewStandingsData,
-  fetchTeamOverviewTransfersData,
-  fetchTeamOverviewUpcomingMatchesData
-} from '@/domains/livescore/actions/teams/team';
-import { teamKeys } from '@/shared/constants/queryKeys';
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { convertStandingsData } from '../../../../../utils/teamDataUtils';
 import TeamTabEmptyState from '../TeamTabEmptyState';
-
-type OverviewMatchesData = Awaited<ReturnType<typeof fetchTeamOverviewRecentMatchesData>>;
-type OverviewPlayerRankingsData = Awaited<ReturnType<typeof fetchTeamOverviewPlayerRankingsData>>;
 
 interface Team {
   team: {
@@ -229,83 +216,30 @@ export default function Overview({
   leagueLogoDarkUrls = {}
 }: OverviewProps) {
   const { getLeagueKoreanName } = useTeamLeague();
-  // Overview uses limited section data to keep the first tab fast.
+  const router = useRouter();
+  const pathname = usePathname();
+
   const handleTabChange = React.useCallback((tab: string, subTab?: string) => {
     if (onTabChange) {
       onTabChange(tab, subTab);
+      return;
     }
-  }, [onTabChange]);
-  const canFetchSupplemental = !isLoading && !error && !!team?.team;
-  const standingsQuery = useQuery({
-    queryKey: [...teamKeys.standings(String(teamId)), 'overview'],
-    queryFn: () => fetchTeamOverviewStandingsData(String(teamId)),
-    enabled: canFetchSupplemental && !standings,
-    ...CACHE_STRATEGIES.STABLE_DATA,
-  });
-  const transfersQuery = useQuery({
-    queryKey: [...teamKeys.detail(String(teamId)), 'overview-transfers'],
-    queryFn: () => fetchTeamOverviewTransfersData(String(teamId)),
-    enabled: canFetchSupplemental && !transfers,
-    ...CACHE_STRATEGIES.STATIC_DATA,
-  });
-  const playerRankingsQuery = useQuery<OverviewPlayerRankingsData>({
-    queryKey: [...teamKeys.detail(String(teamId)), 'overview-player-rankings'],
-    queryFn: () => fetchTeamOverviewPlayerRankingsData(String(teamId), 5),
-    enabled: canFetchSupplemental && (!playerStats || !squad),
-    ...CACHE_STRATEGIES.STABLE_DATA,
-  });
-  const recentMatchesQuery = useQuery<OverviewMatchesData>({
-    queryKey: [...teamKeys.matches(String(teamId)), 'overview-recent'],
-    queryFn: () => fetchTeamOverviewRecentMatchesData(String(teamId), 5),
-    enabled: canFetchSupplemental && !matches,
-    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
-  });
-  const upcomingMatchesQuery = useQuery<OverviewMatchesData>({
-    queryKey: [...teamKeys.matches(String(teamId)), 'overview-upcoming'],
-    queryFn: () => fetchTeamOverviewUpcomingMatchesData(String(teamId), 5),
-    enabled: canFetchSupplemental && !matches,
-    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
-  });
-  const displayStandings = standings || convertStandingsData(standingsQuery.data?.standings);
-  const displayTransfers = transfers || transfersQuery.data?.transfers;
-  const displayPlayerStats = playerStats || playerRankingsQuery.data?.playerStats;
-  const displaySquad = squad || playerRankingsQuery.data?.squad;
-  const fetchedMatches = [
-    ...(recentMatchesQuery.data?.matches || []),
-    ...(upcomingMatchesQuery.data?.matches || []),
-  ];
-  const displayMatches = matches || (fetchedMatches.length > 0 ? fetchedMatches : undefined);
-  const displayPlayerKoreanNames: PlayerKoreanNames = {
-    ...playerKoreanNames,
-    ...(playerRankingsQuery.data?.playerKoreanNames || {}),
-    ...(transfersQuery.data?.playerKoreanNames || {}),
-  };
-  const displayPlayerPhotoUrls: Record<number, string> = {
-    ...playerPhotoUrls,
-    ...(playerRankingsQuery.data?.playerPhotoUrls || {}),
-    ...(transfersQuery.data?.playerPhotoUrls || {}),
-  };
-  const displayTeamLogoUrls: Record<number, string> = {
-    ...teamLogoUrls,
-    ...(standingsQuery.data?.teamLogoUrls || {}),
-    ...(transfersQuery.data?.teamLogoUrls || {}),
-    ...(recentMatchesQuery.data?.teamLogoUrls || {}),
-    ...(upcomingMatchesQuery.data?.teamLogoUrls || {}),
-  };
-  const displayLeagueLogoUrls: Record<number, string> = {
-    ...leagueLogoUrls,
-    ...(standingsQuery.data?.leagueLogoUrls || {}),
-    ...(recentMatchesQuery.data?.leagueLogoUrls || {}),
-    ...(upcomingMatchesQuery.data?.leagueLogoUrls || {}),
-  };
-  const displayLeagueLogoDarkUrls: Record<number, string> = {
-    ...leagueLogoDarkUrls,
-    ...(standingsQuery.data?.leagueLogoDarkUrls || {}),
-    ...(recentMatchesQuery.data?.leagueLogoDarkUrls || {}),
-    ...(upcomingMatchesQuery.data?.leagueLogoDarkUrls || {}),
-  };
-  const matchesLoading = recentMatchesQuery.isLoading || upcomingMatchesQuery.isLoading;
-  const matchesError = recentMatchesQuery.isError && upcomingMatchesQuery.isError;
+    const params = new URLSearchParams();
+    params.set('tab', tab);
+    if (subTab) params.set('subTab', subTab);
+    router.push(`${pathname}?${params.toString()}`);
+  }, [onTabChange, pathname, router]);
+
+  const displayStandings = standings;
+  const displayTransfers = transfers;
+  const displayPlayerStats = playerStats;
+  const displaySquad = squad;
+  const displayMatches = matches;
+  const displayPlayerKoreanNames = playerKoreanNames;
+  const displayPlayerPhotoUrls = playerPhotoUrls;
+  const displayTeamLogoUrls = teamLogoUrls;
+  const displayLeagueLogoUrls = leagueLogoUrls;
+  const displayLeagueLogoDarkUrls = leagueLogoDarkUrls;
   
   if (isLoading) {
     return <LoadingState message="팀 개요 데이터를 불러오는 중..." />;
@@ -346,12 +280,12 @@ export default function Overview({
           teamLogoUrls={displayTeamLogoUrls}
           leagueLogoUrls={displayLeagueLogoUrls}
           leagueLogoDarkUrls={displayLeagueLogoDarkUrls}
-          recentLoading={!matches && recentMatchesQuery.isLoading}
-          upcomingLoading={!matches && upcomingMatchesQuery.isLoading}
+          recentLoading={false}
+          upcomingLoading={false}
         />
-      ) : matchesLoading ? (
+      ) : false ? (
         <MatchSectionsLoading />
-      ) : matchesError ? (
+      ) : false ? (
         <OverviewSectionEmpty title="경기 정보" message="경기 정보를 불러오지 못했습니다." />
       ) : null}
 
@@ -366,9 +300,9 @@ export default function Overview({
           leagueLogoUrls={displayLeagueLogoUrls}
           leagueLogoDarkUrls={displayLeagueLogoDarkUrls}
         />
-      ) : standingsQuery.isLoading ? (
+      ) : false ? (
         <OverviewSectionLoading title="리그 순위" />
-      ) : standingsQuery.isError ? (
+      ) : false ? (
         <OverviewSectionEmpty title="리그 순위" message="순위 정보를 불러오지 못했습니다." />
       ) : null}
 
@@ -381,7 +315,7 @@ export default function Overview({
           playerKoreanNames={displayPlayerKoreanNames}
           playerPhotoUrls={displayPlayerPhotoUrls}
         />
-      ) : playerRankingsQuery.isLoading ? (
+      ) : false ? (
         <OverviewSectionLoading title="시즌 하이라이트" />
       ) : null}
 
@@ -394,9 +328,9 @@ export default function Overview({
           playerPhotoUrls={displayPlayerPhotoUrls}
           teamLogoUrls={displayTeamLogoUrls}
         />
-      ) : transfersQuery.isLoading ? (
+      ) : false ? (
         <RecentTransfersLoading />
-      ) : transfersQuery.isError ? (
+      ) : false ? (
         <OverviewSectionEmpty title="최근 이적" message="이적 정보를 불러오지 못했습니다." />
       ) : null}
     </div>

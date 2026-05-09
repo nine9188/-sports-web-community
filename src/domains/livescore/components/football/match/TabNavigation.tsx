@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { TabList, type TabItem } from '@/shared/components/ui';
 
 interface TabNavigationProps {
@@ -12,6 +12,7 @@ interface TabNavigationProps {
 
 export default function TabNavigation({ activeTab = 'power', onTabChange, onTabIntent }: TabNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const tabs = useMemo<TabItem[]>(() => [
     { id: 'support', label: '\uC751\uC6D0', mobileOnly: true, href: `${pathname}?tab=support` },
     { id: 'power', label: '\uC804\uB825', href: pathname },
@@ -23,8 +24,16 @@ export default function TabNavigation({ activeTab = 'power', onTabChange, onTabI
 
   const handleTabChange = useCallback((tabId: string) => {
     if (tabId === activeTab) return;
-    onTabChange?.(tabId);
-  }, [activeTab, onTabChange]);
+    if (onTabChange) {
+      onTabChange(tabId);
+      return;
+    }
+
+    const tab = tabs.find((item) => item.id === tabId);
+    if (tab?.href) {
+      router.push(tab.href);
+    }
+  }, [activeTab, onTabChange, router, tabs]);
 
   return (
     <TabList

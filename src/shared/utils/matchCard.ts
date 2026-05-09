@@ -1,21 +1,15 @@
 /**
- * 매치카드 공통 유틸리티
+ * Shared match card utilities.
  *
- * 이 파일은 매치카드 관련 모든 유틸리티의 단일 소스입니다.
- * - 이미지 URL 생성
- * - 다크모드 리그 ID
- * - 상태 텍스트 생성
+ * This file is the single source for match card image URLs, status labels,
+ * normalization, and HTML generation.
  */
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
+import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
 
 /**
- * 다크모드 전용 이미지가 있는 리그 ID 목록
- *
- * 이 리그들은 라이트 모드와 다크 모드에서 다른 로고를 사용합니다.
- * Supabase Storage에 {id}.png (라이트)와 {id}-1.png (다크)가 있어야 합니다.
+ * Leagues that have separate dark-mode logos.
  */
 export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
   39, // Premier League
@@ -32,14 +26,9 @@ export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
   61, // Ligue 1
 ] as const;
 
-/**
- * CDN URL (Cloudflare 프록시 or Supabase 직접)
- * NEXT_PUBLIC_SUPABASE_URL은 Supabase 프로젝트 도메인이라 사용 금지 (이미지 경로 불일치)
- */
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_STORAGE_CDN_URL || 'https://cdn.4590football.com';
 
-// 로컬 정적 파일이 있는 팀 ID (public/teams/{id}.webp)
 const STATIC_TEAM_IDS = new Set([
   33,34,35,36,39,40,42,44,45,47,48,49,50,51,52,55,63,65,66,77,79,80,81,82,83,84,85,91,93,94,95,96,97,
   106,108,111,112,114,116,157,160,161,162,163,164,165,167,168,169,170,172,173,175,176,180,182,186,191,192,
@@ -49,30 +38,22 @@ const STATIC_TEAM_IDS = new Set([
   2765,2766,2767,2768,7060,7061,7076,7078,7087,7098,9171,
 ]);
 
-// 로컬 정적 파일이 있는 리그 ID (public/leagues/{id}.webp)
 const STATIC_LEAGUE_IDS = new Set([
   2, 3, 39, 61, 78, 88, 94, 98, 135, 140, 179, 292, 293, 848,
 ]);
 
-// 다크모드 로컬 파일이 있는 리그 ID (public/leagues/{id}-1.webp)
 const STATIC_DARK_LEAGUE_IDS = new Set([
   2, 3, 39, 61, 88, 98, 179, 292, 848,
 ]);
 
-/**
- * 이미지 URL 생성 (라이트/다크 모드 지원)
- * 로컬 정적 파일 우선, 없으면 CDN 경유
- */
 export function getImageUrls(
   logoUrl: string | undefined,
   id: number | string | undefined,
   type: 'teams' | 'leagues'
 ): ImageUrlPair {
-  // 1. ID가 있으면 로컬 정적 파일 우선 확인
   if (id) {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
 
-    // 로컬 파일이 있는 경우
     if (type === 'teams' && STATIC_TEAM_IDS.has(numericId)) {
       const localUrl = `/teams/${numericId}.webp`;
       return { light: localUrl, dark: localUrl };
@@ -85,7 +66,6 @@ export function getImageUrls(
       return { light: lightUrl, dark: darkUrl };
     }
 
-    // 로컬에 없으면 CDN URL
     const lightUrl = `${SUPABASE_URL}/${type}/md/${numericId}.webp`;
     const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
     const darkUrl = hasDarkImage
@@ -95,14 +75,11 @@ export function getImageUrls(
     return { light: lightUrl, dark: darkUrl };
   }
 
-  // 2. URL이 있으면 처리
   if (logoUrl) {
-    // 이미 로컬 경로인 경우 그대로 사용
     if (logoUrl.startsWith('/teams/') || logoUrl.startsWith('/leagues/')) {
       return { light: logoUrl, dark: logoUrl };
     }
 
-    // Supabase Storage / CDN URL인 경우 - ID 추출 후 로컬 우선 확인
     if (logoUrl.includes('supabase.co') || logoUrl.includes('cdn.4590football.com')) {
       const idMatch = logoUrl.match(/\/(teams|leagues)\/(?:md\/)?(\d+)(?:-1)?\.(?:webp|png)$/);
       if (idMatch) {
@@ -112,7 +89,6 @@ export function getImageUrls(
       }
     }
 
-    // API Sports URL인 경우
     if (logoUrl.includes('media.api-sports.io')) {
       const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.(?:webp|png)$/);
       if (idMatch) {
@@ -121,20 +97,12 @@ export function getImageUrls(
       }
     }
 
-    // 그 외 URL은 그대로 사용
     return { light: logoUrl, dark: logoUrl };
   }
 
-  // 3. 둘 다 없으면 플레이스홀더
   return { light: '/images/placeholder-team.svg', dark: '/images/placeholder-team.svg' };
 }
 
-/**
- * 경기 상태 텍스트 및 스타일 정보 생성
- *
- * @param status - 경기 상태 객체
- * @returns 상태 텍스트, CSS 클래스, 라이브 여부
- */
 export function getStatusInfo(status: MatchStatus | undefined | null): MatchStatusInfo {
   if (!status) {
     return { text: '경기 결과', className: '', isLive: false };
@@ -154,17 +122,17 @@ export function getStatusInfo(status: MatchStatus | undefined | null): MatchStat
 
     case '1H': {
       const elapsed = status.elapsed ? `(${status.elapsed}분)` : '';
-      return { text: `전반전 진행 중 ${elapsed}`, className: 'live', isLive: true };
+      return { text: `전반 진행 중${elapsed}`, className: 'live', isLive: true };
     }
 
     case '2H': {
       const elapsed = status.elapsed ? `(${status.elapsed}분)` : '';
-      return { text: `후반전 진행 중 ${elapsed}`, className: 'live', isLive: true };
+      return { text: `후반 진행 중${elapsed}`, className: 'live', isLive: true };
     }
 
     case 'LIVE': {
       const elapsed = status.elapsed ? `(${status.elapsed}분)` : '';
-      return { text: `진행 중 ${elapsed}`, className: 'live', isLive: true };
+      return { text: `진행 중${elapsed}`, className: 'live', isLive: true };
     }
 
     case 'PST':
@@ -181,46 +149,28 @@ export function getStatusInfo(status: MatchStatus | undefined | null): MatchStat
   }
 }
 
-/**
- * MatchCardData 검증
- *
- * @param data - 검증할 데이터
- * @returns 유효한 MatchCardData인지 여부
- */
 export function isValidMatchCardData(data: unknown): boolean {
   if (!data || typeof data !== 'object') return false;
 
   const obj = data as Record<string, unknown>;
-
-  // 필수 필드 확인
   if (!obj.teams || typeof obj.teams !== 'object') return false;
   if (!obj.league || typeof obj.league !== 'object') return false;
 
   const teams = obj.teams as Record<string, unknown>;
-  if (!teams.home || !teams.away) return false;
-
-  return true;
+  return Boolean(teams.home && teams.away);
 }
 
-/**
- * 정규화된 매치 데이터 타입
- */
 export interface NormalizedMatchData {
   id: string | number;
   teams: {
-    home: { id?: number | string; name: string; logo?: string; winner?: boolean | null };
-    away: { id?: number | string; name: string; logo?: string; winner?: boolean | null };
+    home: { id?: number | string; name: string; name_en?: string | null; name_ko?: string | null; slug?: string | null; logo?: string; winner?: boolean | null };
+    away: { id?: number | string; name: string; name_en?: string | null; name_ko?: string | null; slug?: string | null; logo?: string; winner?: boolean | null };
   };
   goals: { home: number | null; away: number | null };
   league: { id?: number | string; name: string; logo?: string };
   status: { code: string; elapsed?: number | null };
 }
 
-/**
- * API 응답을 MatchCardData로 정규화
- *
- * API Sports 응답이나 기존 저장된 데이터를 표준 형식으로 변환
- */
 export function normalizeMatchCardData(data: Record<string, unknown>): NormalizedMatchData {
   const teams = (data.teams as Record<string, unknown>) || {};
   const goals = (data.goals as Record<string, unknown>) || {};
@@ -236,12 +186,18 @@ export function normalizeMatchCardData(data: Record<string, unknown>): Normalize
       home: {
         id: homeTeam.id as number | string | undefined,
         name: (homeTeam.name as string) || '홈팀',
+        name_en: homeTeam.name_en as string | null | undefined,
+        name_ko: homeTeam.name_ko as string | null | undefined,
+        slug: homeTeam.slug as string | null | undefined,
         logo: homeTeam.logo as string | undefined,
         winner: homeTeam.winner as boolean | null | undefined,
       },
       away: {
         id: awayTeam.id as number | string | undefined,
         name: (awayTeam.name as string) || '원정팀',
+        name_en: awayTeam.name_en as string | null | undefined,
+        name_ko: awayTeam.name_ko as string | null | undefined,
+        slug: awayTeam.slug as string | null | undefined,
         logo: awayTeam.logo as string | undefined,
         winner: awayTeam.winner as boolean | null | undefined,
       },
@@ -262,27 +218,12 @@ export function normalizeMatchCardData(data: Record<string, unknown>): Normalize
   };
 }
 
-/**
- * 매치카드 HTML 생성 옵션
- */
 export interface MatchCardHtmlOptions {
-  /** 인라인 스타일 사용 여부 (에디터용: true, 조회/저장용: false) */
   useInlineStyles?: boolean;
-  /** data-match 속성에 원본 데이터 포함 여부 (에디터용: true) */
   includeDataAttr?: boolean;
-  /** processed 마크 추가 여부 */
   markAsProcessed?: boolean;
 }
 
-/**
- * 통합 매치카드 HTML 생성기
- *
- * 모든 렌더러가 이 함수를 사용하여 일관된 HTML 생성
- *
- * @param matchData - 정규화된 매치 데이터
- * @param options - HTML 생성 옵션
- * @returns 매치카드 HTML 문자열
- */
 export function generateMatchCardHtml(
   matchData: NormalizedMatchData,
   options: MatchCardHtmlOptions = {}
@@ -299,28 +240,19 @@ export function generateMatchCardHtml(
   const homeScore = goals.home !== null ? goals.home : '-';
   const awayScore = goals.away !== null ? goals.away : '-';
 
-  // 한글명: matchData에 이미 포함된 값 우선 (작성 시점에 createMatchCardData 등에서 한글명 채워줌)
-  // - 매치 카드 생성/저장 흐름에서 home.name, away.name, league.name 자체에 한글명을 넣어 둠
-  // - 본 함수는 단일 소스(DB) 조회 의존성 제거를 위해 추가 lookup을 하지 않음
   const homeTeamName = homeTeam.name;
   const awayTeamName = awayTeam.name;
   const leagueName = league.name;
-  const href = matchUrl(matchId, getMatchSlug(homeTeam.name, awayTeam.name));
+  const href = getMatchHrefByTeams(matchId, homeTeam, awayTeam);
 
-  // 이미지 URL 생성
   const leagueImages = getImageUrls(league.logo, league.id, 'leagues');
   const homeTeamImages = getImageUrls(homeTeam.logo, homeTeam.id, 'teams');
   const awayTeamImages = getImageUrls(awayTeam.logo, awayTeam.id, 'teams');
-
-  // 상태 정보
   const statusInfo = getStatusInfo(status);
-
-  // data-match 속성
   const dataMatchAttr = includeDataAttr
     ? `data-match="${encodeURIComponent(JSON.stringify(matchData))}"`
     : '';
 
-  // CSS 클래스 vs 인라인 스타일
   if (useInlineStyles) {
     return generateInlineStyleHtml(
       matchId,
@@ -340,7 +272,6 @@ export function generateMatchCardHtml(
     );
   }
 
-  // CSS 클래스 버전
   const processedClass = markAsProcessed ? ' processed-match-card' : '';
   const processedAttr = markAsProcessed ? ' data-processed="true"' : '';
 
@@ -407,9 +338,6 @@ export function generateMatchCardHtml(
   `;
 }
 
-/**
- * 인라인 스타일 HTML 생성 (에디터용)
- */
 function generateInlineStyleHtml(
   matchId: string | number,
   homeTeam: NormalizedMatchData['teams']['home'],
@@ -427,7 +355,7 @@ function generateInlineStyleHtml(
   leagueName: string
 ): string {
   const statusStyle = statusInfo.isLive ? 'color: #059669; font-weight: 500;' : '';
-  const href = matchUrl(matchId, getMatchSlug(homeTeam.name, awayTeam.name));
+  const href = getMatchHrefByTeams(matchId, homeTeam, awayTeam);
 
   return `
     <div data-type="match-card" data-match-id="${matchId}" ${dataMatchAttr} style="

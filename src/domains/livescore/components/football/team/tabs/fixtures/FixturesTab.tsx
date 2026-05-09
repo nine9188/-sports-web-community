@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -12,12 +11,7 @@ import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/
 import { Pagination } from '@/shared/components/ui/pagination';
 import { TabList } from '@/shared/components/ui/tabs';
 import { Match } from '../overview/components/MatchItems';
-import { getMatchSlug } from '@/domains/livescore/utils/slugs';
-import { matchUrl } from '@/domains/livescore/utils/urls';
-import { fetchTeamFixturesTabData } from '@/domains/livescore/actions/teams/team';
-import { teamKeys } from '@/shared/constants/queryKeys';
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig';
-import { Match as ApiMatch } from '@/domains/livescore/actions/teams/matches';
+import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
 import TeamTabEmptyState from '../TeamTabEmptyState';
 import { wdlDraw, wdlLose, wdlWin } from '@/shared/styles/badge';
 
@@ -39,30 +33,7 @@ interface FixturesTabProps {
   leagueLogoDarkUrls?: Record<number, string>;
 }
 
-type FixturesTabData = Awaited<ReturnType<typeof fetchTeamFixturesTabData>>;
 type ResultType = 'W' | 'L' | 'D';
-
-function convertMatchesForFixtures(matchesArray: ApiMatch[] | undefined | null): Match[] | undefined {
-  if (!matchesArray) return undefined;
-
-  return matchesArray.map(match => ({
-    fixture: {
-      id: match.fixture.id,
-      date: match.fixture.date,
-      status: {
-        short: match.fixture.status.short,
-        long: match.fixture.status.short,
-      },
-    },
-    league: {
-      id: (match.league as { id?: number; name: string; logo: string }).id || 0,
-      name: match.league.name,
-      logo: match.league.logo,
-    },
-    teams: match.teams,
-    goals: match.goals,
-  }));
-}
 
 export default function FixturesTab({
   matches,
@@ -70,15 +41,9 @@ export default function FixturesTab({
   teamLogoUrls = {},
   leagueLogoUrls = {},
   leagueLogoDarkUrls = {},
-}: FixturesTabProps) {  const searchParams = useSearchParams();
+}: FixturesTabProps) {
+  const searchParams = useSearchParams();
   const { getLeagueKoreanName } = useTeamLeague();
-
-  const fixturesQuery = useQuery<FixturesTabData>({
-    queryKey: [...teamKeys.matches(String(teamId)), 'fixtures-tab'],
-    queryFn: () => fetchTeamFixturesTabData(String(teamId)),
-    enabled: !matches,
-    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
-  });
 
   const [isDark, setIsDark] = useState(false);
 
@@ -95,26 +60,17 @@ export default function FixturesTab({
     return () => observer.disconnect();
   }, []);
 
-  const displayMatches = matches || convertMatchesForFixtures(fixturesQuery.data?.matches);
-  const displayTeamLogoUrls: Record<number, string> = {
-    ...teamLogoUrls,
-    ...(fixturesQuery.data?.teamLogoUrls || {}),
-  };
-  const displayLeagueLogoUrls: Record<number, string> = {
-    ...leagueLogoUrls,
-    ...(fixturesQuery.data?.leagueLogoUrls || {}),
-  };
-  const displayLeagueLogoDarkUrls: Record<number, string> = {
-    ...leagueLogoDarkUrls,
-    ...(fixturesQuery.data?.leagueLogoDarkUrls || {}),
-  };
+  const displayMatches = matches;
+  const displayTeamLogoUrls = teamLogoUrls;
+  const displayLeagueLogoUrls = leagueLogoUrls;
+  const displayLeagueLogoDarkUrls = leagueLogoDarkUrls;
 
   const getTeamLogo = (id: number) => displayTeamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getLeagueLogo = (id: number) => {
     if (isDark && displayLeagueLogoDarkUrls[id]) return displayLeagueLogoDarkUrls[id];
     return displayLeagueLogoUrls[id] || LEAGUE_PLACEHOLDER;
   };
-  const getMatchHref = (match: Match) => matchUrl(match.fixture.id, getMatchSlug(match.teams.home.name, match.teams.away.name));
+  const buildMatchHref = (match: Match) => getMatchHref(match);
 
   const initialTab = searchParams?.get('subTab') || 'recent';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -175,7 +131,7 @@ export default function FixturesTab({
     return currentMatches.slice(start, start + ITEMS_PER_PAGE);
   }, [currentMatches, currentPage]);
 
-  if ((!displayMatches || displayMatches.length === 0) && !fixturesQuery.isLoading) {
+  if (!displayMatches || displayMatches.length === 0) {
     return <TeamTabEmptyState title="경기 일정" message="경기 일정 데이터가 없습니다." />;
   }
 
@@ -211,7 +167,7 @@ export default function FixturesTab({
 
         <div className="divide-y divide-black/5 dark:divide-white/10">
           {paginatedMatches.length > 0 ? paginatedMatches.map(match => {
-            const href = getMatchHref(match);
+            const href = buildMatchHref(match);
             const result = getTeamResult(match);
 
             return (
@@ -278,9 +234,9 @@ export default function FixturesTab({
             );
           }) : (
             <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
-              {fixturesQuery.isLoading
+              {false
                 ? '불러오는 중...'
-                : fixturesQuery.isError
+                : false
                   ? '경기 정보를 불러오지 못했습니다.'
                   : isRecentTab
                     ? '최근 경기 정보가 없습니다'

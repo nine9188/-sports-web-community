@@ -354,8 +354,6 @@ function mergePlayerProfileFromApi(dbPlayerData: PlayerData, apiPlayerData: Play
     },
     statistics: dbStat ? [{
       ...dbStat,
-      team: apiStat?.team?.id ? apiStat.team : dbStat.team,
-      league: apiStat?.league?.id ? apiStat.league : dbStat.league,
       games: {
         ...dbStat.games,
         number: apiStat?.games?.number || dbStat.games.number,

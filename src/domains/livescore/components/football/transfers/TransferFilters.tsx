@@ -11,8 +11,7 @@ import {
 } from '@/shared/components/ui';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { TRANSFER_LEAGUE_OPTIONS } from '@/domains/livescore/constants/transferLeagues';
-import { getTeamSlugFromName } from '@/domains/livescore/utils/slugs';
-import { transferTeamUrl } from '@/domains/livescore/utils/urls';
+import { getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 const LEAGUE_OPTIONS = [
   { value: '', label: '리그를 선택하세요' },
@@ -79,7 +78,7 @@ export default function TransferFilters({ currentFilters, leagueTeamGroups }: Tr
   ], []);
 
   const pushTeamUrl = (team: { id: number; name_ko: string; name_en: string; slug?: string | null }) => {
-    router.push(transferTeamUrl(team.id, team.slug || getTeamSlugFromName(team.name_en || team.name_ko)));
+    router.push(getTransferTeamHref(team));
   };
 
   const updateFilter = (key: string, value: string) => {

@@ -8,6 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "next lint --ignore-during-builds",
+    "verify:sitemaps": "node scripts/verify-sitemaps.js",
     "analyze": "cross-env ANALYZE=true next build --webpack",
     "test": "vitest",
     "test:ui": "vitest --ui",
