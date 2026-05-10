@@ -1,9 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { getTransferTeamSitemap, siteUrl } from '@/shared/seo/sitemap';
+import { siteUrl } from '@/shared/seo/sitemap';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const transferTeamUrls = await getTransferTeamSitemap();
-
   return [
     {
       url: siteUrl('/'),
@@ -60,6 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'hourly',
       priority: 0.7,
     },
-    ...transferTeamUrls,
   ];
 }

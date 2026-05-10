@@ -1,11 +1,12 @@
 const baseUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
 
 const checks = [
-  { path: '/sitemap.xml', minLocs: 20 },
+  { path: '/sitemap.xml', minLocs: 8 },
   { path: '/boards/posts/sitemap/0.xml', minLocs: 100 },
   { path: '/livescore/football/team/sitemap/0.xml', minLocs: 100 },
   { path: '/livescore/football/player/sitemap/0.xml', minLocs: 100 },
   { path: '/livescore/football/match/sitemap/0.xml', minLocs: 100 },
+  { path: '/transfers/sitemap.xml', minLocs: 100 },
 ];
 
 function absoluteUrl(path) {

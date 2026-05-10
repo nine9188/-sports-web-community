@@ -44,6 +44,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       generatedSitemapUrl('/livescore/football/team'),
       generatedSitemapUrl('/livescore/football/player'),
       generatedSitemapUrl('/livescore/football/match'),
+      siteUrl('/transfers/sitemap.xml'),
       siteUrl('/shop/sitemap.xml'),
     ],
   };
