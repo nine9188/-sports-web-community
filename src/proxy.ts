@@ -4,6 +4,18 @@ import { Database } from '@/shared/types/supabase'
 
 const CANONICAL_HOST = '4590football.com'
 
+const SITE_LAYOUT_SKIP_PATHS = new Set([
+  '/about',
+  '/contact',
+  '/guide',
+  '/privacy',
+  '/terms',
+])
+
+function shouldSkipSiteLayout(pathname: string) {
+  return SITE_LAYOUT_SKIP_PATHS.has(pathname)
+}
+
 function plainNotFoundResponse() {
   return new NextResponse(
     `<!doctype html>
@@ -104,6 +116,16 @@ export async function proxy(request: NextRequest) {
     if (!Number.isFinite(playerId) || playerId <= 0 || playerSlug === String(playerId)) {
       return plainNotFoundResponse()
     }
+  }
+
+  if (request.method === 'GET' && shouldSkipSiteLayout(pathname)) {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-skip-site-layout', '1')
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
   }
 
   // Redirect legacy team URLs without a slug to the canonical slug URL.

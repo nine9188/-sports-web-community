@@ -1,40 +1,58 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { getMatchesByDate, type MatchesWithImages } from '@/domains/boards/actions/matches';
 
-// Query Keys
-export const matchFormKeys = {
-  all: ['matchForm'] as const,
-  matchesByDate: (date: string) => [...matchFormKeys.all, 'matchesByDate', date] as const,
-};
-
-/**
- * 날짜별 경기 목록을 가져오는 훅
- * - 선택된 날짜의 경기 데이터 로드
- * - 4590 표준: Storage URL 포함 반환
- * - 캐싱을 통해 동일 날짜 재요청 방지
- */
 export function useMatchesByDate(date: string, options: { enabled?: boolean } = {}) {
   const { enabled = true } = options;
+  const [result, setResult] = useState<MatchesWithImages | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const query = useQuery({
-    queryKey: matchFormKeys.matchesByDate(date),
-    queryFn: async (): Promise<MatchesWithImages> => {
-      const data = await getMatchesByDate(date);
-      return data;
-    },
-    enabled: enabled && !!date,
-    staleTime: 1000 * 60 * 5, // 5분 (경기 상태가 자주 변경될 수 있음)
-    gcTime: 1000 * 60 * 30, // 30분
-  });
+  useEffect(() => {
+    if (!enabled || !date) {
+      setResult(null);
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
 
-  // 4590 표준: 호환성을 위해 data를 MatchesByDateResult 형태로 반환
+    let cancelled = false;
+
+    async function loadMatches() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await getMatchesByDate(date);
+        if (!cancelled) {
+          setResult(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error('Failed to load matches'));
+          setResult(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMatches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [date, enabled]);
+
   return {
-    ...query,
-    data: query.data?.matches || [],
-    teamLogoUrls: query.data?.teamLogoUrls || {},
-    leagueLogoUrls: query.data?.leagueLogoUrls || {},
-    leagueLogoUrlsDark: query.data?.leagueLogoUrlsDark || {},
+    data: result?.matches || [],
+    teamLogoUrls: result?.teamLogoUrls || {},
+    leagueLogoUrls: result?.leagueLogoUrls || {},
+    leagueLogoUrlsDark: result?.leagueLogoUrlsDark || {},
+    isLoading,
+    error,
   };
 }

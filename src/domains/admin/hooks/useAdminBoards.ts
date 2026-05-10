@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import {
   getAllBoards,
   createBoard,
@@ -9,24 +9,14 @@ import {
   swapBoardOrder,
   type Board,
 } from '../actions/boards';
-import { adminKeys } from '@/shared/constants/queryKeys';
+import { useAsyncData, useAsyncMutation } from './useLocalAsync';
 
-/**
- * Converts a flat list of boards into a hierarchical tree structure.
- *
- * Algorithm:
- * 1. Copies all boards and initializes each with `level: 0` and an empty `children` array.
- * 2. Builds a lookup map (boardMap) keyed by board ID for O(1) access.
- * 3. Iterates through all boards: if a board has a `parent_id` that exists in the map,
- *    it is appended to the parent's `children` array and its level is set to 1.
- *    Otherwise (no parent_id), it becomes a root board.
- * 4. Root boards are sorted by `display_order`.
- * 5. A final pass recursively assigns correct `level` values to all nested children
- *    (depth-first), ensuring deeply nested boards have accurate depth indicators.
- *
- * @param boardsData - Flat array of Board objects from the database
- * @returns Array of root-level Board objects with nested `children` representing the hierarchy
- */
+const listeners = new Set<() => void>();
+
+function notifyBoardsChanged() {
+  listeners.forEach((listener) => listener());
+}
+
 function createBoardStructure(boardsData: Board[]): Board[] {
   const processedBoards = boardsData.map((board) => ({
     ...board,
@@ -43,9 +33,7 @@ function createBoardStructure(boardsData: Board[]): Board[] {
 
   processedBoards.forEach((board) => {
     if (board.parent_id && boardMap[board.parent_id]) {
-      if (!boardMap[board.parent_id].children) {
-        boardMap[board.parent_id].children = [];
-      }
+      boardMap[board.parent_id].children ||= [];
       board.level = 1;
       boardMap[board.parent_id].children!.push(board);
     } else if (!board.parent_id) {
@@ -55,33 +43,25 @@ function createBoardStructure(boardsData: Board[]): Board[] {
 
   rootBoards.sort((a, b) => a.display_order - b.display_order);
 
-  processedBoards.forEach((board) => {
+  const setChildLevels = (children: Board[], parentLevel: number) => {
+    children.sort((a, b) => a.display_order - b.display_order);
+    children.forEach((child) => {
+      child.level = parentLevel + 1;
+      if (child.children && child.children.length > 0) {
+        setChildLevels(child.children as Board[], child.level);
+      }
+    });
+  };
+
+  rootBoards.forEach((board) => {
     if (board.children && board.children.length > 0) {
-      (board.children as Board[]).sort((a, b) => a.display_order - b.display_order);
-
-      (board.children as Board[]).forEach((child) => {
-        child.level = (board.level || 0) + 1;
-
-        if (child.children && child.children.length > 0) {
-          const setChildLevels = (children: Board[], parentLevel: number) => {
-            children.forEach((grandChild) => {
-              grandChild.level = parentLevel + 1;
-              if (grandChild.children && grandChild.children.length > 0) {
-                setChildLevels(grandChild.children, grandChild.level);
-              }
-            });
-          };
-
-          setChildLevels(child.children as Board[], child.level);
-        }
-      });
+      setChildLevels(board.children as Board[], board.level || 0);
     }
   });
 
   return rootBoards;
 }
 
-// 계층 구조를 평면화
 function flattenStructuredBoards(structuredBoards: Board[]): Board[] {
   const result: Board[] = [];
 
@@ -97,19 +77,21 @@ function flattenStructuredBoards(structuredBoards: Board[]): Board[] {
 }
 
 export function useAdminBoards() {
-  const query = useQuery({
-    queryKey: adminKeys.boards(),
-    queryFn: async () => {
-      const result = await getAllBoards();
-      if (!result.success) {
-        throw new Error(result.error || '게시판 목록을 불러오는데 실패했습니다.');
-      }
-      return result.data!;
-    },
-    staleTime: 1000 * 60 * 2, // 2분
+  const query = useAsyncData(async () => {
+    const result = await getAllBoards();
+    if (!result.success) {
+      throw new Error(result.error || '게시판 목록을 불러오지 못했습니다.');
+    }
+    return result.data!;
   });
 
-  // 계층 구조 데이터 계산
+  useEffect(() => {
+    listeners.add(query.refetch);
+    return () => {
+      listeners.delete(query.refetch);
+    };
+  }, [query.refetch]);
+
   const structuredBoards = query.data ? createBoardStructure(query.data) : [];
   const flatBoards = flattenStructuredBoards(structuredBoards);
 
@@ -122,44 +104,24 @@ export function useAdminBoards() {
 }
 
 export function useCreateBoardMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createBoard,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.boards() });
-    },
-  });
+  return useAsyncMutation(createBoard, notifyBoardsChanged);
 }
 
 export function useUpdateBoardMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, formData }: { id: string; formData: Parameters<typeof updateBoard>[1] }) =>
+  return useAsyncMutation(
+    ({ id, formData }: { id: string; formData: Parameters<typeof updateBoard>[1] }) =>
       updateBoard(id, formData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.boards() });
-    },
-  });
+    notifyBoardsChanged
+  );
 }
 
 export function useDeleteBoardMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteBoard,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.boards() });
-    },
-  });
+  return useAsyncMutation((id: string) => deleteBoard(id), notifyBoardsChanged);
 }
 
 export function useSwapBoardOrderMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
+  return useAsyncMutation(
+    ({
       boardId,
       targetId,
       boardOrder,
@@ -170,8 +132,6 @@ export function useSwapBoardOrderMutation() {
       boardOrder: number;
       targetOrder: number;
     }) => swapBoardOrder(boardId, targetId, boardOrder, targetOrder),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.boards() });
-    },
-  });
+    notifyBoardsChanged
+  );
 }

@@ -1,13 +1,12 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchLeagueTeams } from '@/domains/livescore/actions/footballApi';
 import { fetchTeamSquad, type Player } from '@/domains/livescore/actions/teams/squad';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueLogoUrls, getTeamLogoUrls, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 
-// 기존 TeamMapping 타입 호환 (legacy callers may still import this name)
 export interface TeamMapping {
   id: number;
   name_ko: string;
@@ -18,15 +17,6 @@ export interface TeamMapping {
   logo?: string;
 }
 
-// Query Keys
-export const entityKeys = {
-  all: ['entity'] as const,
-  leagueLogos: (leagueIds: number[]) => [...entityKeys.all, 'leagueLogos', leagueIds.join(',')] as const,
-  leagueTeams: (leagueId: number) => [...entityKeys.all, 'leagueTeams', leagueId] as const,
-  teamPlayers: (teamId: number) => [...entityKeys.all, 'teamPlayers', teamId] as const,
-};
-
-// 4590 표준: 반환 타입
 interface LeagueTeamsResult {
   teams: TeamMapping[];
   teamLogoUrls: Record<number, string>;
@@ -39,138 +29,188 @@ interface TeamPlayersResult {
   teamLogoUrl?: string;
 }
 
-// 리그 로고 반환 타입 (light/dark)
 interface LeagueLogosResult {
   light: Record<number, string>;
   dark: Record<number, string>;
 }
 
-/**
- * 리그 로고 URL을 가져오는 훅
- * - 4590 표준: Storage URL 반환 (light/dark 둘 다)
- */
 export function useLeagueLogos(leagueIds: number[]) {
-  const query = useQuery({
-    queryKey: entityKeys.leagueLogos(leagueIds),
-    queryFn: async (): Promise<LeagueLogosResult> => {
-      if (leagueIds.length === 0) return { light: {}, dark: {} };
-      const [light, dark] = await Promise.all([
-        getLeagueLogoUrls(leagueIds, false),
-        getLeagueLogoUrls(leagueIds, true),
-      ]);
-      return { light, dark };
-    },
-    enabled: leagueIds.length > 0,
-    staleTime: 1000 * 60 * 60, // 1시간
-    gcTime: 1000 * 60 * 60 * 24, // 24시간
-  });
+  const [data, setData] = useState<LeagueLogosResult>({ light: {}, dark: {} });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const key = leagueIds.join(',');
+
+  useEffect(() => {
+    if (leagueIds.length === 0) {
+      setData({ light: {}, dark: {} });
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadLogos() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [light, dark] = await Promise.all([
+          getLeagueLogoUrls(leagueIds, false),
+          getLeagueLogoUrls(leagueIds, true),
+        ]);
+        if (!cancelled) setData({ light, dark });
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err : new Error('Failed to load league logos'));
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadLogos();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    ...query,
-    data: query.data?.light || {},
-    dataDark: query.data?.dark || {},
+    data: data.light,
+    dataDark: data.dark,
+    isLoading,
+    error,
   };
 }
 
-/**
- * 리그별 팀 목록을 가져오는 훅
- * - 리그 선택 시 해당 리그의 팀 목록 로드
- * - API 팀 데이터에 한국어 이름 매핑
- * - 4590 표준: 팀 로고 Storage URL 포함
- */
 export function useLeagueTeams(leagueId: number | null) {
   const { getTeamById } = useTeamLeague();
-  const query = useQuery({
-    queryKey: entityKeys.leagueTeams(leagueId ?? 0),
-    queryFn: async (): Promise<LeagueTeamsResult> => {
-      if (!leagueId) return { teams: [], teamLogoUrls: {} };
+  const [result, setResult] = useState<LeagueTeamsResult>({ teams: [], teamLogoUrls: {} });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-      const apiTeams = await fetchLeagueTeams(leagueId.toString());
+  useEffect(() => {
+    if (!leagueId) {
+      setResult({ teams: [], teamLogoUrls: {} });
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
 
-      // API 팀 데이터에 한국어 이름 매핑
-      const mappedTeams: TeamMapping[] = apiTeams.map(apiTeam => {
-        const localTeam = getTeamById(apiTeam.id);
-        return {
-          id: apiTeam.id,
-          name_ko: localTeam?.name_ko || apiTeam.name,
-          name_en: apiTeam.name,
-          country_ko: localTeam?.country_ko,
-          country_en: localTeam?.country_en,
-          code: localTeam?.code,
-          logo: apiTeam.logo,
-        };
-      });
+    let cancelled = false;
+    const currentLeagueId = leagueId;
 
-      // 4590 표준: 팀 로고 Storage URL 일괄 조회
-      const teamIds = mappedTeams.map(t => t.id);
-      const teamLogoUrls = await getTeamLogoUrls(teamIds);
+    async function loadTeams() {
+      setIsLoading(true);
+      setError(null);
 
-      return { teams: mappedTeams, teamLogoUrls };
-    },
-    enabled: !!leagueId,
-    staleTime: 1000 * 60 * 30, // 30분
-    gcTime: 1000 * 60 * 60, // 1시간
-  });
+      try {
+        const apiTeams = await fetchLeagueTeams(currentLeagueId.toString());
+        const teams: TeamMapping[] = apiTeams.map(apiTeam => {
+          const localTeam = getTeamById(apiTeam.id);
+          return {
+            id: apiTeam.id,
+            name_ko: localTeam?.name_ko || apiTeam.name,
+            name_en: apiTeam.name,
+            country_ko: localTeam?.country_ko,
+            country_en: localTeam?.country_en,
+            code: localTeam?.code,
+            logo: apiTeam.logo,
+          };
+        });
+        const teamLogoUrls = await getTeamLogoUrls(teams.map(team => team.id));
+        if (!cancelled) setResult({ teams, teamLogoUrls });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error('Failed to load teams'));
+          setResult({ teams: [], teamLogoUrls: {} });
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
 
-  // 호환성을 위해 data와 teamLogoUrls를 분리하여 반환
+    loadTeams();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [leagueId, getTeamById]);
+
   return {
-    ...query,
-    data: query.data?.teams || [],
-    teamLogoUrls: query.data?.teamLogoUrls || {},
+    data: result.teams,
+    teamLogoUrls: result.teamLogoUrls,
+    isLoading,
+    error,
   };
 }
 
-/**
- * 팀별 선수 목록을 가져오는 훅
- * - 팀 선택 시 해당 팀의 선수 목록 로드
- * - Coach 제외하고 Player만 반환
- * - 선수 한글명도 함께 반환
- * - 4590 표준: 선수 사진 및 팀 로고 Storage URL 포함
- */
 export function useTeamPlayers(teamId: number | null) {
-  const query = useQuery({
-    queryKey: entityKeys.teamPlayers(teamId ?? 0),
-    queryFn: async (): Promise<TeamPlayersResult> => {
-      if (!teamId) return { players: [], koreanNames: {}, playerPhotoUrls: {} };
+  const [result, setResult] = useState<TeamPlayersResult>({
+    players: [],
+    koreanNames: {},
+    playerPhotoUrls: {},
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
+  const loadPlayers = useCallback(async (cancelledRef?: { current: boolean }) => {
+    if (!teamId) {
+      setResult({ players: [], koreanNames: {}, playerPhotoUrls: {} });
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
       const response = await fetchTeamSquad(String(teamId));
+      if (!response.success || !response.data) {
+        if (!cancelledRef?.current) setResult({ players: [], koreanNames: {}, playerPhotoUrls: {} });
+        return;
+      }
 
-      if (response.success && response.data) {
-        // Coach 제외하고 Player만 필터링
-        const players = response.data.filter(
-          (item): item is Player => item.position !== 'Coach'
-        );
+      const players = response.data.filter((item): item is Player => item.position !== 'Coach');
+      const playerIds = players.map(player => player.id);
+      const [koreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
+        getPlayersKoreanNames(playerIds),
+        getPlayerPhotoUrls(playerIds),
+        getTeamLogoUrls([teamId]),
+      ]);
 
-        // 선수 한글명 일괄 조회 (DB)
-        const playerIds = players.map(p => p.id);
-        const [koreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
-          getPlayersKoreanNames(playerIds),
-          getPlayerPhotoUrls(playerIds),
-          getTeamLogoUrls([teamId]),
-        ]);
-
-        return {
+      if (!cancelledRef?.current) {
+        setResult({
           players,
           koreanNames,
           playerPhotoUrls,
           teamLogoUrl: teamLogoUrls[teamId],
-        };
+        });
       }
+    } catch (err) {
+      if (!cancelledRef?.current) {
+        setError(err instanceof Error ? err : new Error('Failed to load players'));
+        setResult({ players: [], koreanNames: {}, playerPhotoUrls: {} });
+      }
+    } finally {
+      if (!cancelledRef?.current) setIsLoading(false);
+    }
+  }, [teamId]);
 
-      return { players: [], koreanNames: {}, playerPhotoUrls: {} };
-    },
-    enabled: !!teamId,
-    staleTime: 1000 * 60 * 30, // 30분
-    gcTime: 1000 * 60 * 60, // 1시간
-  });
+  useEffect(() => {
+    const cancelledRef = { current: false };
+    loadPlayers(cancelledRef);
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [loadPlayers]);
 
-  // 호환성을 위해 분리하여 반환
   return {
-    ...query,
-    data: query.data
-      ? { players: query.data.players, koreanNames: query.data.koreanNames }
-      : { players: [], koreanNames: {} },
-    playerPhotoUrls: query.data?.playerPhotoUrls || {},
-    teamLogoUrl: query.data?.teamLogoUrl,
+    data: {
+      players: result.players,
+      koreanNames: result.koreanNames,
+    },
+    playerPhotoUrls: result.playerPhotoUrls,
+    teamLogoUrl: result.teamLogoUrl,
+    isLoading,
+    error,
+    refetch: () => loadPlayers(),
   };
 }

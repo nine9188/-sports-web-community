@@ -1,18 +1,7 @@
 import React from 'react';
-import '../globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import { siteConfig } from '@/shared/config';
-import { buildMetadata } from '@/shared/utils/metadataNew';
-
-export async function generateMetadata() {
-  return buildMetadata({
-    title: '로그인',
-    description: '로그인, 회원가입, 계정 복구 등 인증 페이지입니다.',
-    path: '/signin',
-    noindex: true,
-  });
-}
 
 /**
  * 인증 페이지용 특수 레이아웃

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { fetchCachedMatchFullData } from './matchData';
 import { slugify } from '@/domains/livescore/utils/slugs';
 import { getMatchLinkSlug } from '@/domains/livescore/utils/entityLinks';
+import { cache } from 'react';
 
 type TeamSlugRow = {
   team_id: number;
@@ -104,7 +105,7 @@ async function getTeamSlugsFromHighlightTitle(fixtureId: number): Promise<string
   return homeSlug && awaySlug ? `${homeSlug}-vs-${awaySlug}` : null;
 }
 
-export async function resolveCanonicalMatchSlug(fixtureId: number | string): Promise<string | null> {
+async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Promise<string | null> {
   const id = Number(fixtureId);
   if (!Number.isFinite(id) || id <= 0) return null;
 
@@ -132,3 +133,5 @@ export async function resolveCanonicalMatchSlug(fixtureId: number | string): Pro
 
   return getTeamSlugsFromHighlightTitle(id);
 }
+
+export const resolveCanonicalMatchSlug = cache(resolveCanonicalMatchSlugInternal);

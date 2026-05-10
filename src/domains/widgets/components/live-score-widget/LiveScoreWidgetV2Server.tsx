@@ -4,7 +4,6 @@ import LeagueToggleClient from './LeagueToggleClient';
 import LeagueHeader from './LeagueHeader';
 import MatchCardServer from './MatchCardServer';
 import WidgetHeader from './WidgetHeader';
-import LiveScoreCacheSeeder from '@/shared/components/LiveScoreCacheSeeder';
 import type { WidgetLeague, WidgetMatch } from './types';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -132,7 +131,7 @@ interface LiveScoreWidgetV2ServerProps {
 }
 
 export default async function LiveScoreWidgetV2Server({ initialData }: LiveScoreWidgetV2ServerProps = {}) {
-  const leagues = initialData ?? [];
+  const leagues = initialData ?? transformToWidgetLeagues(await fetchTodayMatches());
 
   if (leagues.length === 0) {
     return (
@@ -185,13 +184,5 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
 }
 
 export async function LiveScoreWidgetStreaming() {
-  const todayData = await fetchTodayMatches();
-  const leagues = transformToWidgetLeagues(todayData);
-
-  return (
-    <>
-      <LiveScoreCacheSeeder data={todayData} />
-      <LiveScoreWidgetV2Server initialData={leagues} />
-    </>
-  );
+  return <LiveScoreWidgetV2Server />;
 }

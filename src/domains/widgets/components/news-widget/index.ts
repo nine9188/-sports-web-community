@@ -12,3 +12,4 @@ export { validateImageUrl } from './utils';
 
 // 액션 exports (필요시 사용)
 export { getNewsPosts, getAllNewsPosts } from './actions';
+export { fetchNewsData } from './NewsWidget';

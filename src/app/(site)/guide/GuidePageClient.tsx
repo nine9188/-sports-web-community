@@ -1312,7 +1312,7 @@ function TransferDemo({ images }: { images: GuideDemoImages }) {
 
         {/* 모바일 카드 레이아웃 */}
         <div className="block md:hidden divide-y divide-black/5 dark:divide-white/10 bg-white dark:bg-[#1D1D1D]">
-          {transfers.map((t, i) => (
+          {false && transfers.map((t, i) => (
             <div key={i} className="p-3 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
               {/* 1줄: 선수 사진 + 이름 | 날짜 */}
               <div className="flex items-center justify-between mb-2">
@@ -1495,7 +1495,7 @@ function LineupDemo({ images }: { images: GuideDemoImages }) {
           </ContainerHeader>
           <ContainerContent className="p-0">
             <div className="divide-y divide-black/5 dark:divide-white/10">
-              {homePlayers.map((player, i) => (
+              {false && homePlayers.map((player, i) => (
                 <PlayerRow key={player.id} player={player} showClick={i === 0} />
               ))}
             </div>
@@ -2156,7 +2156,7 @@ function EmoticonPickerDemo() {
           </div>
           <div className="px-4 py-4 overflow-visible">
             <div className="grid grid-cols-6 gap-2.5">
-              {emoticons.map((emoji, i) => {
+              {false && emoticons.map((emoji, i) => {
                 const isTarget = i === 0;
                 return (
                   <div key={i} className="relative overflow-visible">
@@ -2227,7 +2227,7 @@ function EmoticonPickerDemo() {
           {/* 이모티콘 그리드 — 모바일 6열 스크롤 */}
           <div className="px-3 py-3 overflow-visible">
             <div className="grid grid-cols-6 gap-1.5">
-              {emoticons.map((emoji, i) => {
+              {false && emoticons.map((emoji, i) => {
                 const isTarget = i === 0;
                 return (
                   <div key={i} className="relative overflow-visible">

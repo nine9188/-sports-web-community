@@ -1,40 +1,52 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getNotices, setPostAsNotice, removeNotice, updateNoticeType, getPostIdByNumber, toggleWidgetVisibility } from '@/domains/boards/actions/posts';
+import { useEffect } from 'react';
+import {
+  getNotices,
+  setPostAsNotice,
+  removeNotice,
+  updateNoticeType,
+  getPostIdByNumber,
+  toggleWidgetVisibility,
+} from '@/domains/boards/actions/posts';
 import { getBoards } from '@/domains/boards/actions/getBoards';
-import { adminKeys, boardKeys } from '@/shared/constants/queryKeys';
 import type { NoticeType } from '@/domains/boards/types/post';
+import { useAsyncData, useAsyncMutation } from './useLocalAsync';
+
+const listeners = new Set<() => void>();
+
+function notifyNoticesChanged() {
+  listeners.forEach((listener) => listener());
+}
 
 export function useAdminNotices() {
-  return useQuery({
-    queryKey: adminKeys.notices(),
-    queryFn: () => getNotices(),
-    staleTime: 1000 * 60 * 2, // 2분
-  });
+  const query = useAsyncData(() => getNotices());
+
+  useEffect(() => {
+    listeners.add(query.refetch);
+    return () => {
+      listeners.delete(query.refetch);
+    };
+  }, [query.refetch]);
+
+  return query;
 }
 
 export function useBoardsForNotice() {
-  return useQuery({
-    queryKey: boardKeys.list(),
-    queryFn: async () => {
-      const result = await getBoards();
-      return result.boards.map((board) => ({
-        id: board.id,
-        name: board.name,
-        slug: board.slug || '',
-        parent_id: board.parent_id || null,
-      }));
-    },
-    staleTime: 1000 * 60 * 5, // 5분
+  return useAsyncData(async () => {
+    const result = await getBoards();
+    return result.boards.map((board) => ({
+      id: board.id,
+      name: board.name,
+      slug: board.slug || '',
+      parent_id: board.parent_id || null,
+    }));
   });
 }
 
 export function useSetNoticeMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
+  return useAsyncMutation(
+    async ({
       postId,
       noticeType,
       boardIds,
@@ -48,20 +60,14 @@ export function useSetNoticeMutation() {
       noticeOrder?: number;
       isMustRead?: boolean;
       showInWidget?: boolean;
-    }) => {
-      return setPostAsNotice(postId, noticeType, boardIds, noticeOrder, isMustRead, showInWidget);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
-    },
-  });
+    }) => setPostAsNotice(postId, noticeType, boardIds, noticeOrder, isMustRead, showInWidget),
+    notifyNoticesChanged
+  );
 }
 
 export function useSetNoticeByNumberMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
+  return useAsyncMutation(
+    async ({
       postNumber,
       noticeType,
       boardIds,
@@ -76,49 +82,39 @@ export function useSetNoticeByNumberMutation() {
       isMustRead?: boolean;
       showInWidget?: boolean;
     }) => {
-      // 게시글 번호로 ID 조회
       const lookupResult = await getPostIdByNumber(postNumber);
       if (!lookupResult.success) {
         return { success: false, message: lookupResult.error };
       }
-      // 공지 설정
-      return setPostAsNotice(lookupResult.postId, noticeType, boardIds, noticeOrder, isMustRead, showInWidget);
+
+      return setPostAsNotice(
+        lookupResult.postId,
+        noticeType,
+        boardIds,
+        noticeOrder,
+        isMustRead,
+        showInWidget
+      );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
-    },
-  });
+    notifyNoticesChanged
+  );
 }
 
 export function useRemoveNoticeMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (postId: string) => removeNotice(postId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
-    },
-  });
+  return useAsyncMutation((postId: string) => removeNotice(postId), notifyNoticesChanged);
 }
 
 export function useToggleWidgetMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ postId, showInWidget }: { postId: string; showInWidget: boolean }) => {
-      return toggleWidgetVisibility(postId, showInWidget);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
-    },
-  });
+  return useAsyncMutation(
+    async ({ postId, showInWidget }: { postId: string; showInWidget: boolean }) =>
+      toggleWidgetVisibility(postId, showInWidget),
+    notifyNoticesChanged
+  );
 }
 
 export function useUpdateNoticeTypeMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
+  return useAsyncMutation(
+    async ({
       postId,
       noticeType,
       boardIds,
@@ -126,11 +122,7 @@ export function useUpdateNoticeTypeMutation() {
       postId: string;
       noticeType: NoticeType;
       boardIds?: string[];
-    }) => {
-      return updateNoticeType(postId, noticeType, boardIds);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.notices() });
-    },
-  });
+    }) => updateNoticeType(postId, noticeType, boardIds),
+    notifyNoticesChanged
+  );
 }

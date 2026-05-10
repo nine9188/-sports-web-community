@@ -1,11 +1,15 @@
-import React, { Suspense } from 'react';
-import { AllPostsWidget, NewsWidget, BoardCollectionWidget, BoardQuickLinksWidget } from '@/domains/widgets/components';
+import React from 'react';
+import { AllPostsWidget, BoardCollectionWidget, BoardQuickLinksWidget, NewsWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
-import { LiveScoreWidgetStreaming } from '@/domains/widgets/components/live-score-widget/index';
+import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
+import { fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { siteConfig } from '@/shared/config';
+import { fetchAllPostsWidgetData } from '@/domains/widgets/components/AllPostsWidget';
+import { fetchNewsData } from '@/domains/widgets/components/news-widget';
+import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
 
 export async function generateMetadata() {
   return buildMetadata({
@@ -44,7 +48,7 @@ const homeJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: '4590 Football',
-  url: 'https://4590football.com',
+  url: siteConfig.url,
   description:
     '축구 팬을 위한 커뮤니티. 실시간 라이브스코어, 경기 분석, AI 예측, 팀·선수 데이터, 축구 소식을 한곳에서 제공합니다.',
   applicationCategory: 'SportsApplication',
@@ -74,136 +78,28 @@ const homeJsonLd = {
     '@type': 'ItemList',
     name: '주요 섹션',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '해외축구', url: 'https://4590football.com/boards/soccer' },
-      { '@type': 'ListItem', position: 2, name: '국내축구', url: 'https://4590football.com/boards/k-league' },
-      { '@type': 'ListItem', position: 3, name: '프리미어리그', url: 'https://4590football.com/boards/premier' },
-      { '@type': 'ListItem', position: 4, name: '라리가', url: 'https://4590football.com/boards/laliga' },
-      { '@type': 'ListItem', position: 5, name: '세리에A', url: 'https://4590football.com/boards/serie-a' },
-      { '@type': 'ListItem', position: 6, name: '분데스리가', url: 'https://4590football.com/boards/bundesliga' },
-      { '@type': 'ListItem', position: 7, name: '축구 소식', url: 'https://4590football.com/boards/news' },
-      { '@type': 'ListItem', position: 8, name: '경기 데이터분석', url: 'https://4590football.com/boards/data-analysis' },
-      { '@type': 'ListItem', position: 9, name: '자유게시판', url: 'https://4590football.com/boards/free' },
-      { '@type': 'ListItem', position: 10, name: '라이브스코어', url: 'https://4590football.com/livescore/football' },
+      { '@type': 'ListItem', position: 1, name: '해외축구', url: `${siteConfig.url}/boards/soccer` },
+      { '@type': 'ListItem', position: 2, name: '국내축구', url: `${siteConfig.url}/boards/k-league` },
+      { '@type': 'ListItem', position: 3, name: '프리미어리그', url: `${siteConfig.url}/boards/premier` },
+      { '@type': 'ListItem', position: 4, name: '라리가', url: `${siteConfig.url}/boards/laliga` },
+      { '@type': 'ListItem', position: 5, name: '세리에A', url: `${siteConfig.url}/boards/serie-a` },
+      { '@type': 'ListItem', position: 6, name: '분데스리가', url: `${siteConfig.url}/boards/bundesliga` },
+      { '@type': 'ListItem', position: 7, name: '축구 소식', url: `${siteConfig.url}/boards/news` },
+      { '@type': 'ListItem', position: 8, name: '경기 데이터분석', url: `${siteConfig.url}/boards/data-analysis` },
+      { '@type': 'ListItem', position: 9, name: '자유게시판', url: `${siteConfig.url}/boards/free` },
+      { '@type': 'ListItem', position: 10, name: '라이브스코어', url: `${siteConfig.url}/livescore/football` },
     ],
   },
 };
 
-function HomeWidgetLoading({
-  title,
-  minHeight = 96,
-}: {
-  title: string;
-  minHeight?: number;
-}) {
-  return (
-    <Container className="bg-white dark:bg-[#1D1D1D]">
-      <ContainerHeader>
-        <ContainerTitle>{title}</ContainerTitle>
-      </ContainerHeader>
-      <ContainerContent
-        className="flex items-center justify-center py-0"
-        style={{ minHeight }}
-      >
-        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
-      </ContainerContent>
-    </Container>
-  );
-}
+export default async function HomePage() {
+  const [liveScoreData, boardCollectionData, latestPosts, news] = await Promise.all([
+    fetchTodayMatches().then(transformToWidgetLeagues),
+    fetchBoardCollectionData(),
+    fetchAllPostsWidgetData(),
+    fetchNewsData(),
+  ]);
 
-function BoardCollectionWidgetLoading() {
-  const loadingBody = (
-    <div className="h-12 px-3 flex items-center justify-center text-center">
-      <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
-    </div>
-  );
-
-  const sectionHeader = (title: string) => (
-    <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10">
-      <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{title}</h3>
-    </div>
-  );
-
-  return (
-    <div>
-      <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader className="justify-between">
-          <ContainerTitle>데이터분석</ContainerTitle>
-          <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
-            분석 더보기
-          </span>
-        </ContainerHeader>
-
-        <div className="grid grid-cols-2">
-          <div className="border-r border-black/5 dark:border-white/10">
-            {sectionHeader('해외축구 분석')}
-            {loadingBody}
-          </div>
-          <div>
-            {sectionHeader('국내축구 분석')}
-            {loadingBody}
-          </div>
-        </div>
-      </Container>
-
-      <div className="md:hidden space-y-4">
-        <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader className="justify-between">
-            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">해외축구 분석</h3>
-            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
-              분석 더보기
-            </span>
-          </ContainerHeader>
-          {loadingBody}
-        </Container>
-
-        <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader className="justify-between">
-            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">국내축구 분석</h3>
-            <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-0.5">
-              분석 더보기
-            </span>
-          </ContainerHeader>
-          {loadingBody}
-        </Container>
-      </div>
-    </div>
-  );
-}
-
-function NewsWidgetLoading() {
-  const sideLoadingCard = (
-    <div className="h-[96px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-      <div className="h-full p-3 flex items-center justify-center text-center">
-        <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="md:w-1/2">
-          <div className="h-[320px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
-            <div className="h-full p-3 flex items-center justify-center text-center">
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">불러오는 중...</p>
-            </div>
-          </div>
-        </div>
-        <div className="md:w-1/2 flex flex-col gap-4">
-          {sideLoadingCard}
-          {sideLoadingCard}
-          {sideLoadingCard}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {sideLoadingCard}
-        {sideLoadingCard}
-      </div>
-    </div>
-  );
-}
-
-export default function HomePage() {
   return (
     <>
       <script
@@ -216,24 +112,16 @@ export default function HomePage() {
           <BoardQuickLinksWidget />
         </div>
         <AdBanner />
-        <Suspense fallback={<HomeWidgetLoading title="빅매치" minHeight={48} />}>
-          <LiveScoreWidgetStreaming />
-        </Suspense>
-        <Suspense fallback={<BoardCollectionWidgetLoading />}>
-          <BoardCollectionWidget />
-        </Suspense>
-        <Suspense fallback={<HomeWidgetLoading title="최신 게시글" minHeight={48} />}>
-          <AllPostsWidget />
-        </Suspense>
+        <LiveScoreWidgetV2 initialData={liveScoreData} />
+        <BoardCollectionWidget initialData={boardCollectionData} />
+        <AllPostsWidget initialData={latestPosts} />
         <div className="hidden md:flex justify-center">
           <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
         </div>
         <div className="md:hidden flex justify-center">
           <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
         </div>
-        <Suspense fallback={<NewsWidgetLoading />}>
-          <NewsWidget />
-        </Suspense>
+        <NewsWidget initialData={news} />
       </main>
     </>
   );

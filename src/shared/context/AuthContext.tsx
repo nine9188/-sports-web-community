@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { updateUserData, signOut } from '@/domains/auth/actions';
@@ -37,7 +36,6 @@ export function AuthProvider({
   initialSession?: Session | null;
 }) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   // initialSession에서 user를 초기값으로 설정 (서버-클라이언트 동기화)
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null);
   const [session, setSession] = useState<Session | null>(initialSession);
@@ -134,14 +132,7 @@ export function AuthProvider({
       }
     }
 
-    // idle 이후에 세션 로드 (TBT 최적화: 초기 렌더 차단 방지)
-    let cancelIdle: (() => void) | null = null;
-    if ('requestIdleCallback' in window) {
-      const idleId = requestIdleCallback(() => getInitialSession(), { timeout: 2000 });
-      cancelIdle = () => cancelIdleCallback(idleId);
-    } else {
-      getInitialSession();
-    }
+    void getInitialSession();
 
     // 인증 상태 변경 감지 (Supabase가 자동으로 세션 갱신 처리)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -154,13 +145,11 @@ export function AuthProvider({
           if (!userError && authenticatedUser) {
             setUser(authenticatedUser);
             setSession(currentSession);
-            queryClient.clear();
             router.refresh();
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setSession(null);
-          queryClient.clear();
           router.refresh();
         } else if (event === 'TOKEN_REFRESHED' && currentSession) {
           setSession(currentSession);
@@ -176,10 +165,9 @@ export function AuthProvider({
 
     return () => {
       mounted = false;
-      if (cancelIdle) cancelIdle();
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, router]);
 
   // 로그인 성공 토스트 처리
   useEffect(() => {

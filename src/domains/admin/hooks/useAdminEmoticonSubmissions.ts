@@ -1,63 +1,65 @@
-'use client'
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminKeys } from '@/shared/constants/queryKeys'
+import { useEffect } from 'react';
 import {
   getSubmissions,
   getSubmissionDetail,
   approveSubmission,
   rejectSubmission,
   suspendSubmission,
-} from '@/domains/admin/actions/emoticon-submissions'
-import type { SubmissionStatus } from '@/domains/shop/types/emoticon-submission'
+} from '@/domains/admin/actions/emoticon-submissions';
+import type { SubmissionStatus } from '@/domains/shop/types/emoticon-submission';
+import { useAsyncData, useAsyncMutation } from './useLocalAsync';
+
+const listeners = new Set<() => void>();
+
+function notifySubmissionsChanged() {
+  listeners.forEach((listener) => listener());
+}
 
 export function useAdminSubmissions(filter: 'all' | SubmissionStatus = 'all') {
-  return useQuery({
-    queryKey: adminKeys.emoticonSubmissionList(filter),
-    queryFn: () => getSubmissions(filter),
-    staleTime: 1000 * 60,
-    gcTime: 1000 * 60 * 5,
-  })
+  const query = useAsyncData(() => getSubmissions(filter), [filter]);
+
+  useEffect(() => {
+    listeners.add(query.refetch);
+    return () => {
+      listeners.delete(query.refetch);
+    };
+  }, [query.refetch]);
+
+  return query;
 }
 
 export function useAdminSubmissionDetail(id: number | null) {
-  return useQuery({
-    queryKey: adminKeys.emoticonSubmissionDetail(id ?? 0),
-    queryFn: () => getSubmissionDetail(id!),
-    enabled: id !== null,
-    staleTime: 1000 * 30,
-  })
+  const query = useAsyncData(() => getSubmissionDetail(id!), [id], id !== null);
+
+  useEffect(() => {
+    listeners.add(query.refetch);
+    return () => {
+      listeners.delete(query.refetch);
+    };
+  }, [query.refetch]);
+
+  return query;
 }
 
 export function useApproveSubmission() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, finalPrice }: { id: number; finalPrice?: number }) =>
-      approveSubmission(id, finalPrice),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.emoticonSubmissions() })
-    },
-  })
+  return useAsyncMutation(
+    ({ id, finalPrice }: { id: number; finalPrice?: number }) => approveSubmission(id, finalPrice),
+    notifySubmissionsChanged
+  );
 }
 
 export function useRejectSubmission() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      rejectSubmission(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.emoticonSubmissions() })
-    },
-  })
+  return useAsyncMutation(
+    ({ id, reason }: { id: number; reason: string }) => rejectSubmission(id, reason),
+    notifySubmissionsChanged
+  );
 }
 
 export function useSuspendSubmission() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
-      suspendSubmission(id, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.emoticonSubmissions() })
-    },
-  })
+  return useAsyncMutation(
+    ({ id, reason }: { id: number; reason: string }) => suspendSubmission(id, reason),
+    notifySubmissionsChanged
+  );
 }

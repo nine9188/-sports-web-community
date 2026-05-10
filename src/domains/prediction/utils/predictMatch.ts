@@ -421,6 +421,7 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
     let homeStats: any, awayStats: any, homeForm: any, awayForm: any
     let homeInjuries: any, awayInjuries: any, h2h: any, odds: any
     let prompt: string
+    let matchForCache: any = null
 
     if (predictionApiData) {
       // /predictions 엔드포인트 데이터 사용 (차트와 동일)
@@ -435,6 +436,7 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
       // 경기 날짜는 별도로 가져와야 함
       const fixtureRes = await fetchFromFootballApi('fixtures', { id: fixtureId })
       const match = fixtureRes?.response?.[0]
+      matchForCache = match
       matchDate = match?.fixture?.date?.split('T')[0] || new Date().toISOString().split('T')[0]
       leagueId = match?.league?.id || 0
       season = getCurrentSeason(leagueId, matchDate)
@@ -514,6 +516,7 @@ ${h2hList}
       const fixtureRes = await fetchFromFootballApi('fixtures', { id: fixtureId })
       const match = fixtureRes?.response?.[0]
       if (!match) throw new Error('경기 정보 없음')
+      matchForCache = match
 
       home = match.teams.home
       away = match.teams.away
@@ -702,7 +705,7 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
     // 예측 결과를 데이터베이스에 저장
     const fixtureForCache = predictionApiData
       ? { teams: { home, away }, league: { id: leagueId, name: '' }, fixture: { date: matchDate } }
-      : (await fetchFromFootballApi('fixtures', { id: fixtureId }))?.response?.[0]
+      : matchForCache
 
     if (fixtureForCache) {
       await savePredictionToCache(

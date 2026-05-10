@@ -2,7 +2,6 @@ import { getAllTopicPosts } from '../actions/getAllTopicPosts';
 import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import TopicTabsServer from './TopicTabsServer';
 import HotdealTabsServer from './HotdealTabsServer';
-import SidebarRelatedPosts from './SidebarRelatedPosts';
 import ServerLeagueStandings from './league/ServerLeagueStandings';
 import AdSense from '@/shared/components/AdSense';
 import { ADSENSE } from '@/shared/constants/ad-constants';
@@ -30,7 +29,6 @@ export default async function RightSidebar() {
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
-          <SidebarRelatedPosts />
           <HotdealTabsServer postsData={hotdealData} />
         </div>
       </aside>
@@ -62,7 +60,6 @@ export default async function RightSidebar() {
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
-          <SidebarRelatedPosts />
           <HotdealTabsServer postsData={emptyHotdealData} />
         </div>
       </aside>

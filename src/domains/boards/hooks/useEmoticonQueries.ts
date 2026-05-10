@@ -1,66 +1,83 @@
-'use client'
+'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { emoticonKeys } from '@/shared/constants/queryKeys'
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig'
+import { useCallback, useEffect, useState } from 'react';
 import {
   getEmoticonShopData,
   getPickerData,
   getPackDetail,
-} from '@/domains/boards/actions/emoticons'
+} from '@/domains/boards/actions/emoticons';
 
-/**
- * 상점 뷰 데이터 (팩 목록 + 보유 + 포인트)
- */
-export function useEmoticonShopData() {
-  return useQuery({
-    queryKey: emoticonKeys.shopData(),
-    queryFn: () => getEmoticonShopData(),
-    ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
-  })
-}
+function useAsyncData<T>(loader: () => Promise<T>, enabled = true) {
+  const [data, setData] = useState<T | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
 
-/**
- * 피커 데이터 (유저가 사용 가능한 팩 + 이모티콘, 순서 반영)
- */
-export function usePickerData() {
-  return useQuery({
-    queryKey: emoticonKeys.pickerData(),
-    queryFn: () => getPickerData(),
-    ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
-  })
-}
+  const refetch = useCallback(() => {
+    setVersion(value => value + 1);
+  }, []);
 
-/**
- * 팩 상세 (이모티콘 목록 + 보유/가격)
- */
-export function usePackDetail(packId: string | null) {
-  return useQuery({
-    queryKey: emoticonKeys.packDetail(packId ?? ''),
-    queryFn: () => getPackDetail(packId!),
-    enabled: !!packId,
-    ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
-  })
-}
+  useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
 
-/**
- * 구매 후 관련 캐시 무효화
- */
-export function useEmoticonInvalidation() {
-  const queryClient = useQueryClient()
+    let cancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+
+      try {
+        const result = await loader();
+        if (!cancelled) setData(result);
+      } catch (err) {
+        if (!cancelled) {
+          setIsError(true);
+          setError(err instanceof Error ? err : new Error('Failed to load data'));
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, loader, version]);
 
   return {
-    /** 구매 완료 시 호출 — 상점/피커/상세 캐시 모두 무효화 */
-    invalidateAfterPurchase: (packId?: string) => {
-      queryClient.invalidateQueries({ queryKey: emoticonKeys.shopData() })
-      queryClient.invalidateQueries({ queryKey: emoticonKeys.pickerData() })
-      if (packId) {
-        queryClient.invalidateQueries({ queryKey: emoticonKeys.packDetail(packId) })
-      }
-    },
-    /** 순서 저장 후 호출 */
-    invalidateAfterOrderChange: () => {
-      queryClient.invalidateQueries({ queryKey: emoticonKeys.pickerData() })
-    },
-  }
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  };
+}
+
+export function useEmoticonShopData() {
+  return useAsyncData(useCallback(() => getEmoticonShopData(), []));
+}
+
+export function usePickerData() {
+  return useAsyncData(useCallback(() => getPickerData(), []));
+}
+
+export function usePackDetail(packId: string | null) {
+  return useAsyncData(
+    useCallback(() => getPackDetail(packId!), [packId]),
+    !!packId
+  );
+}
+
+export function useEmoticonInvalidation() {
+  return {
+    invalidateAfterPurchase: (_packId?: string) => {},
+    invalidateAfterOrderChange: () => {},
+  };
 }

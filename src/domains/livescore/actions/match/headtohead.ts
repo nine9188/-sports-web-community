@@ -3,8 +3,7 @@
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi'
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName'
 import { getPlayerPhotoUrls, getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images'
-import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData'
-import { getSupabaseServer } from '@/shared/lib/supabase/server'
+import { getCurrentSeasonForLeague, getTeamById } from '@/domains/livescore/actions/teamLeagueData'
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 
@@ -330,19 +329,8 @@ export async function fetchTeamRecentForm(teamId: TeamId, last: number = 5): Pro
 }
 
 async function resolveTeamLeagueAndSeason(teamId: TeamId) {
-	let leagueId: number | undefined
-
-	try {
-		const supabase = await getSupabaseServer()
-		const { data: teamRow } = await supabase
-			.from('football_teams')
-			.select('league_id')
-			.eq('team_id', teamId)
-			.single()
-
-		if (teamRow?.league_id) leagueId = Number(teamRow.league_id)
-	} catch {}
-
+	const team = await getTeamById(teamId)
+	const leagueId = team?.league_id || undefined
 	const season = await getCurrentSeasonForLeague(leagueId || 39)
 	return { leagueId: leagueId || 39, season }
 }
@@ -425,6 +413,16 @@ export async function fetchTeamTopPlayers(teamId: TeamId): Promise<TeamTopPlayer
 	}
 }
 
+async function fetchCachedTeamTopPlayersInternal(teamId: TeamId): Promise<TeamTopPlayersSummary> {
+	return unstable_cache(
+		() => fetchTeamTopPlayers(teamId),
+		['team-top-players', String(teamId)],
+		{ revalidate: 21600, tags: [`team-top-players-${teamId}`] }
+	)()
+}
+
+export const fetchCachedTeamTopPlayers = cache(fetchCachedTeamTopPlayersInternal)
+
 export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: number = 5): Promise<HeadToHeadTestData> {
 	// Promise.allSettled + fetchWithRetry lets partial data render when one source fails.
 	const emptyH2H: HeadToHeadSummary = { teamA, teamB, last, items: [], resultSummary: { teamA: { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 }, teamB: { win: 0, draw: 0, loss: 0, goalsFor: 0, goalsAgainst: 0, goalDiff: 0 } } }
@@ -442,8 +440,8 @@ export async function getHeadToHeadTestData(teamA: TeamId, teamB: TeamId, last: 
 		timed(() => fetchWithRetry(() => fetchHeadToHead(teamA, teamB, last))),
 		timed(() => fetchWithRetry(() => fetchTeamRecentForm(teamA, last))),
 		timed(() => fetchWithRetry(() => fetchTeamRecentForm(teamB, last))),
-		timed(() => fetchWithRetry(() => fetchTeamTopPlayers(teamA))),
-		timed(() => fetchWithRetry(() => fetchTeamTopPlayers(teamB)))
+		timed(() => fetchWithRetry(() => fetchCachedTeamTopPlayers(teamA))),
+		timed(() => fetchWithRetry(() => fetchCachedTeamTopPlayers(teamB)))
 	])
 
 	const h2h = results[0].status === 'fulfilled' ? results[0].value : emptyH2H
@@ -637,8 +635,8 @@ export async function getPowerH2HData(teamA: TeamId, teamB: TeamId, last: number
 
 export async function getPowerTopPlayersData(teamA: TeamId, teamB: TeamId, last: number = 5): Promise<HeadToHeadTestData> {
 	const [topA, topB] = await Promise.all([
-		fetchWithRetry(() => fetchTeamTopPlayers(teamA)),
-		fetchWithRetry(() => fetchTeamTopPlayers(teamB))
+		fetchWithRetry(() => fetchCachedTeamTopPlayers(teamA)),
+		fetchWithRetry(() => fetchCachedTeamTopPlayers(teamB))
 	])
 
 	const teamLogoUrls = await getTeamLogoUrls([teamA, teamB])

@@ -297,19 +297,23 @@ const getHomeWidgetNotices = unstable_cache(
   { revalidate: 300, tags: ['posts', 'notices', 'home-widgets'] }
 );
 
+export async function fetchAllPostsWidgetData(): Promise<Post[]> {
+  const [posts, notices] = await Promise.all([getHomeLatestPosts(), getHomeWidgetNotices()]);
+  const noticeIds = new Set(notices.map((notice) => notice.id));
+
+  return [
+    ...notices,
+    ...posts.filter((post) => !noticeIds.has(post.id)),
+  ];
+}
+
 interface AllPostsWidgetProps {
   initialData?: Post[];
 }
 
 export default async function AllPostsWidget({ initialData }: AllPostsWidgetProps = {}) {
   try {
-    const postsPromise = initialData
-      ? Promise.resolve(initialData)
-      : getHomeLatestPosts();
-
-    const noticesPromise = getHomeWidgetNotices();
-
-    const [posts, notices] = await Promise.all([postsPromise, noticesPromise]);
+    const posts = initialData ?? await fetchAllPostsWidgetData();
 
     if (posts.length === 0) {
       return (
@@ -336,12 +340,6 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
       );
     }
 
-    const noticeIds = new Set(notices.map((notice) => notice.id));
-    const combinedPosts = [
-      ...notices,
-      ...posts.filter((post) => !noticeIds.has(post.id)),
-    ];
-
     const headerContent = (
       <div className="w-full h-full flex items-center justify-between">
         <h2 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">최신 게시글</h2>
@@ -359,7 +357,7 @@ export default async function AllPostsWidget({ initialData }: AllPostsWidgetProp
     return (
       <div className="h-full">
         <PostList
-          posts={combinedPosts}
+          posts={posts}
           loading={false}
           emptyMessage="아직 게시글이 없습니다."
           headerContent={headerContent}

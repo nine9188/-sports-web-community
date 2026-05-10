@@ -66,9 +66,9 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
           <span
             className={classNames(
               'inline-flex items-center justify-center shrink-0',
-              'w-12 h-12 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-0 shadow-sm',
+              'w-12 h-12 md:w-auto md:h-auto bg-[#F5F5F5] md:bg-transparent dark:bg-[#262626] md:dark:bg-transparent border border-black/7 md:border-0 dark:border-0 shadow-sm md:shadow-none',
               'transition-all',
-              'md:hidden' // PC에서 숨김
+              'md:mr-1'
             )}
             style={{ borderRadius: '0.5rem' }}
             aria-hidden
@@ -79,30 +79,11 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
                 alt={`${item.label} 아이콘`}
                 width={28}
                 height={28}
-                className="w-7 h-7 object-contain dark:invert"
+                className="w-7 h-7 md:w-5 md:h-5 object-contain dark:invert"
                 loading="eager"
               />
             ) : (
-              <span className="text-2xl">{item.icon ?? '📌'}</span>
-            )}
-          </span>
-
-          {/* PC: 아이콘만 (컨테이너 없음) */}
-          <span
-            className="hidden md:inline-flex items-center justify-center mr-1"
-            aria-hidden
-          >
-            {item.iconImage ? (
-              <Image
-                src={item.iconImage}
-                alt={`${item.label} 아이콘`}
-                width={20}
-                height={20}
-                className="w-5 h-5 object-contain dark:invert"
-                loading="eager"
-              />
-            ) : (
-              <span className="text-xl">{item.icon ?? '📌'}</span>
+              <span className="text-2xl md:text-xl">{item.icon ?? '📌'}</span>
             )}
           </span>
 

@@ -20,7 +20,6 @@ const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { s
 import RecentlyVisited from './RecentlyVisited';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
-import { useAuth } from '@/shared/context/AuthContext';
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -145,11 +144,8 @@ export default function HeaderClient({
   const logoUrl = siteConfig.logo;
 
 
-  // AuthContext와 서버 데이터 동기화
-  // - 서버 데이터(initialUserData): 첫 렌더 시 사용 (SEO, 초기 화면)
-  // - AuthContext(user): 로그인/로그아웃 후 즉시 UI 반영
-  const { user: authUser } = useAuth();
-  const userData = authUser ? initialUserData : null;
+  // 서버에서 검증해 내려준 사용자 데이터를 초기 렌더 기준으로 사용한다.
+  const userData = initialUserData ?? null;
   
   // 사용자 레벨 기반 기본 아이콘 URL
   const userLevel = userData?.level || 1;

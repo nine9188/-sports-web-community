@@ -3,6 +3,7 @@
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getPlayerLinkSlug } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeasonCandidates } from './currentSeason';
+import { cache } from 'react';
 
 type PlayerNameResponse = {
   player?: {
@@ -74,7 +75,7 @@ async function fetchPlayerNameFromStats(playerId: string): Promise<string | null
   return null;
 }
 
-export async function resolvePlayerCanonicalSlug(playerId: string): Promise<string | null> {
+async function resolvePlayerCanonicalSlugInternal(playerId: string): Promise<string | null> {
   const numericId = Number(playerId);
   if (!Number.isFinite(numericId) || numericId <= 0) return null;
 
@@ -88,3 +89,5 @@ export async function resolvePlayerCanonicalSlug(playerId: string): Promise<stri
   const apiSlug = playerName ? getPlayerLinkSlug({ id: playerId, name: playerName }) : '';
   return isUsablePlayerSlug(apiSlug) ? apiSlug : null;
 }
+
+export const resolvePlayerCanonicalSlug = cache(resolvePlayerCanonicalSlugInternal);

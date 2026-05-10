@@ -85,16 +85,20 @@ export async function fetchMatchEvents(matchId: string): Promise<EventDataRespon
   }
 }
 
+export const fetchCachedMatchEvents = cache(fetchMatchEvents);
+
 export async function fetchMatchGoalEvents(matchId: string): Promise<GoalEventDataResponse> {
   try {
     if (!matchId) {
       throw new Error('Match ID is required');
     }
 
-    const data = await fetchFromFootballApi('fixtures/events', { fixture: matchId });
-    const events = Array.isArray(data.response) ? data.response : [];
+    const eventsResult = await fetchCachedMatchEvents(matchId);
+    const events = eventsResult.success && Array.isArray(eventsResult.data)
+      ? eventsResult.data
+      : [];
 
-    const goalEvents = events.filter((event: ApiEvent) => {
+    const goalEvents = events.filter((event: MatchEvent) => {
       const type = event.type?.toLowerCase() || '';
       const detail = event.detail?.toLowerCase() || '';
 
@@ -116,8 +120,6 @@ export async function fetchMatchGoalEvents(matchId: string): Promise<GoalEventDa
     };
   }
 }
-
-export const fetchCachedMatchEvents = cache(fetchMatchEvents);
 
 async function fetchMatchGoalEventsCached(matchId: string): Promise<GoalEventDataResponse> {
   return unstable_cache(

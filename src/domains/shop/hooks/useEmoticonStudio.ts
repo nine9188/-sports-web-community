@@ -1,80 +1,106 @@
-'use client'
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { emoticonStudioKeys } from '@/shared/constants/queryKeys'
-import { CACHE_STRATEGIES } from '@/shared/constants/cacheConfig'
+import { useCallback, useEffect, useState } from 'react';
 import {
   getMySubmissions,
   getMySuspendedSubmissions,
   submitEmoticonPack,
   cancelSubmission,
   checkPackNameDuplicate,
-} from '@/domains/shop/actions/emoticon-submissions'
-import type { SubmitEmoticonFormData } from '@/domains/shop/types/emoticon-submission'
+} from '@/domains/shop/actions/emoticon-submissions';
+import type { SubmitEmoticonFormData } from '@/domains/shop/types/emoticon-submission';
 
-/**
- * 내 신청 목록
- */
+function useAsyncData<T>(loader: () => Promise<T>, enabled = true) {
+  const [data, setData] = useState<T | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(enabled);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
+
+  const refetch = useCallback(() => {
+    setVersion(value => value + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      setIsFetching(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function load() {
+      setIsFetching(true);
+      setError(null);
+
+      try {
+        const result = await loader();
+        if (!cancelled) setData(result);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err : new Error('Failed to load data'));
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+          setIsFetching(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, loader, version]);
+
+  return {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  };
+}
+
+function useAsyncMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(async (input: TInput) => {
+    setIsPending(true);
+    try {
+      return await mutationFn(input);
+    } finally {
+      setIsPending(false);
+    }
+  }, [mutationFn]);
+
+  return {
+    mutateAsync,
+    isPending,
+  };
+}
+
 export function useMySubmissions() {
-  return useQuery({
-    queryKey: emoticonStudioKeys.submissions(),
-    queryFn: () => getMySubmissions(),
-    ...CACHE_STRATEGIES.FREQUENTLY_UPDATED,
-  })
+  return useAsyncData(useCallback(() => getMySubmissions(), []));
 }
 
-/**
- * 내 판매중지 내역
- */
 export function useMySuspendedSubmissions() {
-  return useQuery({
-    queryKey: emoticonStudioKeys.suspended(),
-    queryFn: () => getMySuspendedSubmissions(),
-    ...CACHE_STRATEGIES.OCCASIONALLY_UPDATED,
-  })
+  return useAsyncData(useCallback(() => getMySuspendedSubmissions(), []));
 }
 
-/**
- * 팩 이름 중복 체크 (2자 이상일 때만)
- */
 export function useCheckPackName(name: string) {
-  return useQuery({
-    queryKey: emoticonStudioKeys.packNameCheck(name),
-    queryFn: () => checkPackNameDuplicate(name),
-    enabled: name.trim().length >= 2,
-    staleTime: 1000 * 10,
-    gcTime: 1000 * 60,
-  })
+  const trimmedName = name.trim();
+  return useAsyncData(
+    useCallback(() => checkPackNameDuplicate(trimmedName), [trimmedName]),
+    trimmedName.length >= 2
+  );
 }
 
-/**
- * 신청 제출 mutation
- */
 export function useSubmitPack() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (formData: SubmitEmoticonFormData) => submitEmoticonPack(formData),
-    onSuccess: (result) => {
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: emoticonStudioKeys.submissions() })
-      }
-    },
-  })
+  return useAsyncMutation(useCallback((formData: SubmitEmoticonFormData) => submitEmoticonPack(formData), []));
 }
 
-/**
- * 신청 취소 mutation
- */
 export function useCancelSubmission() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (id: number) => cancelSubmission(id),
-    onSuccess: (result) => {
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: emoticonStudioKeys.submissions() })
-      }
-    },
-  })
+  return useAsyncMutation(useCallback((id: number) => cancelSubmission(id), []));
 }

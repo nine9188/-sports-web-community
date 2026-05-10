@@ -8,7 +8,6 @@ import {
   convertStandingsData
 } from '../../../utils/teamDataUtils';
 import { ErrorState } from '@/domains/livescore/components/common/CommonComponents';
-import SidebarRelatedPosts from '@/domains/sidebar/components/SidebarRelatedPosts';
 import { Match as ApiMatch } from '@/domains/livescore/actions/teams/matches';
 import { Match as UIMatch } from './tabs/overview/components/MatchItems';
 import { FixturesTab } from './tabs/fixtures';
@@ -68,28 +67,23 @@ export default function TabContent({ teamId, tab, initialData, playerKoreanNames
   switch (tabType) {
     case 'overview':
       return (
-        <>
-          <Overview
-            teamId={numericTeamId}
-            team={teamData?.team}
-            stats={convertTeamStatsForOverview(teamData?.stats)}
-            matches={convertMatchesForOverview(matches?.data)}
-            standings={convertStandingsData(standings?.data)}
-            playerStats={playerStats?.data}
-            squad={squad?.data}
-            transfers={transfers?.data}
-            isLoading={false}
-            error={null}
-            playerKoreanNames={playerKoreanNames}
-            playerPhotoUrls={playerPhotoUrls}
-            teamLogoUrls={teamLogoUrls}
-            leagueLogoUrls={leagueLogoUrls}
-            leagueLogoDarkUrls={leagueLogoDarkUrls}
-          />
-          <div className="xl:hidden">
-            <SidebarRelatedPosts />
-          </div>
-        </>
+        <Overview
+          teamId={numericTeamId}
+          team={teamData?.team}
+          stats={convertTeamStatsForOverview(teamData?.stats)}
+          matches={convertMatchesForOverview(matches?.data)}
+          standings={convertStandingsData(standings?.data)}
+          playerStats={playerStats?.data}
+          squad={squad?.data}
+          transfers={transfers?.data}
+          isLoading={false}
+          error={null}
+          playerKoreanNames={playerKoreanNames}
+          playerPhotoUrls={playerPhotoUrls}
+          teamLogoUrls={teamLogoUrls}
+          leagueLogoUrls={leagueLogoUrls}
+          leagueLogoDarkUrls={leagueLogoDarkUrls}
+        />
       );
 
     case 'squad':

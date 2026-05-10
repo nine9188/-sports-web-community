@@ -1,7 +1,6 @@
 'use client';
 
 import { X, User, LogOut, UserCog, PenSquare } from 'lucide-react';
-import { useAuth } from '@/shared/context/AuthContext';
 import { useIcon } from '@/shared/context/IconContext';
 import ClientUserProfile from './auth/ClientUserProfile';
 import AttendanceCalendar from '@/shared/components/AttendanceCalendar';
@@ -24,9 +23,9 @@ export default function ProfileSidebar({
   onClose,
   userData,
 }: ProfileSidebarProps) {
-  const { user } = useAuth();
   const { iconUrl } = useIcon();
   const { logout } = useLogout();
+  const isLoggedIn = Boolean(userData);
 
   // 서버에서 전달받은 userData를 UserProfile 형식으로 변환 (useMemo로 최적화)
   const profileData = useMemo(() => {
@@ -79,7 +78,7 @@ export default function ProfileSidebar({
         {/* 헤더 */}
         <div className="flex items-center justify-between h-14 border-b border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-4">
           <span className="font-medium text-gray-900 dark:text-[#F0F0F0]">
-            {user ? '프로필' : '로그인'}
+            {isLoggedIn ? '프로필' : '로그인'}
           </span>
           <Button
             variant="ghost"
@@ -95,7 +94,7 @@ export default function ProfileSidebar({
 
         {/* 컨텐츠 영역 */}
         <div className="h-[calc(100%-56px)] overflow-y-auto bg-white dark:bg-[#1D1D1D]">
-          {user ? (
+          {isLoggedIn ? (
             // 로그인된 사용자
             <>
               {/* 사용자 프로필 정보 섹션 */}
@@ -105,8 +104,8 @@ export default function ProfileSidebar({
 
               {/* 출석 현황 (미니 캘린더) - 고정 높이로 레이아웃 시프트 방지 */}
               <div className="px-4 pt-2 min-h-[120px]">
-                {user?.id && (
-                  <AttendanceCalendar userId={user.id} variant="mini" />
+                {userData?.id && (
+                  <AttendanceCalendar userId={userData.id} variant="mini" />
                 )}
               </div>
 

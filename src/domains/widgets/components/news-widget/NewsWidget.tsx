@@ -14,11 +14,6 @@ export async function fetchNewsData(boardSlugs: string[] = DEFAULT_BOARD_SLUGS):
   return getAllNewsPosts(boardSlugs);
 }
 
-interface NewsWidgetServerProps extends NewsWidgetProps {
-  /** 미리 fetch된 데이터 (병렬 fetch 시 사용) */
-  initialData?: NewsItem[];
-}
-
 /**
  * 뉴스 위젯 (서버 컴포넌트)
  *
@@ -30,18 +25,16 @@ interface NewsWidgetServerProps extends NewsWidgetProps {
  * 1. 서버에서 뉴스 목록 HTML 생성
  * 2. NewsImageClient가 이미지 로딩/에러 처리
  */
-export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetServerProps = {}) {
-  // initialData가 제공되면 바로 사용, 없으면 자체 fetch
-  let news: NewsItem[];
+interface NewsWidgetServerProps extends NewsWidgetProps {
+  initialData?: NewsItem[];
+}
 
-  if (initialData) {
-    news = initialData;
-  } else {
-    const slugs = boardSlug
+export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetServerProps = {}) {
+  const news = initialData ?? await fetchNewsData(
+    boardSlug
       ? (Array.isArray(boardSlug) ? boardSlug : [boardSlug])
-      : DEFAULT_BOARD_SLUGS;
-    news = await getAllNewsPosts(slugs);
-  }
+      : DEFAULT_BOARD_SLUGS
+  );
 
   if (!news || news.length === 0) {
     const sideEmptyCard = (

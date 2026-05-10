@@ -2,9 +2,9 @@
 
 import { MatchDataExtended, MatchEvent, StandingsData, Standing } from '../../types/match';
 import { fetchCachedMatchData } from '../../utils/matchDataApi';
-import { fetchMatchEvents } from './eventData';
-import { fetchMatchLineups } from './lineupData';
-import { fetchMatchStats } from './statsData';
+import { fetchCachedMatchEvents } from './eventData';
+import { fetchCachedMatchLineups } from './lineupData';
+import { fetchCachedMatchStats } from './statsData';
 import { fetchCachedLeagueStandings } from './standingsData';
 import { TeamLineup } from './lineupData';
 import { TeamStats } from './statsData';
@@ -122,7 +122,7 @@ export async function fetchMatchFullData(
     
     if (options.fetchEvents) {
       promises.push(
-        fetchMatchEvents(matchId)
+        fetchCachedMatchEvents(matchId)
           .then(events => { 
             if (events.success && events.data) {
               response.events = events.data;
@@ -133,7 +133,7 @@ export async function fetchMatchFullData(
     
     if (options.fetchLineups) {
       promises.push(
-        fetchMatchLineups(matchId)
+        fetchCachedMatchLineups(matchId)
           .then(async lineups => { 
             if (lineups.success && lineups.response) {
               response.lineups = {
@@ -150,7 +150,7 @@ export async function fetchMatchFullData(
     
     if (options.fetchStats) {
       promises.push(
-        fetchMatchStats(matchId)
+        fetchCachedMatchStats(matchId)
           .then(stats => { 
             if (stats.success && stats.response) {
               response.stats = stats.response;

@@ -1,139 +1,131 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CommentType } from '../../types/post/comment';
 import { buildCommentTree } from '../../utils/comment/commentUtils';
 import {
   getComments,
-  createComment,
-  updateComment,
-  deleteComment,
-  likeComment,
-  dislikeComment
+  createComment as createCommentAction,
+  updateComment as updateCommentAction,
+  deleteComment as deleteCommentAction,
+  likeComment as likeCommentAction,
+  dislikeComment as dislikeCommentAction,
 } from '../../actions/comments/index';
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
-
-// Query Keys 상수
-export const commentKeys = {
-  all: ['comments'] as const,
-  list: (postId: string) => [...commentKeys.all, 'list', postId] as const,
-};
 
 interface UseCommentsProps {
   postId: string;
   enabled?: boolean;
-  /** 서버에서 미리 가져온 댓글 데이터 (SSR 하이드레이션용) */
   initialComments?: CommentType[];
 }
 
 interface UseCommentsReturn {
-  // 데이터
   comments: CommentType[];
   treeComments: CommentType[];
   commentCount: number;
-
-  // 상태
   isLoading: boolean;
   isFetching: boolean;
   error: string | null;
-
-  // 댓글 작성
   createComment: (content: string, parentId?: string | null) => Promise<void>;
   isCreating: boolean;
-
-  // 댓글 수정
   updateComment: (commentId: string, content: string) => Promise<void>;
   isUpdating: boolean;
-
-  // 댓글 삭제
   deleteComment: (commentId: string) => Promise<void>;
   isDeleting: boolean;
-
-  // 좋아요/싫어요
   likeComment: (commentId: string) => Promise<void>;
   dislikeComment: (commentId: string) => Promise<void>;
   isLiking: boolean;
-
-  // 데이터 갱신
   refetch: () => void;
 }
 
-/**
- * 댓글 관련 상태 및 액션을 관리하는 커스텀 훅 (React Query 기반)
- *
- * @param postId - 게시글 ID
- * @param enabled - 쿼리 활성화 여부
- * @param initialComments - 서버에서 미리 가져온 댓글 (SSR 하이드레이션)
- */
 export function useComments({ postId, enabled = true, initialComments }: UseCommentsProps): UseCommentsReturn {
-  const queryClient = useQueryClient();
+  const [commentsData, setCommentsData] = useState<CommentType[]>(initialComments || []);
+  const [commentNumbers, setCommentNumbers] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(!initialComments && enabled);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
-  // Supabase 클라이언트 (클라이언트 사이드에서만 사용)
   const supabase = useMemo(() => {
     if (typeof window === 'undefined') return null;
     return getSupabaseBrowser();
   }, []);
 
-  // 댓글 목록 조회
-  const {
-    data: commentsData,
-    isLoading,
-    isFetching,
-    error: queryError,
-    refetch
-  } = useQuery({
-    queryKey: commentKeys.list(postId),
-    queryFn: async () => {
-      const response = await getComments(postId);
-      if (!response.success) {
-        throw new Error(response.error || '댓글을 불러오는데 실패했습니다.');
-      }
-      return response.comments || [];
-    },
-    enabled: enabled && !!postId,
-    staleTime: 1000 * 60, // 1분
-    gcTime: 1000 * 60 * 5, // 5분
-    // 서버에서 미리 가져온 데이터로 초기화 (SSR 하이드레이션)
-    initialData: initialComments,
-    // initialData가 있으면 현재 시간으로 설정하여 stale 방지
-    initialDataUpdatedAt: initialComments ? Date.now() : undefined,
-  });
+  const refetch = useCallback(() => {
+    setVersion(value => value + 1);
+  }, []);
 
-  // comment_number 보강 (Supabase 타입 미반영 시 클라이언트에서 직접 조회)
-  const { data: commentNumbers } = useQuery({
-    queryKey: [...commentKeys.list(postId), 'numbers'],
-    queryFn: async () => {
-      if (!supabase) return {};
+  useEffect(() => {
+    if (!enabled || !postId) return;
+
+    let cancelled = false;
+
+    async function loadComments() {
+      const initialLoad = !initialComments && commentsData.length === 0;
+      setIsLoading(initialLoad);
+      setIsFetching(!initialLoad);
+      setError(null);
+
+      try {
+        const response = await getComments(postId);
+        if (!response.success) {
+          throw new Error(response.error || '댓글을 불러오지 못했습니다.');
+        }
+        if (!cancelled) {
+          setCommentsData(response.comments || []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : '댓글을 불러오지 못했습니다.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+          setIsFetching(false);
+        }
+      }
+    }
+
+    loadComments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postId, enabled, version]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!enabled || !postId || !supabase) return;
+
+    let cancelled = false;
+
+    async function loadNumbers() {
       const { data } = await supabase
         .from('comments')
         .select('id, comment_number')
         .eq('post_id', postId);
+
+      if (cancelled) return;
+
       const map: Record<string, number> = {};
       if (data) {
         (data as unknown as { id: string; comment_number: number }[]).forEach(row => {
           map[row.id] = row.comment_number;
         });
       }
-      return map;
-    },
-    enabled: enabled && !!postId && !!supabase,
-    staleTime: 1000 * 60 * 5,
-  });
+      setCommentNumbers(map);
+    }
 
-  // 댓글 데이터와 트리 구조
-  const comments = useMemo(() => {
-    const raw = commentsData || [];
-    if (!commentNumbers || Object.keys(commentNumbers).length === 0) return raw;
-    return raw.map(c => ({
-      ...c,
-      comment_number: c.comment_number ?? commentNumbers[c.id]
-    }));
-  }, [commentsData, commentNumbers]);
-  const treeComments = useMemo(() => buildCommentTree(comments), [comments]);
-  const commentCount = comments.length;
+    loadNumbers();
 
-  // 실시간 업데이트 구독
+    return () => {
+      cancelled = true;
+    };
+  }, [postId, enabled, supabase, version]);
+
   useEffect(() => {
     if (!supabase || !postId || !enabled) return;
 
@@ -148,8 +140,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
           filter: `post_id=eq.${postId}`,
         },
         () => {
-          // 실시간 변경 감지 시 쿼리 무효화
-          queryClient.invalidateQueries({ queryKey: commentKeys.list(postId) });
+          refetch();
         }
       )
       .subscribe();
@@ -157,185 +148,116 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, postId, enabled, queryClient]);
+  }, [supabase, postId, enabled, refetch]);
 
-  // 댓글 작성 mutation
-  const createMutation = useMutation({
-    mutationFn: async ({ content, parentId }: { content: string; parentId?: string | null }) => {
-      const result = await createComment({ postId, content, parentId });
+  const comments = useMemo(() => {
+    if (!commentNumbers || Object.keys(commentNumbers).length === 0) return commentsData;
+    return commentsData.map(comment => ({
+      ...comment,
+      comment_number: comment.comment_number ?? commentNumbers[comment.id],
+    }));
+  }, [commentsData, commentNumbers]);
+
+  const treeComments = useMemo(() => buildCommentTree(comments), [comments]);
+  const commentCount = comments.length;
+
+  const createComment = useCallback(async (content: string, parentId?: string | null) => {
+    setIsCreating(true);
+    try {
+      const result = await createCommentAction({ postId, content, parentId });
       if (!result.success) {
         throw new Error(result.error || '댓글 작성에 실패했습니다.');
       }
-      return result.comment;
-    },
-    onSuccess: (newComment) => {
-      // 새 댓글을 캐시에 추가 (optimistic update)
-      if (newComment) {
-        queryClient.setQueryData<CommentType[]>(
-          commentKeys.list(postId),
-          (old) => [...(old || []), { ...newComment, userAction: null } as CommentType]
-        );
+      if (result.comment) {
+        setCommentsData(old => [...old, { ...result.comment, userAction: null } as CommentType]);
       }
-    },
-    onError: (error) => {
-      console.error('댓글 작성 오류:', error);
-    },
-  });
+    } finally {
+      setIsCreating(false);
+    }
+  }, [postId]);
 
-  // 댓글 수정 mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ commentId, content }: { commentId: string; content: string }) => {
-      const result = await updateComment(commentId, content);
+  const updateComment = useCallback(async (commentId: string, content: string) => {
+    setIsUpdating(true);
+    try {
+      const result = await updateCommentAction(commentId, content);
       if (!result.success) {
         throw new Error(result.error || '댓글 수정에 실패했습니다.');
       }
-      return result.comment;
-    },
-    onSuccess: (updatedComment, { commentId }) => {
-      // 수정된 댓글을 캐시에 업데이트
-      if (updatedComment) {
-        queryClient.setQueryData<CommentType[]>(
-          commentKeys.list(postId),
-          (old) =>
-            old?.map((comment) =>
-              comment.id === commentId
-                ? { ...updatedComment, userAction: comment.userAction }
-                : comment
-            ) || []
-        );
+      if (result.comment) {
+        setCommentsData(old => old.map(comment =>
+          comment.id === commentId
+            ? { ...result.comment, userAction: comment.userAction } as CommentType
+            : comment
+        ));
       }
-    },
-  });
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
 
-  // 댓글 삭제 mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const result = await deleteComment(commentId);
+  const deleteComment = useCallback(async (commentId: string) => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteCommentAction(commentId);
       if (!result.success) {
         throw new Error(result.error || '댓글 삭제에 실패했습니다.');
       }
-      return commentId;
-    },
-    onSuccess: (deletedCommentId) => {
-      // 삭제된 댓글을 캐시에서 제거
-      queryClient.setQueryData<CommentType[]>(
-        commentKeys.list(postId),
-        (old) => old?.filter((comment) => comment.id !== deletedCommentId) || []
-      );
-    },
-  });
+      setCommentsData(old => old.filter(comment => comment.id !== commentId));
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
 
-  // 좋아요 mutation
-  const likeMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const result = await likeComment(commentId);
+  const likeComment = useCallback(async (commentId: string) => {
+    setIsLiking(true);
+    try {
+      const result = await likeCommentAction(commentId);
       if (!result.success) {
         throw new Error(result.error || '좋아요 처리에 실패했습니다.');
       }
-      return { commentId, ...result };
-    },
-    onSuccess: ({ commentId, likes, dislikes, userAction }) => {
-      // 좋아요/싫어요 카운트 업데이트
-      queryClient.setQueryData<CommentType[]>(
-        commentKeys.list(postId),
-        (old) =>
-          old?.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: likes || 0, dislikes: dislikes || 0, userAction: userAction || null }
-              : comment
-          ) || []
-      );
-    },
-  });
+      setCommentsData(old => old.map(comment =>
+        comment.id === commentId
+          ? { ...comment, likes: result.likes || 0, dislikes: result.dislikes || 0, userAction: result.userAction || null }
+          : comment
+      ));
+    } finally {
+      setIsLiking(false);
+    }
+  }, []);
 
-  // 싫어요 mutation
-  const dislikeMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const result = await dislikeComment(commentId);
+  const dislikeComment = useCallback(async (commentId: string) => {
+    setIsLiking(true);
+    try {
+      const result = await dislikeCommentAction(commentId);
       if (!result.success) {
         throw new Error(result.error || '싫어요 처리에 실패했습니다.');
       }
-      return { commentId, ...result };
-    },
-    onSuccess: ({ commentId, likes, dislikes, userAction }) => {
-      // 좋아요/싫어요 카운트 업데이트
-      queryClient.setQueryData<CommentType[]>(
-        commentKeys.list(postId),
-        (old) =>
-          old?.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: likes || 0, dislikes: dislikes || 0, userAction: userAction || null }
-              : comment
-          ) || []
-      );
-    },
-  });
-
-  // 핸들러 함수들
-  const handleCreateComment = useCallback(
-    async (content: string, parentId?: string | null) => {
-      await createMutation.mutateAsync({ content, parentId });
-    },
-    [createMutation]
-  );
-
-  const handleUpdateComment = useCallback(
-    async (commentId: string, content: string) => {
-      await updateMutation.mutateAsync({ commentId, content });
-    },
-    [updateMutation]
-  );
-
-  const handleDeleteComment = useCallback(
-    async (commentId: string) => {
-      await deleteMutation.mutateAsync(commentId);
-    },
-    [deleteMutation]
-  );
-
-  const handleLikeComment = useCallback(
-    async (commentId: string) => {
-      await likeMutation.mutateAsync(commentId);
-    },
-    [likeMutation]
-  );
-
-  const handleDislikeComment = useCallback(
-    async (commentId: string) => {
-      await dislikeMutation.mutateAsync(commentId);
-    },
-    [dislikeMutation]
-  );
+      setCommentsData(old => old.map(comment =>
+        comment.id === commentId
+          ? { ...comment, likes: result.likes || 0, dislikes: result.dislikes || 0, userAction: result.userAction || null }
+          : comment
+      ));
+    } finally {
+      setIsLiking(false);
+    }
+  }, []);
 
   return {
-    // 데이터
     comments,
     treeComments,
     commentCount,
-
-    // 상태
     isLoading,
     isFetching,
-    error: queryError?.message || null,
-
-    // 댓글 작성
-    createComment: handleCreateComment,
-    isCreating: createMutation.isPending,
-
-    // 댓글 수정
-    updateComment: handleUpdateComment,
-    isUpdating: updateMutation.isPending,
-
-    // 댓글 삭제
-    deleteComment: handleDeleteComment,
-    isDeleting: deleteMutation.isPending,
-
-    // 좋아요/싫어요
-    likeComment: handleLikeComment,
-    dislikeComment: handleDislikeComment,
-    isLiking: likeMutation.isPending || dislikeMutation.isPending,
-
-    // 데이터 갱신
-    refetch: () => refetch(),
+    error,
+    createComment,
+    isCreating,
+    updateComment,
+    isUpdating,
+    deleteComment,
+    isDeleting,
+    likeComment,
+    dislikeComment,
+    isLiking,
+    refetch,
   };
 }

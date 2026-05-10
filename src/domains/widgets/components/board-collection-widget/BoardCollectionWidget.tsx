@@ -18,6 +18,10 @@ interface SectionData {
   posts: BoardPost[];
 }
 
+interface BoardCollectionWidgetProps {
+  initialData?: { foreign: SectionData; domestic: SectionData } | null;
+}
+
 /**
  * 데이터분석 위젯 DB 조회 로직 (캐시 래퍼 내부용)
  * Admin 클라이언트 사용 (unstable_cache 내부는 cookies() 사용 불가)
@@ -110,10 +114,6 @@ export const fetchBoardCollectionData = unstable_cache(
   { revalidate: 600, tags: ['board-collection', 'analysis-posts'] }
 );
 
-interface BoardCollectionWidgetProps {
-  initialData?: { foreign: SectionData; domestic: SectionData } | null;
-}
-
 /**
  * 빈 게시글 목록 컴포넌트
  */
@@ -149,10 +149,18 @@ function PostList({ posts }: { posts: BoardPost[] }) {
 /**
  * 섹션 헤더 컴포넌트 (탭 스타일)
  */
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title, href }: { title: string; href: string }) {
   return (
-    <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10">
+    <div className="bg-[#F5F5F5] dark:bg-[#262626] px-4 py-2 border-b border-black/5 dark:border-white/10 flex items-center justify-between gap-3">
       <h3 className="text-[13px] font-medium text-gray-700 dark:text-gray-300">{title}</h3>
+      <Link
+        href={href}
+        prefetch={false}
+        className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5 flex-shrink-0"
+      >
+        더보기
+        <ChevronRight className="w-3.5 h-3.5" />
+      </Link>
     </div>
   );
 }
@@ -170,72 +178,30 @@ export default async function BoardCollectionWidget({ initialData }: BoardCollec
 
   const foreign = data?.foreign ?? { boardName: '해외축구 분석', boardSlug: FOREIGN_ANALYSIS_SLUG, posts: [] };
   const domestic = data?.domestic ?? { boardName: '국내축구 분석', boardSlug: DOMESTIC_ANALYSIS_SLUG, posts: [] };
+  const sections = [
+    { ...foreign, href: `/boards/${FOREIGN_ANALYSIS_SLUG}` },
+    { ...domestic, href: `/boards/${DOMESTIC_ANALYSIS_SLUG}` },
+  ];
 
   return (
     <div>
-      {/* 데스크톱: 2열 레이아웃 */}
-      <Container className="hidden md:block bg-white dark:bg-[#1D1D1D]">
+      <Container className="bg-white dark:bg-[#1D1D1D]">
         <ContainerHeader className="justify-between">
           <ContainerTitle>데이터분석</ContainerTitle>
-          <Link
-            href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
-            prefetch={false}
-            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
-          >
-            분석 더보기
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
         </ContainerHeader>
 
-        <div className="grid grid-cols-2">
-          {/* 왼쪽: 해외축구 분석 */}
-          <div className="border-r border-black/5 dark:border-white/10">
-            <SectionHeader title={foreign.boardName} />
-            <PostList posts={foreign.posts} />
-          </div>
-
-          {/* 오른쪽: 국내축구 분석 */}
-          <div>
-            <SectionHeader title={domestic.boardName} />
-            <PostList posts={domestic.posts} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {sections.map((section, index) => (
+            <div
+              key={section.boardSlug}
+              className={index === 0 ? 'md:border-r border-black/5 dark:border-white/10' : 'border-t md:border-t-0 border-black/5 dark:border-white/10'}
+            >
+              <SectionHeader title={section.boardName} href={section.href} />
+              <PostList posts={section.posts} />
+            </div>
+          ))}
         </div>
       </Container>
-
-      {/* 모바일: 2개 섹션 */}
-      <div className="md:hidden space-y-4">
-        {/* 해외축구 분석 */}
-        <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader className="justify-between">
-            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{foreign.boardName}</h3>
-            <Link
-              href={`/boards/${FOREIGN_ANALYSIS_SLUG}`}
-              prefetch={false}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
-            >
-              분석 더보기
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </ContainerHeader>
-          <PostList posts={foreign.posts} />
-        </Container>
-
-        {/* 국내축구 분석 */}
-        <Container className="bg-white dark:bg-[#1D1D1D]">
-          <ContainerHeader className="justify-between">
-            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{domestic.boardName}</h3>
-            <Link
-              href={`/boards/${DOMESTIC_ANALYSIS_SLUG}`}
-              prefetch={false}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-0.5"
-            >
-              분석 더보기
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </ContainerHeader>
-          <PostList posts={domestic.posts} />
-        </Container>
-      </div>
     </div>
   );
 }

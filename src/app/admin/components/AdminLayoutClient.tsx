@@ -2,16 +2,10 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/shared/context/AuthContext';
 import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, AlertTriangle, Target, FileText, Settings, Grid3x3, Bell, Pin, Database } from 'lucide-react';
 
-interface AdminLayoutClientProps {
-  children: React.ReactNode;
-}
-
-export default function AdminLayoutClient({ children }: AdminLayoutClientProps) {
+export default function AdminLayoutClient() {
   const pathname = usePathname();
-  const { user } = useAuth();
 
   // 관리자 메뉴 항목
   const menuItems = [
@@ -30,66 +24,26 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     { path: '/admin/emoticon-submissions', label: '이모티콘 신청', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/prediction', label: '예측 분석', icon: <Target className="w-5 h-5 mr-2" /> },
     { path: '/admin/cache-management', label: '캐시 관리', icon: <Database className="w-5 h-5 mr-2" /> },
-    { path: '/', label: '사이트로 돌아가기', icon: <Home className="w-5 h-5 mr-2" /> },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#121212]">
-      {/* 관리자 헤더 */}
-      <header className="bg-white dark:bg-[#1D1D1D] border-b border-black/7 dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0F0F0]">관리자 페이지</h1>
-              <p className="text-[13px] text-gray-600 dark:text-gray-400">시스템 관리 및 설정을 위한 관리자 전용 페이지입니다.</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/"
-                className="inline-flex items-center px-3 py-2 border border-black/7 dark:border-white/10 rounded-md text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#262626] hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D] transition-colors"
-              prefetch={false}
-              >
-                <Home className="w-4 h-4 mr-2" />
-                사이트로 돌아가기
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* 메인 컨텐츠 */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* 관리자 네비게이션 메뉴 */}
-          <div className="mb-8">
-            <nav className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10">
-              <div className="px-4 py-3">
-                <div className="flex flex-wrap gap-2">
-                  {menuItems.slice(0, -1).map((item) => (
-                    <Link
-                      key={item.path}
-                      href={item.path}
-                      className={`flex items-center px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
-                        pathname === item.path
-                          ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]'
-                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
-                      }`}
-                    prefetch={false}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </nav>
-          </div>
-
-          {/* 페이지 컨텐츠 */}
-          <div className="bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 p-6">
-            {children}
-          </div>
-        </div>
+    <div className="px-4 py-3">
+      <div className="flex flex-wrap gap-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            href={item.path}
+            className={`flex items-center px-3 py-2 rounded-md text-[13px] font-medium transition-colors ${
+              pathname === item.path
+                ? 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0]'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626]'
+            }`}
+            prefetch={false}
+          >
+            {item.icon}
+            {item.label}
+          </Link>
+        ))}
       </div>
     </div>
   );
