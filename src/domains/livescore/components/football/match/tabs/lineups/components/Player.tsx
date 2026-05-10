@@ -224,8 +224,9 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
       const rectEl = rectRefs.current[key];
       if (!textEl || !rectEl) return;
       const bbox = textEl.getBBox();
-      const px = 0.7;
-      const py = 0.2;
+      const isNumberPill = key.startsWith('number-');
+      const px = isNumberPill ? 0.45 : 0.6;
+      const py = isNumberPill ? 0.06 : 0.1;
       rectEl.setAttribute('x', `${bbox.x - px}`);
       rectEl.setAttribute('y', `${bbox.y - py}`);
       rectEl.setAttribute('width', `${bbox.width + px * 2}`);
@@ -241,7 +242,7 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
     return team.startXI.map((player, index) => {
       const { totalInLine, ...position } = getPositionFromGrid(player.grid, isHome, team.formation);
 
-      const numberFontSize = isMobile ? 1.35 : 1.5;
+      const numberFontSize = isMobile ? 1.25 : 1.4;
       const nameFontSize = isMobile ? 1.5 : 1.8;
       
       const teamId = team.team.id;
@@ -292,7 +293,7 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           >
           {/* 배경 원 - 회색으로 통일 */}
           <circle
-            r="2.5"
+            r="2.35"
             fill="#f3f4f6"
             stroke="white"
             strokeWidth="0.15"
@@ -302,7 +303,7 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           {/* 선수 이미지를 위한 클리핑 패스 */}
           <defs>
             <clipPath id={`clip-${teamId}-${playerId}`}>
-              <circle r="2.5" />
+              <circle r="2.35" />
             </clipPath>
           </defs>
           
@@ -366,7 +367,6 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
                 y="3.9"
                 fill="white"
                 fontSize={numberFontSize}
-                fontWeight="bold"
                 textAnchor="middle"
                 dominantBaseline="middle"
               >
@@ -415,7 +415,6 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
                 y="6.15"
                 fill="white"
                 fontSize={nameFontSize}
-                fontWeight="bold"
                 textAnchor="middle"
                 dominantBaseline="middle"
               >

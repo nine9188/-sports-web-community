@@ -73,7 +73,7 @@ interface LineupsProps {
 export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, playerPhotoUrls = {}, isLoading = false }: LineupsProps) {
   const { getTeamById } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const getTeamLogo = (id: number, fallbackLogo?: string) => teamLogoUrls[id] || fallbackLogo || TEAM_PLACEHOLDER;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<{
     id: number;
@@ -283,6 +283,8 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   });
   const homeLineup = lineups?.home ?? createEmptyLineup(homeTeam);
   const awayLineup = lineups?.away ?? createEmptyLineup(awayTeam);
+  const homeFormationLogoUrl = getTeamLogo(homeLineup.team.id || homeTeam.id, homeLineup.team.logo || homeTeam.logo);
+  const awayFormationLogoUrl = getTeamLogo(awayLineup.team.id || awayTeam.id, awayLineup.team.logo || awayTeam.logo);
   const isLineupsLoading = isLoading;
 
   // 팀별 전체 선수 목록 (선발 + 교체) - 네비게이션용
@@ -298,7 +300,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
   const renderTeamHeader = (team: typeof homeTeam, formation?: string) => (
     <div className="flex items-center gap-2 border-b border-black/5 bg-[#F5F5F5] px-4 py-3 dark:border-white/10 dark:bg-[#262626]">
       <UnifiedSportsImageClient
-        src={getTeamLogo(team.id)}
+        src={getTeamLogo(team.id, team.logo)}
         alt={`${getTeamDisplayName(team.id, team.name)} 로고`}
         size="sm"
         variant="square"
@@ -418,21 +420,31 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     </Container>
   );
 
+  const renderStarterLineupPanel = (
+    team: typeof homeTeam,
+    lineup: TeamLineup,
+    allPlayers: Player[]
+  ) => (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerContent className="p-0">
+        {renderTeamHeader(team, lineup.formation)}
+      </ContainerContent>
+      <ContainerHeader className="md:rounded-none">
+        <ContainerTitle>선발 라인업</ContainerTitle>
+      </ContainerHeader>
+      <ContainerContent className="p-0">
+        {renderLineupList(lineup.startXI, team, allPlayers, '선발 라인업 데이터가 없습니다.', true)}
+      </ContainerContent>
+    </Container>
+  );
+
   const renderTeamLineupColumn = (
     team: typeof homeTeam,
     lineup: TeamLineup,
     allPlayers: Player[]
   ) => (
     <div className="flex flex-col gap-4">
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <ContainerContent className="p-0">
-          {renderTeamHeader(team, lineup.formation)}
-        </ContainerContent>
-      </Container>
-      {renderLineupPanel(
-        '선발 라인업',
-        renderLineupList(lineup.startXI, team, allPlayers, '선발 라인업 데이터가 없습니다.', true)
-      )}
+      {renderStarterLineupPanel(team, lineup, allPlayers)}
       {renderLineupPanel(
         '교체 선수',
         renderLineupList(lineup.substitutes, team, allPlayers, '교체 선수 데이터가 없습니다.')
@@ -465,8 +477,8 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
             playerKoreanNames={mergedPlayerKoreanNames}
             homeTeamDisplayName={getTeamDisplayName(homeTeam.id, homeTeam.name)}
             awayTeamDisplayName={getTeamDisplayName(awayTeam.id, awayTeam.name)}
-            homeTeamLogoUrl={getTeamLogo(homeTeam.id)}
-            awayTeamLogoUrl={getTeamLogo(awayTeam.id)}
+            homeTeamLogoUrl={homeFormationLogoUrl}
+            awayTeamLogoUrl={awayFormationLogoUrl}
             isLoading={isFormationLoading}
           />
         </div>
@@ -494,7 +506,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <th scope="col" className="w-1/2 py-3 px-4 text-left text-[13px] font-medium text-gray-500 dark:text-gray-400 border-r border-black/5 dark:border-white/10">
                   <div className="flex items-center gap-2">
                     <UnifiedSportsImageClient
-                      src={getTeamLogo(homeTeam.id)}
+                      src={getTeamLogo(homeTeam.id, homeTeam.logo)}
                       alt={`${getTeamDisplayName(homeTeam.id, homeTeam.name)} 로고`}
                       size="sm"
                       variant="square"
@@ -508,7 +520,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <th scope="col" className="w-1/2 py-3 px-4 text-left text-[13px] font-medium text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-2">
                     <UnifiedSportsImageClient
-                      src={getTeamLogo(awayTeam.id)}
+                      src={getTeamLogo(awayTeam.id, awayTeam.logo)}
                       alt={`${getTeamDisplayName(awayTeam.id, awayTeam.name)} 로고`}
                       size="sm"
                       variant="square"
@@ -849,7 +861,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <ContainerTitle>선발 라인업</ContainerTitle>
                 <div className="flex items-center gap-2">
                   <UnifiedSportsImageClient
-                    src={getTeamLogo(homeTeam.id)}
+                    src={getTeamLogo(homeTeam.id, homeTeam.logo)}
                     alt={`${getTeamDisplayName(homeTeam.id, homeTeam.name)} 로고`}
                     size="sm"
                     variant="square"
@@ -1019,7 +1031,7 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
                 <ContainerTitle>선발 라인업</ContainerTitle>
                 <div className="flex items-center gap-2">
                   <UnifiedSportsImageClient
-                    src={getTeamLogo(awayTeam.id)}
+                    src={getTeamLogo(awayTeam.id, awayTeam.logo)}
                     alt={`${getTeamDisplayName(awayTeam.id, awayTeam.name)} 로고`}
                     size="sm"
                     variant="square"

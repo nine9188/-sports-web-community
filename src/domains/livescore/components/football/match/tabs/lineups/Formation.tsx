@@ -121,11 +121,18 @@ function drawRoundedImage(
   img: HTMLImageElement,
   x: number, y: number, size: number, radius: number,
 ) {
+  const maxDrawSize = size * 0.78;
+  const ratio = Math.min(maxDrawSize / img.naturalWidth, maxDrawSize / img.naturalHeight);
+  const drawW = img.naturalWidth * ratio;
+  const drawH = img.naturalHeight * ratio;
+  const drawX = x + (size - drawW) / 2;
+  const drawY = y + (size - drawH) / 2;
+
   ctx.save();
   ctx.beginPath();
   ctx.roundRect(x, y, size, size, radius);
   ctx.clip();
-  ctx.drawImage(img, x, y, size, size);
+  ctx.drawImage(img, drawX, drawY, drawW, drawH);
   ctx.restore();
 }
 
