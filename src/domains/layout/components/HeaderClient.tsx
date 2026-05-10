@@ -18,7 +18,6 @@ const LiveScoreModal = dynamic(() => import('./livescoremodal'), { ssr: false })
 import UserProfileClient from './UserProfileClient';
 const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { ssr: false });
 import RecentlyVisited from './RecentlyVisited';
-import { useTodayMatchCount } from '@/domains/livescore/hooks/useLiveScoreData';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
 import { useAuth } from '@/shared/context/AuthContext';
@@ -180,10 +179,10 @@ export default function HeaderClient({
     setIsLiveScoreOpen(!isLiveScoreOpen);
   }, [isLiveScoreOpen]);
 
-  // 오늘 경기 수 조회 (CacheSeeder로 주입된 캐시에서 파생 → 추가 API 호출 없음)
-  const { hasTodayMatches } = useTodayMatchCount();
+  const hasTodayMatches = true;
   const isLoadingMatches = false;
 
+  // Keep the live-score affordance static; data is loaded only after the modal opens.
   // 모바일 검색: 검색 페이지로 이동하여 모달 노출
   const goToSearchPage = useCallback(() => {
     router.push('/search');
@@ -418,10 +417,12 @@ export default function HeaderClient({
       />
 
       {/* 라이브스코어 모달 */}
-      <LiveScoreModal
-        isOpen={isLiveScoreOpen}
-        onClose={() => setIsLiveScoreOpen(false)}
-      />
+      {isLiveScoreOpen && (
+        <LiveScoreModal
+          isOpen={isLiveScoreOpen}
+          onClose={() => setIsLiveScoreOpen(false)}
+        />
+      )}
 
       {/* 검색 모달: 검색 결과 페이지에서만 표시 */}
       {isSearchPage && (

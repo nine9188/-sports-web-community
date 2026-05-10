@@ -2,6 +2,7 @@
 
 import { cache } from 'react';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { getCurrentSeasonForLeague, getLeagueById, getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 
 type LeagueResponse = {
   league: {
@@ -42,6 +43,23 @@ export const resolveCurrentTeamMainLeague = cache(async (
   teamId: string | number,
   preferredSeason?: number | null
 ): Promise<CurrentTeamMainLeague | null> => {
+  const numericTeamId = typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
+
+  if (Number.isFinite(numericTeamId)) {
+    const team = await getTeamById(numericTeamId);
+
+    if (team?.league_id) {
+      const season = preferredSeason ?? await getCurrentSeasonForLeague(team.league_id);
+      const league = await getLeagueById(team.league_id);
+
+      return {
+        leagueId: team.league_id,
+        season,
+        name: league?.name || league?.name_ko || team.name_en || team.name_ko,
+      };
+    }
+  }
+
   const currentYear = new Date().getFullYear();
   const europeanSeason = new Date().getMonth() > 6 ? currentYear : currentYear - 1;
   const seasonsToTry = [...new Set([

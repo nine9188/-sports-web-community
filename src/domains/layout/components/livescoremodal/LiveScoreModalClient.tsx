@@ -4,7 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Clock, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import Link from 'next/link';
-import { useTodayMatches, useDateMatches } from '@/domains/livescore/hooks/useLiveScoreData';
+import {
+  fetchTodayMatches,
+  fetchMatchesByDateLabel,
+  type MatchData,
+} from '@/domains/livescore/actions/footballApi';
 import LiveScoreContent from './LiveScoreContent';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
@@ -19,23 +23,48 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   // SSR 보호: 포털은 클라이언트 마운트 후에만 사용
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
-
-  // 오늘 데이터: CacheSeeder로 주입된 캐시에서 사용
-  const { data: todayData, isLoading: isLoadingToday } = useTodayMatches();
-
-  // 어제/내일 데이터: 탭 클릭 시 lazy fetch
-  const { data: yesterdayMatches, isLoading: isLoadingYesterday } = useDateMatches(
-    'yesterday',
-    selectedDate === 'yesterday'
-  );
-  const { data: tomorrowMatches, isLoading: isLoadingTomorrow } = useDateMatches(
-    'tomorrow',
-    selectedDate === 'tomorrow'
-  );
+  const [matchesByDate, setMatchesByDate] = useState<Partial<Record<'yesterday' | 'today' | 'tomorrow', MatchData[]>>>({});
+  const [loadingDate, setLoadingDate] = useState<'yesterday' | 'today' | 'tomorrow' | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen || matchesByDate[selectedDate]) return;
+
+    let cancelled = false;
+
+    const loadMatches = async () => {
+      setLoadingDate(selectedDate);
+
+      try {
+        const matches = selectedDate === 'today'
+          ? (await fetchTodayMatches()).data?.today?.matches || []
+          : (await fetchMatchesByDateLabel(selectedDate)).matches || [];
+
+        if (!cancelled) {
+          setMatchesByDate((prev) => ({ ...prev, [selectedDate]: matches }));
+        }
+      } catch (error) {
+        console.error('[LiveScoreModal] failed to load matches:', error);
+
+        if (!cancelled) {
+          setMatchesByDate((prev) => ({ ...prev, [selectedDate]: [] }));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingDate(null);
+        }
+      }
+    };
+
+    loadMatches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, matchesByDate, selectedDate]);
 
   // 탭 변경 핸들러
   const handleTabChange = (newDate: 'yesterday' | 'today' | 'tomorrow') => {
@@ -44,14 +73,10 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
 
   // 선택된 날짜의 경기 데이터 + 로딩 상태
   const getSelectedMatches = () => {
-    switch (selectedDate) {
-      case 'yesterday':
-        return { matches: yesterdayMatches || [], isLoading: isLoadingYesterday };
-      case 'today':
-        return { matches: todayData?.data?.today?.matches || [], isLoading: isLoadingToday };
-      case 'tomorrow':
-        return { matches: tomorrowMatches || [], isLoading: isLoadingTomorrow };
-    }
+    return {
+      matches: matchesByDate[selectedDate] || [],
+      isLoading: loadingDate === selectedDate || !matchesByDate[selectedDate],
+    };
   };
 
   if (!isMounted) return null;

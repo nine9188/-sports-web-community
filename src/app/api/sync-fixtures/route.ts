@@ -51,6 +51,10 @@ async function fetchFixturesForLeague(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = await res.json();
+  if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {
+    return [];
+  }
+
   const response = data?.response;
   if (!Array.isArray(response)) return [];
 

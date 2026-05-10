@@ -4,18 +4,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { isLiveMatch } from '../../../constants/match-status';
-import { useLiveScore } from '../../../hooks/useLiveScoreQueries';
+import { Match } from '@/domains/livescore/types/match';
 import LeagueMatchList from './LeagueMatchList';
 import NavigationBar from './NavigationBar';
 
 interface LiveScoreViewProps {
   initialDate: string;
   initialShowLiveOnly?: boolean;
+  initialMatches: Match[];
+  initialLiveMatchCount: number;
 }
 
 export default function LiveScoreView({
   initialDate,
   initialShowLiveOnly = false,
+  initialMatches,
+  initialLiveMatchCount,
 }: LiveScoreViewProps) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date>(() => (
@@ -32,8 +36,6 @@ export default function LiveScoreView({
     setIsNavigating(false);
   }, [initialDate, initialShowLiveOnly]);
 
-  const { matches, isLoading, liveMatchCount } = useLiveScore(selectedDate, { showLiveOnly });
-
   useEffect(() => {
     const scheduleNextKstMidnight = () => {
       const nowUtc = new Date();
@@ -43,7 +45,10 @@ export default function LiveScoreView({
       const msUntilNext = nextKstMidnight.getTime() - kstNow.getTime();
 
       const timeoutId = window.setTimeout(() => {
-        setSelectedDate(new Date());
+        const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+        const dateStr = kst.toISOString().split('T')[0];
+        setIsNavigating(true);
+        router.push(`/livescore/football?date=${dateStr}`, { scroll: false });
         scheduleNextKstMidnight();
       }, msUntilNext);
 
@@ -52,10 +57,10 @@ export default function LiveScoreView({
 
     const id = scheduleNextKstMidnight();
     return () => window.clearTimeout(id);
-  }, []);
+  }, [router]);
 
   const filteredMatches = useMemo(() => {
-    return matches.filter(match => {
+    return initialMatches.filter(match => {
       if (showLiveOnly && !isLiveMatch(match.status.code)) {
         return false;
       }
@@ -71,7 +76,7 @@ export default function LiveScoreView({
 
       return true;
     });
-  }, [matches, searchKeyword, showLiveOnly]);
+  }, [initialMatches, searchKeyword, showLiveOnly]);
 
   const handleDateChange = (newDate: Date) => {
     if (showLiveOnly) {
@@ -106,17 +111,17 @@ export default function LiveScoreView({
       <NavigationBar
         searchKeyword={searchKeyword}
         showLiveOnly={showLiveOnly}
-        liveMatchCount={liveMatchCount}
+        liveMatchCount={initialLiveMatchCount}
         onSearchChange={setSearchKeyword}
         onLiveClick={handleLiveClick}
         onDateChange={handleDateChange}
         allExpanded={allExpanded}
         onToggleExpandAll={() => setAllExpanded(!allExpanded)}
         selectedDate={selectedDate}
-        isNavigating={isNavigating || isLoading}
+        isNavigating={isNavigating}
       />
 
-      {isLoading ? (
+      {isNavigating ? (
         <Container className="bg-white dark:bg-[#1D1D1D]">
           <ContainerHeader>
             <ContainerTitle>경기 일정</ContainerTitle>

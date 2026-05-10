@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import {
@@ -72,6 +73,10 @@ export async function generateMetadata({
 // URL에서 허용하는 팀 상세 탭 목록.
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
 
+function isSearchCrawler(userAgent: string): boolean {
+  return /Googlebot|Google-InspectionTool|bingbot|BingPreview|Yeti|Daum\/|DuckDuckBot|Baiduspider|YandexBot/i.test(userAgent);
+}
+
 /** URL 탭 기준으로 필요한 팀 데이터를 서버에서 준비하고 렌더링합니다. */
 async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
   try {
@@ -87,6 +92,9 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const needsPlayerStats = ['squad', 'stats'].includes(initialTab);
     const needsStandings = initialTab === 'standings';
     const needsTransfers = initialTab === 'transfers';
+    const requestHeaders = await headers();
+    const userAgent = requestHeaders.get('user-agent') || '';
+    const shouldFetchHeavyOverview = initialTab === 'overview' && !isSearchCrawler(userAgent);
 
     const [
       initialData,
@@ -105,10 +113,10 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
         matchLimit: 10,
       }),
-      initialTab === 'overview'
+      shouldFetchHeavyOverview
         ? fetchTeamOverviewPlayerRankingsData(id, 5)
         : Promise.resolve(null),
-      initialTab === 'overview'
+      shouldFetchHeavyOverview
         ? fetchTeamOverviewTransfersData(id)
         : Promise.resolve(null),
       initialTab === 'overview'

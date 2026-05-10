@@ -1,5 +1,8 @@
 import LiveScoreView from '@/domains/livescore/components/football/MainView/LiveScoreView';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
+import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
+import { countLiveMatches } from '@/domains/livescore/constants/match-status';
+import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 
@@ -78,6 +81,9 @@ export default async function FootballLiveScorePage({
   const searchParams = await searchParamsPromise;
   const dateParam = searchParams?.date ?? getKstDateString();
   const initialShowLiveOnly = searchParams?.filter === 'live';
+  const rawMatches = await fetchMatchesByDate(dateParam);
+  const initialMatches = await transformMatches(rawMatches);
+  const liveMatchCount = countLiveMatches(initialMatches);
 
   const pageUrl = `${siteConfig.url}/livescore/football`;
 
@@ -103,6 +109,8 @@ export default async function FootballLiveScorePage({
           key={`${dateParam}-${initialShowLiveOnly ? 'live' : 'all'}`}
           initialDate={dateParam}
           initialShowLiveOnly={initialShowLiveOnly}
+          initialMatches={initialMatches}
+          initialLiveMatchCount={liveMatchCount}
         />
     </>
   );
