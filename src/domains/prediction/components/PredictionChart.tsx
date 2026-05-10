@@ -184,18 +184,6 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 }
 
 // 데이터 행
-function DataRow({ label, value, subValue, color }: { label: string; value: string | number; subValue?: string; color?: string }) {
-  return (
-    <div className="flex items-center justify-between px-3 py-1.5 border-b border-black/5 dark:border-white/10 last:border-b-0">
-      <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
-      <span className={`text-xs font-medium ${color || 'text-gray-900 dark:text-[#F0F0F0]'}`}>
-        {value}
-        {subValue && <span className="text-gray-400 ml-1">({subValue})</span>}
-      </span>
-    </div>
-  );
-}
-
 // 시간대별 골 차트 (간소화)
 function GoalsByMinuteCompact({ scoredMinute, concededMinute }: { scoredMinute?: MinuteStats; concededMinute?: MinuteStats }) {
   const timeSlots = ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90'];

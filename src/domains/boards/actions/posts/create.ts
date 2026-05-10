@@ -10,6 +10,7 @@ import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
+import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { cacheThumbnailToStorage } from './cacheThumbnail';
 import type { PostActionResponse } from './utils';
 
@@ -179,6 +180,10 @@ async function createPostInternal(params: {
       getActivityTypeValues().then(types => rewardUserActivity(userId, types.POST_CREATION, postId)),
       // WebSub Hub 알림
       pingWebSubHub(),
+      // IndexNow 알림
+      submitIndexNowUrl(`/boards/${boardSlug}/${postNumber}`).then((result) => {
+        if (!result.ok) console.error('[IndexNow] post create submit failed:', result);
+      }),
       // 썸네일 Storage 캐싱 (외부 URL → CDN URL로 교체)
       cacheThumbnailToStorage(thumbnailUrl ?? '', postId),
       // 첫 게시글 마일스톤

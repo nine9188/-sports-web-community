@@ -6,6 +6,7 @@ import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
+import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { revalidateTag } from 'next/cache';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
@@ -195,7 +196,12 @@ export async function updatePost(
           boardSlug,
           title
         }
-      )
+      ),
+      boardSlug && postData.post_number
+        ? submitIndexNowUrl(`/boards/${boardSlug}/${postData.post_number}`).then((result) => {
+            if (!result.ok) console.error('[IndexNow] post update submit failed:', result);
+          })
+        : Promise.resolve()
     ]).catch(err => {
       console.error('게시글 수정 후처리 실패 (무시됨):', err);
     });

@@ -11,6 +11,7 @@ import { getLeagueLogoUrl } from '@/domains/livescore/actions/images'
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl'
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary'
+import { submitIndexNowUrl } from '@/shared/seo/indexnow'
 // predictMatch는 OpenAI SDK를 사용하므로 동적 import로 처리
 // (모듈 레벨 import 시 OPENAI_API_KEY 누락 등으로 전체 모듈 로드 실패 방지)
 async function loadPredictMatch() {
@@ -1137,7 +1138,7 @@ async function createPredictionPost(
         thumbnail_url: extractFirstImageUrl(content),
         summary: extractSummary(content),
       })
-      .select()
+      .select('id, post_number, boards(slug)')
       .single()
 
     if (postError || !post) {
@@ -1169,6 +1170,13 @@ async function createPredictionPost(
     // 캐시 무효화: BoardCollectionWidget (unstable_cache) 즉시 갱신
     revalidateTag('board-collection', 'default')
     revalidateTag('analysis-posts', 'default')
+
+    const boardSlug = (post.boards as { slug: string } | null)?.slug
+    if (boardSlug && post.post_number) {
+      submitIndexNowUrl(`/boards/${boardSlug}/${post.post_number}`).then((result) => {
+        if (!result.ok) console.error('[IndexNow] prediction post submit failed:', result)
+      })
+    }
 
     return {
       success: true,
