@@ -26,6 +26,11 @@ import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKor
 import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamLogoUrl } from '@/domains/livescore/actions/images';
 import { isUsableTeamSlug, resolveTeamCanonicalSlug } from '@/domains/livescore/actions/teams/slug';
+import {
+  isNextNotFoundError,
+  isNextRedirectError,
+  normalizeRouteSlug,
+} from '@/shared/utils/nextNavigationErrors';
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -87,7 +92,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       return notFound();
     }
 
-    if (slug !== canonicalSlug) {
+    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       const tabParam = tab && tab !== 'overview' ? `?tab=${tab}` : '';
       permanentRedirect(`/livescore/football/team/${id}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
@@ -363,6 +368,10 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       </>
     );
   } catch (error: unknown) {
+    if (isNextRedirectError(error) || isNextNotFoundError(error)) {
+      throw error;
+    }
+
     console.error('팀 페이지 로딩 오류:', error);
     notFound();
   }

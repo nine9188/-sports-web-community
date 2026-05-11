@@ -20,6 +20,7 @@ import {
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import { getBoardSlugByLeagueId } from '@/domains/boards/actions/getBoards';
 import AdBanner from '@/shared/components/AdBanner';
+import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 
 interface LeaguePageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -248,7 +249,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
   const league = await fetchLeagueDetails(id);
   const canonicalSlug = getLeagueSlug(leagueId, league?.name);
 
-  if (slug !== canonicalSlug) {
+  if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
     permanentRedirect(`/livescore/football/leagues/${id}/${encodeURIComponent(canonicalSlug)}`);
   }
 

@@ -89,18 +89,6 @@ export async function generateMetadata({
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
 
-function isFallbackPlayerSlug(id: string, slug?: string | null): boolean {
-  const normalizedSlug = String(slug ?? '').trim().toLowerCase();
-  const normalizedId = String(id ?? '').trim().toLowerCase();
-
-  return (
-    !normalizedSlug ||
-    normalizedSlug === 'player' ||
-    normalizedSlug === normalizedId ||
-    normalizedSlug === `player-${normalizedId}`
-  );
-}
-
 function buildMissingPlayerMetadata(id: string): Promise<Metadata> {
   return buildMetadata({
     title: '선수 정보를 찾을 수 없습니다',

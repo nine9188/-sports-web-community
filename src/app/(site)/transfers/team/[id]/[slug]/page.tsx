@@ -11,9 +11,9 @@ import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKor
 import { ensureAssetsCached, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import TransfersPageContent from '@/domains/livescore/components/football/transfers/TransfersPageContent';
 import { getTeamLinkSlug, getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
-import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
+import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 
 interface TeamTransfersPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -33,7 +33,13 @@ async function getTeamContext(id: string, slug?: string) {
   const expectedSlug = getTeamLinkSlug(team);
   const league = team.league_id ? await getLeagueById(team.league_id) : null;
 
-  return { teamId, team, league, expectedSlug, shouldRedirect: Boolean(slug && slug !== expectedSlug) };
+  return {
+    teamId,
+    team,
+    league,
+    expectedSlug,
+    shouldRedirect: Boolean(slug && normalizeRouteSlug(slug) !== normalizeRouteSlug(expectedSlug)),
+  };
 }
 
 export async function generateMetadata({ params }: TeamTransfersPageProps): Promise<Metadata> {

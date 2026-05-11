@@ -19,6 +19,7 @@ import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKor
 import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 import type { HeaderGoalEvent } from '@/domains/livescore/components/football/match/MatchHeader';
+import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 
 function addHoursToIsoDate(isoDate: string, hours: number): string {
   const date = new Date(isoDate);
@@ -165,7 +166,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       return notFound();
     }
 
-    if (slug !== canonicalSlug) {
+    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       const tabParam = initialTab !== DEFAULT_TAB ? `?tab=${initialTab}` : '';
       permanentRedirect(`/livescore/football/match/${matchId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
@@ -437,13 +438,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       </>
     );
   } catch (error) {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'digest' in error &&
-      typeof error.digest === 'string' &&
-      error.digest.startsWith('NEXT_REDIRECT')
-    ) {
+    if (isNextRedirectError(error)) {
       throw error;
     }
     console.error('Match page loading error:', error);
