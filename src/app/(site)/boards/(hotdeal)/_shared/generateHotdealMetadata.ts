@@ -1,12 +1,14 @@
 import { Metadata } from 'next';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { BoardListSearchParams, getBoardListMetadataState } from '../../_shared/boardListMetadata';
 
 interface HotdealMetadataConfig {
   slug: string;
   titleSuffix: string;
   fallbackDescription: string;
   keywords: string[];
+  searchParams?: BoardListSearchParams;
 }
 
 export async function generateHotdealMetadata({
@@ -14,6 +16,7 @@ export async function generateHotdealMetadata({
   titleSuffix,
   fallbackDescription,
   keywords,
+  searchParams,
 }: HotdealMetadataConfig): Promise<Metadata> {
   const supabase = await getSupabaseServer();
 
@@ -32,10 +35,13 @@ export async function generateHotdealMetadata({
     });
   }
 
+  const metadataState = getBoardListMetadataState(`/boards/${slug}`, searchParams);
+
   return buildMetadata({
     title: `${board.name} - ${titleSuffix}`,
     description: board.description || `${fallbackDescription} 축구 커뮤니티 4590 Football.`,
-    path: `/boards/${slug}`,
+    path: metadataState.path,
     keywords: [...keywords, '축구 커뮤니티', '4590', '4590football'],
+    ...(metadataState.robots && { robots: metadataState.robots }),
   });
 }

@@ -308,13 +308,11 @@ export async function fetchAllPostsWidgetData(): Promise<Post[]> {
 }
 
 interface AllPostsWidgetProps {
-  initialData?: Post[];
+  posts: Post[];
 }
 
-export default async function AllPostsWidget({ initialData }: AllPostsWidgetProps = {}) {
+export default async function AllPostsWidget({ posts }: AllPostsWidgetProps) {
   try {
-    const posts = initialData ?? await fetchAllPostsWidgetData();
-
     if (posts.length === 0) {
       return (
         <Container className="h-full bg-white dark:bg-[#1D1D1D]">

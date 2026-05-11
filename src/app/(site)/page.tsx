@@ -112,16 +112,16 @@ export default async function HomePage() {
           <BoardQuickLinksWidget />
         </div>
         <AdBanner />
-        <LiveScoreWidgetV2 initialData={liveScoreData} />
-        <BoardCollectionWidget initialData={boardCollectionData} />
-        <AllPostsWidget initialData={latestPosts} />
+        <LiveScoreWidgetV2 leagues={liveScoreData} />
+        <BoardCollectionWidget data={boardCollectionData} />
+        <AllPostsWidget posts={latestPosts} />
         <div className="hidden md:flex justify-center">
           <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
         </div>
         <div className="md:hidden flex justify-center">
           <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
         </div>
-        <NewsWidget initialData={news} />
+        <NewsWidget news={news} />
       </main>
     </>
   );

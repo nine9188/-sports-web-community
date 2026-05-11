@@ -1,6 +1,6 @@
 import { getAllNewsPosts } from './actions';
 import { MainCard, SideCard } from './NewsCardServer';
-import { NewsWidgetProps, NewsItem } from './types';
+import { NewsItem } from './types';
 import { Container } from '@/shared/components/ui';
 
 /** 기본 뉴스 게시판 */
@@ -25,17 +25,11 @@ export async function fetchNewsData(boardSlugs: string[] = DEFAULT_BOARD_SLUGS):
  * 1. 서버에서 뉴스 목록 HTML 생성
  * 2. NewsImageClient가 이미지 로딩/에러 처리
  */
-interface NewsWidgetServerProps extends NewsWidgetProps {
-  initialData?: NewsItem[];
+interface NewsWidgetServerProps {
+  news: NewsItem[];
 }
 
-export default async function NewsWidget({ boardSlug, initialData }: NewsWidgetServerProps = {}) {
-  const news = initialData ?? await fetchNewsData(
-    boardSlug
-      ? (Array.isArray(boardSlug) ? boardSlug : [boardSlug])
-      : DEFAULT_BOARD_SLUGS
-  );
-
+export default async function NewsWidget({ news }: NewsWidgetServerProps) {
   if (!news || news.length === 0) {
     const sideEmptyCard = (
       <div className="h-[96px] bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">

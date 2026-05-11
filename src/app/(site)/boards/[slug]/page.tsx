@@ -7,6 +7,8 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUtils';
 import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
 import type { Board } from '@/domains/layout/types/board';
+import { siteConfig } from '@/shared/config';
+import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
@@ -73,16 +75,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const supabase = await getSupabaseServer();
-  const pageParam = resolvedSearchParams?.page;
-  const parsedPage = pageParam ? Number(pageParam) : 1;
-  const currentPage = Number.isInteger(parsedPage) && parsedPage > 1 ? parsedPage : 1;
-  const hasIndexablePageParam = currentPage > 1;
-  const hasFilterParams = Boolean(
-    resolvedSearchParams?.from ||
-    resolvedSearchParams?.store ||
-    resolvedSearchParams?.search ||
-    resolvedSearchParams?.searchType
-  );
+  const metadataState = getBoardListMetadataState(`/boards/${slug}`, resolvedSearchParams);
 
   // 게시판 정보 조회
   const { data: board } = await supabase
@@ -105,9 +98,9 @@ export async function generateMetadata({
   return buildMetadata({
     title: seo.title,
     description: board.description ? `${board.description} 축구 커뮤니티 4590 Football.` : seo.desc,
-    path: hasIndexablePageParam && !hasFilterParams ? `/boards/${slug}?page=${currentPage}` : `/boards/${slug}`,
+    path: metadataState.path,
     keywords: seo.keywords,
-    ...(hasFilterParams && { robots: { index: false, follow: true } }),
+    ...(metadataState.robots && { robots: metadataState.robots }),
   });
 }
 
@@ -156,6 +149,7 @@ function BoardFallbackLayout({ slug }: { slug: string }) {
       teamData={null}
       leagueData={null}
       isLoggedIn={false}
+      canWrite={false}
       currentPage={1}
       slug={slug}
       rootBoardId={parent?.id || slug}
@@ -220,7 +214,7 @@ async function BoardDetailContent({
     // 5. 게시판 JSON-LD 구조화 데이터 (AI/검색엔진용)
     const childBoards = result.hoverChildBoardsMap[result.boardData.id] || [];
     const namedChildBoards = childBoards.filter((child) => Boolean(child.name?.trim()));
-    const boardUrl = `https://4590football.com/boards/${slug}`;
+    const boardUrl = `${siteConfig.url}/boards/${slug}`;
     const boardName = result.boardData.name?.trim() || slug;
     const boardJsonLd = {
       '@context': 'https://schema.org',
@@ -231,13 +225,13 @@ async function BoardDetailContent({
       isPartOf: {
         '@type': 'WebSite',
         name: '4590 Football',
-        url: 'https://4590football.com',
+        url: siteConfig.url,
       },
       ...(namedChildBoards.length > 0 && {
         hasPart: namedChildBoards.map((child, index) => ({
           '@type': 'CollectionPage',
           name: child.name,
-          url: `https://4590football.com/boards/${child.slug || ''}`,
+          url: `${siteConfig.url}/boards/${child.slug || ''}`,
           position: index + 1,
         })),
       }),
@@ -256,7 +250,7 @@ async function BoardDetailContent({
       provider: {
         '@type': 'Organization',
         name: '4590 Football',
-        url: 'https://4590football.com',
+        url: siteConfig.url,
       },
     };
 
@@ -266,7 +260,7 @@ async function BoardDetailContent({
         const crumbPath = crumb.slug && crumb.slug !== '#'
           ? (crumb.slug.startsWith('/') ? crumb.slug : `/boards/${crumb.slug}`)
           : undefined;
-        return crumbPath && crumb.name ? { name: crumb.name, item: `https://4590football.com${crumbPath}` } : null;
+        return crumbPath && crumb.name ? { name: crumb.name, item: `${siteConfig.url}${crumbPath}` } : null;
       })
       .filter((item): item is { name: string; item: string } => item !== null);
 
@@ -274,7 +268,7 @@ async function BoardDetailContent({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: '홈', item: 'https://4590football.com' },
+        { '@type': 'ListItem', position: 1, name: '홈', item: siteConfig.url },
         ...validBreadcrumbs.map((crumb, index) => ({
           '@type': 'ListItem',
           position: index + 2,
@@ -308,6 +302,7 @@ async function BoardDetailContent({
         } : null}
         isLoggedIn={result.isLoggedIn}
         isAdmin={result.isAdmin}
+        canWrite={result.canWrite}
         currentPage={currentPage}
         slug={slug}
         rootBoardId={result.rootBoardId}

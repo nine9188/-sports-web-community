@@ -27,7 +27,7 @@ async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
 
     const { data: posts, error: postsError } = await supabase
       .from('posts')
-      .select('id, title, summary, thumbnail_url, created_at, views, likes, post_number')
+      .select('id, title, summary, thumbnail_url, created_at, views, likes, post_number, profiles(nickname, public_id)')
       .eq('board_id', boardData.id)
       .order('created_at', { ascending: false })
       .limit(POSTS_LIMIT);
@@ -37,7 +37,17 @@ async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
       return [];
     }
 
-    const newsItems: NewsItem[] = posts.map((post: { id: string; title: string; summary: string | null; thumbnail_url: string | null; created_at: string; views: number | null; likes: number | null; post_number: number }) => {
+    const newsItems: NewsItem[] = posts.map((post: {
+      id: string;
+      title: string;
+      summary: string | null;
+      thumbnail_url: string | null;
+      created_at: string;
+      views: number | null;
+      likes: number | null;
+      post_number: number;
+      profiles: { nickname?: string | null; public_id?: string | null } | null;
+    }) => {
       const summary = post.summary
         ? post.summary.slice(0, 150) + (post.summary.length > 150 ? '...' : '')
         : '';
@@ -54,7 +64,11 @@ async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
         source: boardData.name,
         publishedAt: post.created_at || new Date().toISOString(),
         url: `/boards/${boardSlug}/${post.post_number || 0}`,
-        postNumber: post.post_number || 0
+        postNumber: post.post_number || 0,
+        authorNickname: post.profiles?.nickname || '익명',
+        authorPublicId: post.profiles?.public_id || null,
+        views: post.views || 0,
+        likes: post.likes || 0
       };
     });
 

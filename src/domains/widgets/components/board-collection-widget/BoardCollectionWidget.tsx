@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import BoardPostItem from './BoardPostItem';
 import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { formatDate } from '@/shared/utils/dateUtils';
 import type { BoardPost } from './types';
 
 const POSTS_PER_SECTION = 5;
@@ -19,8 +20,22 @@ interface SectionData {
 }
 
 interface BoardCollectionWidgetProps {
-  initialData?: { foreign: SectionData; domestic: SectionData } | null;
+  data: { foreign: SectionData; domestic: SectionData } | null;
 }
+
+type AnalysisPostRow = {
+  id: string;
+  title: string;
+  post_number: number;
+  created_at: string | null;
+  views: number | null;
+  likes: number | null;
+  profiles: {
+    nickname?: string | null;
+    public_id?: string | null;
+  } | null;
+  boards: { slug: string | null; name: string } | null;
+};
 
 /**
  * 데이터분석 위젯 DB 조회 로직 (캐시 래퍼 내부용)
@@ -34,14 +49,14 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
     const [foreignPostsResult, domesticPostsResult] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, title, post_number, boards(slug, name)')
+        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'foreign')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
       supabase
         .from('posts')
-        .select('id, title, post_number, boards(slug, name)')
+        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'domestic')
         .order('created_at', { ascending: false })
@@ -69,13 +84,21 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
     }
 
     // 포맷팅 (실제 board slug 사용, fallback으로 기본 slug)
-    const formatPosts = (posts: { id: string; title: string; post_number: number; boards: { slug: string | null; name: string } | null }[] | null, fallbackSlug: string, fallbackName: string): BoardPost[] => {
-      return (posts || []).map(p => ({
+    const formatPosts = (posts: unknown, fallbackSlug: string, fallbackName: string): BoardPost[] => {
+      const rows = (posts || []) as AnalysisPostRow[];
+
+      return rows.map(p => ({
         id: p.id,
         title: p.title,
         post_number: p.post_number,
+        created_at: p.created_at || undefined,
+        formattedDate: p.created_at ? formatDate(p.created_at) : '-',
         board_slug: p.boards?.slug || fallbackSlug,
         board_name: p.boards?.name || fallbackName,
+        author_nickname: p.profiles?.nickname || '익명',
+        author_public_id: p.profiles?.public_id || null,
+        views: p.views || 0,
+        likes: p.likes || 0,
         comment_count: commentCountMap[p.id] || 0,
         team_logo: null,
         league_logo: null,
@@ -173,9 +196,7 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
  * - 탭 전환 없이 2열 레이아웃
  * - 하이드레이션 불필요 → LCP 즉시 확정
  */
-export default async function BoardCollectionWidget({ initialData }: BoardCollectionWidgetProps = {}) {
-  const data = initialData !== undefined ? initialData : await fetchBoardCollectionData();
-
+export default async function BoardCollectionWidget({ data }: BoardCollectionWidgetProps) {
   const foreign = data?.foreign ?? { boardName: '해외축구 분석', boardSlug: FOREIGN_ANALYSIS_SLUG, posts: [] };
   const domestic = data?.domestic ?? { boardName: '국내축구 분석', boardSlug: DOMESTIC_ANALYSIS_SLUG, posts: [] };
   const sections = [

@@ -16,5 +16,5 @@ export default async function LeagueRedirect({
   const league = await fetchLeagueDetails(id);
   const slug = getLeagueSlug(parseInt(id, 10), league?.name);
 
-  permanentRedirect(`/livescore/football/leagues/${id}/${slug}`);
+  permanentRedirect(`/livescore/football/leagues/${id}/${encodeURIComponent(slug)}`);
 }

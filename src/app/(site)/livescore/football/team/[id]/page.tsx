@@ -1,4 +1,5 @@
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { resolveTeamCanonicalSlug } from '@/domains/livescore/actions/teams/slug';
 
 /**
  * /team/[id] → /team/[id]/[slug] 리다이렉트 전용
@@ -14,22 +15,12 @@ export default async function TeamRedirect({
   const { id } = await params;
   const { tab } = await searchParams;
 
-  let slug = 'team';
+  const slug = await resolveTeamCanonicalSlug(id);
 
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/football_teams?team_id=eq.${id}&select=slug&limit=1`,
-      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }, cache: 'force-cache' }
-    );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any[] = await res.json();
-    if (data?.[0]?.slug) slug = data[0].slug;
-  } catch {
-    slug = 'team';
+  if (!slug) {
+    notFound();
   }
 
   const tabParam = tab ? `?tab=${tab}` : '';
-  permanentRedirect(`/livescore/football/team/${id}/${slug}${tabParam}`);
+  permanentRedirect(`/livescore/football/team/${id}/${encodeURIComponent(slug)}${tabParam}`);
 }

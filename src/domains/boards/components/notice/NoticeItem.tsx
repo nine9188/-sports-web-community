@@ -183,15 +183,15 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       </td>
 
       {/* 제목 */}
-      <td className="py-2 px-4 align-middle">
+      <td className="py-2 px-1 align-middle">
         <Link href={postUrl} className="block w-full" prefetch={false}>
-          <div className="flex items-center">
-            <span className="text-xs line-clamp-1 text-gray-900 dark:text-[#F0F0F0]">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
               {notice.title}
             </span>
             {(notice.comment_count || 0) > 0 && (
               <span
-                className="ml-1 text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0"
+                className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0 whitespace-nowrap"
                 title={`댓글 ${notice.comment_count}개`}
               >
                 [{notice.comment_count}]
@@ -202,7 +202,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       </td>
 
       {/* 작성자 (아이콘 + 닉네임) */}
-      <td className="py-2 px-3 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
+      <td className="py-2 px-1 text-left text-xs text-gray-500 dark:text-gray-400 align-middle">
         <AuthorLink
           nickname={notice.author_nickname || notice.profiles?.nickname || '익명'}
           publicId={notice.author_public_id || notice.profiles?.public_id}

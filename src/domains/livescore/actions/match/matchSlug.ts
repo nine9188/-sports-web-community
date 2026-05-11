@@ -3,7 +3,8 @@
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { fetchCachedMatchFullData } from './matchData';
 import { slugify } from '@/domains/livescore/utils/slugs';
-import { getMatchLinkSlug } from '@/domains/livescore/utils/entityLinks';
+import { getMatchLinkSlug, getTeamLinkSlug } from '@/domains/livescore/utils/entityLinks';
+import { isUsableTeamSlug } from '@/domains/livescore/actions/teams/slug';
 import { cache } from 'react';
 
 type TeamSlugRow = {
@@ -38,17 +39,43 @@ function findTeamSlugByName(name: string, teams: TeamSlugRow[]): string | null {
   if (!normalizedName) return null;
 
   const exact = teams.find((team) =>
-    team.slug && teamNameCandidates(team).some((candidate) => candidate === normalizedName)
+    isUsableTeamSlug(team.team_id, team.slug) && teamNameCandidates(team).some((candidate) => candidate === normalizedName)
   );
   if (exact?.slug) return exact.slug;
 
   const partial = teams.find((team) =>
-    team.slug && teamNameCandidates(team).some((candidate) =>
+    isUsableTeamSlug(team.team_id, team.slug) && teamNameCandidates(team).some((candidate) =>
       candidate.includes(normalizedName) || normalizedName.includes(candidate)
     )
   );
 
   return partial?.slug || null;
+}
+
+function canonicalTeamSlugFromRow(team: TeamSlugRow): string | null {
+  if (isUsableTeamSlug(team.team_id, team.slug)) return team.slug;
+
+  const nameSlug = getTeamLinkSlug({
+    id: team.team_id,
+    name: team.name,
+    name_ko: team.name_ko,
+    display_name: team.display_name,
+    short_name: team.short_name,
+  });
+
+  return isUsableTeamSlug(team.team_id, nameSlug) ? nameSlug : null;
+}
+
+function isUsableMatchSlug(fixtureId: number | string, slug?: string | null): slug is string {
+  const normalized = String(slug ?? '').trim().toLowerCase();
+  const normalizedId = String(fixtureId ?? '').trim().toLowerCase();
+
+  return Boolean(
+    normalized &&
+    normalized !== 'match' &&
+    normalized !== normalizedId &&
+    normalized !== `match-${normalizedId}`
+  );
 }
 
 function extractTeamsFromHighlightTitle(title: string | null | undefined): [string, string] | null {
@@ -71,12 +98,14 @@ async function getTeamSlugsFromIds(homeTeamId?: number | null, awayTeamId?: numb
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
     .from('football_teams')
-    .select('team_id, slug')
+    .select('team_id, name, name_ko, display_name, short_name, slug')
     .in('team_id', [homeTeamId, awayTeamId]);
 
-  const rows = (data || []) as Array<{ team_id: number; slug: string | null }>;
-  const homeSlug = rows.find((row) => row.team_id === homeTeamId)?.slug;
-  const awaySlug = rows.find((row) => row.team_id === awayTeamId)?.slug;
+  const rows = (data || []) as TeamSlugRow[];
+  const homeRow = rows.find((row) => row.team_id === homeTeamId);
+  const awayRow = rows.find((row) => row.team_id === awayTeamId);
+  const homeSlug = homeRow ? canonicalTeamSlugFromRow(homeRow) : null;
+  const awaySlug = awayRow ? canonicalTeamSlugFromRow(awayRow) : null;
 
   return homeSlug && awaySlug ? `${homeSlug}-vs-${awaySlug}` : null;
 }
@@ -95,14 +124,14 @@ async function getTeamSlugsFromHighlightTitle(fixtureId: number): Promise<string
 
   const { data: teams } = await supabase
     .from('football_teams')
-    .select('team_id, name, name_ko, display_name, short_name, slug')
-    .not('slug', 'is', null);
+    .select('team_id, name, name_ko, display_name, short_name, slug');
 
   const rows = (teams || []) as TeamSlugRow[];
   const homeSlug = findTeamSlugByName(teamNames[0], rows) || slugify(teamNames[0]);
   const awaySlug = findTeamSlugByName(teamNames[1], rows) || slugify(teamNames[1]);
 
-  return homeSlug && awaySlug ? `${homeSlug}-vs-${awaySlug}` : null;
+  const slug = homeSlug && awaySlug ? `${homeSlug}-vs-${awaySlug}` : null;
+  return isUsableMatchSlug(fixtureId, slug) ? slug : null;
 }
 
 async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Promise<string | null> {
@@ -121,14 +150,14 @@ async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Pr
       matchData.match.teams?.home?.id,
       matchData.match.teams?.away?.id
     );
-    if (fromIds) return fromIds;
+    if (isUsableMatchSlug(id, fromIds)) return fromIds;
 
     const fromNames = getMatchLinkSlug(
       matchData.match.teams?.home || {},
       matchData.match.teams?.away || {},
       id
     );
-    if (fromNames) return fromNames;
+    if (isUsableMatchSlug(id, fromNames)) return fromNames;
   }
 
   return getTeamSlugsFromHighlightTitle(id);

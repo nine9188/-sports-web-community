@@ -67,6 +67,7 @@ export default function BasicStatsCards({ stats, leagueLogoUrl, leagueLogoDarkUr
   };
 
   const safeCleanSheet = stats.clean_sheet || { total: 0, home: 0, away: 0 };
+  const hasLeagueInfo = Boolean(stats.league?.id && stats.league?.name);
 
   return (
     <div className="space-y-4 mb-4">
@@ -85,7 +86,7 @@ export default function BasicStatsCards({ stats, leagueLogoUrl, leagueLogoDarkUr
           <div className="flex items-center py-3">
             {/* 리그 정보 */}
             <div className="flex-1 flex items-center justify-center gap-2 relative">
-              <div className="w-6 h-6 flex-shrink-0">
+              <div className={`w-6 h-6 flex-shrink-0 ${hasLeagueInfo ? '' : 'hidden'}`}>
                 <UnifiedSportsImageClient
                   src={finalLeagueLogo}
                   alt={safeLeague.name || ''}
@@ -96,12 +97,12 @@ export default function BasicStatsCards({ stats, leagueLogoUrl, leagueLogoDarkUr
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate">
-                  {getLeagueKoreanName(safeLeague.name) || safeLeague.name || '-'}
+                  {hasLeagueInfo ? (getLeagueKoreanName(safeLeague.name) || safeLeague.name) : '데이터 없음'}
                 </p>
-                <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
-                  <span>{safeLeague.season || '-'}</span>
+                <div className={`items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 ${hasLeagueInfo ? 'flex' : 'hidden'}`}>
+                  <span>{hasLeagueInfo ? (safeLeague.season || '-') : '데이터 없음'}</span>
                   <span>•</span>
-                  <span>{safeLeague.country || '-'}</span>
+                  <span>{hasLeagueInfo ? (safeLeague.country || '-') : ''}</span>
                 </div>
               </div>
               <span className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-8 bg-[#EAEAEA] dark:bg-[#333333]" />

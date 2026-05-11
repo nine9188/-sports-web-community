@@ -22,5 +22,5 @@ export default async function PlayerRedirect({
   }
 
   const tabParam = tab ? `?tab=${tab}` : '';
-  permanentRedirect(`/livescore/football/player/${id}/${slug}${tabParam}`);
+  permanentRedirect(`/livescore/football/player/${id}/${encodeURIComponent(slug)}${tabParam}`);
 }

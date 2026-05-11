@@ -291,7 +291,7 @@ async function fetchTeamData(
 
     // 팀 정보 API 요청
     let teamInfo: TeamInfo | null = null;
-    let leagueId = 39;
+    let leagueId: number | null = null;
     let dbLeagueFound = false;
     let currentSeason: number | null = null;
     let statsData: TeamStats | null = null;
@@ -361,7 +361,10 @@ async function fetchTeamData(
     }
 
     // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
-    currentSeason = currentSeason ?? await perf.mark('db:current-season', () => getCurrentSeasonForLeague(leagueId));
+    if (currentSeason === null && leagueId !== null) {
+      const resolvedLeagueId = leagueId;
+      currentSeason = await perf.mark('db:current-season', () => getCurrentSeasonForLeague(resolvedLeagueId));
+    }
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
     {
@@ -390,6 +393,7 @@ async function fetchTeamData(
       }
     }
 
+    if (leagueId !== null && currentSeason !== null) {
     try {
       const statsResult = await perf.mark('api:teams-statistics', () => fetchFromFootballApi('teams/statistics', { team: teamId, season: currentSeason, league: leagueId }));
       if (statsResult?.response) {
@@ -397,6 +401,7 @@ async function fetchTeamData(
       }
     } catch {
       // stats 실패해도 팀 기본 정보는 반환
+    }
     }
     
     // 팀 매핑 정보 적용

@@ -9,7 +9,7 @@ import { getNoticesForBoard } from './posts';
 import { getHoverMenuData, type HoverMenuBoard } from './getHoverMenuData';
 import { processNoticesForLayout } from '../utils/notice/noticeUtils';
 import { getTeamLogoUrl, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getBoardViewerPermissions } from './permissions';
 import type { LayoutPost } from '../types/post/layout';
 import type { Post } from '../types/post';
 
@@ -56,6 +56,8 @@ export interface BoardPageAllData {
   } | null;
   isLoggedIn: boolean;
   isAdmin: boolean;
+  canWrite: boolean;
+  canWriteNotice: boolean;
   rootBoardId: string;
   rootBoardSlug: string;
   viewType?: 'text' | 'image-table' | 'list';
@@ -115,20 +117,9 @@ export async function getBoardPageAllData(
 
   if ('error' in cached) return cached;
 
-  // isAdmin은 사용자별 값이므로 캐시 밖에서 매 요청마다 체크
-  let isAdmin = false;
-  if (cached.isLoggedIn) {
-    try {
-      const supabase = await getSupabaseServer();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
-        isAdmin = profile?.is_admin || false;
-      }
-    } catch { /* isAdmin = false */ }
-  }
+  const viewer = await getBoardViewerPermissions(cached.boardData);
 
-  return { ...cached, isAdmin };
+  return { ...cached, ...viewer };
 }
 
 async function _getBoardPageAllDataImpl(
@@ -235,8 +226,10 @@ async function _getBoardPageAllDataImpl(
     breadcrumbs: boardResult.breadcrumbs || [],
     teamData: boardResult.teamData || null,
     leagueData: boardResult.leagueData || null,
-    isLoggedIn: boardResult.isLoggedIn || false,
-    isAdmin: false, // getBoardPageAllData에서 캐시 밖에서 덮어씀
+    isLoggedIn: false,
+    isAdmin: false,
+    canWrite: false,
+    canWriteNotice: false,
     rootBoardId: boardResult.rootBoardId || '',
     rootBoardSlug: boardResult.rootBoardSlug || '',
     viewType,

@@ -23,6 +23,7 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
           teamData={null}
           leagueData={null}
           isLoggedIn={false}
+          canWrite={false}
           currentPage={1}
           slug={slug}
           rootBoardId={slug}
@@ -48,6 +49,8 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
           type: 'league'
         } : null}
         isLoggedIn={result.isLoggedIn}
+        isAdmin={result.isAdmin}
+        canWrite={result.canWrite}
         currentPage={currentPage}
         slug={slug}
         rootBoardId={result.rootBoardId}
@@ -73,6 +76,7 @@ export default async function HotdealBoardPage({ slug, searchParams }: HotdealBo
         teamData={null}
         leagueData={null}
         isLoggedIn={false}
+        canWrite={false}
         currentPage={1}
         slug={slug}
         rootBoardId={slug}

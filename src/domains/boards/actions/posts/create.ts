@@ -13,6 +13,7 @@ import { pingWebSubHub } from '@/shared/utils/websub-ping';
 import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { cacheThumbnailToStorage } from './cacheThumbnail';
 import type { PostActionResponse } from './utils';
+import { calculateBoardViewerPermissions } from '../permissions';
 
 // 생성된 게시글 타입
 interface CreatedPost {
@@ -63,7 +64,7 @@ async function createPostInternal(params: {
     // 정지 확인 + 게시판 조회 병렬 실행
     const [suspensionCheck, boardResult] = await Promise.all([
       checkSuspensionGuard(userId),
-      supabase.from('boards').select('id, name, slug').eq('id', boardId).single(),
+      supabase.from('boards').select('id, name, slug, access_level').eq('id', boardId).single(),
     ]);
 
     if (suspensionCheck.isSuspended) {
@@ -75,17 +76,20 @@ async function createPostInternal(params: {
       return { success: false, error: '게시판 정보를 찾을 수 없습니다.' };
     }
 
-    // 공지사항 게시판은 관리자만 작성 가능
-    if (boardData.slug === 'notice') {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', userId)
-        .single();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin, is_suspended, suspended_until')
+      .eq('id', userId)
+      .single();
 
-      if (!profile?.is_admin) {
-        return { success: false, error: '공지사항은 관리자만 작성할 수 있습니다.' };
-      }
+    const permissions = calculateBoardViewerPermissions(boardData, profile);
+    if (!permissions.canWrite) {
+      return {
+        success: false,
+        error: boardData.slug === 'notice'
+          ? '공지사항은 관리자만 작성할 수 있습니다.'
+          : '이 게시판에 글을 작성할 권한이 없습니다.',
+      };
     }
 
     // content JSON 파싱 (posts_content에 저장하기 위해 변수로 추출)

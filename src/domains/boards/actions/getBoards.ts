@@ -40,14 +40,7 @@ export const getBoardBySlugOrId = cache(async (slugOrId: string) => {
 export async function getBoardPageData(slug: string, currentPage: number, fromParam?: string) {
   try {
     const supabase = await getSupabaseServer();
-
-    // 병렬로 데이터 요청 처리
-    const [userResult, cachedMaps] = await Promise.all([
-      supabase.auth.getUser(),
-      getCachedBoardMaps()
-    ]);
-
-    const isLoggedIn = !!userResult.data?.user;
+    const cachedMaps = await getCachedBoardMaps();
     const { boardsMap: rawBoardsMap, childBoardsMap: rawChildBoardsMap, allBoards } = cachedMaps;
     const boardsMap = rawBoardsMap as unknown as BoardMap;
     const childBoardsMap = rawChildBoardsMap as unknown as ChildBoardsMap;
@@ -204,7 +197,7 @@ export async function getBoardPageData(slug: string, currentPage: number, fromPa
       filteredBoardIds,
       teamData,
       leagueData,
-      isLoggedIn,
+      isLoggedIn: false,
       childBoardsMap,
       rootBoardId,
       rootBoardSlug

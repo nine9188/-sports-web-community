@@ -59,3 +59,38 @@ export const getHoverMenuData = cache(async (rootBoardId: string): Promise<Hover
 
   return { topBoards, childBoardsMap };
 });
+
+export const getGlobalHoverMenuData = cache(async (): Promise<HoverMenuData> => {
+  const boardsData = (await getCachedAllBoards()) as BoardRow[];
+  const topBoards: HoverMenuBoard[] = [];
+  const childBoardsMap: Record<string, HoverMenuBoard[]> = {};
+
+  if (!boardsData || boardsData.length === 0) {
+    return { topBoards, childBoardsMap };
+  }
+
+  topBoards.push(...boardsData
+    .filter((board: BoardRow) => !board.parent_id)
+    .map((board: BoardRow) => ({
+      id: board.id,
+      name: board.name,
+      display_order: board.display_order || 0,
+      slug: board.slug || undefined
+    })));
+
+  boardsData.forEach((board: BoardRow) => {
+    if (board.parent_id) {
+      if (!childBoardsMap[board.parent_id]) {
+        childBoardsMap[board.parent_id] = [];
+      }
+      childBoardsMap[board.parent_id].push({
+        id: board.id,
+        name: board.name,
+        display_order: board.display_order || 0,
+        slug: board.slug || undefined
+      });
+    }
+  });
+
+  return { topBoards, childBoardsMap };
+});

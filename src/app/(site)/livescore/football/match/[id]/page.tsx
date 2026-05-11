@@ -22,5 +22,5 @@ export default async function MatchRedirect({
   }
 
   const tabParam = tab ? `?tab=${tab}` : '';
-  permanentRedirect(`/livescore/football/match/${id}/${slug}${tabParam}`);
+  permanentRedirect(`/livescore/football/match/${id}/${encodeURIComponent(slug)}${tabParam}`);
 }

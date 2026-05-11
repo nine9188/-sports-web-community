@@ -22,6 +22,35 @@ function CommentCount({ count }: { count: number }) {
   );
 }
 
+function PostMeta({ post }: { post: BoardPost }) {
+  const board = post.board_name || '';
+  const author = post.author_nickname || '익명';
+  const date = post.formattedDate || '-';
+  const views = post.views ?? 0;
+  const likes = post.likes ?? 0;
+
+  return (
+    <span className="mt-1 flex w-full min-w-0 items-center justify-between gap-3 text-[11px] leading-none text-gray-500 dark:text-gray-400">
+      <span className="flex min-w-0 items-center gap-1.5">
+        {board && (
+          <>
+            <span className="truncate" title={board}>{board}</span>
+            <span className="flex-shrink-0 text-gray-300 dark:text-gray-600">|</span>
+          </>
+        )}
+        <span className="truncate" title={author}>{author}</span>
+        <span className="flex-shrink-0 text-gray-300 dark:text-gray-600">|</span>
+        <span className="flex-shrink-0">{date}</span>
+      </span>
+      <span className="flex flex-shrink-0 items-center gap-1.5">
+        <span>조회 {views}</span>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <span>추천 {likes}</span>
+      </span>
+    </span>
+  );
+}
+
 /**
  * 게시글 아이템 서버 컴포넌트
  */
@@ -30,14 +59,15 @@ export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
     <Link
       href={`/boards/${post.board_slug}/${post.post_number}`}
       prefetch={false}
-      className={`text-[13px] text-gray-900 dark:text-[#F0F0F0] md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors py-3 md:py-2 px-3 md:px-4 flex items-center min-w-0 ${
+      className={`text-[13px] text-gray-900 dark:text-[#F0F0F0] md:hover:bg-[#EAEAEA] md:dark:hover:bg-[#333333] transition-colors py-2.5 px-3 md:px-4 flex flex-col min-w-0 ${
         isLast ? '' : 'border-b border-black/5 dark:border-white/10'
       }`}
     >
-      <span className="flex-1 min-w-0 truncate">
+      <span className="w-full min-w-0 truncate">
         {post.title}
         {post.comment_count > 0 && <CommentCount count={post.comment_count} />}
       </span>
+      <PostMeta post={post} />
     </Link>
   );
 }

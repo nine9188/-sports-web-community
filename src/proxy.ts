@@ -12,6 +12,18 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
   '/terms',
 ])
 
+function isUsableTeamSlug(teamId: string | number, slug?: string | null): slug is string {
+  const normalized = String(slug ?? '').trim().toLowerCase()
+  const normalizedId = String(teamId ?? '').trim().toLowerCase()
+
+  return Boolean(
+    normalized &&
+    normalized !== 'team' &&
+    normalized !== normalizedId &&
+    normalized !== `team-${normalizedId}`
+  )
+}
+
 function shouldSkipSiteLayout(pathname: string) {
   return SITE_LAYOUT_SKIP_PATHS.has(pathname)
 }
@@ -140,15 +152,14 @@ export async function proxy(request: NextRequest) {
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: any[] = await res.json()
-      const slug = data?.[0]?.slug || 'team'
-      const url = request.nextUrl.clone()
-      url.pathname = `/livescore/football/team/${teamId}/${slug}`
-      return NextResponse.redirect(url, 301)
+      const slug = data?.[0]?.slug
+      if (isUsableTeamSlug(teamId, slug)) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/livescore/football/team/${teamId}/${encodeURIComponent(slug)}`
+        return NextResponse.redirect(url, 301)
+      }
     } catch {
-      // Fallback when the database lookup fails.
-      const url = request.nextUrl.clone()
-      url.pathname = `/livescore/football/team/${teamId}/team`
-      return NextResponse.redirect(url, 301)
+      // Let the App Router resolver try API/name fallbacks.
     }
   }
 

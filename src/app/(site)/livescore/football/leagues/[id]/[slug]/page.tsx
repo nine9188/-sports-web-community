@@ -249,7 +249,7 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
   const canonicalSlug = getLeagueSlug(leagueId, league?.name);
 
   if (slug !== canonicalSlug) {
-    permanentRedirect(`/livescore/football/leagues/${id}/${canonicalSlug}`);
+    permanentRedirect(`/livescore/football/leagues/${id}/${encodeURIComponent(canonicalSlug)}`);
   }
 
   return await LeaguePageContent({ id });

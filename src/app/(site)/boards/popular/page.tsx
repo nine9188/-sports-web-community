@@ -1,20 +1,29 @@
 import Link from 'next/link';
 import { getAllPopularPosts } from '@/domains/boards/actions/getAllPopularPosts';
-import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
-import PopularPageClient from './PopularPageClient';
+import { getGlobalHoverMenuData } from '@/domains/boards/actions/getHoverMenuData';
+import PeriodFilter from '@/domains/boards/components/common/PeriodFilter';
+import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata() {
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ page?: string; period?: string }>
+}) {
+  const metadataState = getBoardListMetadataState('/boards/popular', await searchParams);
+
   return buildMetadata({
     title: '인기글 - HOT 게시글',
     description: '해외축구, 국내축구, 축구 분석 게시판에서 가장 많이 읽히는 HOT 게시글을 확인하세요. 축구 커뮤니티 4590 Football.',
-    path: '/boards/popular',
+    path: metadataState.path,
     keywords: ['축구 커뮤니티', '4590', '4590football', '해외축구 게시판', '국내축구 게시판', '축구 분석', '인기글'],
+    ...(metadataState.robots && { robots: metadataState.robots }),
   });
 }
 
@@ -43,50 +52,7 @@ export default async function PopularPostsPage({
     // getAllPopularPosts 결과를 직접 사용 (content 포함)
     const layoutPosts = postsData.data || [];
 
-    // HoverMenu용 데이터 가져오기 (unstable_cache 7일, DB 조회 없음)
-    const boardsData = await getCachedAllBoards();
-
-    // HoverMenu용 데이터 구조화
-    const topBoards: Array<{
-      id: string;
-      name: string;
-      display_order: number;
-      slug?: string;
-    }> = [];
-
-    const hoverChildBoardsMap: Record<string, Array<{
-      id: string;
-      name: string;
-      display_order: number;
-      slug?: string;
-    }>> = {};
-
-    if (boardsData) {
-      // 최상위 게시판들 (parent_id가 null)
-      const rootBoards = boardsData.filter(board => !board.parent_id);
-
-      topBoards.push(...rootBoards.map(board => ({
-        id: board.id,
-        name: board.name,
-        display_order: board.display_order || 0,
-        slug: board.slug || undefined
-      })));
-
-      // 모든 하위 게시판 관계 맵핑
-      boardsData.forEach(board => {
-        if (board.parent_id) {
-          if (!hoverChildBoardsMap[board.parent_id]) {
-            hoverChildBoardsMap[board.parent_id] = [];
-          }
-          hoverChildBoardsMap[board.parent_id].push({
-            id: board.id,
-            name: board.name,
-            display_order: board.display_order || 0,
-            slug: board.slug || undefined
-          });
-        }
-      });
-    }
+    const { topBoards, childBoardsMap: hoverChildBoardsMap } = await getGlobalHoverMenuData();
 
     // 기간별 설명
     const periodNames = {
@@ -114,11 +80,18 @@ export default async function PopularPostsPage({
 
     // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <PopularPageClient
+      <BoardDetailLayout
         boardData={popularBoardData}
         breadcrumbs={[]}
+        teamData={null}
+        leagueData={null}
+        isLoggedIn={false}
+        canWrite={false}
         currentPage={currentPage}
-        posts={layoutPosts as unknown as Parameters<typeof PopularPageClient>[0]['posts']}
+        slug="popular"
+        rootBoardId="popular"
+        rootBoardSlug="popular"
+        posts={layoutPosts as unknown as Parameters<typeof BoardDetailLayout>[0]['posts']}
         topBoards={topBoards}
         hoverChildBoardsMap={hoverChildBoardsMap}
         pagination={{
@@ -126,7 +99,8 @@ export default async function PopularPostsPage({
           itemsPerPage: postsData.meta.itemsPerPage,
           currentPage: postsData.meta.currentPage
         }}
-        period={validPeriod}
+        filterComponent={<PeriodFilter currentPeriod={validPeriod} />}
+        listVariant="card"
       />
     );
   } catch (error) {

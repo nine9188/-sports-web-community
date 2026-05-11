@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
-import { resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
+import { isUsablePlayerSlug, resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import {
@@ -37,7 +37,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id, slug } = await params;
 
-  if (isFallbackPlayerSlug(id, slug)) {
+  if (!isUsablePlayerSlug(slug)) {
     return buildMissingPlayerMetadata(id);
   }
 
@@ -149,14 +149,15 @@ function isNextNotFoundError(error: unknown): boolean {
 /** 선수 데이터 로딩 + 렌더링 async 서버 컴포넌트 */
 async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: string; slug: string; tab: string; page?: string }) {
   try {
-    if (isFallbackPlayerSlug(playerId, slug)) {
-      const canonicalSlug = await resolvePlayerCanonicalSlug(playerId);
-      if (canonicalSlug) {
-        const tabParam = tab && tab !== 'stats' ? `?tab=${tab}` : '';
-        permanentRedirect(`/livescore/football/player/${playerId}/${canonicalSlug}${tabParam}`);
-      }
+    const canonicalSlug = await resolvePlayerCanonicalSlug(playerId);
 
+    if (!canonicalSlug) {
       return notFound();
+    }
+
+    if (slug !== canonicalSlug) {
+      const tabParam = tab && tab !== 'stats' ? `?tab=${tab}` : '';
+      permanentRedirect(`/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
 
     // 유효한 탭인지 확인
@@ -245,7 +246,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       ? await getSafeTeamById(currentTeam.id)
       : null;
     const playerDisplayName = playerKoreanName || playerInfo?.name || '';
-    const playerSlug = slug || (playerInfo?.name ? slugify(playerInfo.name) : '') || 'player';
+    const playerSlug = canonicalSlug;
     const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
     const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
     const teamUrl = currentTeam?.id && currentTeam?.name

@@ -1,6 +1,7 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import type { PopularPost } from '../types/post';
@@ -23,6 +24,33 @@ interface GetAllPopularPostsParams {
   page?: number;
   limit?: number;
 }
+
+type PopularPostRow = {
+  id: string;
+  title: string;
+  post_number: number;
+  likes: number | null;
+  views: number | null;
+  created_at: string | null;
+  board_id: string | null;
+  user_id: string | null;
+  thumbnail_url: string | null;
+  boards?: {
+    id?: string | null;
+    slug?: string | null;
+    name?: string | null;
+    team_id?: number | null;
+    league_id?: number | null;
+  } | null;
+  profiles?: {
+    id?: string | null;
+    nickname?: string | null;
+    level?: number | null;
+    exp?: number | null;
+    icon_id?: number | null;
+    public_id?: string | null;
+  } | null;
+};
 
 /**
  * HOT 점수 계산 (사이드바와 동일한 공식)
@@ -56,8 +84,20 @@ export async function getAllPopularPosts({
   page = 1,
   limit = 20
 }: GetAllPopularPostsParams = {}): Promise<PopularPostsResponse> {
+  return unstable_cache(
+    () => getAllPopularPostsImpl({ period, page, limit }),
+    ['all-popular-posts', period, String(page), String(limit)],
+    { revalidate: 60, tags: ['posts', 'comments', 'popular-posts'] }
+  )();
+}
+
+async function getAllPopularPostsImpl({
+  period = 'week',
+  page = 1,
+  limit = 20
+}: Required<GetAllPopularPostsParams>): Promise<PopularPostsResponse> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseAdmin();
     const now = new Date();
 
     // 기간별 시작 날짜 계산
@@ -109,7 +149,9 @@ export async function getAllPopularPosts({
       throw new Error('인기 게시글 조회 실패');
     }
 
-    if (!postsData || postsData.length === 0) {
+    const posts = (postsData || []) as unknown as PopularPostRow[];
+
+    if (posts.length === 0) {
       return {
         data: [],
         meta: {
@@ -123,7 +165,7 @@ export async function getAllPopularPosts({
     }
 
     // 댓글 수 계산
-    const postIds = postsData.map(post => post.id);
+    const postIds = posts.map((post) => post.id);
     const commentCounts: Record<string, number> = {};
 
     if (postIds.length > 0) {
@@ -145,7 +187,7 @@ export async function getAllPopularPosts({
 
     // HOT 점수 계산 후 정렬
     const nowMs = now.getTime();
-    const scoredPosts = postsData.map(post => ({
+    const scoredPosts = posts.map((post) => ({
       post,
       hotScore: calculateHotScore(
         post.views || 0,
@@ -198,7 +240,7 @@ export async function getAllPopularPosts({
         .in('id', leagueIds);
 
       if (leaguesData) {
-        leaguesData.forEach(league => {
+        leaguesData.forEach((league: { id: number; logo: string | null }) => {
           if (league.id && league.logo) {
             leagueLogoMap[league.id] = league.logo;
           }
@@ -219,7 +261,7 @@ export async function getAllPopularPosts({
         .in('id', iconIds);
 
       if (iconsData) {
-        iconsData.forEach(icon => {
+        iconsData.forEach((icon: { id: number; image_url: string | null }) => {
           if (icon.id && icon.image_url) {
             userIconMap[icon.id] = icon.image_url;
           }
@@ -248,7 +290,7 @@ export async function getAllPopularPosts({
         views: post.views || 0,
         comment_count: commentCounts[post.id] || 0,
         author_nickname: post.profiles?.nickname || '익명',
-        author_id: post.profiles?.id,
+        author_id: post.profiles?.id || undefined,
         author_level: post.profiles?.level || 1,
         author_exp: post.profiles?.exp || 0,
         author_icon_id: iconId,

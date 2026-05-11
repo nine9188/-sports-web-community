@@ -7,12 +7,17 @@ const SLUG = 'hotdeal-appliance';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ page?: string; from?: string; store?: string }>
+}): Promise<Metadata> {
   return generateHotdealMetadata({
     slug: SLUG,
     titleSuffix: '가전 핫딜',
     fallbackDescription: '가전제품 핫딜, 최저가 정보를 확인하세요.',
     keywords: ['가전 핫딜', '가전제품 특가', '가전 최저가', '핫딜'],
+    searchParams: await searchParams,
   });
 }
 

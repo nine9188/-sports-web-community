@@ -3,6 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCachedAllBoards } from './getCachedBoards';
 import type { Board } from '@/domains/boards/types/board';
+import { calculateBoardViewerPermissions } from './permissions';
 
 /**
  * 계층 구조의 게시판을 flat 배열로 변환
@@ -154,10 +155,24 @@ export async function getCreatePostData(slug: string) {
     // 관리자가 아니면 공지사항 게시판 제외
     const { data: { user } } = await supabase.auth.getUser();
     let isAdmin = false;
+    let canWrite = false;
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin, is_suspended, suspended_until')
+        .eq('id', user.id)
+        .single();
       isAdmin = profile?.is_admin || false;
+      canWrite = calculateBoardViewerPermissions(board, profile).canWrite;
     }
+
+    if (!canWrite) {
+      return {
+        success: false,
+        error: '이 게시판에 글을 작성할 권한이 없습니다.'
+      };
+    }
+
     if (!isAdmin) {
       allBoards = allBoards.filter(b => b.slug !== 'notice');
     }

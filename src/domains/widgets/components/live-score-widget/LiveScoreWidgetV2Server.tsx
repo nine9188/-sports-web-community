@@ -127,12 +127,10 @@ export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeag
 }
 
 interface LiveScoreWidgetV2ServerProps {
-  initialData?: WidgetLeague[];
+  leagues: WidgetLeague[];
 }
 
-export default async function LiveScoreWidgetV2Server({ initialData }: LiveScoreWidgetV2ServerProps = {}) {
-  const leagues = initialData ?? transformToWidgetLeagues(await fetchTodayMatches());
-
+export default async function LiveScoreWidgetV2Server({ leagues }: LiveScoreWidgetV2ServerProps) {
   if (leagues.length === 0) {
     return (
       <Container className="bg-white dark:bg-[#1D1D1D]">
@@ -184,5 +182,6 @@ export default async function LiveScoreWidgetV2Server({ initialData }: LiveScore
 }
 
 export async function LiveScoreWidgetStreaming() {
-  return <LiveScoreWidgetV2Server />;
+  const leagues = transformToWidgetLeagues(await fetchTodayMatches());
+  return <LiveScoreWidgetV2Server leagues={leagues} />;
 }

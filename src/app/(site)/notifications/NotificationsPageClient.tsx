@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, CheckCheck, Trash2, ChevronDown } from 'lucide-react';
@@ -18,16 +18,16 @@ type FilterType = 'all' | 'unread';
 type TypeFilter = 'all' | NotificationType;
 
 const notificationTypeLabels: Record<TypeFilter, string> = {
-  all: '?꾩껜 ?뚮┝',
-  comment: '?볤?',
-  reply: '?듦?',
+  all: '전체 알림',
+  comment: '댓글',
+  reply: '답글',
   post_like: '게시글 좋아요',
   comment_like: '댓글 좋아요',
   level_up: '레벨업',
   report_result: '신고 결과',
   admin_notice: '관리자 공지',
   welcome: '환영',
-  hot_post: '핫 게시글',
+  hot_post: '인기 게시글',
   profile_update: '프로필 업데이트',
   suspension: '계정 정지',
   phone_verified: '휴대폰 인증',

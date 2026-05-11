@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import {
   fetchTeamFullData,
@@ -26,6 +26,7 @@ import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeag
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamLogoUrl } from '@/domains/livescore/actions/images';
+import { isUsableTeamSlug, resolveTeamCanonicalSlug } from '@/domains/livescore/actions/teams/slug';
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -54,7 +55,8 @@ export async function generateMetadata({
 
   const team = teamData.team;
   const teamName = team.name;
-  const teamSlug = slug || slugify(teamName) || 'team';
+  const canonicalSlug = await resolveTeamCanonicalSlug(id);
+  const teamSlug = canonicalSlug || (isUsableTeamSlug(id, slug) ? slug : '') || slugify(teamName);
   const teamLogoUrl = await getTeamLogoUrl(Number(id), 'md');
   const ogImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
   const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
@@ -80,6 +82,17 @@ function isSearchCrawler(userAgent: string): boolean {
 /** URL 탭 기준으로 필요한 팀 데이터를 서버에서 준비하고 렌더링합니다. */
 async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
   try {
+    const canonicalSlug = await resolveTeamCanonicalSlug(id);
+
+    if (!canonicalSlug) {
+      return notFound();
+    }
+
+    if (slug !== canonicalSlug) {
+      const tabParam = tab && tab !== 'overview' ? `?tab=${tab}` : '';
+      permanentRedirect(`/livescore/football/team/${id}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
+    }
+
     // 유효하지 않은 탭은 기본 overview로 정규화합니다.
     const initialTab = VALID_TABS.includes(tab as TeamTabType)
       ? (tab as TeamTabType)
@@ -263,7 +276,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       (member: { position?: string }) => member.position === 'Coach'
     ) as { id?: number; name?: string } | undefined;
 
-    const teamSlug = slug || (team?.name ? slugify(team.name) : '') || 'team';
+    const teamSlug = canonicalSlug;
     const teamUrl = `${siteConfig.url}/livescore/football/team/${id}/${teamSlug}`;
     const leagueId = leagueIdFromData;
     const leagueNameForSlug = initialData.standings?.data?.[0]?.league?.name || leagueMapping?.name_ko;

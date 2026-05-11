@@ -7,6 +7,12 @@
  */
 export function slugify(text: string): string {
   return text
+    .replace(/[ıİ]/g, 'i')
+    .replace(/[ğĞ]/g, 'g')
+    .replace(/[şŞ]/g, 's')
+    .replace(/[çÇ]/g, 'c')
+    .replace(/[öÖ]/g, 'o')
+    .replace(/[üÜ]/g, 'u')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .normalize('NFC')

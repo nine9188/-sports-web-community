@@ -10,6 +10,10 @@ export interface NewsItem {
   publishedAt: string;
   url: string;
   postNumber?: number;
+  authorNickname?: string;
+  authorPublicId?: string | null;
+  views?: number;
+  likes?: number;
 }
 
 /** 뉴스 위젯 Props */

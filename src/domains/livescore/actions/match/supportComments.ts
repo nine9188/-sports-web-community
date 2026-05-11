@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
@@ -54,7 +54,7 @@ export const getSupportComments = cache(async (matchId: string) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('????????? ??됰슦????????怨몄뵒:', error);
+      console.error('응원댓글 조회 오류:', error);
       return { success: false, data: [], error: error.message };
     }
 
@@ -131,8 +131,8 @@ export const getSupportComments = cache(async (matchId: string) => {
 
     return { success: true, data: commentsWithProfiles, error: null };
   } catch (error) {
-    console.error('????????? ??됰슦????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
-    return { success: false, data: [], error: '??????????????곗뵯??????紐꾪닓 嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
+    console.error('응원댓글 조회 중 오류:', error);
+    return { success: false, data: [], error: '댓글을 불러오는 중 오류가 발생했습니다.' };
   }
 });
 
@@ -148,7 +148,7 @@ export async function createSupportComment(
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
     // ??? ??????(??됰슦????????ㅼ굡????潁??insert)
@@ -165,7 +165,7 @@ export async function createSupportComment(
       .single();
 
     if (error) {
-      console.error('????????? ??????????怨몄뵒:', error);
+      console.error('응원댓글 작성 오류:', error);
       return { success: false, error: error.message };
     }
 
@@ -173,8 +173,8 @@ export async function createSupportComment(
 
     return { success: true, comment: data };
   } catch (error) {
-    console.error('????????? ??????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
-    return { success: false, error: '??? ??????嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
+    console.error('응원댓글 작성 중 오류:', error);
+    return { success: false, error: '댓글 작성 중 오류가 발생했습니다.' };
   }
 }
 
@@ -202,7 +202,7 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     if (authError || !user) {
       return {
         success: false,
-        error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????'
+        error: '로그인이 필요합니다.'
       };
     }
     
@@ -215,7 +215,7 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     if (commentFetchError) {
       return {
         success: false,
-        error: `??? ??됰슦????????怨몄뵒: ${commentFetchError.message}`
+        error: `댓글 정보를 불러오지 못했습니다: ${commentFetchError.message}`
       };
     }
     
@@ -282,10 +282,10 @@ export async function likeMatchComment(commentId: string): Promise<MatchCommentL
     };
     
   } catch (error) {
-    console.error('????щ였????꿔꺂??節뉖き??????怨몄뵒:', error);
+    console.error('댓글 좋아요 처리 오류:', error);
     return {
       success: false,
-      error: '????щ였????꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.'
+      error: '좋아요 처리 중 오류가 발생했습니다.'
     };
   }
 }
@@ -300,7 +300,7 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     if (authError || !user) {
       return {
         success: false,
-        error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????'
+        error: '로그인이 필요합니다.'
       };
     }
     
@@ -313,7 +313,7 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     if (commentFetchError) {
       return {
         success: false,
-        error: `??? ??됰슦????????怨몄뵒: ${commentFetchError.message}`
+        error: `댓글 정보를 불러오지 못했습니다: ${commentFetchError.message}`
       };
     }
     
@@ -380,10 +380,10 @@ export async function dislikeMatchComment(commentId: string): Promise<MatchComme
     };
     
   } catch (error) {
-    console.error('???????꿔꺂??節뉖き??????怨몄뵒:', error);
+    console.error('댓글 싫어요 처리 오류:', error);
     return {
       success: false,
-      error: '???????꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.'
+      error: '싫어요 처리 중 오류가 발생했습니다.'
     };
   }
 }
@@ -401,7 +401,7 @@ export async function deleteSupportComment(commentId: string, currentPath?: stri
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
     const { data: comment, error: commentError } = await supabase
@@ -411,11 +411,11 @@ export async function deleteSupportComment(commentId: string, currentPath?: stri
       .single();
 
     if (commentError || !comment) {
-      return { success: false, error: '??????꿔꺂????????????ㅿ폍??????딅젩.' };
+      return { success: false, error: '댓글을 찾을 수 없습니다.' };
   }
 
     if (comment.user_id !== user.id) {
-      return { success: false, error: '??⑤슢?뽫춯?????????????????????????딅젩.' };
+      return { success: false, error: '본인이 작성한 댓글만 삭제할 수 있습니다.' };
     }
 
     const { error: deleteError } = await supabase
@@ -431,8 +431,8 @@ export async function deleteSupportComment(commentId: string, currentPath?: stri
 
     return { success: true };
   } catch (error) {
-    console.error('??? ????嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
-    return { success: false, error: '??? ????嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
+    console.error('댓글 삭제 중 오류:', error);
+    return { success: false, error: '댓글 삭제 중 오류가 발생했습니다.' };
   }
 }
 
@@ -448,7 +448,7 @@ export async function reportSupportComment(
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
-      return { success: false, error: '?汝??吏??癲ル슢???뼘?????썹땟???嶺뚮ㅎ????' };
+      return { success: false, error: '로그인이 필요합니다.' };
     }
 
     const { data: existingReport } = await supabase
@@ -460,7 +460,7 @@ export async function reportSupportComment(
       .single();
 
     if (existingReport) {
-      return { success: false, error: '???? ????ャ렑???????????뉖뤁??' };
+      return { success: false, error: '신고 사유를 입력해주세요.' };
     }
 
     const { data, error } = await supabase
@@ -476,15 +476,15 @@ export async function reportSupportComment(
       .single();
 
     if (error) {
-      console.error('????????? ????ャ렑??????怨몄뵒:', error);
-      return { success: false, error: '????ャ렑???꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
+      console.error('응원댓글 신고 오류:', error);
+      return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
     }
 
     // ???援온??????볥궙?袁р뵾???? ???????醫딆┣???    revalidatePath('/admin/reports');
     
     return { success: true, data };
   } catch (error) {
-    console.error('????????? ????ャ렑??嚥????繹먮굝???熬곣뫖利든뜏類ｋ렱??', error);
-    return { success: false, error: '????ャ렑???꿔꺂??節뉖き??嚥?????怨몄뵒??醫딆쓧? ?熬곣뫖利든뜏類ｋ렱???????????딅젩.' };
+    console.error('응원댓글 신고 중 오류:', error);
+    return { success: false, error: '신고 처리 중 오류가 발생했습니다.' };
   }
 } 

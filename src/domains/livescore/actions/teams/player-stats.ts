@@ -84,7 +84,7 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
     }
 
     // 리그에 맞는 시즌 계산 (K리그 등 캘린더 시즌 리그 대응)
-    currentSeason = currentSeason ?? await getCurrentSeasonForLeague(leagueId ? Number(leagueId) : 39);
+    // currentSeason is resolved after a real leagueId is found.
 
     // DB에서 리그를 못 찾았으면 API로 재조회 (현재 연도 + 유럽 시즌 둘 다 시도)
     if (!leagueId) {
@@ -128,10 +128,16 @@ export async function fetchTeamPlayerStats(teamId: string, league?: string): Pro
         }
       }
 
-      if (!leagueId) {
-        leagueId = '39';
-      }
     }
+
+    if (!leagueId) {
+      return {
+        success: false,
+        message: '현재 리그 정보를 찾을 수 없습니다',
+      };
+    }
+
+    currentSeason = currentSeason ?? await getCurrentSeasonForLeague(Number(leagueId));
 
     const previousSeason = currentSeason - 1;
 

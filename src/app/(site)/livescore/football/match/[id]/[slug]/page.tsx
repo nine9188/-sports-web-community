@@ -163,7 +163,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
 
     if (slug !== canonicalSlug) {
       const tabParam = initialTab !== DEFAULT_TAB ? `?tab=${initialTab}` : '';
-      permanentRedirect(`/livescore/football/match/${matchId}/${canonicalSlug}${tabParam}`);
+      permanentRedirect(`/livescore/football/match/${matchId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
 
     const matchData = await fetchCachedMatchFullData(matchId, {

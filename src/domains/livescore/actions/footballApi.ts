@@ -154,7 +154,7 @@ interface ApiPlayer {
 
 // API 설정
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_KEY = process.env.FOOTBALL_API_KEY || '';
+const API_KEY = process.env.FOOTBALL_API_KEY || process.env.RAPID_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
 const FOOTBALL_API_MAX_ATTEMPTS = 3;
 const FOOTBALL_API_RETRY_DELAYS_MS = [300, 1200];
 

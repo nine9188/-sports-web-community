@@ -11,8 +11,10 @@ export interface BoardPost {
   board_name: string;
   post_number: number;
   created_at?: string;
+  formattedDate?: string;
   content?: string;
   author_nickname?: string;
+  author_public_id?: string | null;
   views?: number;
   likes?: number;
   comment_count: number;

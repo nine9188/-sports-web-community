@@ -27,6 +27,10 @@ export type PlayerLinkSource = {
   nameEn?: string | null;
   name_ko?: string | null;
   nameKo?: string | null;
+  korean_name?: string | null;
+  koreanName?: string | null;
+  display_name?: string | null;
+  displayName?: string | null;
   firstname?: string | null;
   lastname?: string | null;
 };
@@ -46,6 +50,18 @@ export type MatchLinkSource = {
 
 function firstText(...values: Array<string | null | undefined>): string {
   return values.find((value) => typeof value === 'string' && value.trim())?.trim() || '';
+}
+
+function isGeneratedEntitySlug(slug: string, entity: 'team' | 'player' | 'match', id: EntityId): boolean {
+  const normalized = slug.trim().toLowerCase();
+  const normalizedId = String(id ?? '').trim().toLowerCase();
+
+  return (
+    !normalized ||
+    normalized === entity ||
+    (Boolean(normalizedId) && normalized === normalizedId) ||
+    (Boolean(normalizedId) && normalized === `${entity}-${normalizedId}`)
+  );
 }
 
 export function getTeamId(team: TeamLinkSource): string | number {
@@ -91,6 +107,10 @@ export function getPlayerLinkSlug(player: PlayerLinkSource): string {
     player.name,
     player.name_ko,
     player.nameKo,
+    player.korean_name,
+    player.koreanName,
+    player.display_name,
+    player.displayName,
     fullName
   );
   const fallback = getPlayerId(player) ? `player-${getPlayerId(player)}` : 'player';
@@ -136,23 +156,33 @@ export function getMatchLinkSlug(
 }
 
 export function getTeamHref(team: TeamLinkSource): string {
-  return teamUrl(getTeamId(team), getTeamLinkSlug(team));
+  const id = getTeamId(team);
+  const slug = getTeamLinkSlug(team);
+
+  return teamUrl(id, isGeneratedEntitySlug(slug, 'team', id) ? undefined : slug);
 }
 
 export function getTransferTeamHref(team: TeamLinkSource): string {
-  return transferTeamUrl(getTeamId(team), getTeamLinkSlug(team));
+  const id = getTeamId(team);
+  const slug = getTeamLinkSlug(team);
+
+  return transferTeamUrl(id, isGeneratedEntitySlug(slug, 'team', id) ? undefined : slug);
 }
 
 export function getPlayerHref(player: PlayerLinkSource): string {
-  return playerUrl(getPlayerId(player), getPlayerLinkSlug(player));
+  const id = getPlayerId(player);
+  const slug = getPlayerLinkSlug(player);
+
+  return playerUrl(id, isGeneratedEntitySlug(slug, 'player', id) ? undefined : slug);
 }
 
 export function getMatchHref(match: MatchLinkSource): string {
   const homeTeam = match.homeTeam || match.teams?.home || {};
   const awayTeam = match.awayTeam || match.teams?.away || {};
   const id = getMatchId(match);
+  const slug = getMatchLinkSlug(homeTeam, awayTeam, id);
 
-  return matchUrl(id, getMatchLinkSlug(homeTeam, awayTeam, id));
+  return matchUrl(id, isGeneratedEntitySlug(slug, 'match', id) ? undefined : slug);
 }
 
 export function getMatchHrefByTeams(
@@ -160,5 +190,8 @@ export function getMatchHrefByTeams(
   homeTeam: TeamLinkSource,
   awayTeam: TeamLinkSource
 ): string {
-  return matchUrl(matchId || 0, getMatchLinkSlug(homeTeam, awayTeam, matchId));
+  const id = matchId || 0;
+  const slug = getMatchLinkSlug(homeTeam, awayTeam, id);
+
+  return matchUrl(id, isGeneratedEntitySlug(slug, 'match', id) ? undefined : slug);
 }

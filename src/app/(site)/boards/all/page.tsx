@@ -1,21 +1,29 @@
 import Link from 'next/link';
 import { fetchPosts } from '@/domains/boards/actions';
-import { getCachedAllBoards } from '@/domains/boards/actions/getCachedBoards';
+import { getGlobalHoverMenuData } from '@/domains/boards/actions/getHoverMenuData';
 import { getNotices } from '@/domains/boards/actions/posts/notices';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata() {
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const metadataState = getBoardListMetadataState('/boards/all', await searchParams);
+
   return buildMetadata({
     title: '전체글 - 해외축구·국내축구 게시판',
     description: '해외축구, 국내축구, 축구 분석, 자유게시판 등 모든 게시판의 최신 글을 한곳에서 확인하세요. 축구 커뮤니티 4590 Football.',
-    path: '/boards/all',
+    path: metadataState.path,
     keywords: ['해외축구 게시판', '국내축구 게시판', '축구 분석 커뮤니티', '축구 커뮤니티', '4590', '4590football', '해외축구', '국내축구'],
+    ...(metadataState.robots && { robots: metadataState.robots }),
   });
 }
 
@@ -42,50 +50,7 @@ export default async function AllPostsPage({
     // fetchPosts 결과를 직접 사용 (content 포함)
     const layoutPosts = postsData.data || [];
 
-    // HoverMenu용 데이터 가져오기 (unstable_cache 7일, DB 조회 없음)
-    const boardsData = await getCachedAllBoards();
-
-    // HoverMenu용 데이터 구조화
-    const topBoards: Array<{
-      id: string;
-      name: string;
-      display_order: number;
-      slug?: string;
-    }> = [];
-
-    const hoverChildBoardsMap: Record<string, Array<{
-      id: string;
-      name: string;
-      display_order: number;
-      slug?: string;
-    }>> = {};
-
-    if (boardsData) {
-      // 최상위 게시판들 (parent_id가 null)
-      const rootBoards = boardsData.filter(board => !board.parent_id);
-
-      topBoards.push(...rootBoards.map(board => ({
-        id: board.id,
-        name: board.name,
-        display_order: board.display_order || 0,
-        slug: board.slug || undefined
-      })));
-
-      // 모든 하위 게시판 관계 맵핑
-      boardsData.forEach(board => {
-        if (board.parent_id) {
-          if (!hoverChildBoardsMap[board.parent_id]) {
-            hoverChildBoardsMap[board.parent_id] = [];
-          }
-          hoverChildBoardsMap[board.parent_id].push({
-            id: board.id,
-            name: board.name,
-            display_order: board.display_order || 0,
-            slug: board.slug || undefined
-          });
-        }
-      });
-    }
+    const { topBoards, childBoardsMap: hoverChildBoardsMap } = await getGlobalHoverMenuData();
 
     // 가상의 "전체글" 게시판 데이터
     const allBoardData = {
@@ -110,6 +75,7 @@ export default async function AllPostsPage({
         teamData={null}
         leagueData={null}
         isLoggedIn={false}
+        canWrite={false}
         currentPage={currentPage}
         slug="all"
         rootBoardId="all"

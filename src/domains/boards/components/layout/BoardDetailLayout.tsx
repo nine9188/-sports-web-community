@@ -1,7 +1,4 @@
-"use client";
-
-import React, { memo, useEffect } from "react";
-import { addRecentlyVisited } from "@/domains/layout/utils/recentlyVisited";
+import React, { memo } from "react";
 import Link from "next/link";
 import { PenLine } from "lucide-react";
 import BoardBreadcrumbs from "../common/BoardBreadcrumbs";
@@ -21,6 +18,7 @@ import { Board } from "../../types/board";
 import KakaoAd from "@/shared/components/KakaoAd";
 import { KAKAO } from "@/shared/constants/ad-constants";
 import type { LayoutPost, PopularPost } from "@/domains/boards/types/post";
+import RecentlyVisitedBoardEffect from "./RecentlyVisitedBoardEffect";
 
 // LayoutPost를 Post로 alias (기존 코드 호환)
 type Post = LayoutPost;
@@ -71,6 +69,7 @@ interface BoardDetailLayoutProps {
   leagueData: LeagueData | null;
   isLoggedIn: boolean;
   isAdmin?: boolean;
+  canWrite?: boolean;
   currentPage: number;
   slug: string;
   rootBoardId: string;
@@ -122,6 +121,7 @@ export default function BoardDetailLayout({
   leagueData,
   isLoggedIn,
   isAdmin = false,
+  canWrite,
   currentPage,
   slug,
   rootBoardId,
@@ -142,17 +142,7 @@ export default function BoardDetailLayout({
   leagueLogoUrlDark,
 }: BoardDetailLayoutProps) {
   const viewType = propViewType || boardData.view_type;
-
-  // 게시판 방문 기록
-  useEffect(() => {
-    if (boardData.id && boardData.name) {
-      addRecentlyVisited({
-        id: boardData.id,
-        slug: boardData.slug || boardData.id,
-        name: boardData.name,
-      });
-    }
-  }, [boardData.id, boardData.slug, boardData.name]);
+  const canWritePost = canWrite ?? (isLoggedIn && (slug !== 'notice' || isAdmin));
 
   const hasBreadcrumbs = breadcrumbs.length > 0;
 
@@ -169,6 +159,11 @@ export default function BoardDetailLayout({
 
   return (
     <div className="container mx-auto" data-current-page={currentPage}>
+      <RecentlyVisitedBoardEffect
+        id={boardData.id}
+        slug={boardData.slug || boardData.id}
+        name={boardData.name}
+      />
       <div>
         <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
@@ -194,7 +189,7 @@ export default function BoardDetailLayout({
             teamData={teamData}
             boardId={boardData.id}
             boardSlug={slug}
-            isLoggedIn={isLoggedIn}
+            isLoggedIn={canWritePost}
             className=""
             teamLogoUrl={teamLogoUrl}
           />
@@ -211,7 +206,7 @@ export default function BoardDetailLayout({
             leagueData={leagueData}
             boardId={boardData.id}
             boardSlug={slug}
-            isLoggedIn={isLoggedIn}
+            isLoggedIn={canWritePost}
             className=""
             leagueLogoUrl={leagueLogoUrl}
             leagueLogoUrlDark={leagueLogoUrlDark}
@@ -231,7 +226,7 @@ export default function BoardDetailLayout({
             <h1 className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
             </h1>
-            {isLoggedIn && (slug !== 'notice' || isAdmin) && (
+            {canWritePost && (
               <Link
                 href={`/boards/${slug}/create`}
                 aria-label="글쓰기"
@@ -302,7 +297,7 @@ export default function BoardDetailLayout({
         <div className="w-full sm:w-1/2">
           <BoardSearchBar slug={slug} />
         </div>
-        {isLoggedIn && (slug !== 'notice' || isAdmin) && (
+        {canWritePost && (
           <Link
             href={`/boards/${slug}/create`}
             className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
