@@ -22,6 +22,7 @@ export function DesktopPostListServer({
   posts,
   currentPostId,
   currentBoardId,
+  currentPage,
   showBoard = true,
   variant = 'text',
 }: DesktopPostListServerProps) {
@@ -37,6 +38,7 @@ export function DesktopPostListServer({
                 isLast={index === posts.length - 1}
                 currentPostId={currentPostId}
                 currentBoardId={currentBoardId}
+                currentPage={currentPage}
                 showBoard={showBoard}
                 variant={variant}
               />
@@ -91,6 +93,7 @@ export function DesktopPostListServer({
                 isLast={index === posts.length - 1}
                 currentPostId={currentPostId}
                 currentBoardId={currentBoardId}
+                currentPage={currentPage}
                 showBoard={showBoard}
                 variant={variant}
               />

@@ -74,7 +74,6 @@ export default function PostDetailRelatedList({
 
   const updateUrl = (page: number) => {
     const url = new URL(window.location.href);
-    url.searchParams.delete("from");
     url.searchParams.set("listPage", String(page));
     window.history.pushState(null, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
   };
@@ -130,6 +129,7 @@ export default function PostDetailRelatedList({
           showBoard={true}
           currentBoardId={boardId}
           currentPostId={currentPostId}
+          currentPage={currentPage}
         />
       </div>
 

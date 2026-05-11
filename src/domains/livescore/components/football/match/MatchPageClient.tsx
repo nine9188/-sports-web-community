@@ -1,4 +1,3 @@
-'use client';
 import AdBanner from '@/shared/components/AdBanner';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import type { SidebarData } from '@/domains/livescore/actions/match/sidebarData';

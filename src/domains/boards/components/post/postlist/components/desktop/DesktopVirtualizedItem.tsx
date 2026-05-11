@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import { Post, PostVariant } from '../../types';
-import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
+import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
@@ -17,6 +17,7 @@ interface VirtualizedItemData {
   posts: Post[];
   currentPostId?: string;
   currentBoardId: string;
+  currentPage?: number;
   showBoard: boolean;
   variant: PostVariant;
 }
@@ -35,7 +36,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
   style,
   data,
 }: VirtualizedItemProps) {
-  const { posts, currentPostId, currentBoardId, showBoard, variant } = data;
+  const { posts, currentPostId, currentBoardId, currentPage, showBoard, variant } = data;
   const post = posts[index];
 
   // 안전한 날짜 포맷팅 (Hook은 early return 전에 호출)
@@ -61,7 +62,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
 
   const isCurrentPost = post.id === currentPostId;
   // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
-  const href = `/boards/${post.board_slug}/${post.post_number}`;
+  const href = buildPostDetailHref(post.board_slug, post.post_number, currentBoardId, currentPage);
 
   // 제목 텍스트 및 스타일 계산
   const titleText = getPostTitleText(post);

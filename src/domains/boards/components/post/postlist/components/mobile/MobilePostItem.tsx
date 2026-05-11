@@ -9,7 +9,7 @@ import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PostItemProps } from '../../types';
-import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
+import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons } from '../shared/PostRenderers';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 import { AuthorLink } from '@/domains/user/components';
@@ -20,11 +20,12 @@ export const MobilePostItem = React.memo(function MobilePostItem({
   isLast = false,
   currentPostId,
   currentBoardId,
+  currentPage,
   variant = 'text',
 }: PostItemProps) {
   const isCurrentPost = post.id === currentPostId;
   // SEO: 쿼리 파라미터 제거 - Google 중복 색인 방지
-  const href = `/boards/${post.board_slug}/${post.post_number}`;
+  const href = buildPostDetailHref(post.board_slug, post.post_number, currentBoardId, currentPage);
 
   // from 정보를 sessionStorage에 저장 (클릭 시)
   const handleClick = useCallback(() => {

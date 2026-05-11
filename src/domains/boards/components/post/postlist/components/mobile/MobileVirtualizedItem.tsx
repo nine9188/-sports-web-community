@@ -9,7 +9,7 @@ import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Post, PostVariant } from '../../types';
-import { extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
+import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
 import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
 
@@ -17,6 +17,7 @@ interface VirtualizedItemData {
   posts: Post[];
   currentPostId?: string;
   currentBoardId: string;
+  currentPage?: number;
   variant: PostVariant;
 }
 
@@ -31,7 +32,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
   style,
   data,
 }: VirtualizedItemProps) {
-  const { posts, currentPostId, currentBoardId, variant } = data;
+  const { posts, currentPostId, currentBoardId, currentPage, variant } = data;
   const post = posts[index];
 
   // from 정보를 sessionStorage에 저장 (클릭 시)
@@ -54,7 +55,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
   if (!post) return null;
 
   const isCurrentPost = post.id === currentPostId;
-  const href = `/boards/${post.board_slug}/${post.post_number}`;
+  const href = buildPostDetailHref(post.board_slug, post.post_number, currentBoardId, currentPage);
   const titleText = getPostTitleText(post);
   const titleClassName = getPostTitleClassName(post, isCurrentPost);
 

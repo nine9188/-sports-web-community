@@ -1,0 +1,102 @@
+# 11. Player detail
+
+대상 route:
+- `src/app/(site)/livescore/football/player/[id]/[slug]/page.tsx`
+- `src/app/(site)/livescore/football/player/[id]/page.tsx`
+
+관련 파일:
+- `src/domains/livescore/components/football/player/PlayerPageClient.tsx`
+- `src/domains/livescore/components/football/player/PlayerHeader.tsx`
+- `src/domains/livescore/components/football/player/TabNavigation.tsx`
+- `src/domains/livescore/components/football/player/TabContent.tsx`
+- `src/domains/livescore/components/football/player/tabs/PlayerFixtures.tsx`
+- `src/domains/livescore/actions/player/data.ts`
+- `src/domains/livescore/actions/player/slug.ts`
+
+## 점검 기준
+
+- 상세 페이지가 기본적으로 Server Component인지 확인한다.
+- canonical slug와 query 상태(`tab`, `page`)의 정책이 일관적인지 확인한다.
+- metadata와 본문이 같은 선수 데이터를 중복으로 읽는지 확인한다.
+- URL state가 검색 노출과 섞이지 않는지 확인한다.
+- 서버 shell과 client island 경계가 과도하게 넓지 않은지 확인한다.
+
+## 발견한 문제
+
+### 1. `tab`와 `page` query URL이 검색 정책에서 분리되지 않았다
+
+선수 상세는 `?tab=stats|fixtures|trophies|transfers|injuries|rankings` 형태의 탭 상태를 URL에 둔다.
+`fixtures` 탭은 다시 `page` query로 페이징까지 가진다.
+
+그런데 `generateMetadata()`는 `searchParams`를 받지 않고, `tab`이나 `page`가 붙은 변형 URL을 `noindex`로 막지 않는다.
+즉 같은 선수 상세가 탭/페이지마다 여러 URL로 열릴 수 있고, 검색 엔진 기준으로 기본 canonical과 상태 URL이 함께 노출될 수 있다.
+
+### 2. `/player/[id]` 리다이렉트가 tab만 보존하고 `page`는 잃는다
+
+`src/app/(site)/livescore/football/player/[id]/page.tsx`는 canonical slug로 리다이렉트할 때 `tab`만 붙이고 `page`는 유지하지 않는다.
+fixtures 2페이지 같은 상태에서 slug 정규화가 일어나면 페이지 상태가 깨질 수 있다.
+
+### 3. metadata와 본문이 같은 최상위 데이터 로더를 각각 호출한다
+
+`generateMetadata()`와 `PlayerPageContent()`가 둘 다 `fetchPlayerFullData()`를 호출한다.
+`fetchPlayerFullData()` 내부에 일부 캐시된 하위 호출은 있지만, 상위 함수 자체는 캐시 래퍼가 없다.
+
+그래서 선수 기본 정보, 통계, 랭킹 같은 핵심 데이터는 metadata와 page 본문에서 각각 한 번씩 더 읽히는 구조다.
+`cache`/`unstable_cache`가 부분적으로는 중복을 줄이지만, route 기준으로는 여전히 중복 호출 경로가 남아 있다.
+
+### 4. `PlayerPageClient`는 실제 훅이 없는데도 client boundary를 갖는다
+
+`PlayerPageClient.tsx`는 직접 `useState`, `useEffect`, `useRouter`, 브라우저 API를 쓰지 않고
+`PlayerHeader`, 광고 배너, `PlayerTabNavigation`, `TabContent`를 묶는 역할만 한다.
+
+즉 지금 client boundary는 실제 상호작용 때문이 아니라 wrapper 위치 때문에 유지되고 있다.
+이 wrapper는 Server Component로 내릴 수 있다.
+
+### 5. `PlayerHeader`와 `TabContent` 쪽은 이미 client island가 필요하다
+
+`PlayerHeader.tsx`는 `useTeamLeague()` context와 이미지 처리 때문에 client 성격이 있고,
+`TabContent.tsx`는 탭 내부 컴포넌트 조합을 담당한다.
+따라서 실제로 client로 남겨야 할 것은 하위 interactive 섹션이지, 상위 wrapper 전체는 아니다.
+
+## 확인 결과
+
+- `page.tsx`는 Server Component다.
+- canonical slug는 `resolvePlayerCanonicalSlug()`로 정규화하고 있다.
+- `PlayerPageContent()`는 `tab`과 `page`에 따라 필요한 데이터만 선별해서 로드한다.
+- `PlayerFixtures.tsx`는 `page` query를 직접 갱신한다.
+- `PlayerPageClient`는 현재는 client wrapper지만 자체 훅은 없다.
+
+## 수정 방향
+
+### 1. `tab` / `page` 상태 URL을 noindex로 정리
+
+- `generateMetadata()`에 `searchParams`를 받아 `tab` 또는 `page` 존재 시 `noindex`를 넣는다.
+- 기본 canonical은 정규화된 slug URL로 유지한다.
+- fixtures paging과 다른 탭 상태 URL은 검색 노출이 아니라 탐색용 상태로만 취급한다.
+
+### 2. slug 정규화 리다이렉트에서 `page` 상태도 보존한다
+
+- `/player/[id]`에서 canonical slug로 보낼 때 `tab`뿐 아니라 `page`도 유지한다.
+- 특히 fixtures pagination 상태가 깨지지 않도록 query 보존 규칙을 통일한다.
+
+### 3. `fetchPlayerFullData()` 호출 구조를 route 기준으로 다시 본다
+
+- metadata와 본문에서 같은 함수를 각각 호출하는 구조를 줄일 수 있는지 검토한다.
+- 최소한 `generateMetadata()`와 page 본문이 같은 핵심 선수 정보는 같은 캐시 키를 공유해야 한다.
+- `fetchPlayerFullData()` 상위에도 캐시 래퍼를 두는 방안을 검토한다.
+
+### 4. `PlayerPageClient`의 wrapper 역할을 서버로 내린다
+
+- `PlayerPageClient`는 Server Component로 바꿀 수 있다.
+- 실제 client island는 `PlayerHeader`, `PlayerTabNavigation`, `TabContent` 같은 하위 interactive 컴포넌트만 남긴다.
+- 그렇게 하면 player detail의 client boundary가 wrapper 수준에서 한 단계 줄어든다.
+
+## 검증
+
+- 코드 수정 전 문서만 작성했다.
+- 아직 `typecheck` / `build`는 다시 돌리지 않았다.
+
+## 결론
+
+11번 선수 상세는 탭/페이지 query 정책, metadata 중복 호출, 그리고 불필요하게 남은 client wrapper가 핵심이다.
+먼저 `tab`/`page` URL을 검색 정책에서 정리하고, 그 다음 `PlayerPageClient`를 server shell로 내리는 순서가 맞다.

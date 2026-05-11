@@ -7,10 +7,12 @@ interface PostNavigationProps {
   boardSlug: string;
   prevPost: { id: string; title: string; post_number: number } | null;
   nextPost: { id: string; title: string; post_number: number } | null;
+  returnHref?: string;
+  detailQueryString?: string;
   isLoggedIn?: boolean;
 }
 
-export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNavigationProps) {
+export default function PostNavigation({ boardSlug, prevPost, nextPost, returnHref, detailQueryString = '' }: PostNavigationProps) {
   // 표시할 버튼들의 배열 생성
   const buttons = [
     // 이전글 버튼 (항상 표시)
@@ -23,7 +25,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-[13px] gap-1"
         >
-          <Link href={`/boards/${boardSlug}/${prevPost.post_number}`} prefetch={false}>
+          <Link href={`/boards/${boardSlug}/${prevPost.post_number}${detailQueryString}`} prefetch={false}>
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>이전글</span>
           </Link>
@@ -50,7 +52,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-[13px] gap-1"
         >
-          <Link href={`/boards/${boardSlug}`} prefetch={false}>
+          <Link href={returnHref || `/boards/${boardSlug}`} prefetch={false}>
             <ListOrdered className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>목록</span>
           </Link>
@@ -67,7 +69,7 @@ export default function PostNavigation({ boardSlug, prevPost, nextPost }: PostNa
           asChild
           className="text-xs sm:text-[13px] gap-1"
         >
-          <Link href={`/boards/${boardSlug}/${nextPost.post_number}`} prefetch={false}>
+          <Link href={`/boards/${boardSlug}/${nextPost.post_number}${detailQueryString}`} prefetch={false}>
             <span>다음글</span>
             <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </Link>

@@ -81,11 +81,14 @@ function buildVideoObjectJsonLd({
 }
 
 export async function generateMetadata({
-  params
+  params,
+  searchParams
 }: {
-  params: Promise<{ id: string; slug: string }>
+  params: Promise<{ id: string; slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }): Promise<Metadata> {
-  const { id, slug } = await params;
+  const [{ id, slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const hasTabState = Boolean(resolvedSearchParams?.tab);
 
   const matchData = await fetchCachedMatchFullData(id, {
     fetchEvents: false,
@@ -147,6 +150,7 @@ export async function generateMetadata({
       '축구 경기 결과',
       '실시간 스코어',
     ],
+    ...(hasTabState ? { noindex: true } : {}),
   });
 }
 

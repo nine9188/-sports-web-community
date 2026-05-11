@@ -16,6 +16,7 @@ interface PostFooterProps {
   isLoggedIn?: boolean;
   postId?: string;
   userId?: string;
+  returnHref?: string;
   withMargin?: boolean;
 }
 
@@ -26,6 +27,7 @@ export default function PostFooter({
   isLoggedIn = false,
   postId,
   userId,
+  returnHref,
   withMargin = true
 }: PostFooterProps) {
   const router = useRouter();
@@ -54,7 +56,7 @@ export default function PostFooter({
       }
 
       // 삭제 성공 - 게시판 목록으로 즉시 이동 (404 방지)
-      const targetUrl = `/boards/${response.boardSlug || boardSlug}`;
+      const targetUrl = returnHref || `/boards/${response.boardSlug || boardSlug}`;
       toast.success('게시글이 삭제되었습니다.');
       router.replace(targetUrl);
     } catch {

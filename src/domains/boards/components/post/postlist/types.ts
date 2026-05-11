@@ -57,6 +57,7 @@ export interface PostListProps {
   loading?: boolean;
   showBoard?: boolean;
   currentPostId?: string;
+  currentPage?: number;
   emptyMessage?: string;
   headerContent?: React.ReactNode;
   footerContent?: React.ReactNode;
@@ -74,6 +75,7 @@ export interface PostItemProps {
   isLast?: boolean;
   currentPostId?: string;
   currentBoardId: string;
+  currentPage?: number;
   showBoard: boolean;
   variant: PostVariant;
 }

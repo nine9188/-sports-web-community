@@ -26,6 +26,7 @@ export function MobilePostList({
   posts,
   currentPostId,
   currentBoardId,
+  currentPage,
   variant = 'text',
   maxHeight,
 }: Omit<PostListProps, 'loading' | 'showBoard' | 'emptyMessage' | 'headerContent' | 'footerContent' | 'className'>) {
@@ -66,9 +67,10 @@ export function MobilePostList({
       posts: deferredPosts,
       currentPostId,
       currentBoardId,
+      currentPage,
       variant,
     }),
-    [deferredPosts, currentPostId, currentBoardId, variant]
+    [deferredPosts, currentPostId, currentBoardId, currentPage, variant]
   );
 
   // 아이템 높이 계산
@@ -106,6 +108,7 @@ export function MobilePostList({
             isLast={index === deferredPosts.length - 1}
             currentPostId={currentPostId}
             currentBoardId={currentBoardId}
+            currentPage={currentPage}
             showBoard={false}
             variant={variant}
           />

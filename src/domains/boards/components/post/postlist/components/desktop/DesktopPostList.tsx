@@ -28,6 +28,7 @@ export function DesktopPostList({
   posts,
   currentPostId,
   currentBoardId,
+  currentPage,
   showBoard = true,
   variant = 'text',
   maxHeight,
@@ -56,10 +57,11 @@ export function DesktopPostList({
       posts: deferredPosts,
       currentPostId,
       currentBoardId,
+      currentPage,
       showBoard,
       variant,
     }),
-    [deferredPosts, currentPostId, currentBoardId, showBoard, variant]
+    [deferredPosts, currentPostId, currentBoardId, currentPage, showBoard, variant]
   );
 
   // 아이템 높이 계산
@@ -81,6 +83,7 @@ export function DesktopPostList({
                 isLast={index === deferredPosts.length - 1}
                 currentPostId={currentPostId}
                 currentBoardId={currentBoardId}
+                currentPage={currentPage}
                 showBoard={showBoard}
                 variant={variant}
               />
@@ -194,6 +197,7 @@ export function DesktopPostList({
                 isLast={index === deferredPosts.length - 1}
                 currentPostId={currentPostId}
                 currentBoardId={currentBoardId}
+                currentPage={currentPage}
                 showBoard={showBoard}
                 variant={variant}
               />

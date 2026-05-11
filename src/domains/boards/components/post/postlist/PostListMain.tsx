@@ -36,6 +36,7 @@ export default function PostList({
   loading = false,
   showBoard = true,
   currentPostId,
+  currentPage,
   emptyMessage = '게시글이 없습니다.',
   headerContent,
   footerContent,
@@ -89,10 +90,11 @@ export default function PostList({
           <PostListEmpty message={emptyMessage} />
         ) : useVirtualization ? (
           // 30개 이상: 클라이언트 가상화 (react-window는 dynamic import로 지연 로드)
-          <VirtualizedPostList
+            <VirtualizedPostList
             posts={posts}
             currentPostId={currentPostId}
             currentBoardId={currentBoardId}
+            currentPage={currentPage}
             showBoard={showBoard}
             variant={variant}
             maxHeight={maxHeight}
@@ -104,12 +106,14 @@ export default function PostList({
               posts={posts}
               currentPostId={currentPostId}
               currentBoardId={currentBoardId}
+              currentPage={currentPage}
               variant={variant}
             />
             <DesktopPostListServer
               posts={posts}
               currentPostId={currentPostId}
               currentBoardId={currentBoardId}
+              currentPage={currentPage}
               showBoard={showBoard}
               variant={variant}
             />

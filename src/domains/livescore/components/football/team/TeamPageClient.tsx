@@ -1,5 +1,3 @@
-'use client';
-
 import TeamHeader from './TeamHeader';
 import TabNavigation from './TabNavigation';
 import TabContent from './TabContent';

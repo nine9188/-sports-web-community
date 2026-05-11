@@ -22,6 +22,7 @@ export function MobilePostListServer({
   posts,
   currentPostId,
   currentBoardId,
+  currentPage,
   variant = 'text',
 }: MobilePostListServerProps) {
   return (
@@ -33,6 +34,7 @@ export function MobilePostListServer({
             isLast={index === posts.length - 1}
             currentPostId={currentPostId}
             currentBoardId={currentBoardId}
+            currentPage={currentPage}
             showBoard={false}
             variant={variant}
           />

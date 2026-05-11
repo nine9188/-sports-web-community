@@ -45,6 +45,19 @@ function extractFirstImage(content: unknown): string | null {
   return traverse(doc.content);
 }
 
+function buildQueryString(
+  searchParams: { from?: string; page?: string; listPage?: string; sort?: string },
+  keys: Array<'from' | 'page' | 'listPage' | 'sort'>
+): string {
+  const params = new URLSearchParams();
+  keys.forEach((key) => {
+    const value = searchParams[key];
+    if (value) params.set(key, value);
+  });
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
 // 게시글 메타데이터 생성
 export async function generateMetadata({
   params,
@@ -89,9 +102,9 @@ export async function generateMetadata({
 
 /** 게시글 데이터 로딩 + 렌더링 async 서버 컴포넌트 (Suspense 스트리밍용) */
 async function PostDetailContent({
-  slug, postNumber, fromBoardId, pageParam
+  slug, postNumber, fromBoardId, pageParam, returnHref, detailQueryString
 }: {
-  slug: string; postNumber: string; fromBoardId?: string; pageParam?: number;
+  slug: string; postNumber: string; fromBoardId?: string; pageParam?: number; returnHref: string; detailQueryString: string;
 }) {
   try {
     // 서버 액션을 통해 모든 데이터 로드 (page 전달)
@@ -479,6 +492,8 @@ async function PostDetailContent({
         postUserAction={result.postUserAction || null}
         slug={slug}
         postNumber={postNumber}
+        returnHref={returnHref}
+        detailQueryString={detailQueryString}
       />
       </>
     );
@@ -516,6 +531,8 @@ export default async function PostDetailPage({
   const pageFromQuery = resolvedSearchParams?.listPage ?? resolvedSearchParams?.page;
   const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
   const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : undefined;
+  const detailQueryString = buildQueryString(resolvedSearchParams, ['from', 'page', 'listPage', 'sort']);
+  const returnHref = `/boards/${slug}${buildQueryString(resolvedSearchParams, ['from', 'page', 'sort'])}`;
 
   if (!slug || !postNumber) {
     return notFound();
@@ -527,6 +544,8 @@ export default async function PostDetailPage({
       postNumber={postNumber}
       fromBoardId={fromBoardId}
       pageParam={safePage}
+      returnHref={returnHref}
+      detailQueryString={detailQueryString}
     />
   );
 }

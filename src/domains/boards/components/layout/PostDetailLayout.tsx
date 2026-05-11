@@ -1,6 +1,4 @@
-"use client";
-
-import React, { memo, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { CommentType } from "../../types/post/comment";
 import { AdjacentPosts } from "../../types/post";
@@ -22,15 +20,7 @@ import PostDetailRelatedList from "./PostDetailRelatedList";
 import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
 import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
-
-// 메모이제이션 적용
-const MemoizedBoardBreadcrumbs = memo(BoardBreadcrumbs);
-const MemoizedPostHeader = memo(PostHeader);
-const MemoizedPostNavigation = memo(PostNavigation);
-const MemoizedPostActions = memo(PostActions);
-const MemoizedPostFooter = memo(PostFooter);
-const MemoizedCommentSection = memo(CommentSection);
-const MemoizedPostDetailRelatedList = memo(PostDetailRelatedList);
+import PostHashScroller from "./PostHashScroller";
 
 interface PostAuthor {
   nickname: string | null;
@@ -122,6 +112,8 @@ interface PostDetailLayoutProps {
   postUserAction: "like" | "dislike" | null;
   slug: string;
   postNumber: string;
+  returnHref: string;
+  detailQueryString: string;
 }
 
 export default function PostDetailLayout({
@@ -144,18 +136,9 @@ export default function PostDetailLayout({
   postUserAction,
   slug,
   postNumber,
+  returnHref,
+  detailQueryString,
 }: PostDetailLayoutProps) {
-  // 스크롤 처리 - 해시가 있으면 해당 댓글로 스크롤
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash) {
-      const hashId = window.location.hash.substring(1);
-      setTimeout(() => {
-        const element = document.getElementById(hashId);
-        if (element) element.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }, []);
-
   // 게시글 상세 정보 구성
   const author: PostAuthor = {
     nickname: post.profiles?.nickname || null,
@@ -197,9 +180,10 @@ export default function PostDetailLayout({
   if (isPostDeleted) {
     return (
       <div className="container mx-auto">
+        <PostHashScroller />
         {/* 게시판 경로 */}
         <div className="overflow-x-auto sm:mt-0 mt-4">
-          <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+          <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
         </div>
 
         {/* 삭제된 게시글 메시지 */}
@@ -243,9 +227,10 @@ export default function PostDetailLayout({
   if (isPostHidden) {
     return (
       <div className="container mx-auto">
+        <PostHashScroller />
         {/* 게시판 경로 */}
         <div className="overflow-x-auto sm:mt-0 mt-4">
-          <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+          <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
         </div>
 
         {/* 숨김 처리된 게시글 메시지 */}
@@ -290,15 +275,16 @@ export default function PostDetailLayout({
 
   return (
     <div className="container mx-auto">
+      <PostHashScroller />
       {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
       <div className="overflow-x-auto">
-        <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
+        <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
       </div>
 
       {/* 2. 게시글 본문 (상세 정보) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
         {/* 게시글 헤더 컴포넌트 */}
-        <MemoizedPostHeader
+        <PostHeader
           title={post.title}
           author={author}
           createdAt={post.created_at || ""}
@@ -327,7 +313,7 @@ export default function PostDetailLayout({
         <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
           <div className="flex flex-col space-y-4">
             {/* 추천/비추천 버튼 */}
-            <MemoizedPostActions
+            <PostActions
               postId={post.id}
               boardId={board.id || ""}
               initialLikes={post.likes || 0}
@@ -386,22 +372,25 @@ export default function PostDetailLayout({
       </Container>
 
       {/* 4. 게시글 하단 버튼 영역 */}
-      <MemoizedPostFooter
-        boardSlug={slug}
-        postNumber={postNumber}
-        isAuthor={isAuthor}
-        isLoggedIn={isLoggedIn}
-        postId={post.id}
-        userId={post.user_id}
-        withMargin={true}
-      />
+        <PostFooter
+          boardSlug={slug}
+          postNumber={postNumber}
+          isAuthor={isAuthor}
+          isLoggedIn={isLoggedIn}
+          postId={post.id}
+          userId={post.user_id}
+          returnHref={returnHref}
+          withMargin={true}
+        />
 
       {/* 5. 포스트 네비게이션 */}
       <div className="mb-4">
-        <MemoizedPostNavigation
+        <PostNavigation
           prevPost={adjacentPosts.prevPost}
           nextPost={adjacentPosts.nextPost}
           boardSlug={slug}
+          returnHref={returnHref}
+          detailQueryString={detailQueryString}
         />
       </div>
 
@@ -417,7 +406,7 @@ export default function PostDetailLayout({
 
       {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}
       <div className="mb-4">
-        <MemoizedCommentSection
+        <CommentSection
           postId={post.id}
           postOwnerId={post.user_id}
           currentUserId={currentUserId}
@@ -437,7 +426,7 @@ export default function PostDetailLayout({
       </div>
 
       {/* 8. 같은 게시판의 다른 글 목록 - 초기 SSR 후 페이지 이동은 목록만 갱신 */}
-      <MemoizedPostDetailRelatedList
+      <PostDetailRelatedList
         initialPosts={formattedPosts}
         initialCurrentPage={currentPage}
         totalPages={totalPages}
@@ -448,15 +437,16 @@ export default function PostDetailLayout({
       />
 
       {/* 9. 게시글 푸터 (중복) */}
-      <MemoizedPostFooter
-        boardSlug={slug}
-        postNumber={postNumber}
-        isAuthor={isAuthor}
-        isLoggedIn={isLoggedIn}
-        postId={post.id}
-        userId={post.user_id}
-        withMargin={totalPages > 1}
-      />
+        <PostFooter
+          boardSlug={slug}
+          postNumber={postNumber}
+          isAuthor={isAuthor}
+          isLoggedIn={isLoggedIn}
+          postId={post.id}
+          userId={post.user_id}
+          returnHref={returnHref}
+          withMargin={totalPages > 1}
+        />
 
       {/* 10. 검색바 + 글쓰기 */}
       <div className="mt-4 px-4 sm:px-0 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

@@ -61,6 +61,11 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
 
   useEffect(() => {
     if (!enabled || !postId) return;
+    if (initialComments && version === 0) {
+      setIsLoading(false);
+      setIsFetching(false);
+      return;
+    }
 
     let cancelled = false;
 

@@ -8,6 +8,7 @@ interface VirtualizedPostListProps {
   posts: Post[];
   currentPostId?: string;
   currentBoardId: string;
+  currentPage?: number;
   showBoard: boolean;
   variant: PostVariant;
   maxHeight?: string;
@@ -17,6 +18,7 @@ export function VirtualizedPostList({
   posts,
   currentPostId,
   currentBoardId,
+  currentPage,
   showBoard,
   variant,
   maxHeight,
@@ -27,6 +29,7 @@ export function VirtualizedPostList({
         posts={posts}
         currentPostId={currentPostId}
         currentBoardId={currentBoardId}
+        currentPage={currentPage}
         variant={variant}
         maxHeight={maxHeight}
       />
@@ -34,6 +37,7 @@ export function VirtualizedPostList({
         posts={posts}
         currentPostId={currentPostId}
         currentBoardId={currentBoardId}
+        currentPage={currentPage}
         showBoard={showBoard}
         variant={variant}
         maxHeight={maxHeight}

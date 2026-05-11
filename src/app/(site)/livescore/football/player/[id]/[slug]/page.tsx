@@ -20,6 +20,7 @@ import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
+import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 
 /**
  * ============================================
@@ -155,7 +156,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       return notFound();
     }
 
-    if (slug !== canonicalSlug) {
+    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       const tabParam = tab && tab !== 'stats' ? `?tab=${tab}` : '';
       permanentRedirect(`/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
@@ -335,7 +336,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       </>
     );
   } catch (error) {
-    if (isNextNotFoundError(error)) {
+    if (isNextRedirectError(error) || isNextNotFoundError(error)) {
       throw error;
     }
 

@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { notFound, permanentRedirect } from 'next/navigation';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import {
@@ -35,11 +34,14 @@ interface TeamPageProps {
 
 // 팀 메타데이터 생성
 export async function generateMetadata({
-  params
+  params,
+  searchParams
 }: {
-  params: Promise<{ id: string; slug: string }>
+  params: Promise<{ id: string; slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }): Promise<Metadata> {
-  const { id, slug } = await params;
+  const [{ id, slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const hasTabState = Boolean(resolvedSearchParams?.tab);
 
   // 팀 데이터 조회 (최소한의 옵션으로)
   const teamData = await fetchTeamSeoData(id);
@@ -69,15 +71,12 @@ export async function generateMetadata({
     imageWidth: ogImage ? 128 : undefined,
     imageHeight: ogImage ? 128 : undefined,
     keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
+    ...(hasTabState ? { noindex: true } : {}),
   });
 }
 
 // URL에서 허용하는 팀 상세 탭 목록.
 const VALID_TABS: TeamTabType[] = ['overview', 'fixtures', 'standings', 'squad', 'transfers', 'stats'];
-
-function isSearchCrawler(userAgent: string): boolean {
-  return /Googlebot|Google-InspectionTool|bingbot|BingPreview|Yeti|Daum\/|DuckDuckBot|Baiduspider|YandexBot/i.test(userAgent);
-}
 
 /** URL 탭 기준으로 필요한 팀 데이터를 서버에서 준비하고 렌더링합니다. */
 async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; tab: string }) {
@@ -105,9 +104,6 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     const needsPlayerStats = ['squad', 'stats'].includes(initialTab);
     const needsStandings = initialTab === 'standings';
     const needsTransfers = initialTab === 'transfers';
-    const requestHeaders = await headers();
-    const userAgent = requestHeaders.get('user-agent') || '';
-    const shouldFetchHeavyOverview = initialTab === 'overview' && !isSearchCrawler(userAgent);
 
     const [
       initialData,
@@ -126,10 +122,10 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
         matchLimit: 10,
       }),
-      shouldFetchHeavyOverview
+      initialTab === 'overview'
         ? fetchTeamOverviewPlayerRankingsData(id, 5)
         : Promise.resolve(null),
-      shouldFetchHeavyOverview
+      initialTab === 'overview'
         ? fetchTeamOverviewTransfersData(id)
         : Promise.resolve(null),
       initialTab === 'overview'

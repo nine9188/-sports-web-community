@@ -121,7 +121,7 @@ export default function StatsCards({ stats, onTabChange, leagueLogoUrl, leagueLo
             />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate">
+            <p className={`${hasLeagueInfo ? 'font-medium text-xs text-gray-900 dark:text-[#F0F0F0] truncate' : 'text-[13px] text-gray-500 dark:text-gray-400'}`}>
               {hasLeagueInfo ? (getLeagueKoreanName(safeLeague.name) || safeLeague.name) : '데이터 없음'}
             </p>
             <div className={`items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 ${hasLeagueInfo ? 'flex' : 'hidden'}`}>

@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import { Metadata } from 'next';
 import { permanentRedirect } from 'next/navigation';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerHeader } from '@/shared/components/ui';
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
@@ -9,15 +8,15 @@ import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
 import { getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
-import { TransferFilters } from '@/domains/livescore/components/football/transfers';
+import { TransferFilters, TransferLeagueGroups } from '@/domains/livescore/components/football/transfers';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: '축구 이적시장 - 팀별 영입·방출 내역',
-    description: '프리미어리그, 라리가, 세리에A, 분데스리가, K리그 등 주요 리그의 팀별 축구 이적시장 정보를 확인하세요.',
+    title: '이적시장 - 해외/국내 이적 정보',
+    description: '프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그 등 주요 리그의 이적시장 정보를 확인하세요.',
     path: '/transfers',
-    keywords: ['축구 이적', '이적시장', '팀별 이적', '선수 영입', '선수 방출', '해외축구 이적', 'K리그 이적', '4590football'],
+    keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', '4590football'],
   });
 }
 
@@ -73,13 +72,13 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
       <Container>
         <ContainerHeader>
           <div className="flex items-center justify-between w-full">
-            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">축구 이적시장</h1>
-            <span className="hidden md:inline text-xs text-gray-500 dark:text-gray-400">팀별 영입·방출 내역</span>
+            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">이적시장</h1>
+            <span className="hidden md:inline text-xs text-gray-500 dark:text-gray-400">해외/국내 이적 정보</span>
           </div>
         </ContainerHeader>
         <div className="px-4 py-4 bg-white dark:bg-[#1D1D1D] space-y-2">
           <p className="text-[13px] text-gray-700 dark:text-gray-300">
-            프리미어리그, 라리가, 세리에A, 분데스리가, K리그 등 주요 리그의 팀별 이적시장 정보를 확인하세요.
+            프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그 등 주요 리그의 이적시장 정보를 확인하세요.
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {groupedTeams.length}개 리그, {supportedTeams.length}개 팀의 이적시장 페이지를 제공합니다.
@@ -95,37 +94,7 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
         <TransferFilters currentFilters={{}} leagueTeamGroups={filterLeagueTeamGroups} />
       </div>
 
-      <div className="mt-4 space-y-4">
-        {groupedTeams.map(({ league, teams: leagueTeams }) => {
-          if (!league) return null;
-
-          return (
-            <Container key={league.id}>
-              <ContainerHeader>
-                <div className="flex items-center justify-between w-full">
-                  <ContainerTitle>{league.name_ko || league.name}</ContainerTitle>
-                  <span className="text-xs text-gray-700 dark:text-gray-300 bg-[#F5F5F5] dark:bg-[#262626] px-2 py-1 rounded">
-                    {leagueTeams.length}팀
-                  </span>
-                </div>
-              </ContainerHeader>
-              <div className="bg-white dark:bg-[#1D1D1D] p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {leagueTeams.map((team) => (
-                  <Link
-                    key={team.id}
-                    href={getTransferTeamHref(team)}
-                    className="flex items-center justify-between gap-2 rounded border border-black/5 dark:border-white/10 px-3 py-2 text-[13px] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#F5F5F5] dark:hover:bg-[#262626] transition-colors"
-                  prefetch={false}
-                  >
-                    <span className="truncate">{team.name_ko || team.name_en}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">이적시장</span>
-                  </Link>
-                ))}
-              </div>
-            </Container>
-          );
-        })}
-      </div>
+      <TransferLeagueGroups groupedTeams={groupedTeams} />
     </div>
   );
 }
