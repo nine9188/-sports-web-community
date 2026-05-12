@@ -46,7 +46,7 @@ function renderSeoSummary(chartData: Record<string, unknown>): string {
   ].filter(([, home, away]) => home || away);
 
   return `
-    <section class="prediction-chart-seo bg-white dark:bg-[#1D1D1D] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <section data-nosnippet class="prediction-chart-seo bg-white dark:bg-[#1D1D1D] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="p-4 border-b border-black/5 dark:border-white/10">
         <h3 class="text-sm font-bold text-gray-900 dark:text-[#F0F0F0] mb-2">
           ${escapeHtml(homeName)} vs ${escapeHtml(awayName)} 예측 분석
@@ -89,6 +89,7 @@ export function renderPredictionChart(data: PredictionChartRenderData): string {
   return `
     <div
       class="prediction-chart-container my-4"
+      data-nosnippet
       data-type="prediction-chart"
       data-fixture-id="${escapeHtml(fixtureId)}"
       data-chart="${encodeURIComponent(JSON.stringify(chartData))}"

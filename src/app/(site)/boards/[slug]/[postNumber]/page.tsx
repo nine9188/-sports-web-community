@@ -11,6 +11,7 @@ import { siteConfig } from '@/shared/config';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
+import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -59,6 +60,38 @@ function buildQueryString(
   return query ? `?${query}` : '';
 }
 
+function compactSeoText(value?: string | null): string {
+  return String(value ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function looksLikeNoisyPredictionSummary(value: string): boolean {
+  const percentCount = value.match(/\d+(?:\.\d+)?%/g)?.length ?? 0;
+  return (
+    percentCount >= 4 ||
+    /Double chance|Team To Win|승부 예측|예상 승자|상대전적|언더\/오버|총 골|공격 .*%|수비 .*%/i.test(value)
+  );
+}
+
+function buildPostSeoDescription({
+  summary,
+  title,
+  boardName,
+}: {
+  summary?: string | null;
+  title: string;
+  boardName: string;
+}): string {
+  const cleanSummary = compactSeoText(summary);
+  if (cleanSummary && !looksLikeNoisyPredictionSummary(cleanSummary)) {
+    return cleanSummary.slice(0, 180);
+  }
+
+  return `${title} 게시글입니다. ${boardName}에서 축구 경기 분석, 예측, 팀 소식과 팬 의견을 확인하세요.`;
+}
+
 // 게시글 메타데이터 생성
 export async function generateMetadata({
   params,
@@ -87,7 +120,12 @@ export async function generateMetadata({
     notFound();
   }
 
-  const description = post.summary || `${board.name} 게시판의 게시글입니다. 축구 커뮤니티 4590 Football.`;
+  const metadataSummary = (post as { content_summary?: string | null }).content_summary || post.summary;
+  const description = buildPostSeoDescription({
+    summary: metadataSummary,
+    title: post.title,
+    boardName: board.name,
+  });
 
   return buildMetadata({
     title: `${post.title} - ${board.name}`,
@@ -261,18 +299,8 @@ async function PostDetailContent({
     const siteUrl = seoSettings?.site_url || siteConfig.url;
     const postUrl = siteConfig.getCanonical(`/boards/${slug}/${postNumber}`);
 
-    // 본문에서 설명 추출
-    let articleDescription = '';
-    if (result.post.content) {
-      const contentStr = typeof result.post.content === 'string'
-        ? result.post.content
-        : JSON.stringify(result.post.content);
-      articleDescription = contentStr
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 200);
-    }
+    // 본문에서 설명 추출. TipTap 카드/예측 차트/RSS 보조 UI는 제외하고 실제 본문 텍스트를 우선한다.
+    const articleDescription = extractSummary(result.post.content, 200);
 
     // 게시글 본문에서 첫 번째 이미지 추출 (없으면 OG 이미지 사용)
     const firstImage = extractFirstImage(result.post.content);
@@ -280,6 +308,11 @@ async function PostDetailContent({
     const contentType = (result.board as { content_type?: string }).content_type || 'community';
     const postTitle = result.post.title?.trim() || `${result.board.name} 게시글`;
     const boardName = result.board.name?.trim() || '게시판';
+    const seoDescription = buildPostSeoDescription({
+      summary: articleDescription,
+      title: postTitle,
+      boardName,
+    });
 
     // 공통 author 객체
     const authorSchema = {
@@ -308,7 +341,7 @@ async function PostDetailContent({
         '@type': 'NewsArticle',
         name: postTitle,
         headline: postTitle,
-        description: articleDescription || `${boardName}의 게시글입니다.`,
+        description: seoDescription,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -329,7 +362,7 @@ async function PostDetailContent({
         '@type': 'Article',
         name: postTitle,
         headline: postTitle,
-        description: articleDescription || `${boardName}의 게시글입니다.`,
+        description: seoDescription,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -349,7 +382,7 @@ async function PostDetailContent({
         '@context': 'https://schema.org',
         '@type': 'Review',
         name: postTitle,
-        reviewBody: articleDescription || `${boardName}의 게시글입니다.`,
+        reviewBody: seoDescription,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -367,7 +400,7 @@ async function PostDetailContent({
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: postTitle,
-        description: articleDescription || `${boardName}의 게시글입니다.`,
+        description: seoDescription,
         image: postImage,
         offers: {
           '@type': 'Offer',
@@ -381,7 +414,7 @@ async function PostDetailContent({
           name: `${postTitle} 리뷰`,
           author: authorSchema,
           datePublished: result.post.created_at,
-          reviewBody: articleDescription,
+          reviewBody: seoDescription,
         },
       };
     } else {
@@ -407,7 +440,7 @@ async function PostDetailContent({
         '@type': 'DiscussionForumPosting',
         name: postTitle,
         headline: postTitle,
-        text: articleDescription || `${boardName}의 게시글입니다.`,
+        text: seoDescription,
         image: postImage,
         author: authorSchema,
         datePublished: result.post.created_at,
@@ -459,7 +492,7 @@ async function PostDetailContent({
         {/* 게시판 타입별 구조화 데이터 */}
         <DaumWebmasterHints
           title={`${postTitle} - ${boardName}`}
-          content={articleDescription || `${boardName} 게시글입니다.`}
+          content={seoDescription}
           datetime={result.post.created_at}
         />
         <script

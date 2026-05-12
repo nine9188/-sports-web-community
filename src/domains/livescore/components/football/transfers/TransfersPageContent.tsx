@@ -119,11 +119,13 @@ export default async function TransfersPageContent({
   return (
     <div className="space-y-4 pb-0">
       {/* 필터 섹션 */}
-      <TransferFiltersComponent currentFilters={currentFilters} leagueTeamGroups={leagueTeamGroups} />
+      <div data-nosnippet>
+        <TransferFiltersComponent currentFilters={currentFilters} leagueTeamGroups={leagueTeamGroups} />
+      </div>
 
       {/* 이적 목록 */}
       {transfers.length === 0 ? (
-        <Container>
+        <Container data-nosnippet>
           <ContainerHeader>
             <div className="flex items-center justify-between w-full">
               <ContainerTitle>이적 목록</ContainerTitle>
@@ -139,7 +141,7 @@ export default async function TransfersPageContent({
           </div>
         </Container>
       ) : (
-        <Container>
+        <Container data-nosnippet>
           {/* 헤더 */}
           <ContainerHeader>
             <div className="flex items-center justify-between w-full">

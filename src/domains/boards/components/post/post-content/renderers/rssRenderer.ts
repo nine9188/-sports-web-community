@@ -10,7 +10,7 @@ export function renderRssHeader(rssPost: RssPost): string {
   const imageUrl = rssPost.imageUrl || rssPost.image_url;
 
   return `
-    <div class="mb-6">
+    <div class="mb-6" data-nosnippet>
       ${imageUrl ? `
       <div class="mb-4 relative overflow-hidden rounded-lg">
         <img

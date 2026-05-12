@@ -151,11 +151,11 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
               </svg>
               <span className="font-bold">이적시장 허브로 돌아가기</span>
             </Link>
-            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{teamName} 이적시장</h1>
+            <h1 className="daum-wm-title text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{teamName} 이적시장</h1>
           </div>
         </ContainerHeader>
         <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
-          <p className="text-[13px] text-gray-700 dark:text-gray-300">
+          <p className="daum-wm-content text-[13px] text-gray-700 dark:text-gray-300">
             {context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en || ''}
             {' '}
             {context.league?.name_ko || context.league?.name || '축구 리그'} {teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.

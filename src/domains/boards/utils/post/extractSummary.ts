@@ -42,6 +42,11 @@ export function extractSummary(
         const text = collectTexts(doc.content);
         return text.slice(0, maxLength);
       }
+
+      const rssText = extractRssText(doc);
+      if (rssText) {
+        return rssText.slice(0, maxLength);
+      }
     }
   } catch {
     // 무시
@@ -65,6 +70,7 @@ function collectTexts(nodes: unknown[]): string {
       n.type === 'matchCard' ||
       n.type === 'teamCard' ||
       n.type === 'playerCard' ||
+      n.type === 'predictionChart' ||
       n.type === 'image' ||
       n.type === 'video' ||
       n.type === 'youtube' ||
@@ -93,4 +99,17 @@ function collectTexts(nodes: unknown[]): string {
  */
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function extractRssText(content: Record<string, unknown>): string {
+  const candidates = [content.description, content.content, content.title];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue;
+
+    const text = stripHtml(candidate);
+    if (text) return text;
+  }
+
+  return '';
 }
