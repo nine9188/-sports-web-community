@@ -146,7 +146,8 @@ function PaginationSummary({
 function highlightQuery(text: string, searchQuery: string) {
   if (!searchQuery.trim()) return text
 
-  const regex = new RegExp(`(${searchQuery})`, 'gi')
+  const escapedQuery = escapeRegExp(searchQuery.trim())
+  const regex = new RegExp(`(${escapedQuery})`, 'gi')
   const parts = text.split(regex)
 
   return parts.map((part, index) =>
@@ -156,4 +157,8 @@ function highlightQuery(text: string, searchQuery: string) {
       </mark>
     ) : part
   )
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

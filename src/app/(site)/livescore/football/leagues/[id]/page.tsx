@@ -1,5 +1,6 @@
 import { permanentRedirect } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
+import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 
 /**
@@ -12,9 +13,11 @@ export default async function LeagueRedirect({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const leagueId = parseInt(id, 10);
 
-  const league = await fetchLeagueDetails(id);
-  const slug = getLeagueSlug(parseInt(id, 10), league?.name);
+  const league = await getLeagueById(leagueId);
+  const leagueName = league?.name || (await fetchLeagueDetails(id))?.name;
+  const slug = getLeagueSlug(leagueId, leagueName);
 
   permanentRedirect(`/livescore/football/leagues/${id}/${encodeURIComponent(slug)}`);
 }

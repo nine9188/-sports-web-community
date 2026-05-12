@@ -1,5 +1,3 @@
-'use client';
-
 import PlayerHeader from './PlayerHeader';
 import PlayerTabNavigation from './TabNavigation';
 import TabContent from './TabContent';

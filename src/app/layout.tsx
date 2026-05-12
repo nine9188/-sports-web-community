@@ -5,6 +5,7 @@ import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { brandColors, siteConfig } from '@/shared/config';
 
 // Inter font with display swap to avoid FOIT.
@@ -129,6 +130,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RootLayoutProvider>
           {children}
         </RootLayoutProvider>
+        <DaumWebmasterHints
+          title={siteConfig.ogTitle || siteConfig.name}
+          content={siteConfig.description}
+        />
         <Analytics />
         <SpeedInsights />
         {/* Google tag loaded with next/script to avoid hydration mismatch. */}

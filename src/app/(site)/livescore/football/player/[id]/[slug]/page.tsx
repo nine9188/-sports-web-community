@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
-import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
+import { fetchCachedPlayerData, fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { isUsablePlayerSlug, resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 import {
   SITE_ORGANIZATION_ID,
@@ -32,37 +33,32 @@ import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavi
 
 // 선수 메타데이터 생성
 export async function generateMetadata({
-  params
+  params,
+  searchParams
 }: {
-  params: Promise<{ id: string; slug: string }>
+  params: Promise<{ id: string; slug: string }>;
+  searchParams: Promise<{ tab?: string; page?: string }>;
 }): Promise<Metadata> {
-  const { id, slug } = await params;
+  const [{ id, slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const hasQueryState = Boolean(resolvedSearchParams?.tab || resolvedSearchParams?.page);
 
   if (!isUsablePlayerSlug(slug)) {
     return buildMissingPlayerMetadata(id);
   }
 
-  // 선수 데이터 조회 (최소한의 옵션으로)
-  const playerData = await fetchPlayerFullData(id, {
-    fetchSeasons: false,
-    fetchStats: false,
-    fetchFixtures: false,
-    fetchTrophies: false,
-    fetchTransfers: false,
-    fetchInjuries: false,
-    fetchRankings: false,
-  });
+  // metadata는 전체 탭 로더가 아니라 선수 기본 데이터만 조회한다.
+  const playerData = await fetchCachedPlayerData(id);
 
-  if (!playerData.success || !playerData.playerData?.info) {
+  if (!playerData?.info) {
     return buildMissingPlayerMetadata(id);
   }
 
-  if (getPlayerSeoQuality(playerData.playerData) === 'worthless') {
+  if (getPlayerSeoQuality(playerData) === 'worthless') {
     return buildMissingPlayerMetadata(id);
   }
 
-  const player = playerData.playerData.info;
-  const statistics = playerData.playerData.statistics;
+  const player = playerData.info;
+  const statistics = playerData.statistics;
 
   // 한글 매핑 (서버 액션으로 DB 조회)
   const playerName = await getSafePlayerKoreanName(player.id) || player.name;
@@ -70,7 +66,7 @@ export async function generateMetadata({
   const teamMapping = teamId ? await getSafeTeamById(teamId) : null;
   const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
   const position = statistics?.[0]?.games?.position || '';
-  const playerPhotoUrl = playerData.playerPhotoUrl || player.photo;
+  const playerPhotoUrl = player.photo;
   const ogImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
 
   const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
@@ -83,11 +79,25 @@ export async function generateMetadata({
     imageWidth: ogImage ? 128 : undefined,
     imageHeight: ogImage ? 128 : undefined,
     keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
+    ...(hasQueryState ? { noindex: true } : {}),
   });
 }
 
 // 유효한 탭 목록
 const VALID_TABS: PlayerTabType[] = ['stats', 'fixtures', 'trophies', 'transfers', 'injuries', 'rankings'];
+
+function buildPlayerDetailQuery(tab: PlayerTabType, page?: string): string {
+  const params = new URLSearchParams();
+  if (tab !== 'stats') params.set('tab', tab);
+
+  const pageNumber = Number.parseInt(page || '1', 10);
+  if (tab === 'fixtures' && Number.isFinite(pageNumber) && pageNumber > 1) {
+    params.set('page', String(pageNumber));
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
 
 function buildMissingPlayerMetadata(id: string): Promise<Metadata> {
   return buildMetadata({
@@ -144,15 +154,16 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       return notFound();
     }
 
-    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
-      const tabParam = tab && tab !== 'stats' ? `?tab=${tab}` : '';
-      permanentRedirect(`/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
-    }
-
-    // 유효한 탭인지 확인
-    const initialTab = VALID_TABS.includes(tab as PlayerTabType)
+    const initialTab: PlayerTabType = VALID_TABS.includes(tab as PlayerTabType)
       ? (tab as PlayerTabType)
       : 'stats';
+
+    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
+      permanentRedirect(
+        `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}${buildPlayerDetailQuery(initialTab, page)}`
+      );
+    }
+
     const fixturePage = initialTab === 'fixtures'
       ? Math.max(1, Number.parseInt(page || '1', 10) || 1)
       : 1;
@@ -257,6 +268,13 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       ? absoluteSiteUrl(teamLogoUrl)
       : undefined;
     const currentPosition = playerStats?.[0]?.games?.position;
+    const daumContent = [
+      `${playerDisplayName || playerInfo?.name || '선수'} 축구 선수 프로필`,
+      teamDisplayName ? `소속팀 ${teamDisplayName}` : '',
+      currentPosition ? `포지션 ${currentPosition}` : '',
+      playerInfo?.nationality ? `국적 ${playerInfo.nationality}` : '',
+      '시즌 통계, 경기 기록, 이적, 부상, 트로피 정보를 확인하세요.',
+    ].filter(Boolean).join('. ');
     const personSchema = playerInfo ? {
       '@context': 'https://schema.org',
       '@type': 'Person',
@@ -303,6 +321,10 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
+        <DaumWebmasterHints
+          title={`${playerDisplayName || playerInfo?.name || '선수'} - 선수 프로필`}
+          content={daumContent}
+        />
         {personSchema && (
           <script
             type="application/ld+json"

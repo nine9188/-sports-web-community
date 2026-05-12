@@ -11,6 +11,7 @@ import {
   fetchTeamSeoData,
 } from '@/domains/livescore/actions/teams/team';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 import {
   SITE_ORGANIZATION_ID,
@@ -337,6 +338,14 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     // BreadcrumbList JSON-LD
     const teamDisplayName = teamMapping?.name_ko || team?.name || '';
     const leagueDisplayName = leagueMapping?.name_ko || initialData.standings?.data?.[0]?.league?.name || '';
+    const daumContent = [
+      `${teamDisplayName || team?.name || '팀'} 축구팀 정보`,
+      leagueDisplayName ? `${leagueDisplayName} 소속` : '',
+      team?.country ? `${team.country} 축구팀` : '',
+      venue?.name ? `홈구장 ${venue.name}` : '',
+      team?.founded ? `창단 ${team.founded}` : '',
+      '경기 일정, 결과, 순위, 선수단, 이적 정보를 확인하세요.',
+    ].filter(Boolean).join('. ');
     const breadcrumbSchema = buildBreadcrumbJsonLd({
       items: [
         { name: '홈', url: '/' },
@@ -349,6 +358,10 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
+        <DaumWebmasterHints
+          title={`${teamDisplayName || team?.name || '팀'} - 팀 정보`}
+          content={daumContent}
+        />
         {sportsTeamSchema && (
           <script
             type="application/ld+json"

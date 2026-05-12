@@ -5,6 +5,7 @@ import { getNotices } from '@/domains/boards/actions/posts/notices';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
@@ -69,7 +70,12 @@ export default async function AllPostsPage({
 
     // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <BoardDetailLayout
+      <>
+        <DaumWebmasterHints
+          title="전체글 - 4590 Football 게시판"
+          content="해외축구, 국내축구, 축구 분석, 자유게시판 등 모든 게시판의 최신 글을 확인하세요."
+        />
+        <BoardDetailLayout
         boardData={allBoardData}
         breadcrumbs={[]}
         teamData={null}
@@ -90,7 +96,8 @@ export default async function AllPostsPage({
           currentPage: postsData.meta.currentPage
         }}
         listVariant="card"
-      />
+        />
+      </>
     );
   } catch (error) {
     console.error("AllPostsPage Error:", error);

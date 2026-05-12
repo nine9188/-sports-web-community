@@ -16,6 +16,7 @@ import {
   ContainerTitle,
 } from "@/shared/components/ui";
 import { buildMetadata } from "@/shared/utils/metadataNew";
+import DaumWebmasterHints from "@/shared/components/DaumWebmasterHints";
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = "force-dynamic";
@@ -133,6 +134,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
     return (
       <div className="container mx-auto">
+        <DaumWebmasterHints
+          title={`${currentCategory.name} - 포인트 상점`}
+          content={currentCategory.description || `${currentCategory.name} 아이템을 확인하고 포인트로 구매하세요.`}
+        />
         <Container className="mb-4">
           <ContainerHeader>
             <ContainerTitle>{currentCategory.name}</ContainerTitle>

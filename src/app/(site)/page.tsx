@@ -7,6 +7,7 @@ import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/c
 import { fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { fetchAllPostsWidgetData } from '@/domains/widgets/components/AllPostsWidget';
 import { fetchNewsData } from '@/domains/widgets/components/news-widget';
 import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
@@ -102,6 +103,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <DaumWebmasterHints
+        title={siteConfig.ogTitle || siteConfig.name}
+        content={siteConfig.description}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}

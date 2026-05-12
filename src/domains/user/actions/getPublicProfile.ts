@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { PublicProfile, ActionResponse } from '../types';
@@ -23,9 +24,9 @@ function maskUsername(username: string): string {
  * @param publicId 유저의 공개 ID (8자리 영숫자)
  * @returns 공개 프로필 정보
  */
-export async function getPublicProfile(
+const getCachedPublicProfile = cache(async (
   publicId: string
-): Promise<ActionResponse<PublicProfile>> {
+): Promise<ActionResponse<PublicProfile>> => {
   try {
     if (!publicId || publicId.length !== 8) {
       return {
@@ -115,4 +116,10 @@ export async function getPublicProfile(
       error: error instanceof Error ? error.message : '프로필을 가져오는 중 오류가 발생했습니다.',
     };
   }
+});
+
+export async function getPublicProfile(
+  publicId: string
+): Promise<ActionResponse<PublicProfile>> {
+  return getCachedPublicProfile(publicId);
 }

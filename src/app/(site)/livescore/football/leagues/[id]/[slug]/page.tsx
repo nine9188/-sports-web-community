@@ -7,6 +7,7 @@ import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFi
 import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
 import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection, CupRoundsView } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 import {
   SITE_ORGANIZATION_ID,
@@ -83,6 +84,9 @@ async function LeaguePageContent({ id }: { id: string }) {
   }
   const leagueSlug = getLeagueSlug(leagueId, league.name);
   const displayName = leagueMapping?.name_ko || league.name;
+  const seasonLabel = leagueMapping?.is_calendar_season
+    ? `${league.season} 시즌`
+    : `${league.season}-${String(league.season + 1).slice(2)} 시즌`;
 
   const isCup = league.type === 'Cup';
 
@@ -131,12 +135,18 @@ async function LeaguePageContent({ id }: { id: string }) {
 
   return (
     <div className="min-h-screen">
+      <DaumWebmasterHints
+        title={`${displayName} - 리그 정보`}
+        content={`${displayName}${league.country ? ` (${league.country})` : ''} 리그 순위, 팀 순위, 득점 순위, 일정과 결과를 확인하세요.`}
+      />
       <script type="application/ld+json" {...jsonLdScriptProps(leagueSchema)} />
       <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
 
       <div className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 overflow-hidden">
         <LeagueHeader
           league={league}
+          displayName={displayName}
+          seasonLabel={seasonLabel}
           leagueLogoUrl={leagueLogoUrl}
           leagueLogoUrlDark={leagueLogoUrlDark}
           boardSlug={boardSlug}

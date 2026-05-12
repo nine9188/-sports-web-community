@@ -95,7 +95,7 @@ export async function searchContent({
     }
 
     // 개수만 가져오기 (모든 탭에서 실행) - 데이터 검색과 별도로 실행
-    if (type !== 'posts') {
+    if (type !== 'all' && type !== 'posts') {
       countPromises.push(
         getPostsCount(query).then(count => ({ type: 'posts-count', count })).catch(() => {
           return { type: 'posts-count', count: 0 }
@@ -103,7 +103,7 @@ export async function searchContent({
       )
     }
 
-    if (type !== 'comments') {
+    if (type !== 'all' && type !== 'comments') {
       countPromises.push(
         getCommentsCount(query).then(count => ({ type: 'comments-count', count })).catch(() => {
           return { type: 'comments-count', count: 0 }
@@ -111,7 +111,7 @@ export async function searchContent({
       )
     }
 
-    if (type !== 'teams') {
+    if (type !== 'all' && type !== 'teams') {
       countPromises.push(
         getTeamsCount(query).then(count => ({ type: 'teams-count', count })).catch(() => {
           return { type: 'teams-count', count: 0 }

@@ -1,11 +1,6 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
-import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { ContainerHeader, ContainerContent } from '@/shared/components/ui';
 
 // 4590 표준: placeholder 상수
@@ -13,35 +8,22 @@ const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 interface LeagueHeaderProps {
   league: LeagueDetails;
+  displayName: string;
+  seasonLabel: string;
   // 4590 표준: 이미지 Storage URL
   leagueLogoUrl?: string;
   leagueLogoUrlDark?: string;
   boardSlug?: string | null;
 }
 
-export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark, boardSlug }: LeagueHeaderProps) {
-  const { getLeagueById, formatSeasonLabel } = useTeamLeague();
-  // 다크모드 감지
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDark(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
-  // 한국어 리그명 매핑
-  const leagueInfo = getLeagueById(league.id);
-  const displayName = leagueInfo?.name_ko || league.name;
-
+export default function LeagueHeader({
+  league,
+  displayName,
+  seasonLabel,
+  leagueLogoUrl,
+  leagueLogoUrlDark,
+  boardSlug,
+}: LeagueHeaderProps) {
   return (
     <>
       <ContainerHeader className="justify-between">
@@ -71,14 +53,35 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
         <div className="flex items-center space-x-2">
           {/* 리그 로고 */}
           <div className="relative w-6 h-6 flex-shrink-0">
-            <UnifiedSportsImageClient
-              src={(isDark && leagueLogoUrlDark) ? leagueLogoUrlDark : (leagueLogoUrl || LEAGUE_PLACEHOLDER)}
-              alt={`${displayName} 로고`}
-              width={24}
-              height={24}
-              loading="eager"
-              className="object-contain w-6 h-6"
-            />
+            {leagueLogoUrlDark && leagueLogoUrl ? (
+              <>
+                <Image
+                  src={leagueLogoUrl}
+                  alt={`${displayName} 로고`}
+                  width={24}
+                  height={24}
+                  unoptimized
+                  className="object-contain w-6 h-6 dark:hidden"
+                />
+                <Image
+                  src={leagueLogoUrlDark}
+                  alt={`${displayName} 로고`}
+                  width={24}
+                  height={24}
+                  unoptimized
+                  className="hidden object-contain w-6 h-6 dark:block"
+                />
+              </>
+            ) : (
+              <Image
+                src={leagueLogoUrlDark || leagueLogoUrl || LEAGUE_PLACEHOLDER}
+                alt={`${displayName} 로고`}
+                width={24}
+                height={24}
+                unoptimized
+                className="object-contain w-6 h-6"
+              />
+            )}
           </div>
 
           {/* 리그 정보 */}
@@ -105,7 +108,7 @@ export default function LeagueHeader({ league, leagueLogoUrl, leagueLogoUrlDark,
               <div className="flex items-center text-xs text-gray-700 dark:text-gray-300">
                 <span className="font-medium">{league.country}</span>
                 <span className="mx-1">•</span>
-                <span className="font-medium">{formatSeasonLabel(league.season, league.id)}</span>
+                <span className="font-medium">{seasonLabel}</span>
                 {league.type && (
                   <>
                     <span className="mx-1">•</span>

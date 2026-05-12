@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { getMatchHrefByTeams, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
@@ -403,9 +404,23 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       awayTeamName,
       leagueName,
     });
+    const daumScore = match && !['TBD', 'NS'].includes(statusCode)
+      ? `${match.goals.home ?? 0} - ${match.goals.away ?? 0}`
+      : 'vs';
+    const daumTitle = `${homeTeamName} ${daumScore} ${awayTeamName} - ${leagueName}`;
+    const daumContent = [
+      `${leagueName} ${homeTeamName} ${daumScore} ${awayTeamName} 경기 정보`,
+      venueName || venueCity ? `경기장 ${[venueName, venueCity].filter(Boolean).join(', ')}` : '',
+      '라인업, 전력 비교, 이벤트, 통계, 순위 정보를 확인하세요.',
+    ].filter(Boolean).join('. ');
 
     return (
       <>
+        <DaumWebmasterHints
+          title={daumTitle}
+          content={daumContent}
+          datetime={matchStartDate}
+        />
         {sportsEventSchema && (
           <script
             type="application/ld+json"

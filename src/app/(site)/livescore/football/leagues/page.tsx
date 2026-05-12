@@ -6,6 +6,7 @@ import { LeagueCard } from '@/domains/livescore/components/football/leagues';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export async function generateMetadata() {
@@ -40,6 +41,10 @@ export default async function LeaguesPage() {
   return (
     <div className="min-h-screen w-full">
       <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="리그·팀" />
+      <DaumWebmasterHints
+        title="축구 리그 순위 및 팀 정보"
+        content="EPL, 라리가, 세리에A, 분데스리가, 리그앙, K리그 등 주요 축구 리그의 순위, 팀, 선수, 경기 일정을 확인하세요."
+      />
       <div className="container mx-auto w-full">
         {/* 페이지 헤더 */}
         <Container>

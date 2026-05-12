@@ -9,6 +9,7 @@ import CategoryFilter from "@/domains/shop/components/CategoryFilter";
 import type { ShopItem } from "@/domains/shop/types";
 import TrackPageVisit from "@/domains/layout/components/TrackPageVisit";
 import { buildMetadata } from "@/shared/utils/metadataNew";
+import DaumWebmasterHints from "@/shared/components/DaumWebmasterHints";
 
 // 동적 렌더링 강제 설정 추가
 export const dynamic = "force-dynamic";
@@ -102,6 +103,10 @@ export default async function ShopPage({ searchParams }: Props) {
     return (
       <div className="container mx-auto">
         <TrackPageVisit id="shop" slug="shop" name="아이콘샵" />
+        <DaumWebmasterHints
+          title="포인트 상점 - 4590 Football"
+          content="4590 Football 포인트 상점에서 프로필 아이콘, 닉네임 변경권, 커뮤니티 아이템을 확인하세요."
+        />
         <div className="bg-white dark:bg-[#1D1D1D] border border-black/7 dark:border-0 md:rounded-lg overflow-hidden mb-4">
           <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center md:rounded-t-lg">
             <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">

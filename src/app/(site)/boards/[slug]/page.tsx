@@ -8,6 +8,7 @@ import { convertApiPostsToLayoutPosts } from '@/domains/boards/utils/post/postUt
 import { STATIC_NAV_BOARDS } from '@/domains/layout/constants/staticBoards';
 import type { Board } from '@/domains/layout/types/board';
 import { siteConfig } from '@/shared/config';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
@@ -281,6 +282,10 @@ async function BoardDetailContent({
     // 7. 레이아웃 렌더링
     return (
       <>
+      <DaumWebmasterHints
+        title={`${boardName} - 4590 Football 게시판`}
+        content={result.boardData.description || `${boardName} 게시판의 최신 글과 축구 커뮤니티 소식을 확인하세요.`}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(boardJsonLd) }}

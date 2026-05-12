@@ -1,12 +1,34 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getPublicProfile } from '@/domains/user/actions';
+import { getPublicProfile, getUserCommentedPosts, getUserPosts } from '@/domains/user/actions';
 import { PublicProfileCard } from '@/domains/user/components';
 import UserActivityTabs from './UserActivityTabs';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
+const ITEMS_PER_PAGE = 20;
+
+type ActivityTab = 'posts' | 'comments';
+type UserPageSearchParams = {
+  tab?: string | string[];
+  page?: string | string[];
+};
+
 interface PageProps {
   params: Promise<{ publicId: string }>;
+  searchParams?: Promise<UserPageSearchParams>;
+}
+
+function readQueryValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseActivityTab(value: string | string[] | undefined): ActivityTab {
+  return readQueryValue(value) === 'comments' ? 'comments' : 'posts';
+}
+
+function parsePage(value: string | string[] | undefined): number {
+  const parsed = parseInt(readQueryValue(value) || '1', 10);
+  return Number.isFinite(parsed) ? Math.max(1, parsed) : 1;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -30,8 +52,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 }
 
-export default async function UserProfilePage({ params }: PageProps) {
-  const { publicId } = await params;
+export default async function UserProfilePage({ params, searchParams }: PageProps) {
+  const [{ publicId }, query] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve({} as UserPageSearchParams),
+  ]);
+  const activeTab = parseActivityTab(query.tab);
+  const currentPage = parsePage(query.page);
   const result = await getPublicProfile(publicId);
 
   if (!result.success || !result.data) {
@@ -39,6 +66,11 @@ export default async function UserProfilePage({ params }: PageProps) {
   }
 
   const profile = result.data;
+  const activityResult = activeTab === 'comments'
+    ? await getUserCommentedPosts(publicId, { page: currentPage, limit: ITEMS_PER_PAGE })
+    : await getUserPosts(publicId, { page: currentPage, limit: ITEMS_PER_PAGE });
+  const activityPosts = activityResult.success ? activityResult.data ?? [] : [];
+  const activityTotalCount = activityResult.success ? activityResult.totalCount ?? 0 : 0;
 
   return (
     <main>
@@ -50,6 +82,10 @@ export default async function UserProfilePage({ params }: PageProps) {
       {/* 탭 + 리스트 + 페이지네이션 */}
       <UserActivityTabs
         publicId={publicId}
+        activeTab={activeTab}
+        currentPage={currentPage}
+        posts={activityPosts}
+        totalCount={activityTotalCount}
         initialPostCount={profile.post_count}
         initialCommentCount={profile.comment_count}
       />

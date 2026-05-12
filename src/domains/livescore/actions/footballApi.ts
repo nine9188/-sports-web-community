@@ -723,41 +723,51 @@ type StandingRow = {
   rank?: number;
 };
 
+const _fetchLeagueDetailsImpl = unstable_cache(
+  async (leagueId: string): Promise<LeagueDetails | null> => {
+    try {
+      const apiData = await fetchFromFootballApi('leagues', { id: leagueId, current: 'true' });
+
+      if (!apiData?.response?.[0]) {
+        return null;
+      }
+
+      const data = apiData.response[0];
+      const league = data.league;
+      const currentSeason = data.seasons?.find((season: { current?: boolean }) => season.current);
+
+      if (!league?.id) {
+        return null;
+      }
+
+      // 4590 표준: Storage URL 조회
+      const leagueLogoUrls = await getLeagueLogoUrls([league.id]);
+
+      const result = {
+        id: league.id,
+        name: league.name || '',
+        country: league.country || '',
+        logo: leagueLogoUrls[league.id] || '',  // 4590 표준: Storage URL
+        flag: league.flag || '',
+        season: currentSeason?.year || new Date().getFullYear(),
+        type: league.type || ''
+      };
+
+      return result;
+    } catch (error) {
+      console.error('리그 상세 정보 가져오기 실패:', error);
+      return null;
+    }
+  },
+  ['league-details-v1'],
+  { revalidate: 604800, tags: ['leagues'] }
+);
+
 // 리그 상세 정보 가져오기
+export const fetchCachedLeagueDetails = cache(_fetchLeagueDetailsImpl);
+
 export async function fetchLeagueDetails(leagueId: string): Promise<LeagueDetails | null> {
-  try {
-    const apiData = await fetchFromFootballApi('leagues', { id: leagueId, current: 'true' });
-
-    if (!apiData?.response?.[0]) {
-      return null;
-    }
-
-    const data = apiData.response[0];
-    const league = data.league;
-    const currentSeason = data.seasons?.find((season: { current?: boolean }) => season.current);
-
-    if (!league?.id) {
-      return null;
-    }
-
-    // 4590 표준: Storage URL 조회
-    const leagueLogoUrls = await getLeagueLogoUrls([league.id]);
-
-    const result = {
-      id: league.id,
-      name: league.name || '',
-      country: league.country || '',
-      logo: leagueLogoUrls[league.id] || '',  // 4590 표준: Storage URL
-      flag: league.flag || '',
-      season: currentSeason?.year || new Date().getFullYear(),
-      type: league.type || ''
-    };
-
-    return result;
-  } catch (error) {
-    console.error('리그 상세 정보 가져오기 실패:', error);
-    return null;
-  }
+  return fetchCachedLeagueDetails(leagueId);
 }
 
 // 시즌 완료 여부 확인 함수

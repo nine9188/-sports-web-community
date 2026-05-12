@@ -29,7 +29,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = params.q || ''
   const type = params.type || 'all'
   const sort = params.sort || 'latest'
-  const page = parseInt(params.page || '1', 10)
+  const parsedPage = parseInt(params.page || '1', 10)
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1
   
   // 페이지네이션 설정
   const limit = 20

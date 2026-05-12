@@ -5,6 +5,7 @@ import PeriodFilter from '@/domains/boards/components/common/PeriodFilter';
 import BoardDetailLayout from '@/domains/boards/components/layout/BoardDetailLayout';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getBoardListMetadataState } from '../_shared/boardListMetadata';
 
 // 동적 렌더링 강제 설정
@@ -80,7 +81,12 @@ export default async function PopularPostsPage({
 
     // 레이아웃 컴포넌트에 데이터 전달
     return (
-      <BoardDetailLayout
+      <>
+        <DaumWebmasterHints
+          title="인기글 - HOT 게시글"
+          content="4590 Football에서 가장 많이 읽히는 축구 커뮤니티 인기 게시글을 확인하세요."
+        />
+        <BoardDetailLayout
         boardData={popularBoardData}
         breadcrumbs={[]}
         teamData={null}
@@ -101,7 +107,8 @@ export default async function PopularPostsPage({
         }}
         filterComponent={<PeriodFilter currentPeriod={validPeriod} />}
         listVariant="card"
-      />
+        />
+      </>
     );
   } catch (error) {
     console.error("PopularPostsPage Error:", error);

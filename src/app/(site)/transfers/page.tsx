@@ -4,6 +4,7 @@ import { Container, ContainerHeader } from '@/shared/components/ui';
 import AdBanner from '@/shared/components/AdBanner';
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
 import { getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
@@ -11,21 +12,27 @@ import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd'
 import { TransferFilters, TransferLeagueGroups } from '@/domains/livescore/components/football/transfers';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 
-export async function generateMetadata(): Promise<Metadata> {
+type TransfersSearchParams = {
+  team?: string;
+  type?: 'in' | 'out' | 'all';
+  page?: string;
+};
+
+interface TransfersPageProps {
+  searchParams: Promise<TransfersSearchParams>;
+}
+
+export async function generateMetadata({ searchParams }: TransfersPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const hasQueryState = Boolean(params.team || params.type || params.page);
+
   return buildMetadata({
     title: '이적시장 - 해외/국내 이적 정보',
     description: '프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그 등 주요 리그의 이적시장 정보를 확인하세요.',
     path: '/transfers',
     keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', '4590football'],
+    noindex: hasQueryState,
   });
-}
-
-interface TransfersPageProps {
-  searchParams: Promise<{
-    team?: string;
-    type?: 'in' | 'out' | 'all';
-    page?: string;
-  }>;
 }
 
 export default async function TransfersPage({ searchParams }: TransfersPageProps) {
@@ -66,6 +73,10 @@ export default async function TransfersPage({ searchParams }: TransfersPageProps
 
   return (
     <div className="min-h-screen">
+      <DaumWebmasterHints
+        title="이적시장 - 축구 이적 정보"
+        content="프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그 등 주요 리그의 축구 이적시장 정보를 확인하세요."
+      />
       <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
       <TrackPageVisit id="transfers" slug="transfers" name="이적시장" />
 

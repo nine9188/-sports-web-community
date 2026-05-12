@@ -4,6 +4,7 @@ import { fetchMatchesByDate } from '@/domains/livescore/actions/footballApi';
 import { countLiveMatches } from '@/domains/livescore/constants/match-status';
 import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import { buildMetadata } from '@/shared/utils/metadataNew';
+import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 
 export async function generateMetadata({
@@ -94,6 +95,10 @@ export default async function FootballLiveScorePage({
     <>
       <TrackPageVisit id="livescore" slug="livescore/football" name="라이브스코어" />
       <h1 className="sr-only">오늘 축구 라이브스코어 - 실시간 경기결과</h1>
+      <DaumWebmasterHints
+        title="축구 라이브스코어 - 실시간 경기 결과"
+        content={`${dateParam} 축구 경기 일정, 실시간 스코어, 경기 결과를 확인하세요. 현재 진행 중인 라이브 경기는 ${liveMatchCount}개입니다.`}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -1,5 +1,3 @@
-'use client'
-
 interface SearchHeaderProps {
   title?: string
   description?: string

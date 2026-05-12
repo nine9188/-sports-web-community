@@ -10,10 +10,10 @@ export default async function PlayerRedirect({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; page?: string }>;
 }) {
   const { id } = await params;
-  const { tab } = await searchParams;
+  const { tab, page } = await searchParams;
 
   const slug = await resolvePlayerCanonicalSlug(id);
 
@@ -21,6 +21,10 @@ export default async function PlayerRedirect({
     notFound();
   }
 
-  const tabParam = tab ? `?tab=${tab}` : '';
-  permanentRedirect(`/livescore/football/player/${id}/${encodeURIComponent(slug)}${tabParam}`);
+  const queryParams = new URLSearchParams();
+  if (tab) queryParams.set('tab', tab);
+  if (page) queryParams.set('page', page);
+  const query = queryParams.toString();
+
+  permanentRedirect(`/livescore/football/player/${id}/${encodeURIComponent(slug)}${query ? `?${query}` : ''}`);
 }

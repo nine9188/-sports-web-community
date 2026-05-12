@@ -1,16 +1,35 @@
 import { siteConfig } from '@/shared/config';
-import { siteUrl } from '@/shared/seo/sitemap';
+import {
+  getMatchSitemapCount,
+  getPlayerSitemapCount,
+  getPostSitemapCount,
+  getTeamSitemapCount,
+  sitemapPageCount,
+  siteUrl,
+} from '@/shared/seo/sitemap';
 
-function generatedSitemapUrl(path: string) {
-  return siteUrl(`${path}/sitemap/0.xml`);
+function generatedSitemapUrls(path: string, total: number): string[] {
+  return sitemapPageCount(total).map(({ id }) => siteUrl(`${path}/sitemap/${id}.xml`));
 }
 
 const DAUM_WEBMASTER_PIN =
   '#DaumWebMasterTool:01765042dd66f6f3757a98813cab0c841580123d8059d5895751b2575132466f:Qc8LDKHH1AV7wtQw2Sv8Rw==';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
-export function GET() {
+export async function GET() {
+  const [
+    postSitemapCount,
+    teamSitemapCount,
+    playerSitemapCount,
+    matchSitemapCount,
+  ] = await Promise.all([
+    getPostSitemapCount(),
+    getTeamSitemapCount(),
+    getPlayerSitemapCount(),
+    getMatchSitemapCount(),
+  ]);
+
   const lines = [
     'User-agent: *',
     'Allow: /',
@@ -81,11 +100,11 @@ export function GET() {
     `Host: ${new URL(siteConfig.url).host}`,
     `Sitemap: ${siteUrl('/sitemap.xml')}`,
     `Sitemap: ${siteUrl('/boards/sitemap.xml')}`,
-    `Sitemap: ${generatedSitemapUrl('/boards/posts')}`,
+    ...generatedSitemapUrls('/boards/posts', postSitemapCount).map((url) => `Sitemap: ${url}`),
     `Sitemap: ${siteUrl('/livescore/football/leagues/sitemap.xml')}`,
-    `Sitemap: ${generatedSitemapUrl('/livescore/football/team')}`,
-    `Sitemap: ${generatedSitemapUrl('/livescore/football/player')}`,
-    `Sitemap: ${generatedSitemapUrl('/livescore/football/match')}`,
+    ...generatedSitemapUrls('/livescore/football/team', teamSitemapCount).map((url) => `Sitemap: ${url}`),
+    ...generatedSitemapUrls('/livescore/football/player', playerSitemapCount).map((url) => `Sitemap: ${url}`),
+    ...generatedSitemapUrls('/livescore/football/match', matchSitemapCount).map((url) => `Sitemap: ${url}`),
     `Sitemap: ${siteUrl('/transfers/sitemap.xml')}`,
     `Sitemap: ${siteUrl('/shop/sitemap.xml')}`,
     '',

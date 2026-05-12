@@ -1,5 +1,3 @@
-'use client';
-
 import { PublicProfile } from '../types';
 import UserIcon from '@/shared/components/UserIcon';
 import ReportButton from '@/domains/reports/components/ReportButton';

@@ -66,37 +66,54 @@ fixtures 2페이지 같은 상태에서 slug 정규화가 일어나면 페이지
 - `PlayerFixtures.tsx`는 `page` query를 직접 갱신한다.
 - `PlayerPageClient`는 현재는 client wrapper지만 자체 훅은 없다.
 
-## 수정 방향
+## 수정 내용
 
 ### 1. `tab` / `page` 상태 URL을 noindex로 정리
 
-- `generateMetadata()`에 `searchParams`를 받아 `tab` 또는 `page` 존재 시 `noindex`를 넣는다.
-- 기본 canonical은 정규화된 slug URL로 유지한다.
-- fixtures paging과 다른 탭 상태 URL은 검색 노출이 아니라 탐색용 상태로만 취급한다.
+`src/app/(site)/livescore/football/player/[id]/[slug]/page.tsx`의 `generateMetadata()`가 `searchParams`를 받도록 수정했다.
+`tab` 또는 `page` query가 있으면 `noindex`를 넣는다.
+
+적용 대상:
+- `/livescore/football/player/[id]/[slug]?tab=fixtures`
+- `/livescore/football/player/[id]/[slug]?tab=fixtures&page=2`
+- `/livescore/football/player/[id]/[slug]?tab=trophies`
+- `/livescore/football/player/[id]/[slug]?tab=transfers`
+- `/livescore/football/player/[id]/[slug]?tab=injuries`
+- `/livescore/football/player/[id]/[slug]?tab=rankings`
+
+기본 canonical은 정규화된 slug URL로 유지한다.
+fixtures paging과 다른 탭 상태 URL은 검색 노출이 아니라 탐색용 상태로만 취급한다.
 
 ### 2. slug 정규화 리다이렉트에서 `page` 상태도 보존한다
 
-- `/player/[id]`에서 canonical slug로 보낼 때 `tab`뿐 아니라 `page`도 유지한다.
-- 특히 fixtures pagination 상태가 깨지지 않도록 query 보존 규칙을 통일한다.
+`src/app/(site)/livescore/football/player/[id]/page.tsx`가 canonical slug로 리다이렉트할 때 `tab`뿐 아니라 `page`도 유지하도록 수정했다.
+
+또한 `[id]/[slug]/page.tsx`에서 slug가 canonical과 다를 때도 query 생성 helper를 사용해 `fixtures` 탭의 `page` 상태를 같이 보존한다.
 
 ### 3. `fetchPlayerFullData()` 호출 구조를 route 기준으로 다시 본다
 
-- metadata와 본문에서 같은 함수를 각각 호출하는 구조를 줄일 수 있는지 검토한다.
-- 최소한 `generateMetadata()`와 page 본문이 같은 핵심 선수 정보는 같은 캐시 키를 공유해야 한다.
-- `fetchPlayerFullData()` 상위에도 캐시 래퍼를 두는 방안을 검토한다.
+metadata에서 `fetchPlayerFullData()`를 직접 호출하던 구조를 줄였다.
+`generateMetadata()`는 전체 탭 로더 대신 `fetchCachedPlayerData()`로 선수 기본 데이터만 읽도록 바꿨다.
+
+본문은 여전히 현재 탭에 필요한 데이터만 `fetchPlayerFullData()`로 준비한다.
+이제 metadata가 탭별 통합 로더를 별도로 한 번 더 호출하지 않는다.
 
 ### 4. `PlayerPageClient`의 wrapper 역할을 서버로 내린다
 
-- `PlayerPageClient`는 Server Component로 바꿀 수 있다.
-- 실제 client island는 `PlayerHeader`, `PlayerTabNavigation`, `TabContent` 같은 하위 interactive 컴포넌트만 남긴다.
-- 그렇게 하면 player detail의 client boundary가 wrapper 수준에서 한 단계 줄어든다.
+`src/domains/livescore/components/football/player/PlayerPageClient.tsx`의 `"use client"`를 제거했다.
+`PlayerPageClient`는 직접 훅이나 브라우저 API를 쓰지 않으므로 Server Component로 렌더링한다.
+
+client island로 남는 부분:
+- `PlayerHeader.tsx`
+- `TabNavigation.tsx`
+- `TabContent.tsx`
 
 ## 검증
 
-- 코드 수정 전 문서만 작성했다.
-- 아직 `typecheck` / `build`는 다시 돌리지 않았다.
+- `npm.cmd run typecheck` 통과
+- `npm.cmd run build` 통과
 
 ## 결론
 
-11번 선수 상세는 탭/페이지 query 정책, metadata 중복 호출, 그리고 불필요하게 남은 client wrapper가 핵심이다.
-먼저 `tab`/`page` URL을 검색 정책에서 정리하고, 그 다음 `PlayerPageClient`를 server shell로 내리는 순서가 맞다.
+11번 선수 상세는 수정 완료했다.
+핵심 수정은 `tab`/`page` query URL을 `noindex`로 정리하고, slug 정규화에서 pagination 상태를 보존하며, metadata의 무거운 통합 로더 호출과 `PlayerPageClient` client wrapper를 줄인 것이다.
