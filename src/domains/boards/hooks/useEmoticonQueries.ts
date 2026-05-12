@@ -5,11 +5,12 @@ import {
   getEmoticonShopData,
   getPickerData,
   getPackDetail,
+  type EmoticonShopData,
 } from '@/domains/boards/actions/emoticons';
 
-function useAsyncData<T>(loader: () => Promise<T>, enabled = true) {
-  const [data, setData] = useState<T | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(enabled);
+function useAsyncData<T>(loader: () => Promise<T>, enabled = true, initialData?: T) {
+  const [data, setData] = useState<T | undefined>(initialData);
+  const [isLoading, setIsLoading] = useState(enabled && initialData === undefined);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [version, setVersion] = useState(0);
@@ -60,8 +61,9 @@ function useAsyncData<T>(loader: () => Promise<T>, enabled = true) {
   };
 }
 
-export function useEmoticonShopData() {
-  return useAsyncData(useCallback(() => getEmoticonShopData(), []));
+export function useEmoticonShopData(options: { enabled?: boolean; initialData?: EmoticonShopData } = {}) {
+  const enabled = options.enabled ?? true;
+  return useAsyncData(useCallback(() => getEmoticonShopData(), []), enabled, options.initialData);
 }
 
 export function usePickerData() {

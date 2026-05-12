@@ -11,7 +11,8 @@
 
 주의:
 - `hydration 0`을 목표로 하지 않는다. 필요한 island만 hydrate하는 쪽이 목표다.
-- `loading.tsx`와 `prefetch`는 기본 금지 항목이 아니다. 비용이 있거나 UX에 불리할 때만 제한한다.
+- `loading.tsx`는 사용하지 않는다. 서버에서 바로 그릴 수 있는 shell과 필요한 `Suspense` 범위만 검토한다.
+- 내부 이동의 `prefetch`는 사용하지 않는다. `Link`를 유지하되 비용이 있는 자동 프리페치가 발생하지 않게 `prefetch={false}`를 명시한다.
 
 ## 1. 기본 구조
 
@@ -43,7 +44,7 @@
 
 ## 4. loading / streaming
 
-- 로딩 시간이 의미 있는 route에만 `loading.tsx`를 둔다.
+- route segment에 `loading.tsx`를 두지 않는다.
 - 전체 페이지를 한 번에 client로 넘기지 않는다.
 - 필요한 부분만 `Suspense`로 스트리밍한다.
 - 서버에서 바로 그릴 수 있는 shell은 서버에서 먼저 렌더링한다.
@@ -54,8 +55,8 @@
 ## 5. 이동 / prefetch
 
 - 내부 이동은 기본적으로 `Link`를 사용한다.
-- `prefetch`는 기본 허용이지만, 비용이 큰 상세 페이지나 무거운 데이터 경로는 선택적으로 끈다.
-- 필요성이 확인되면 그때만 예외 처리한다.
+- 내부 `Link`에는 `prefetch={false}`를 명시한다.
+- 자동 프리페치가 켜지는 링크가 남아 있으면 수정 대상으로 본다.
 
 공식 문서:
 - Link: https://nextjs.org/docs/app/api-reference/components/link

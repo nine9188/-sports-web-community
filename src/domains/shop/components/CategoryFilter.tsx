@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { useSearchParams, usePathname } from 'next/navigation'
+import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { ShopItem } from '../types'
 import ItemGrid from '@/domains/shop/components/ItemGrid'
 import EmoticonShopSection from '@/domains/shop/components/EmoticonShopSection'
+import type { EmoticonShopData } from '@/domains/boards/actions/emoticons'
 import { Button, Container, ContainerContent, Pagination, TabList } from '@/shared/components/ui'
 import AdBanner from '@/shared/components/AdBanner'
 
@@ -40,6 +41,10 @@ interface CategoryFilterProps {
   loginNotice?: React.ReactNode
   initialActiveCategory?: string
   emoticonCategoryId?: number | null
+  currentPage?: number
+  totalPages?: number
+  serverPaginated?: boolean
+  initialEmoticonData?: EmoticonShopData
 }
 
 export default function CategoryFilter({
@@ -50,24 +55,32 @@ export default function CategoryFilter({
   categories,
   loginNotice,
   initialActiveCategory,
-  emoticonCategoryId
+  emoticonCategoryId,
+  currentPage: serverCurrentPage = 1,
+  totalPages: serverTotalPages,
+  serverPaginated = false,
+  initialEmoticonData
 }: CategoryFilterProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
+  const router = useRouter()
+  const activeCategory = initialActiveCategory ?? (searchParams.get('cat') ?? 'all')
 
   // 초기 탭 결정: URL 파라미터 기반
-  const getInitialTab = (): ShopTab => {
-    const cat = initialActiveCategory ?? searchParams.get('cat') ?? 'all'
+  const activeTab = useMemo<ShopTab>(() => {
+    const cat = activeCategory
     if (emoticonCategoryId != null && cat === String(emoticonCategoryId)) return 'emoticons'
     if (cat === String(SPECIAL_ITEMS_CATEGORY_ID)) return 'special'
     return 'icons'
-  }
+  }, [activeCategory, emoticonCategoryId])
 
-  const [activeTab, setActiveTab] = useState<ShopTab>(getInitialTab)
-  const [activeCategory, setActiveCategory] = useState<string>(initialActiveCategory ?? (searchParams.get('cat') ?? 'all'))
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(serverCurrentPage)
   const [isMobile, setIsMobile] = useState(false)
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    setCurrentPage(serverCurrentPage)
+  }, [serverCurrentPage])
 
   // 모바일 체크
   useEffect(() => {
@@ -134,25 +147,16 @@ export default function CategoryFilter({
       parent.subcategories.forEach(sub => allowedIds.add(sub.id))
     }
     return items.filter(item => item.category_id != null && allowedIds.has(item.category_id as number))
-  }, [items, activeCategory, sortedCategories])
+  }, [items, activeCategory, sortedCategories, emoticonCategoryId])
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [activeCategory])
-
-  const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE)
+  const totalPages = serverPaginated
+    ? (serverTotalPages ?? Math.ceil(items.length / PAGE_SIZE))
+    : Math.ceil(filteredItems.length / PAGE_SIZE)
   const paginatedItems = useMemo(() => {
+    if (serverPaginated) return items
     const start = (currentPage - 1) * PAGE_SIZE
     return filteredItems.slice(start, start + PAGE_SIZE)
-  }, [filteredItems, currentPage])
-
-  useEffect(() => {
-    const catFromUrl = searchParams.get('cat') ?? 'all'
-    if (catFromUrl !== activeCategory) {
-      setActiveCategory(catFromUrl)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [filteredItems, currentPage, items, serverPaginated])
 
   const updateUrlCategory = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -164,27 +168,22 @@ export default function CategoryFilter({
     }
     const query = params.toString()
     const href = query ? `${pathname}?${query}` : pathname
-    window.history.replaceState(null, '', href)
-  }, [searchParams, pathname])
+    router.push(href, { scroll: false })
+  }, [searchParams, pathname, router])
 
   const handleSelect = useCallback((id: string) => {
-    setActiveCategory(id)
     updateUrlCategory(id)
   }, [updateUrlCategory])
 
   // 탭 전환 핸들러
   const handleTabChange = useCallback((tab: ShopTab) => {
-    setActiveTab(tab)
     setCurrentPage(1)
     setMobileDropdownOpen(false)
     if (tab === 'emoticons' && emoticonCategoryId != null) {
-      setActiveCategory(String(emoticonCategoryId))
       updateUrlCategory(String(emoticonCategoryId))
     } else if (tab === 'special') {
-      setActiveCategory(String(SPECIAL_ITEMS_CATEGORY_ID))
       updateUrlCategory(String(SPECIAL_ITEMS_CATEGORY_ID))
     } else {
-      setActiveCategory('all')
       updateUrlCategory('all')
     }
   }, [emoticonCategoryId, updateUrlCategory])
@@ -351,6 +350,7 @@ export default function CategoryFilter({
             userId={userId}
             userItems={userItems}
             userPoints={userPoints}
+            initialData={initialEmoticonData}
           />
         ) : (
           <>
@@ -366,8 +366,8 @@ export default function CategoryFilter({
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                mode="button"
+                onPageChange={serverPaginated ? undefined : setCurrentPage}
+                mode={serverPaginated ? 'url' : 'button'}
                 withMargin={false}
               />
             )}

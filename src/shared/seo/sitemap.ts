@@ -63,7 +63,13 @@ type FixtureRow = {
 };
 
 type ShopCategoryRow = {
+  id: number;
   slug: string | null;
+  parent_id: number | null;
+};
+
+type ShopItemCategoryRow = {
+  category_id: number | null;
 };
 
 type SupabaseQueryResult = {
@@ -199,18 +205,40 @@ export async function getLeagueSitemap(): Promise<MetadataRoute.Sitemap> {
 
 export async function getShopSitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = getSupabaseAdmin();
-  const { data, error } = await runSitemapQuery('shop_categories query', () => supabase
+  const [{ data, error }, { data: itemCategories, error: itemError }] = await Promise.all([
+    runSitemapQuery('shop_categories query', () => supabase
     .from('shop_categories')
-    .select('slug')
-    .eq('is_active', true));
+    .select('id, slug, parent_id')
+      .eq('is_active', true)),
+    runSitemapQuery('shop_items category query', () => supabase
+      .from('shop_items')
+      .select('category_id')
+      .eq('is_active', true)),
+  ]);
 
   if (error) {
     console.error('[sitemap] shop_categories query failed:', error);
     return [];
   }
 
-  return ((data || []) as ShopCategoryRow[])
-    .filter((category) => Boolean(category.slug))
+  if (itemError) {
+    console.error('[sitemap] shop_items category query failed:', itemError);
+  }
+
+  const categories = (data || []) as ShopCategoryRow[];
+  const parentById = new Map(categories.map((category) => [category.id, category.parent_id]));
+  const categoryIdsWithItems = new Set<number>();
+
+  for (const row of (itemCategories || []) as ShopItemCategoryRow[]) {
+    let categoryId = row.category_id;
+    while (categoryId) {
+      categoryIdsWithItems.add(categoryId);
+      categoryId = parentById.get(categoryId) ?? null;
+    }
+  }
+
+  return categories
+    .filter((category) => Boolean(category.slug) && categoryIdsWithItems.has(category.id))
     .map((category): SitemapEntry => ({
       url: siteUrl(`/shop/${category.slug}`),
       changeFrequency: 'weekly',

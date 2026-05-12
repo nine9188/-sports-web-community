@@ -9,7 +9,6 @@ import {
 } from "@/domains/shop/actions/actions";
 import CategoryFilter from "@/domains/shop/components/CategoryFilter";
 import type { ShopItem } from "@/domains/shop/types";
-import { Pagination } from "@/shared/components/ui";
 import {
   Container,
   ContainerHeader,
@@ -28,9 +27,19 @@ interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
+function readQueryValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parsePage(value: string | string[] | undefined): number {
+  const parsed = parseInt(readQueryValue(value) || "1", 10);
+  return Number.isFinite(parsed) ? Math.max(1, parsed) : 1;
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category } = await params;
-  const sp = await (searchParams ?? Promise.resolve({})) as Record<string, string | undefined>;
+  const sp = await (searchParams ??
+    Promise.resolve({} as Record<string, string | string[] | undefined>));
   const categoryData = await getShopCategory(category);
 
   // 카테고리 없음 → noindex
@@ -54,7 +63,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { total } = await getCategoryItemsPaginated(allCategoryIds, 1, 1);
 
   // 필터/정렬 파라미터 체크 (cat, page 등)
-  const hasFilterParams = sp["cat"] || sp["page"];
+  const hasFilterParams = readQueryValue(sp["cat"]) || readQueryValue(sp["page"]);
 
   // 아이템 0개 → noindex
   if (total === 0) {
@@ -76,112 +85,80 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
-  try {
-    const { category } = await params;
-    const sp = await (searchParams ??
-      Promise.resolve({} as Record<string, string | string[] | undefined>));
-    const pageParam = Array.isArray(sp["page"]) ? sp["page"][0] : sp["page"];
-    const catParam = Array.isArray(sp["cat"]) ? sp["cat"][0] : sp["cat"];
-    const page = Math.max(1, Number(pageParam ?? "1") || 1);
-    const pageSize = 24;
+  const { category } = await params;
+  const sp = await (searchParams ??
+    Promise.resolve({} as Record<string, string | string[] | undefined>));
+  const page = parsePage(sp["page"]);
+  const catParam = readQueryValue(sp["cat"]);
+  const pageSize = 24;
+  const currentCategory = await getShopCategory(category);
 
-    // 현재 카테고리와 하위 카테고리 정보 가져오기
-    const currentCategory = await getShopCategory(category);
+  if (!currentCategory) {
+    notFound();
+  }
 
-    if (!currentCategory) {
-      notFound();
-    }
-
-    // 모든 관련 카테고리 ID 수집 (자식 + 손자 포함)
-    const allCategoryIdsSet = new Set<number>();
-    allCategoryIdsSet.add(currentCategory.id);
-    (currentCategory.subcategories || []).forEach((child) => {
-      allCategoryIdsSet.add(child.id);
-      (child.subcategories || []).forEach((grandchild) => {
-        allCategoryIdsSet.add(grandchild.id);
-      });
+  const allCategoryIdsSet = new Set<number>();
+  allCategoryIdsSet.add(currentCategory.id);
+  (currentCategory.subcategories || []).forEach((child) => {
+    allCategoryIdsSet.add(child.id);
+    (child.subcategories || []).forEach((grandchild) => {
+      allCategoryIdsSet.add(grandchild.id);
     });
-    const allCategoryIds = Array.from(allCategoryIdsSet);
+  });
+  const allCategoryIds = Array.from(allCategoryIdsSet);
+  const supabase = await getSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    // 사용자 정보 및 아이템 가져오기
-    const supabase = await getSupabaseServer();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // catParam이 있으면 해당 카테고리로 범위 축소 (루트=자식 포함, 서브=해당 서브만)
-    let categoryIdsForFetch = allCategoryIds;
-    if (catParam && catParam !== "all") {
-      const catId = Number(catParam);
-      if (!Number.isNaN(catId)) {
-        if (catId === currentCategory.id) {
-          categoryIdsForFetch = allCategoryIds;
-        } else if (allCategoryIdsSet.has(catId)) {
-          categoryIdsForFetch = [catId];
-        }
+  let categoryIdsForFetch = allCategoryIds;
+  if (catParam && catParam !== "all") {
+    const catId = Number(catParam);
+    if (Number.isFinite(catId)) {
+      if (catId === currentCategory.id) {
+        categoryIdsForFetch = allCategoryIds;
+      } else if (allCategoryIdsSet.has(catId)) {
+        categoryIdsForFetch = [catId];
       }
     }
+  }
 
-    const { items, total } = await getCategoryItemsPaginated(
-      categoryIdsForFetch,
-      page,
-      pageSize,
-    );
+  const [{ items, total }, userPoints, userItems] = await Promise.all([
+    getCategoryItemsPaginated(categoryIdsForFetch, page, pageSize),
+    getUserPoints(user?.id),
+    getUserItems(user?.id),
+  ]);
 
-    // 사용자 포인트 및 보유 아이템 가져오기
-    const userPoints = await getUserPoints(user?.id);
-    const userItems = await getUserItems(user?.id);
-
-    return (
-      <div className="container mx-auto">
-        <DaumWebmasterHints
-          title={`${currentCategory.name} - 포인트 상점`}
-          content={currentCategory.description || `${currentCategory.name} 아이템을 확인하고 포인트로 구매하세요.`}
-        />
-        <Container className="mb-4">
-          <ContainerHeader>
-            <ContainerTitle>{currentCategory.name}</ContainerTitle>
-          </ContainerHeader>
-          {currentCategory.description && (
-            <div className="px-4 py-3">
-              <p className="text-gray-700 dark:text-gray-300 text-[13px]">
-                {currentCategory.description}
-              </p>
-            </div>
-          )}
-        </Container>
-
-        <CategoryFilter
-          items={items as ShopItem[]}
-          userItems={userItems}
-          userPoints={userPoints}
-          userId={user?.id}
-          categories={(currentCategory.subcategories || []).map(({ id, name, display_order }) => ({ id, name, display_order: display_order ?? undefined }))}
-          initialActiveCategory={catParam ?? "all"}
-        />
-
-        {total > pageSize && (
-          <Pagination
-            currentPage={page}
-            totalPages={Math.ceil(total / pageSize)}
-            mode="url"
-            withMargin={true}
-          />
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error("Error:", error);
-    return (
-      <div className="container mx-auto">
-        <Container>
-          <div className="px-4 py-8 text-center">
-            <p className="text-gray-700 dark:text-gray-300">
-              오류가 발생했습니다.
+  return (
+    <div className="container mx-auto">
+      <DaumWebmasterHints
+        title={`${currentCategory.name} - 포인트 상점`}
+        content={currentCategory.description || `${currentCategory.name} 아이템을 확인하고 포인트로 구매하세요.`}
+      />
+      <Container className="mb-4">
+        <ContainerHeader>
+          <ContainerTitle>{currentCategory.name}</ContainerTitle>
+        </ContainerHeader>
+        {currentCategory.description && (
+          <div className="px-4 py-3">
+            <p className="text-gray-700 dark:text-gray-300 text-[13px]">
+              {currentCategory.description}
             </p>
           </div>
-        </Container>
-      </div>
-    );
-  }
+        )}
+      </Container>
+
+      <CategoryFilter
+        items={items as ShopItem[]}
+        userItems={userItems}
+        userPoints={userPoints}
+        userId={user?.id}
+        categories={(currentCategory.subcategories || []).map(({ id, name, display_order }) => ({ id, name, display_order: display_order ?? undefined }))}
+        initialActiveCategory={catParam ?? "all"}
+        currentPage={page}
+        totalPages={Math.ceil(total / pageSize)}
+        serverPaginated
+      />
+    </div>
+  );
 }

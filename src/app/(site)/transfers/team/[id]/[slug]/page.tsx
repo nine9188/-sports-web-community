@@ -43,6 +43,19 @@ async function getTeamContext(id: string, slug?: string) {
   };
 }
 
+function buildTeamTransfersDescription({
+  countryName,
+  leagueName,
+  teamName,
+}: {
+  countryName?: string | null;
+  leagueName: string;
+  teamName: string;
+}) {
+  const leagueContext = countryName ? `${countryName} ${leagueName}` : leagueName;
+  return `${leagueContext} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.`;
+}
+
 export async function generateMetadata({ params, searchParams }: TeamTransfersPageProps): Promise<Metadata> {
   const [{ id, slug }, query] = await Promise.all([params, searchParams]);
   const context = await getTeamContext(id, slug);
@@ -59,12 +72,12 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
   const teamName = context.team.name_ko || context.team.name_en;
   const leagueName = context.league?.name_ko || context.league?.name || '축구 리그';
   const countryName = context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en;
-  const leagueContext = countryName ? `${countryName} ${leagueName}` : leagueName;
+  const description = buildTeamTransfersDescription({ countryName, leagueName, teamName });
   const hasQueryState = Boolean(query.type || query.page);
 
   return buildMetadata({
     title: `${teamName} 이적시장`,
-    description: `${leagueContext} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.`,
+    description,
     path: getTransferTeamHref(context.team),
     keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, '축구 이적시장', '4590football'],
     noindex: hasQueryState,
@@ -121,6 +134,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
   const leagueName = context.league?.name_ko || context.league?.name || '축구 리그';
   const countryName = context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en;
   const teamUrl = getTransferTeamHref(context.team);
+  const description = buildTeamTransfersDescription({ countryName, leagueName, teamName });
   const breadcrumbSchema = buildBreadcrumbJsonLd({
     items: [
       { name: '홈', url: '/' },
@@ -128,14 +142,29 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
       { name: teamName, url: teamUrl },
     ],
   });
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `https://4590football.com${teamUrl}#webpage`,
+    url: `https://4590football.com${teamUrl}`,
+    name: `${teamName} 이적시장`,
+    description,
+    inLanguage: 'ko-KR',
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': 'https://4590football.com#website',
+      name: '4590 Football',
+    },
+  };
 
   return (
     <div className="min-h-screen">
       <DaumWebmasterHints
         title={`${teamName} 이적시장`}
-        content={`${countryName ? `${countryName} ` : ''}${leagueName} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.`}
+        content={description}
       />
       <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
+      <script type="application/ld+json" {...jsonLdScriptProps(webPageSchema)} />
       <TrackPageVisit id={`transfers-team-${context.teamId}`} slug={context.expectedSlug} name={`${teamName} 이적시장`} />
 
       <Container>
@@ -156,9 +185,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
         </ContainerHeader>
         <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
           <p className="daum-wm-content text-[13px] text-gray-700 dark:text-gray-300">
-            {context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en || ''}
-            {' '}
-            {context.league?.name_ko || context.league?.name || '축구 리그'} {teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.
+            {description}
           </p>
         </div>
       </Container>

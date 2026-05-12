@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Search, X } from 'lucide-react'
 import { Button, Container, ContainerContent, Pagination } from '@/shared/components/ui'
-import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons'
+import { type EmoticonPackInfo, type EmoticonShopData } from '@/domains/boards/actions/emoticons'
 import { useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries'
 import EmoticonPackCard from './EmoticonPackCard'
 import EmoticonPackDetailModal from './EmoticonPackDetailModal'
@@ -23,12 +23,17 @@ interface EmoticonShopSectionProps {
   userId?: string
   userItems: number[]
   userPoints: number
+  initialData?: EmoticonShopData
 }
 
 export default function EmoticonShopSection({
   userId,
+  initialData,
 }: EmoticonShopSectionProps) {
-  const { data: shopData, isLoading } = useEmoticonShopData()
+  const { data: shopData, isLoading } = useEmoticonShopData({
+    enabled: !initialData,
+    initialData,
+  })
   const [subFilter, setSubFilter] = useState<SubFilter>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null)

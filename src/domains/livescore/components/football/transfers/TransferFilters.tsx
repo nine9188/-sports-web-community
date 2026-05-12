@@ -120,7 +120,7 @@ export default function TransferFilters({ currentFilters, leagueTeamGroups }: Tr
   };
 
   return (
-    <Container className="overflow-visible">
+    <Container className="overflow-visible" data-nosnippet>
       <ContainerHeader>
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 'use server'
 
+import { cache } from 'react'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { ShopCategory } from '@/domains/shop/types'
 import { revalidatePath } from 'next/cache'
@@ -9,7 +10,7 @@ import { logUserAction } from '@/shared/actions/log-actions'
 /**
  * 상점 카테고리 조회
  */
-export async function getShopCategories() {
+const getCachedShopCategories = cache(async () => {
   const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
@@ -20,12 +21,16 @@ export async function getShopCategories() {
   
   if (error) throw new Error('카테고리 목록 조회 실패')
   return data || []
+})
+
+export async function getShopCategories() {
+  return getCachedShopCategories()
 }
 
 /**
  * 특정 카테고리 조회
  */
-export async function getShopCategory(slug: string) {
+const getCachedShopCategory = cache(async (slug: string) => {
   const supabase = await getSupabaseServer()
   
   const { data, error } = await supabase
@@ -75,6 +80,10 @@ export async function getShopCategory(slug: string) {
     ;(data as unknown as ShopCategory).subcategories = level2
   }
   return data
+})
+
+export async function getShopCategory(slug: string) {
+  return getCachedShopCategory(slug)
 }
 
 /**
@@ -98,12 +107,16 @@ export async function getCategoryItems(categoryIds: number[]) {
 /**
  * 카테고리 아이템 페이지네이션 조회
  */
-export async function getCategoryItemsPaginated(
-  categoryIds: number[],
+const getCachedCategoryItemsPaginated = cache(async (
+  categoryIdsKey: string,
   page: number,
   pageSize: number
-) {
+ ) => {
   const supabase = await getSupabaseServer()
+  const categoryIds = categoryIdsKey
+    .split(',')
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id))
 
   const currentPage = Number.isFinite(page) && page > 0 ? page : 1
   const limit = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 24
@@ -127,6 +140,28 @@ export async function getCategoryItemsPaginated(
     page: currentPage,
     pageSize: limit
   }
+})
+
+export async function getCategoryItemsPaginated(
+  categoryIds: number[],
+  page: number,
+  pageSize: number
+) {
+  const categoryIdsKey = [...new Set(categoryIds)]
+    .filter((id) => Number.isFinite(id))
+    .sort((a, b) => a - b)
+    .join(',')
+
+  if (!categoryIdsKey) {
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize,
+    }
+  }
+
+  return getCachedCategoryItemsPaginated(categoryIdsKey, page, pageSize)
 }
 
 /**

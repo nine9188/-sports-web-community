@@ -41,6 +41,14 @@ export interface EmoticonPackInfo {
   created_at: string | null
 }
 
+export interface EmoticonShopData {
+  packs: EmoticonPackInfo[]
+  ownedItemIds: number[]
+  userPoints: number
+  isLoggedIn: boolean
+  userId: string | null
+}
+
 export interface EmoticonFromDB {
   id: number
   pack_id: string
@@ -240,7 +248,7 @@ export async function getUserOwnedEmoticonPacks(): Promise<number[]> {
 
 // ── 상점 뷰 통합 데이터 ──
 
-export async function getEmoticonShopData() {
+export async function getEmoticonShopData(): Promise<EmoticonShopData> {
   const supabase = await getSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
