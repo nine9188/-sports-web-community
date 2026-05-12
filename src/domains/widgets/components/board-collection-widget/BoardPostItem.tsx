@@ -30,7 +30,7 @@ function PostMeta({ post }: { post: BoardPost }) {
   const likes = post.likes ?? 0;
 
   return (
-    <span className="mt-1 flex w-full min-w-0 items-center justify-between gap-3 text-[11px] leading-none text-gray-500 dark:text-gray-400">
+    <span className="mt-1 flex w-full min-w-0 items-center justify-start gap-1.5 text-[11px] leading-none text-gray-500 dark:text-gray-400">
       <span className="flex min-w-0 items-center gap-1.5">
         {board && (
           <>
@@ -43,6 +43,7 @@ function PostMeta({ post }: { post: BoardPost }) {
         <span className="flex-shrink-0">{date}</span>
       </span>
       <span className="flex flex-shrink-0 items-center gap-1.5">
+        <span className="text-gray-300 dark:text-gray-600">|</span>
         <span>조회 {views}</span>
         <span className="text-gray-300 dark:text-gray-600">|</span>
         <span>추천 {likes}</span>

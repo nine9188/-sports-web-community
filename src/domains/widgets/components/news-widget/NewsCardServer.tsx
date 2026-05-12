@@ -23,7 +23,7 @@ function NewsMeta({ item, compact = false }: { item: NewsItem; compact?: boolean
   const likes = item.likes ?? 0;
 
   return (
-    <div className="mt-2 flex w-full min-w-0 items-center justify-between gap-3 text-[11px] leading-none text-gray-500 dark:text-gray-400">
+    <div className="mt-2 flex w-full min-w-0 items-center justify-start gap-1.5 text-[11px] leading-none text-gray-500 dark:text-gray-400">
       <div className="flex min-w-0 items-center gap-1.5">
         <span className="truncate" title={source}>{source}</span>
         <span className="flex-shrink-0 text-gray-300 dark:text-gray-600">|</span>
@@ -36,6 +36,7 @@ function NewsMeta({ item, compact = false }: { item: NewsItem; compact?: boolean
         <span className="flex-shrink-0">{date}</span>
       </div>
       <div className="flex flex-shrink-0 items-center gap-1.5">
+        <span className="text-gray-300 dark:text-gray-600">|</span>
         <span>조회 {views}</span>
         <span className="text-gray-300 dark:text-gray-600">|</span>
         <span>추천 {likes}</span>

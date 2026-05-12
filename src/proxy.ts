@@ -12,6 +12,13 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
   '/terms',
 ])
 
+const PUBLIC_CRAWLER_USER_AGENT_PATTERN =
+  /(googlebot|adsbot-google|mediapartners-google|gptbot|chatgpt-user|oai-searchbot|claudebot|claude-searchbot|perplexitybot|perplexity-user|google-extended|ccbot|applebot-extended|bytespider|amazonbot|facebookbot|meta-externalagent)/i
+
+function isPublicCrawlerUserAgent(userAgent: string | null) {
+  return Boolean(userAgent && PUBLIC_CRAWLER_USER_AGENT_PATTERN.test(userAgent))
+}
+
 function isUsableTeamSlug(teamId: string | number, slug?: string | null): slug is string {
   const normalized = String(slug ?? '').trim().toLowerCase()
   const normalizedId = String(teamId ?? '').trim().toLowerCase()
@@ -174,10 +181,17 @@ export async function proxy(request: NextRequest) {
   const isAdmin = pathname.startsWith('/admin')
   const isAuthException = authExceptionPaths.some(path => pathname.startsWith(path)) || pathname.startsWith('/auth')
   const hasNicknameCookie = request.cookies.get('has_nickname')?.value === '1'
+  const isPublicCrawler = isPublicCrawlerUserAgent(request.headers.get('user-agent'))
 
   // Fast path: public pages with a verified nickname cookie skip Supabase auth lookup.
   // This keeps common /boards and /livescore visits from paying auth middleware cost.
   if (!isProtected && !isAuthPage && !isAdmin && !isAuthException && hasNicknameCookie) {
+    return NextResponse.next({ request: { headers: request.headers } })
+  }
+
+  // Public crawler traffic should not be gated by auth/session refresh work.
+  // Protected and admin paths still go through the normal checks below.
+  if (!isProtected && !isAuthPage && !isAdmin && !isAuthException && isPublicCrawler) {
     return NextResponse.next({ request: { headers: request.headers } })
   }
 

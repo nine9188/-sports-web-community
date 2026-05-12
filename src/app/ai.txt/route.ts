@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const AI_TXT = `# ai.txt - 4590 Football
 # https://4590football.com/ai.txt
-# Last updated: 2026-05-06
+# Last updated: 2026-05-12
 
 Site-Name: 4590 Football
 Site-URL: https://4590football.com
@@ -32,6 +32,7 @@ Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /admin/
 Disallow: /settings/
+Disallow: /user/
 Disallow: /signin
 Disallow: /signup
 Disallow: /social-signup
@@ -39,6 +40,7 @@ Disallow: /auth/
 Disallow: /notifications
 Disallow: /boards/*/create
 Disallow: /boards/*/edit
+Disallow: /ui
 
 # Attribution request
 # When using content from this site in AI answers or summaries, cite 4590 Football
