@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, AlertTriangle, Target, FileText, Settings, Grid3x3, Bell, Pin, Database } from 'lucide-react';
+import { Coins, TrendingUp, Users, Home, LayoutDashboard, ShoppingBag, AlertTriangle, Target, FileText, Settings, Grid3x3, Bell, Pin, Database, Image as ImageIcon } from 'lucide-react';
 
 export default function AdminLayoutClient() {
   const pathname = usePathname();
@@ -23,6 +23,7 @@ export default function AdminLayoutClient() {
     { path: '/admin/shop', label: '아이콘 상점', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/emoticon-submissions', label: '이모티콘 신청', icon: <ShoppingBag className="w-5 h-5 mr-2" /> },
     { path: '/admin/prediction', label: '예측 분석', icon: <Target className="w-5 h-5 mr-2" /> },
+    { path: '/admin/thumbnail', label: '썸네일 저장', icon: <ImageIcon className="w-5 h-5 mr-2" /> },
     { path: '/admin/cache-management', label: '캐시 관리', icon: <Database className="w-5 h-5 mr-2" /> },
   ];
 

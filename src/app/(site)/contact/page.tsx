@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
+import StandalonePageHeader from '../_components/StandalonePageHeader';
 import { Mail, Handshake, Megaphone, HelpCircle } from 'lucide-react';
+
+const CONTACT_EMAIL = 'support@4590football.com';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -18,34 +19,52 @@ const contactCategories = [
     icon: Handshake,
     title: '제휴 문의',
     description: '데이터 제휴, API 연동, 콘텐츠 파트너십 등 다양한 형태의 제휴를 환영합니다.',
-    email: 'support@4590football.com',
+    email: CONTACT_EMAIL,
     subject: '[제휴] ',
   },
   {
     icon: Megaphone,
     title: '광고 문의',
     description: '배너 광고, 스폰서십, 브랜드 캠페인 등 광고 집행에 대해 안내해 드립니다.',
-    email: 'support@4590football.com',
+    email: CONTACT_EMAIL,
     subject: '[광고] ',
   },
   {
     icon: HelpCircle,
     title: '기타 문의',
     description: '서비스 이용 관련 문의, 건의사항, 버그 리포트 등 기타 문의를 받습니다.',
-    email: 'support@4590football.com',
+    email: CONTACT_EMAIL,
     subject: '[문의] ',
   },
 ];
 
 export default function ContactPage() {
+  const contactPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: '4590 Football 문의하기',
+    url: `${siteConfig.url}/contact`,
+    mainEntity: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      url: siteConfig.url,
+      email: CONTACT_EMAIL,
+      contactPoint: contactCategories.map((category) => ({
+        '@type': 'ContactPoint',
+        contactType: category.title,
+        email: category.email,
+        availableLanguage: ['ko'],
+      })),
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#1D1D1D]">
-      {/* 왼쪽 상단 로고 */}
-      <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="inline-block" prefetch={false}>
-          <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" />
-        </Link>
-      </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageJsonLd) }}
+      />
+      <StandalonePageHeader />
 
       {/* 헤더 */}
       <section className="border-b border-black/7 dark:border-white/10 bg-[#F9FAFB] dark:bg-[#262626]">
@@ -69,7 +88,7 @@ export default function ContactPage() {
             href="mailto:support@4590football.com"
             className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline"
           >
-            support@4590football.com
+            {CONTACT_EMAIL}
           </a>
         </div>
       </section>

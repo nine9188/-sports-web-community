@@ -1,26 +1,19 @@
-import Image from 'next/image';
-import Link from 'next/link';
 import { buildMetadata } from '@/shared/utils/metadataNew';
-import { siteConfig } from '@/shared/config';
+import StandalonePageHeader from '../_components/StandalonePageHeader';
 
 export async function generateMetadata() {
   return buildMetadata({
     title: '이용약관',
     description: '4590 Football 서비스 이용약관을 확인하세요.',
     path: '/terms',
-    noindex: true,
+    robots: { index: false, follow: true },
   });
 }
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen">
-      {/* 왼쪽 상단 로고 */}
-      <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="inline-block" prefetch={false}>
-          <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" />
-        </Link>
-      </div>
+      <StandalonePageHeader />
 
       <div className="flex flex-col items-center px-4 pb-8">
       <div className="w-full max-w-3xl">

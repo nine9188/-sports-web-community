@@ -54,15 +54,15 @@ const AuthStateManager = React.memo(function AuthStateManager({
   
   return (
     <div className="flex flex-col min-h-screen w-full" data-site-shell>
-      <div data-site-header>
-      <HeaderClient
-        onProfileClick={onProfileClick}
-        isSidebarOpen={false}
-        initialUserData={headerUserData}
-        boards={headerBoards || []}
-        isAdmin={headerIsAdmin}
-        totalPostCountSlot={headerTotalPostCountSlot}
-      />
+      <div className="contents" data-site-header>
+        <HeaderClient
+          onProfileClick={onProfileClick}
+          isSidebarOpen={false}
+          initialUserData={headerUserData}
+          boards={headerBoards || []}
+          isAdmin={headerIsAdmin}
+          totalPostCountSlot={headerTotalPostCountSlot}
+        />
       </div>
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto pb-4 bg-transparent" data-site-content-row>
         <div data-site-left-sidebar>

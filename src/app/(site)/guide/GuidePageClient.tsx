@@ -10,7 +10,6 @@ import {
   ShoppingBag, Palette, Bot, Bell, Search,
 } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { siteConfig } from '@/shared/config';
 
 /* ─────────────────────────────────────────────
    타입
@@ -3602,6 +3601,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
   const scrollToToc = () => {
     tocRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+  const isSectionVisible = (id: string) => activeSection === null || activeSection === id;
 
   return (
     <div className="min-h-screen w-full bg-[#F5F5F5] dark:bg-[#111111]">
@@ -3618,13 +3618,6 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </button>
         </div>
       )}
-      {/* 로고 */}
-      <div className="px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="inline-block" prefetch={false}>
-          <Image src={siteConfig.logo} alt="4590 Football" width={340} height={148} unoptimized className="h-10 sm:h-14 w-auto dark:invert" priority />
-        </Link>
-      </div>
-
       <div className="max-w-3xl mx-auto px-0 md:px-4 pb-8 space-y-8">
 
         {/* 히어로 */}
@@ -3670,7 +3663,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>
 
         {/* ───── 1. 리그·팀 ───── */}
-        {activeSection === 'league' && <Section id="league" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('league') && <Section id="league" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Trophy} title="리그·팀 페이지" desc="리그를 선택해 순위표와 팀 정보를 확인하세요" color="blue" />
 
           <GuideBox title="사용 방법">
@@ -3722,7 +3715,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 4. 라이브스코어·매치 ───── */}
-        {activeSection === 'match' && <Section id="match" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('match') && <Section id="match" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Tv} title="라이브스코어 · 매치 페이지" desc="실시간 스코어, 라인업, 경기 통계" color="red" />
 
           <GuideBox title="사용 방법">
@@ -3761,7 +3754,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 5. 이적시장 ───── */}
-        {activeSection === 'transfer' && <Section id="transfer" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('transfer') && <Section id="transfer" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={ArrowLeftRight} title="이적시장" desc="최신 이적, 임대, 자유계약 소식" color="amber" />
 
           <GuideBox title="사용 방법">
@@ -3787,7 +3780,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 6. 게시글 카드 삽입 ───── */}
-        {activeSection === 'editor' && <Section id="editor" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('editor') && <Section id="editor" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={PenTool} title="게시글에 카드 삽입하기" desc="팀, 선수, 매치 카드를 게시글에 삽입" color="cyan" />
 
           <GuideBox title="카드 삽입 방법">
@@ -3807,7 +3800,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 7. 상점 ───── */}
-        {activeSection === 'shop' && <Section id="shop" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('shop') && <Section id="shop" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={ShoppingBag} title="상점" desc="포인트로 아이템 구매" color="violet" />
 
           <GuideBox title="소개">
@@ -3838,7 +3831,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 8. 이모티콘 스튜디오 ───── */}
-        {activeSection === 'emoticon-studio' && <Section id="emoticon-studio" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('emoticon-studio') && <Section id="emoticon-studio" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Palette} title="이모티콘" desc="이모티콘 구매 및 제작" color="amber" />
 
           <GuideBox title="이모티콘 구매">
@@ -3892,7 +3885,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 9. 고객센터 문의 ───── */}
-        {activeSection === 'chatbot' && <Section id="chatbot" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('chatbot') && <Section id="chatbot" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Bot} title="고객센터 문의" desc="사이트 이용 문의, 신고, 의견 제출" color="green" />
 
           <GuideBox title="소개">
@@ -3932,7 +3925,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 10. 알림 ───── */}
-        {activeSection === 'notification' && <Section id="notification" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('notification') && <Section id="notification" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Bell} title="알림" desc="댓글, 추천, 멘션 알림" color="red" />
 
           <GuideBox title="소개">
@@ -3966,7 +3959,7 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
         </Section>}
 
         {/* ───── 11. 검색 ───── */}
-        {activeSection === 'search' && <Section id="search" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+        {isSectionVisible('search') && <Section id="search" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
           <SectionHeader icon={Search} title="검색" desc="게시글, 팀, 댓글 통합 검색" color="blue" />
 
           <GuideBox title="소개">

@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
-import { getTeamLogoUrls, getLeagueLogoUrls, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
+import StandalonePageHeader from '../_components/StandalonePageHeader';
 import GuidePageClient from './GuidePageClient';
+import { GUIDE_DEMO_IMAGES } from './demoAssets';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -12,19 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-// 데모용 ID
-const DEMO_TEAM_IDS = [42, 49, 50, 40, 47, 33, 48, 194, 541, 529]; // Arsenal, Chelsea, Man City, Liverpool, Tottenham, Man Utd, West Ham, Ajax, Real Madrid, Barcelona
-const DEMO_LEAGUE_IDS = [39, 140, 135, 2, 78, 61, 292]; // EPL, LaLiga, Serie A, UCL, Bundesliga, Ligue1, K-League
-const DEMO_PLAYER_IDS = [1100, 306, 1460, 1465, 2929, 19533, 284324, 37127, 152982, 5996, 116117]; // Haaland, Salah, Saka, Havertz, Timber, Partey, Rice, Odegaard, Palmer, Enzo, Caicedo
-
-export default async function GuidePage() {
-  const [teamLogos, leagueLogos, leagueLogosDark, playerPhotos] = await Promise.all([
-    getTeamLogoUrls(DEMO_TEAM_IDS, 'sm'),
-    getLeagueLogoUrls(DEMO_LEAGUE_IDS, false, 'sm'),
-    getLeagueLogoUrls(DEMO_LEAGUE_IDS, true, 'sm'),
-    getPlayerPhotoUrls(DEMO_PLAYER_IDS, 'sm'),
-  ]);
-
+export default function GuidePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
@@ -47,9 +36,8 @@ export default async function GuidePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <GuidePageClient
-        demoImages={{ teamLogos, leagueLogos, leagueLogosDark, playerPhotos }}
-      />
+      <StandalonePageHeader priority />
+      <GuidePageClient demoImages={GUIDE_DEMO_IMAGES} />
     </>
   );
 }
