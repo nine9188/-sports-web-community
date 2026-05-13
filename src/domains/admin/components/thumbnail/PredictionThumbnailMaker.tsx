@@ -20,7 +20,18 @@ type ThumbnailTemplate =
   | 'match'
   | 'clean';
 type ThumbnailTone = 'dark' | 'light';
-type PosterBackground = 'blueGreen' | 'navy' | 'blackBlue' | 'blackGreen' | 'charcoal' | 'custom';
+type PosterBackground =
+  | 'aiVertical'
+  | 'aiSquare'
+  | 'aiNoVsVertical'
+  | 'aiNoVsSquare'
+  | 'aiNoVsVertical2'
+  | 'blueGreen'
+  | 'navy'
+  | 'blackBlue'
+  | 'blackGreen'
+  | 'charcoal'
+  | 'custom';
 
 interface ThumbnailSize {
   id: ThumbnailSizeId;
@@ -34,6 +45,16 @@ const THUMBNAIL_SIZES: ThumbnailSize[] = [
   { id: 'vertical', label: '1080 x 1350', width: 1080, height: 1350, icon: RectangleVertical },
   { id: 'square', label: '1080 x 1080', width: 1080, height: 1080, icon: Square },
   { id: 'smallSquare', label: '542 x 542', width: 542, height: 542, icon: Square },
+];
+
+const EXPORT_TEMPLATES: Array<{ id: ThumbnailTemplate; label: string }> = [
+  { id: 'versus', label: 'VS 포스터형' },
+  { id: 'powerOdds', label: '전력비교 1' },
+  { id: 'powerRadar', label: '전력비교 2' },
+  { id: 'comparison', label: '상대 비교지표' },
+  { id: 'condition', label: '팀 컨디션' },
+  { id: 'goals', label: '득점 흐름' },
+  { id: 'h2h', label: '최근 맞대결' },
 ];
 
 const SAMPLE_SOURCE: PredictionThumbnailSource = {
@@ -93,31 +114,40 @@ const TONES = {
     bg: '#101318',
     bg2: '#171b22',
     panel: '#1f2530',
+    panelGlass: 'rgba(31,37,48,0.74)',
     panel2: '#252c37',
-    text: '#f8fafc',
-    muted: '#a7b0bf',
-    line: 'rgba(255,255,255,0.12)',
-    home: '#38bdf8',
-    away: '#34d399',
-    draw: '#a3a3a3',
-    accent: '#f59e0b',
+    panel2Glass: 'rgba(37,44,55,0.58)',
+    text: '#ffffff',
+    muted: '#d7deea',
+    line: 'rgba(255,255,255,0.2)',
+    home: '#2ec7ff',
+    away: '#2ff0a7',
+    draw: '#d4d4d8',
+    accent: '#ffb020',
   },
   light: {
     bg: '#f7f9fc',
     bg2: '#edf2f7',
     panel: '#ffffff',
+    panelGlass: 'rgba(255,255,255,0.78)',
     panel2: '#f1f5f9',
-    text: '#111827',
-    muted: '#64748b',
-    line: 'rgba(15,23,42,0.12)',
-    home: '#0284c7',
-    away: '#059669',
-    draw: '#737373',
-    accent: '#d97706',
+    panel2Glass: 'rgba(241,245,249,0.64)',
+    text: '#07111f',
+    muted: '#334155',
+    line: 'rgba(15,23,42,0.18)',
+    home: '#0369a1',
+    away: '#047857',
+    draw: '#52525b',
+    accent: '#c76500',
   },
 };
 
 const POSTER_BACKGROUNDS: Array<{ id: PosterBackground; label: string }> = [
+  { id: 'aiVertical', label: 'AI 포스터 세로' },
+  { id: 'aiSquare', label: 'AI 포스터 정사각' },
+  { id: 'aiNoVsVertical', label: 'AI 배경 세로' },
+  { id: 'aiNoVsSquare', label: 'AI 배경 정사각' },
+  { id: 'aiNoVsVertical2', label: 'AI 배경 세로 2' },
   { id: 'blueGreen', label: '블루그린' },
   { id: 'navy', label: '네이비' },
   { id: 'blackBlue', label: '블랙블루' },
@@ -125,6 +155,24 @@ const POSTER_BACKGROUNDS: Array<{ id: PosterBackground; label: string }> = [
   { id: 'charcoal', label: '차콜' },
   { id: 'custom', label: '커스텀' },
 ];
+
+const POSTER_IMAGE_BACKGROUNDS: Partial<Record<PosterBackground, string>> = {
+  aiVertical: '/images/prediction-poster-vs-vertical.png',
+  aiSquare: '/images/prediction-poster-vs-square.png',
+  aiNoVsVertical: '/images/prediction-template-bg-vertical.png',
+  aiNoVsSquare: '/images/prediction-template-bg-square.png',
+  aiNoVsVertical2: '/images/prediction-template-bg-vertical-2.png?v=20260513-151654-small',
+};
+
+function getPosterImageBackground(background: PosterBackground, size: ThumbnailSize): string | undefined {
+  if (background === 'aiNoVsVertical2') {
+    return size.width <= 600
+      ? '/images/prediction-template-bg-vertical-2.png?v=20260513-151654-small'
+      : '/images/prediction-template-bg-vertical-2-large.png?v=20260513-151654-large';
+  }
+
+  return POSTER_IMAGE_BACKGROUNDS[background];
+}
 
 function getPosterBackground(
   preset: PosterBackground,
@@ -200,6 +248,115 @@ function makeFileName(source: PredictionThumbnailSource | null, size: ThumbnailS
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 80);
+}
+
+const CRC_TABLE = Array.from({ length: 256 }, (_, index) => {
+  let value = index;
+  for (let bit = 0; bit < 8; bit += 1) {
+    value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+  }
+  return value >>> 0;
+});
+
+function crc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1] ?? '';
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function dateToDosParts(date: Date): { time: number; date: number } {
+  const year = Math.max(1980, date.getFullYear());
+  return {
+    time: (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2),
+    date: ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+  };
+}
+
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const output = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    output.set(part, offset);
+    offset += part.length;
+  }
+  return output;
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
+function createZipBlob(files: Array<{ name: string; bytes: Uint8Array }>): Blob {
+  const encoder = new TextEncoder();
+  const now = dateToDosParts(new Date());
+  const localParts: Uint8Array[] = [];
+  const centralParts: Uint8Array[] = [];
+  let offset = 0;
+
+  for (const file of files) {
+    const nameBytes = encoder.encode(file.name);
+    const crc = crc32(file.bytes);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    localView.setUint32(0, 0x04034b50, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint16(6, 0x0800, true);
+    localView.setUint16(8, 0, true);
+    localView.setUint16(10, now.time, true);
+    localView.setUint16(12, now.date, true);
+    localView.setUint32(14, crc, true);
+    localView.setUint32(18, file.bytes.length, true);
+    localView.setUint32(22, file.bytes.length, true);
+    localView.setUint16(26, nameBytes.length, true);
+    localHeader.set(nameBytes, 30);
+    localParts.push(localHeader, file.bytes);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    centralView.setUint32(0, 0x02014b50, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint16(8, 0x0800, true);
+    centralView.setUint16(10, 0, true);
+    centralView.setUint16(12, now.time, true);
+    centralView.setUint16(14, now.date, true);
+    centralView.setUint32(16, crc, true);
+    centralView.setUint32(20, file.bytes.length, true);
+    centralView.setUint32(24, file.bytes.length, true);
+    centralView.setUint16(28, nameBytes.length, true);
+    centralView.setUint32(42, offset, true);
+    centralHeader.set(nameBytes, 46);
+    centralParts.push(centralHeader);
+
+    offset += localHeader.length + file.bytes.length;
+  }
+
+  const centralDirectory = concatBytes(centralParts);
+  const endHeader = new Uint8Array(22);
+  const endView = new DataView(endHeader.buffer);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(8, files.length, true);
+  endView.setUint16(10, files.length, true);
+  endView.setUint32(12, centralDirectory.length, true);
+  endView.setUint32(16, offset, true);
+
+  const blobParts = [...localParts, centralDirectory, endHeader].map(toArrayBuffer);
+  return new Blob(blobParts, { type: 'application/zip' });
 }
 
 function normalizeRadarValue(value: number | undefined, maxExpected: number): number {
@@ -458,76 +615,43 @@ function StatPill({
   );
 }
 
-function PredictionOddsStrip({
-  data,
-  tone,
-  compact = false,
-  inline = false,
-  inlineSize,
-  scale = 1,
+function GradientTeamLogo({
+  src,
+  name,
+  size,
+  color,
+  opacity = 0.22,
 }: {
-  data: PredictionChartData;
-  tone: ThumbnailTone;
-  compact?: boolean;
-  inline?: boolean;
-  inlineSize?: number;
-  scale?: number;
+  src?: string;
+  name: string;
+  size: number;
+  color: string;
+  opacity?: number;
 }) {
-  const colors = TONES[tone];
-  const mainSize = inline ? inlineSize ?? (compact ? 14 : 34) : compact ? 28 : 52;
-  const drawLabelSize = compact ? 20 : 34;
-  const drawValueSize = compact ? 34 : 62;
-
-  if (inline) {
+  if (src) {
     return (
       <div
+        aria-label={name}
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: compact ? 8 : Math.round(22 * scale),
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: Math.round(850 * scale),
-          margin: '0 auto',
+          width: size,
+          height: size,
+          opacity,
+          background: `radial-gradient(circle at 32% 28%, #ffffff 0%, ${color} 42%, transparent 76%), linear-gradient(135deg, ${color}, rgba(255,255,255,0.9))`,
+          WebkitMaskImage: `url("${proxyImage(src)}")`,
+          maskImage: `url("${proxyImage(src)}")`,
+          WebkitMaskRepeat: 'no-repeat',
+          maskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskPosition: 'center',
+          WebkitMaskSize: 'contain',
+          maskSize: 'contain',
+          filter: `drop-shadow(0 ${size * 0.04}px ${size * 0.08}px ${color}66)`,
         }}
-      >
-        <div style={{ color: colors.home, fontSize: mainSize, fontWeight: 950, lineHeight: 1, whiteSpace: 'nowrap' }}>
-          홈승 {displayPercent(data.predictions.percent.home)}
-        </div>
-        <div style={{ color: colors.draw, fontSize: mainSize, fontWeight: 950, lineHeight: 1, textAlign: 'center', whiteSpace: 'nowrap' }}>
-          무승부 {displayPercent(data.predictions.percent.draw)}
-        </div>
-        <div style={{ color: colors.away, fontSize: mainSize, fontWeight: 950, lineHeight: 1, textAlign: 'right', whiteSpace: 'nowrap' }}>
-          {displayPercent(data.predictions.percent.away)} 원정승
-        </div>
-      </div>
+      />
     );
   }
 
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gap: compact ? 14 : 24,
-        width: '100%',
-        maxWidth: compact ? '100%' : 780,
-        margin: '0 auto',
-      }}
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: compact ? 16 : 30, alignItems: 'center' }}>
-        <div style={{ color: colors.home, fontSize: mainSize, fontWeight: 950, lineHeight: 1, whiteSpace: 'nowrap' }}>
-          홈승 {displayPercent(data.predictions.percent.home)}
-        </div>
-        <div style={{ color: colors.away, fontSize: mainSize, fontWeight: 950, lineHeight: 1, textAlign: 'right', whiteSpace: 'nowrap' }}>
-          {displayPercent(data.predictions.percent.away)} 원정승
-        </div>
-      </div>
-      <div style={{ display: 'grid', justifyItems: 'center', gap: compact ? 7 : 12 }}>
-        <div style={{ color: colors.muted, fontSize: drawLabelSize, fontWeight: 900, lineHeight: 1 }}>무승부</div>
-        <div style={{ color: colors.draw, fontSize: drawValueSize, fontWeight: 950, lineHeight: 1 }}>{displayPercent(data.predictions.percent.draw)}</div>
-      </div>
-    </div>
-  );
+  return <PlainTeamLogo src={src} name={name} size={size} color={color} showLogo opacity={opacity} />;
 }
 
 function ComparisonBars({
@@ -535,36 +659,53 @@ function ComparisonBars({
   tone,
   limit,
   compact = false,
+  scale,
+  fullBar = false,
 }: {
   data: PredictionChartData;
   tone: ThumbnailTone;
   limit?: number;
   compact?: boolean;
+  scale?: number;
+  fullBar?: boolean;
 }) {
   const colors = TONES[tone];
   const rows = getThumbnailComparisonRows(data).slice(0, limit);
+  const sizeScale = scale ?? (compact ? 0.5 : 1);
+  const rowGap = (fullBar ? 24 : 14) * sizeScale;
+  const labelGap = (fullBar ? 10 : 7) * sizeScale;
+  const labelSize = 18 * sizeScale;
+  const valueSize = 23 * sizeScale;
+  const barHeight = 13 * sizeScale;
+  const numberColumn = 66 * sizeScale;
+  const columnGap = 13 * sizeScale;
 
   return (
-    <div style={{ display: 'grid', gap: compact ? 11 : 18 }}>
-      {rows.map((row) => {
-        const total = Math.max(row.home + row.away, 1);
-        return (
-          <div key={row.label} style={{ display: 'grid', gridTemplateColumns: compact ? '54px 1fr 54px' : '80px 1fr 80px', gap: compact ? 10 : 18, alignItems: 'center' }}>
-            <div style={{ color: colors.home, fontSize: compact ? 16 : 24, fontWeight: 900, textAlign: 'right' }}>{Math.round(row.home)}%</div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.muted, fontSize: compact ? 14 : 20, fontWeight: 700, marginBottom: compact ? 5 : 8 }}>
-                <span>{row.label}</span>
-                <span>{Math.round(row.away)}%</span>
+    <div style={{ display: 'grid', gap: rowGap, width: '100%' }}>
+      {rows.map((row) => (
+        <div key={row.label} style={{ display: 'grid', gap: labelGap }}>
+          <div style={{ color: colors.muted, fontSize: labelSize, fontWeight: 800, textAlign: 'center' }}>{row.label}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: `${numberColumn}px 1fr ${numberColumn}px`, gap: columnGap, alignItems: 'center' }}>
+            <div style={{ color: colors.home, fontSize: valueSize, fontWeight: 950, textAlign: 'right', lineHeight: 1 }}>{Math.round(row.home)}%</div>
+            {fullBar ? (
+              <div style={{ height: barHeight, borderRadius: 999, overflow: 'hidden', background: colors.panel2, display: 'flex' }}>
+                <div style={{ width: `${row.home}%`, background: colors.home }} />
+                <div style={{ width: `${row.away}%`, background: colors.away }} />
               </div>
-              <div style={{ height: compact ? 10 : 18, borderRadius: 999, overflow: 'hidden', background: colors.panel2, display: 'flex' }}>
-                <div style={{ width: `${(row.home / total) * 100}%`, background: colors.home }} />
-                <div style={{ width: `${(row.away / total) * 100}%`, background: colors.away }} />
+            ) : (
+              <div style={{ height: barHeight, borderRadius: 999, overflow: 'hidden', background: colors.panel2, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ width: `${row.home}%`, height: '100%', background: colors.home }} />
+                </div>
+                <div>
+                  <div style={{ width: `${row.away}%`, height: '100%', background: colors.away }} />
+                </div>
               </div>
-            </div>
-            <div style={{ color: colors.away, fontSize: compact ? 16 : 24, fontWeight: 900 }}>{Math.round(row.away)}%</div>
+            )}
+            <div style={{ color: colors.away, fontSize: valueSize, fontWeight: 950, lineHeight: 1 }}>{Math.round(row.away)}%</div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -583,17 +724,18 @@ function RadarValueRows({
   const colors = TONES[tone];
   const rows = getRadarRows(data);
   const sizeScale = scale ?? (compact ? 0.5 : 1);
-  const rowGap = Math.max(7, Math.round(14 * sizeScale));
-  const labelSize = Math.max(11, Math.round(18 * sizeScale));
-  const valueSize = Math.max(14, Math.round(23 * sizeScale));
-  const barHeight = Math.max(7, Math.round(13 * sizeScale));
-  const numberColumn = Math.max(42, Math.round(66 * sizeScale));
-  const columnGap = Math.max(8, Math.round(13 * sizeScale));
+  const rowGap = 14 * sizeScale;
+  const labelGap = 7 * sizeScale;
+  const labelSize = 18 * sizeScale;
+  const valueSize = 23 * sizeScale;
+  const barHeight = 13 * sizeScale;
+  const numberColumn = 66 * sizeScale;
+  const columnGap = 13 * sizeScale;
 
   return (
-    <div style={{ display: 'grid', gap: rowGap }}>
+    <div style={{ display: 'grid', gap: rowGap, width: '100%' }}>
       {rows.map((row) => (
-        <div key={row.label} style={{ display: 'grid', gap: Math.max(4, Math.round(7 * sizeScale)) }}>
+        <div key={row.label} style={{ display: 'grid', gap: labelGap }}>
           <div style={{ color: colors.muted, fontSize: labelSize, fontWeight: 800, textAlign: 'center' }}>{row.label}</div>
           <div style={{ display: 'grid', gridTemplateColumns: `${numberColumn}px 1fr ${numberColumn}px`, gap: columnGap, alignItems: 'center' }}>
             <div style={{ color: colors.home, fontSize: valueSize, fontWeight: 950, textAlign: 'right', lineHeight: 1 }}>{Math.round(row.home)}</div>
@@ -613,16 +755,22 @@ function RadarValueRows({
   );
 }
 
-function RecentH2HMiniBlock({ data, tone, compact = false }: { data: PredictionChartData; tone: ThumbnailTone; compact?: boolean }) {
+function RecentH2HMiniBlock({ data, tone, scale = 1 }: { data: PredictionChartData; tone: ThumbnailTone; scale?: number }) {
   const colors = TONES[tone];
-  const matches = data.h2h?.slice(0, compact ? 1 : 3) ?? [];
+  const matches = data.h2h?.slice(0, 5) ?? [];
+  const rowGap = 20 * scale;
+  const teamSize = 24 * scale;
+  const scoreSize = 34 * scale;
+  const dateSize = 18 * scale;
+  const gap = 22 * scale;
+  const rowPadding = 8 * scale;
 
   if (matches.length === 0) {
-    return <div style={{ color: colors.muted, fontSize: compact ? 15 : 18, fontWeight: 800 }}>최근 맞대결 데이터 없음</div>;
+    return <div style={{ color: colors.muted, fontSize: 18 * scale, fontWeight: 800 }}>최근 맞대결 데이터 없음</div>;
   }
 
   return (
-    <div style={{ display: 'grid', gap: compact ? 10 : 14 }}>
+    <div style={{ display: 'grid', gap: rowGap }}>
       {matches.map((match) => {
         const date = match.fixture.date ? match.fixture.date.slice(0, 10) : '-';
         const homeWon = match.teams.home.winner === true;
@@ -634,20 +782,21 @@ function RecentH2HMiniBlock({ data, tone, compact = false }: { data: PredictionC
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr auto 1fr',
-              gap: compact ? 10 : 16,
+              gap,
               alignItems: 'center',
+              padding: `${rowPadding}px 0`,
             }}
           >
-            <div style={{ minWidth: 0, color: homeWon ? colors.home : colors.text, fontSize: compact ? 16 : 21, fontWeight: homeWon ? 950 : 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ minWidth: 0, color: homeWon ? colors.home : colors.text, fontSize: teamSize, fontWeight: homeWon ? 950 : 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {match.teams.home.name}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ color: colors.text, fontSize: compact ? 22 : 30, fontWeight: 950, lineHeight: 1 }}>
+              <div style={{ color: colors.text, fontSize: scoreSize, fontWeight: 950, lineHeight: 1 }}>
                 {match.goals.home} - {match.goals.away}
               </div>
-              <div style={{ color: colors.muted, fontSize: compact ? 11 : 13, fontWeight: 750, marginTop: 5 }}>{date}</div>
+              <div style={{ color: colors.muted, fontSize: dateSize, fontWeight: 800, marginTop: 8 * scale }}>{date}</div>
             </div>
-            <div style={{ minWidth: 0, color: awayWon ? colors.away : colors.text, fontSize: compact ? 16 : 21, fontWeight: awayWon ? 950 : 800, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ minWidth: 0, color: awayWon ? colors.away : colors.text, fontSize: teamSize, fontWeight: awayWon ? 950 : 800, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {match.teams.away.name}
             </div>
           </div>
@@ -656,8 +805,6 @@ function RecentH2HMiniBlock({ data, tone, compact = false }: { data: PredictionC
     </div>
   );
 }
-
-type ChartTeam = PredictionChartData['teams']['home'];
 
 function valueAt(source: unknown, path: string[], fallback: string | number = '-'): string {
   let current = source;
@@ -674,26 +821,177 @@ function numAt(source: unknown, path: string[], fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function StatBox({
-  label,
-  homeValue,
-  awayValue,
+function TeamConditionTable({
+  data,
   tone,
-  compact = false,
+  scale = 1,
 }: {
-  label: string;
-  homeValue: string | number;
-  awayValue: string | number;
+  data: PredictionChartData;
   tone: ThumbnailTone;
-  compact?: boolean;
+  scale?: number;
 }) {
   const colors = TONES[tone];
+  const home = data.teams.home;
+  const away = data.teams.away;
+  const homeLeague = home.league;
+  const awayLeague = away.league;
+  const rows = [
+    { label: '최근 5경기 폼', home: safeText(home.last_5?.form), away: safeText(away.last_5?.form) },
+    { label: '최근 5경기 공격', home: safeText(home.last_5?.att), away: safeText(away.last_5?.att) },
+    { label: '최근 5경기 수비', home: safeText(home.last_5?.def), away: safeText(away.last_5?.def) },
+    {
+      label: '시즌 전적',
+      home: `${numAt(home, ['league', 'fixtures', 'wins', 'total'])}승 ${numAt(home, ['league', 'fixtures', 'draws', 'total'])}무 ${numAt(home, ['league', 'fixtures', 'loses', 'total'])}패`,
+      away: `${numAt(away, ['league', 'fixtures', 'wins', 'total'])}승 ${numAt(away, ['league', 'fixtures', 'draws', 'total'])}무 ${numAt(away, ['league', 'fixtures', 'loses', 'total'])}패`,
+    },
+    { label: '클린시트', home: valueAt(homeLeague, ['clean_sheet', 'total']), away: valueAt(awayLeague, ['clean_sheet', 'total']) },
+    { label: '무득점 경기', home: valueAt(homeLeague, ['failed_to_score', 'total']), away: valueAt(awayLeague, ['failed_to_score', 'total']) },
+    { label: '주요 포메이션', home: valueAt(homeLeague, ['lineups', '0', 'formation']), away: valueAt(awayLeague, ['lineups', '0', 'formation']) },
+  ];
+  const headerSize = 22 * scale;
+  const labelSize = 23 * scale;
+  const valueSize = 27 * scale;
+  const rowPadding = 18 * scale;
+  const gap = 22 * scale;
+
   return (
-    <div style={{ borderRadius: compact ? 14 : 18, background: colors.panel, border: `1px solid ${colors.line}`, padding: compact ? '12px 14px' : '18px 20px' }}>
-      <div style={{ color: colors.muted, fontSize: compact ? 13 : 20, fontWeight: 800, marginBottom: compact ? 8 : 12 }}>{label}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: compact ? 10 : 18 }}>
-        <div style={{ color: colors.home, fontSize: compact ? 20 : 34, fontWeight: 950, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{homeValue}</div>
-        <div style={{ color: colors.away, fontSize: compact ? 20 : 34, fontWeight: 950, textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{awayValue}</div>
+    <div style={{ display: 'grid', gap: 0 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) minmax(0,0.95fr) minmax(0,1fr)',
+          gap,
+          color: colors.muted,
+          fontSize: headerSize,
+          fontWeight: 900,
+          padding: `0 ${rowPadding}px ${rowPadding}px`,
+        }}
+      >
+        <div style={{ color: colors.home, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home.name}</div>
+        <div style={{ textAlign: 'center' }}>항목</div>
+        <div style={{ color: colors.away, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{away.name}</div>
+      </div>
+      {rows.map((row, index) => (
+        <div
+          key={row.label}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0,1fr) minmax(0,0.95fr) minmax(0,1fr)',
+            gap,
+            alignItems: 'center',
+            padding: `${rowPadding}px`,
+            borderTop: `1px solid ${colors.line}`,
+            background: index % 2 === 1 ? colors.panel2Glass : 'transparent',
+          }}
+        >
+          <div style={{ color: colors.home, fontSize: valueSize, fontWeight: 950, whiteSpace: 'nowrap' }}>{row.home}</div>
+          <div style={{ color: colors.muted, fontSize: labelSize, fontWeight: 850, textAlign: 'center', lineHeight: 1.15 }}>{row.label}</div>
+          <div style={{ color: colors.away, fontSize: valueSize, fontWeight: 950, textAlign: 'right', whiteSpace: 'nowrap' }}>{row.away}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GoalsFlowTable({
+  data,
+  tone,
+  scale = 1,
+}: {
+  data: PredictionChartData;
+  tone: ThumbnailTone;
+  scale?: number;
+}) {
+  const colors = TONES[tone];
+  const home = data.teams.home;
+  const away = data.teams.away;
+  const minuteSlots = ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90'];
+  const summaryRows = [
+    { label: '시즌 득점', home: valueAt(home, ['league', 'goals', 'for', 'total', 'total']), away: valueAt(away, ['league', 'goals', 'for', 'total', 'total']) },
+    { label: '시즌 실점', home: valueAt(home, ['league', 'goals', 'against', 'total', 'total']), away: valueAt(away, ['league', 'goals', 'against', 'total', 'total']) },
+    { label: '평균 득점', home: valueAt(home, ['league', 'goals', 'for', 'average', 'total']), away: valueAt(away, ['league', 'goals', 'for', 'average', 'total']) },
+    {
+      label: '언더/오버 2.5',
+      home: `O ${valueAt(home, ['league', 'goals', 'for', 'under_over', '2.5', 'over'])} / U ${valueAt(home, ['league', 'goals', 'for', 'under_over', '2.5', 'under'])}`,
+      away: `O ${valueAt(away, ['league', 'goals', 'for', 'under_over', '2.5', 'over'])} / U ${valueAt(away, ['league', 'goals', 'for', 'under_over', '2.5', 'under'])}`,
+    },
+  ];
+  const minuteRows = minuteSlots.map((slot) => ({
+    label: slot,
+    home: numAt(home, ['league', 'goals', 'for', 'minute', slot, 'total']),
+    away: numAt(away, ['league', 'goals', 'for', 'minute', slot, 'total']),
+  }));
+  const headerSize = 20 * scale;
+  const labelSize = 16 * scale;
+  const valueSize = 23 * scale;
+  const minuteLabelSize = 15 * scale;
+  const minuteValueSize = 18 * scale;
+  const rowPaddingY = 10 * scale;
+  const rowPaddingX = 18 * scale;
+  const gap = 20 * scale;
+  const chartGap = 10 * scale;
+  const minuteLabelGap = 5 * scale;
+  const barHeight = 10 * scale;
+  const numberColumn = 38 * scale;
+  const columnGap = 10 * scale;
+  const maxMinute = Math.max(...minuteRows.flatMap((row) => [row.home, row.away]), 1);
+
+  return (
+    <div style={{ display: 'grid', gap: 20 * scale }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) minmax(0,0.9fr) minmax(0,1fr)',
+          gap,
+          color: colors.muted,
+          fontSize: headerSize,
+          fontWeight: 900,
+          padding: `0 ${rowPaddingX}px ${rowPaddingY}px`,
+        }}
+      >
+        <div style={{ color: colors.home, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home.name}</div>
+        <div style={{ textAlign: 'center' }}>항목</div>
+        <div style={{ color: colors.away, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{away.name}</div>
+      </div>
+      <div style={{ borderTop: `1px solid ${colors.line}` }}>
+        {summaryRows.map((row, index) => (
+          <div
+            key={row.label}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0,1fr) minmax(0,0.9fr) minmax(0,1fr)',
+              gap,
+              alignItems: 'center',
+              padding: `${rowPaddingY}px ${rowPaddingX}px`,
+              borderBottom: index === summaryRows.length - 1 ? 'none' : `1px solid ${colors.line}`,
+              background: index % 2 === 1 ? colors.panel2Glass : 'transparent',
+            }}
+          >
+            <div style={{ color: colors.home, fontSize: valueSize, fontWeight: 950, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.home}</div>
+            <div style={{ color: colors.muted, fontSize: labelSize, fontWeight: 850, textAlign: 'center', lineHeight: 1.15 }}>{row.label}</div>
+            <div style={{ color: colors.away, fontSize: valueSize, fontWeight: 950, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.away}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gap: chartGap, padding: `0 ${rowPaddingX}px ${rowPaddingY}px`, width: '100%' }}>
+        <div style={{ color: colors.muted, fontSize: labelSize, fontWeight: 900, textAlign: 'center' }}>시간대별 득점</div>
+        {minuteRows.map((row) => (
+          <div key={row.label} style={{ display: 'grid', gap: minuteLabelGap }}>
+            <div style={{ color: colors.muted, fontSize: minuteLabelSize, fontWeight: 850, textAlign: 'center', lineHeight: 1 }}>{row.label}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: `${numberColumn}px 1fr ${numberColumn}px`, gap: columnGap, alignItems: 'center' }}>
+              <div style={{ color: colors.home, fontSize: minuteValueSize, fontWeight: 950, textAlign: 'right', lineHeight: 1 }}>{row.home}</div>
+              <div style={{ height: barHeight, borderRadius: 999, overflow: 'hidden', background: colors.panel2, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ width: `${(row.home / maxMinute) * 100}%`, height: '100%', background: colors.home }} />
+                </div>
+                <div>
+                  <div style={{ width: `${(row.away / maxMinute) * 100}%`, height: '100%', background: colors.away }} />
+                </div>
+              </div>
+              <div style={{ color: colors.away, fontSize: minuteValueSize, fontWeight: 950, lineHeight: 1 }}>{row.away}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -713,6 +1011,118 @@ function TeamHeader({ data, tone, compact = false, scale = 1 }: { data: Predicti
       <div style={{ color: colors.muted, fontSize: compact ? 14 : Math.round(22 * scale), fontWeight: 950 }}>VS</div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap, minWidth: 0 }}>
         <div style={{ minWidth: 0, color: colors.text, fontSize, fontWeight: 900, whiteSpace: 'nowrap', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.teams.away.name}</div>
+        <PlainTeamLogo src={data.teams.away.logo} name={data.teams.away.name} size={logoSize} color={colors.away} showLogo />
+      </div>
+    </div>
+  );
+}
+
+function DataTopBrand({ tone, scale = 1 }: { tone: ThumbnailTone; scale?: number }) {
+  const logoWidth = 236 * scale;
+  const logoHeight = 58 * scale;
+
+  return (
+    <>
+      <div
+        style={{
+          position: 'absolute',
+          right: 24 * scale,
+          top: 22 * scale,
+          zIndex: 8,
+          color: '#2ff06d',
+          fontSize: 22 * scale,
+          fontWeight: 950,
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+          textAlign: 'right',
+          textTransform: 'uppercase',
+          textShadow: tone === 'dark' ? '0 0 10px rgba(47,240,109,0.34)' : 'none',
+        }}
+      >
+        MATCH PREVIEW
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          left: 24 * scale,
+          top: 18 * scale,
+          zIndex: 8,
+          width: logoWidth,
+          height: logoHeight,
+          pointerEvents: 'none',
+        }}
+      >
+        <Image
+          src={tone === 'dark' ? '/logo/4590football-logo-white.webp' : '/logo/4590football-logo.png'}
+          alt="4590 Football"
+          width={236}
+          height={58}
+          unoptimized
+          crossOrigin="anonymous"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            objectPosition: 'left center',
+            opacity: tone === 'dark' ? 0.94 : 0.86,
+            filter: tone === 'dark' ? 'drop-shadow(0 5px 12px rgba(0,0,0,0.28))' : 'none',
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
+function DataBottomBrand({ tone, scale = 1 }: { tone: ThumbnailTone; scale?: number }) {
+  const colors = TONES[tone];
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 30 * scale,
+        zIndex: 8,
+        color: tone === 'dark' ? 'rgba(255,255,255,0.82)' : colors.muted,
+        fontFamily: '"Montserrat", "Avenir Next", "Century Gothic", Arial, sans-serif',
+        fontSize: Math.max(10, 19 * scale),
+        fontWeight: 300,
+        letterSpacing: '0.36em',
+        lineHeight: 1,
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        textShadow: tone === 'dark' ? '0 2px 10px rgba(0,0,0,0.36)' : 'none',
+        pointerEvents: 'none',
+      }}
+    >
+      4590FOOTBALL.COM
+    </div>
+  );
+}
+
+function PowerOddsHeader({ data, tone, scale = 1 }: { data: PredictionChartData; tone: ThumbnailTone; scale?: number }) {
+  const colors = TONES[tone];
+  const logoSize = Math.round(72 * scale);
+  const teamSize = Math.round(34 * scale);
+  const percentSize = 22 * scale;
+  const vsSize = Math.round(22 * scale);
+  const gap = Math.round(18 * scale);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto minmax(0,1fr)', alignItems: 'center', gap: Math.round(26 * scale) }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap, minWidth: 0 }}>
+        <PlainTeamLogo src={data.teams.home.logo} name={data.teams.home.name} size={logoSize} color={colors.home} showLogo />
+        <div style={{ minWidth: 0, color: colors.text, fontSize: teamSize, fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.teams.home.name}</div>
+        <div style={{ color: colors.home, fontSize: percentSize, fontWeight: 950, lineHeight: 1, whiteSpace: 'nowrap' }}>{displayPercent(data.predictions.percent.home)}</div>
+      </div>
+      <div style={{ display: 'grid', justifyItems: 'center', gap: 5 * scale, minWidth: 74 * scale }}>
+        <div style={{ color: colors.draw, fontSize: percentSize, fontWeight: 950, lineHeight: 1 }}>{displayPercent(data.predictions.percent.draw)}</div>
+        <div style={{ color: colors.muted, fontSize: vsSize, fontWeight: 950, lineHeight: 1 }}>VS</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap, minWidth: 0 }}>
+        <div style={{ color: colors.away, fontSize: percentSize, fontWeight: 950, lineHeight: 1, whiteSpace: 'nowrap' }}>{displayPercent(data.predictions.percent.away)}</div>
+        <div style={{ minWidth: 0, color: colors.text, fontSize: teamSize, fontWeight: 900, whiteSpace: 'nowrap', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.teams.away.name}</div>
         <PlainTeamLogo src={data.teams.away.logo} name={data.teams.away.name} size={logoSize} color={colors.away} showLogo />
       </div>
     </div>
@@ -775,20 +1185,38 @@ function RadarComparison({ data, tone, chartSize = 430 }: { data: PredictionChar
   );
 }
 
-function MinuteBars({ team, tone, color }: { team: ChartTeam; tone: ThumbnailTone; color: string }) {
+function RadarLegend({ data, tone, scale = 1 }: { data: PredictionChartData; tone: ThumbnailTone; scale?: number }) {
   const colors = TONES[tone];
-  const slots = ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90'];
-  const values = slots.map((slot) => numAt(team, ['league', 'goals', 'for', 'minute', slot, 'total']));
-  const max = Math.max(...values, 1);
+  const fontSize = 18 * scale;
+  const gap = 10 * scale;
+  const lineWidth = 38 * scale;
+  const lineHeight = 3 * scale;
+
   return (
-    <div style={{ display: 'grid', gap: 9 }}>
-      {slots.map((slot, index) => (
-        <div key={slot} style={{ display: 'grid', gridTemplateColumns: '62px 1fr 38px', gap: 10, alignItems: 'center' }}>
-          <div style={{ color: colors.muted, fontSize: 15, fontWeight: 750 }}>{slot}</div>
-          <div style={{ height: 12, borderRadius: 999, overflow: 'hidden', background: colors.panel2 }}>
-            <div style={{ width: `${(values[index] / max) * 100}%`, height: '100%', background: color }} />
-          </div>
-          <div style={{ color: colors.text, fontSize: 16, fontWeight: 850, textAlign: 'right' }}>{values[index]}</div>
+    <div
+      style={{
+        position: 'absolute',
+        left: 26 * scale,
+        bottom: 26 * scale,
+        zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap,
+        color: colors.text,
+        fontSize,
+        fontWeight: 850,
+        lineHeight: 1,
+        pointerEvents: 'none',
+      }}
+    >
+      {[
+        { name: data.teams.home.name, color: colors.home },
+        { name: data.teams.away.name, color: colors.away },
+      ].map((team) => (
+        <div key={team.name} style={{ display: 'grid', gridTemplateColumns: `${lineWidth}px minmax(0, ${210 * scale}px)`, alignItems: 'center', gap: 8 * scale }}>
+          <span style={{ width: lineWidth, height: lineHeight, borderRadius: 999, background: team.color, flex: '0 0 auto' }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{team.name}</span>
         </div>
       ))}
     </div>
@@ -886,28 +1314,59 @@ function PredictionThumbnail({
   const isSmall = size.width <= 600;
   const isSquare = size.width === size.height;
   const unit = size.width / 1080;
-  const pad = isSquare ? Math.round(76 * unit) : isSmall ? 34 : 82;
+  const contentScale = unit;
+  const pad = template === 'versus' ? (isSquare ? Math.round(76 * unit) : isSmall ? 34 : 82) : Math.round((isSquare ? 92 : 98) * unit);
+  const topPad = template === 'versus' ? pad : pad + Math.round(26 * unit);
   const logoSize = isSmall ? 72 : template === 'match' ? 150 : template === 'versus' ? 138 : 112;
   const titleSize = isSmall ? 30 : isSquare ? 56 : 58;
   const teamSize = isSmall ? 26 : 42;
-  const panelRadius = isSquare ? Math.round(28 * unit) : isSmall ? 16 : 28;
-  const background =
-    tone === 'dark'
+  const panelRadius = Math.round(28 * contentScale);
+  const selectedPosterImage = getPosterImageBackground(posterBackground, size);
+  const backgroundImage =
+    selectedPosterImage
+      ? tone === 'dark'
+        ? `linear-gradient(145deg, rgba(5,8,13,0.54), rgba(5,10,18,0.72)), url("${selectedPosterImage}")`
+        : `linear-gradient(145deg, rgba(255,255,255,0.34), rgba(241,245,249,0.58)), url("${selectedPosterImage}")`
+      : tone === 'dark'
       ? `radial-gradient(circle at 18% 12%, rgba(56,189,248,0.26), transparent 28%), radial-gradient(circle at 88% 18%, rgba(52,211,153,0.2), transparent 24%), linear-gradient(145deg, ${colors.bg}, ${colors.bg2})`
       : `radial-gradient(circle at 18% 12%, rgba(14,165,233,0.18), transparent 28%), radial-gradient(circle at 88% 18%, rgba(16,185,129,0.16), transparent 24%), linear-gradient(145deg, ${colors.bg}, ${colors.bg2})`;
 
   const frameStyle = {
     width: size.width,
     height: size.height,
-    background,
+    backgroundColor: colors.bg,
+    backgroundImage,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
     color: colors.text,
     fontFamily: 'Arial, "Noto Sans KR", system-ui, sans-serif',
     position: 'relative',
     overflow: 'hidden',
-    padding: pad,
+    padding: `${topPad}px ${pad}px ${pad}px`,
     boxSizing: 'border-box',
     letterSpacing: 0,
   } satisfies React.CSSProperties;
+  const sectionTitleSize = 32 * contentScale;
+  const sectionTitleTop = 44 * contentScale;
+  const sectionTitleWeight = 950;
+  const dataPanelTop = 34 * contentScale;
+  const dataTopBrand = <DataTopBrand tone={tone} scale={contentScale} />;
+  const dataBottomBrand = <DataBottomBrand tone={tone} scale={contentScale} />;
+  const panelStyle = {
+    background: colors.panelGlass,
+    border: `1px solid ${colors.line}`,
+    boxShadow: tone === 'dark' ? '0 22px 52px rgba(0,0,0,0.2)' : '0 18px 44px rgba(15,23,42,0.1)',
+    textShadow: tone === 'dark' ? '0 2px 8px rgba(0,0,0,0.28)' : 'none',
+  } satisfies React.CSSProperties;
+  const comparisonPanelLayout = (scale: number) => ({
+    ...panelStyle,
+    borderRadius: panelRadius,
+    padding: `${58 * scale}px ${42 * scale}px`,
+    minHeight: 560 * scale,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }) satisfies React.CSSProperties;
 
   if (template === 'versus') {
     const fitNameSize = (name: string, base: number) => {
@@ -925,6 +1384,10 @@ function PredictionThumbnail({
     const teamBlockWidth = size.width - pad * 2;
     const foregroundLogoSize = isSmall ? 78 : isSquare ? 146 : 158;
     const watermarkLogoSize = isSmall ? 230 : isSquare ? 520 : 620;
+    const posterImage = getPosterImageBackground(posterBackground, size);
+    const isImagePoster = Boolean(posterImage);
+    const imagePosterLogoSize = isSmall ? 84 : isSquare ? 168 : 176;
+    const imagePosterWatermarkSize = isSmall ? 260 : isSquare ? 560 : 640;
     const teamNameStyle = {
       color: colors.text,
       fontFamily: '"Noto Sans KR", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif',
@@ -937,117 +1400,99 @@ function PredictionThumbnail({
 
     return (
       <div style={frameStyle}>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: getPosterBackground(posterBackground, tone, posterColors),
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            left: -watermarkLogoSize * 0.24,
-            top: size.height * 0.16,
-            width: watermarkLogoSize,
-            height: watermarkLogoSize,
-            transform: 'rotate(-10deg)',
-            zIndex: 1,
-          }}
-        >
-          <PlainTeamLogo
-            src={home.logo}
-            name={home.name}
-            size={watermarkLogoSize}
-            color={colors.home}
-            showLogo={showLogo}
-            opacity={tone === 'dark' ? 0.07 : 0.1}
-          />
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            right: -watermarkLogoSize * 0.26,
-            bottom: size.height * 0.13,
-            width: watermarkLogoSize,
-            height: watermarkLogoSize,
-            transform: 'rotate(10deg)',
-            zIndex: 1,
-          }}
-        >
-          <PlainTeamLogo
-            src={away.logo}
-            name={away.name}
-            size={watermarkLogoSize}
-            color={colors.away}
-            showLogo={showLogo}
-            opacity={tone === 'dark' ? 0.07 : 0.1}
-          />
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: pad,
-            top: isSmall ? 24 : 42,
-            width: isSmall ? 118 : 210,
-            height: isSmall ? 28 : 50,
-            zIndex: 4,
-          }}
-        >
+        {posterImage ? (
           <Image
-            src="/logo/4590football-logo-white.webp"
-            alt="4590 Football"
-            width={210}
-            height={50}
+            src={posterImage}
+            alt=""
+            fill
             unoptimized
-            crossOrigin="anonymous"
+            priority
+            style={{ objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+          />
+        ) : (
+          <div
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              objectPosition: 'left center',
-              opacity: 0.96,
+              position: 'absolute',
+              inset: 0,
+              background: getPosterBackground(posterBackground, tone, posterColors),
             }}
           />
+        )}
+        <div
+          style={{
+            position: 'absolute',
+            left: isImagePoster ? -imagePosterWatermarkSize * 0.16 : -watermarkLogoSize * 0.24,
+            top: isImagePoster ? size.height * 0.12 : size.height * 0.16,
+            width: isImagePoster ? imagePosterWatermarkSize : watermarkLogoSize,
+            height: isImagePoster ? imagePosterWatermarkSize : watermarkLogoSize,
+            transform: isImagePoster ? 'rotate(-7deg)' : 'rotate(-10deg)',
+            zIndex: 1,
+          }}
+        >
+          {isImagePoster ? (
+            <GradientTeamLogo src={home.logo} name={home.name} size={imagePosterWatermarkSize} color={colors.home} opacity={0.2} />
+          ) : (
+            <PlainTeamLogo
+              src={home.logo}
+              name={home.name}
+              size={watermarkLogoSize}
+              color={colors.home}
+              showLogo={showLogo}
+              opacity={tone === 'dark' ? 0.07 : 0.1}
+            />
+          )}
         </div>
         <div
           style={{
             position: 'absolute',
-            right: pad,
-            top: isSmall ? 24 : 42,
-            color: colors.accent,
-            fontSize: isSmall ? 15 : 25,
-            fontWeight: 950,
-            textTransform: 'uppercase',
-            zIndex: 4,
+            right: isImagePoster ? -imagePosterWatermarkSize * 0.18 : -watermarkLogoSize * 0.26,
+            bottom: isImagePoster ? size.height * 0.09 : size.height * 0.13,
+            width: isImagePoster ? imagePosterWatermarkSize : watermarkLogoSize,
+            height: isImagePoster ? imagePosterWatermarkSize : watermarkLogoSize,
+            transform: isImagePoster ? 'rotate(7deg)' : 'rotate(10deg)',
+            zIndex: 1,
           }}
         >
-          Match Preview
+          {isImagePoster ? (
+            <GradientTeamLogo src={away.logo} name={away.name} size={imagePosterWatermarkSize} color={colors.away} opacity={0.2} />
+          ) : (
+            <PlainTeamLogo
+              src={away.logo}
+              name={away.name}
+              size={watermarkLogoSize}
+              color={colors.away}
+              showLogo={showLogo}
+              opacity={tone === 'dark' ? 0.07 : 0.1}
+            />
+          )}
         </div>
-        <VsMark size={size} compact={isSmall} />
+        
+        {!isImagePoster && <VsMark size={size} compact={isSmall} />}
 
         <div
           style={{
             position: 'absolute',
-            top: isSmall ? 74 : pad + 58,
+            top: isImagePoster ? size.height * 0.22 : isSmall ? 74 : pad + 58,
             left: pad,
             width: teamBlockWidth,
             zIndex: 4,
             display: 'flex',
             alignItems: 'center',
-            gap: isSmall ? 8 : 14,
+            gap: isImagePoster ? 18 * unit : isSmall ? 8 : 14,
           }}
         >
-          <PlainTeamLogo src={home.logo} name={home.name} size={foregroundLogoSize} color={colors.home} showLogo={showLogo} />
+          <PlainTeamLogo src={home.logo} name={home.name} size={isImagePoster ? imagePosterLogoSize : foregroundLogoSize} color={colors.home} showLogo={showLogo} />
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ color: '#ffffff', fontSize: badgeSize, fontWeight: 950, textTransform: 'uppercase', marginBottom: isSmall ? 2 : 5 }}>
-              HOME
-            </div>
+            {!isImagePoster && (
+              <div style={{ color: '#ffffff', fontSize: badgeSize, fontWeight: 950, textTransform: 'uppercase', marginBottom: isSmall ? 2 : 5 }}>
+                HOME
+              </div>
+            )}
             <div
               style={{
                 ...teamNameStyle,
-                fontSize: homeNameSize,
-                maxWidth: teamBlockWidth - foregroundLogoSize - (isSmall ? 18 : 30),
+                fontSize: isImagePoster ? fitNameSize(home.name, isSmall ? 40 : isSquare ? 72 : 80) : homeNameSize,
+                maxWidth: teamBlockWidth - (isImagePoster ? imagePosterLogoSize : foregroundLogoSize) - (isSmall ? 18 : 30),
               }}
             >
               {home.name}
@@ -1059,74 +1504,53 @@ function PredictionThumbnail({
           style={{
             position: 'absolute',
             right: pad,
-            bottom: isSmall ? 74 : pad + 58,
+            bottom: isImagePoster ? size.height * 0.18 : isSmall ? 74 : pad + 58,
             width: teamBlockWidth,
             zIndex: 4,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: isSmall ? 8 : 14,
+            gap: isImagePoster ? 18 * unit : isSmall ? 8 : 14,
             textAlign: 'right',
           }}
         >
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ color: '#ffffff', fontSize: badgeSize, fontWeight: 950, textTransform: 'uppercase', marginBottom: isSmall ? 2 : 5 }}>
-              AWAY
-            </div>
+            {!isImagePoster && (
+              <div style={{ color: '#ffffff', fontSize: badgeSize, fontWeight: 950, textTransform: 'uppercase', marginBottom: isSmall ? 2 : 5 }}>
+                AWAY
+              </div>
+            )}
             <div
               style={{
                 ...teamNameStyle,
-                fontSize: awayNameSize,
-                maxWidth: teamBlockWidth - foregroundLogoSize - (isSmall ? 18 : 30),
+                fontSize: isImagePoster ? fitNameSize(away.name, isSmall ? 40 : isSquare ? 72 : 80) : awayNameSize,
+                maxWidth: teamBlockWidth - (isImagePoster ? imagePosterLogoSize : foregroundLogoSize) - (isSmall ? 18 : 30),
               }}
             >
               {away.name}
             </div>
           </div>
-          <PlainTeamLogo src={away.logo} name={away.name} size={foregroundLogoSize} color={colors.away} showLogo={showLogo} />
+          <PlainTeamLogo src={away.logo} name={away.name} size={isImagePoster ? imagePosterLogoSize : foregroundLogoSize} color={colors.away} showLogo={showLogo} />
         </div>
 
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            bottom: isSmall ? 14 : 40,
-            transform: 'translateX(-50%)',
-            color: colors.muted,
-            fontSize: isSmall ? 12 : 22,
-            fontWeight: 850,
-            zIndex: 4,
-            textTransform: 'uppercase',
-            opacity: isSmall ? 0.86 : 1,
-          }}
-        >
-          4590football.com
-        </div>
       </div>
     );
   }
 
   if (template === 'powerOdds') {
-    const squareScale = isSquare ? unit : 1;
-    const radarChartSize = isSquare ? Math.round(720 * squareScale) : 870;
+    const squareScale = contentScale;
+    const radarChartSize = isSquare ? Math.round(650 * squareScale) : 760;
 
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={false} scale={squareScale} />
-        <div style={{ marginTop: isSquare ? Math.round(16 * squareScale) : 34 }}>
-          <PredictionOddsStrip
-            data={chartData}
-            tone={tone}
-            compact={false}
-            inline
-            inlineSize={isSquare ? Math.round(26 * squareScale) : 34}
-            scale={squareScale}
-          />
+        {dataTopBrand}
+        {dataBottomBrand}
+        <PowerOddsHeader data={chartData} tone={tone} scale={squareScale} />
+        <div style={{ marginTop: sectionTitleTop }}>
+          <div style={{ color: colors.accent, fontSize: sectionTitleSize, fontWeight: sectionTitleWeight }}>전력비교 레이더</div>
         </div>
-        <div style={{ marginTop: isSquare ? Math.round(12 * squareScale) : 32 }}>
-          <div style={{ color: colors.accent, fontSize: isSquare ? Math.round(30 * squareScale) : 34, fontWeight: 950 }}>전력비교 레이더</div>
-        </div>
-        <div style={{ marginTop: isSquare ? Math.round(10 * squareScale) : 24, borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSquare ? Math.round(4 * squareScale) : 4 }}>
+        <div style={{ ...panelStyle, position: 'relative', marginTop: dataPanelTop, borderRadius: panelRadius, padding: 12 * squareScale }}>
+          <RadarLegend data={chartData} tone={tone} scale={squareScale} />
           <RadarComparison data={chartData} tone={tone} chartSize={radarChartSize} />
         </div>
       </div>
@@ -1134,15 +1558,20 @@ function PredictionThumbnail({
   }
 
   if (template === 'powerRadar') {
-    const valueScale = isSquare ? unit : 1;
+    const valueScale = contentScale;
+    const titleSize = sectionTitleSize;
+    const titleTop = sectionTitleTop;
+    const panelTop = dataPanelTop;
 
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={false} scale={valueScale} />
-        <div style={{ marginTop: isSquare ? Math.round(42 * valueScale) : 42 }}>
-          <div style={{ color: colors.accent, fontSize: isSquare ? Math.round(34 * valueScale) : 34, fontWeight: 950 }}>전력비교 레이더 수치</div>
+        {dataTopBrand}
+        {dataBottomBrand}
+        <TeamHeader data={chartData} tone={tone} compact={false} scale={contentScale} />
+        <div style={{ marginTop: titleTop }}>
+          <div style={{ color: colors.accent, fontSize: titleSize, fontWeight: sectionTitleWeight }}>전력비교 레이더 수치</div>
         </div>
-        <div style={{ marginTop: isSquare ? Math.round(52 * valueScale) : 78, borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSquare ? Math.round(42 * valueScale) : 42 }}>
+        <div style={{ ...comparisonPanelLayout(valueScale), marginTop: panelTop }}>
           <RadarValueRows data={chartData} tone={tone} scale={valueScale} />
         </div>
       </div>
@@ -1150,88 +1579,75 @@ function PredictionThumbnail({
   }
 
   if (template === 'comparison') {
+    const comparisonScale = contentScale;
+    const titleSize = sectionTitleSize;
+    const titleTop = sectionTitleTop;
+    const panelTop = dataPanelTop;
+
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={isSmall} />
-        <div style={{ marginTop: isSmall ? 24 : 42 }}>
-          <div style={{ color: colors.accent, fontSize: isSmall ? 22 : 32, fontWeight: 950, marginBottom: 8 }}>상대 비교지표</div>
-          <div style={{ color: colors.muted, fontSize: isSmall ? 14 : 19, fontWeight: 750 }}>게시글 비교 바차트 기준</div>
+        {dataTopBrand}
+        {dataBottomBrand}
+        <TeamHeader data={chartData} tone={tone} scale={contentScale} />
+        <div style={{ marginTop: titleTop }}>
+          <div style={{ color: colors.accent, fontSize: titleSize, fontWeight: sectionTitleWeight }}>상대 비교지표</div>
         </div>
-        <div style={{ marginTop: isSmall ? 24 : 52, borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSmall ? 18 : 40 }}>
-          <ComparisonBars data={chartData} tone={tone} limit={isSmall ? 5 : 7} compact={isSmall} />
+        <div style={{ ...comparisonPanelLayout(comparisonScale), marginTop: panelTop }}>
+          <ComparisonBars data={chartData} tone={tone} limit={7} scale={comparisonScale} fullBar />
         </div>
       </div>
     );
   }
 
   if (template === 'condition') {
-    const homeLeague = home.league;
-    const awayLeague = away.league;
+    const conditionScale = contentScale * (isSquare ? 0.92 : 1.12);
+    const titleTop = sectionTitleTop;
+    const panelTop = dataPanelTop;
+    const panelPad = 18 * conditionScale;
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={isSmall} />
-        <div style={{ marginTop: isSmall ? 20 : 38, color: colors.accent, fontSize: isSmall ? 22 : 28, fontWeight: 950 }}>팀 컨디션</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isSmall ? 12 : 22, marginTop: isSmall ? 18 : 28 }}>
-          <StatBox label="최근 5경기 폼" homeValue={safeText(home.last_5?.form)} awayValue={safeText(away.last_5?.form)} tone={tone} compact={isSmall} />
-          <StatBox label="최근 5경기 공격" homeValue={safeText(home.last_5?.att)} awayValue={safeText(away.last_5?.att)} tone={tone} compact={isSmall} />
-          <StatBox label="최근 5경기 수비" homeValue={safeText(home.last_5?.def)} awayValue={safeText(away.last_5?.def)} tone={tone} compact={isSmall} />
-          <StatBox label="시즌 전적" homeValue={`${numAt(home, ['league', 'fixtures', 'wins', 'total'])}승 ${numAt(home, ['league', 'fixtures', 'draws', 'total'])}무 ${numAt(home, ['league', 'fixtures', 'loses', 'total'])}패`} awayValue={`${numAt(away, ['league', 'fixtures', 'wins', 'total'])}승 ${numAt(away, ['league', 'fixtures', 'draws', 'total'])}무 ${numAt(away, ['league', 'fixtures', 'loses', 'total'])}패`} tone={tone} compact={isSmall} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isSmall ? 12 : 22, marginTop: isSmall ? 12 : 22 }}>
-          <StatBox label="클린시트" homeValue={valueAt(homeLeague, ['clean_sheet', 'total'])} awayValue={valueAt(awayLeague, ['clean_sheet', 'total'])} tone={tone} compact={isSmall} />
-          <StatBox label="무득점 경기" homeValue={valueAt(homeLeague, ['failed_to_score', 'total'])} awayValue={valueAt(awayLeague, ['failed_to_score', 'total'])} tone={tone} compact={isSmall} />
-        </div>
-        <div style={{ marginTop: isSmall ? 14 : 28, borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSmall ? 16 : 28 }}>
-          <div style={{ color: colors.muted, fontSize: isSmall ? 14 : 20, fontWeight: 850, marginBottom: isSmall ? 10 : 16 }}>주요 포메이션</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isSmall ? 14 : 24 }}>
-            <div style={{ color: colors.home, fontSize: isSmall ? 24 : 36, fontWeight: 950 }}>{valueAt(homeLeague, ['lineups', '0', 'formation'])}</div>
-            <div style={{ color: colors.away, fontSize: isSmall ? 24 : 36, fontWeight: 950, textAlign: 'right' }}>{valueAt(awayLeague, ['lineups', '0', 'formation'])}</div>
-          </div>
+        {dataTopBrand}
+        {dataBottomBrand}
+        <TeamHeader data={chartData} tone={tone} scale={contentScale} />
+        <div style={{ marginTop: titleTop, color: colors.accent, fontSize: sectionTitleSize, fontWeight: sectionTitleWeight }}>팀 컨디션</div>
+        <div style={{ ...panelStyle, marginTop: panelTop, borderRadius: panelRadius, padding: panelPad, overflow: 'hidden' }}>
+          <TeamConditionTable data={chartData} tone={tone} scale={conditionScale} />
         </div>
       </div>
     );
   }
 
   if (template === 'goals') {
+    const goalsScale = contentScale * (isSquare ? 1.08 : 1.28);
+    const titleTop = sectionTitleTop;
+    const panelTop = dataPanelTop;
+    const panelPad = isSquare ? 16 * goalsScale : 18;
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={isSmall} />
-        <div style={{ marginTop: isSmall ? 20 : 38, color: colors.accent, fontSize: isSmall ? 22 : 28, fontWeight: 950 }}>득점 흐름</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isSmall ? 12 : 22, marginTop: isSmall ? 18 : 28 }}>
-          <StatBox label="시즌 득점" homeValue={valueAt(home, ['league', 'goals', 'for', 'total', 'total'])} awayValue={valueAt(away, ['league', 'goals', 'for', 'total', 'total'])} tone={tone} compact={isSmall} />
-          <StatBox label="시즌 실점" homeValue={valueAt(home, ['league', 'goals', 'against', 'total', 'total'])} awayValue={valueAt(away, ['league', 'goals', 'against', 'total', 'total'])} tone={tone} compact={isSmall} />
-          <StatBox label="평균 득점" homeValue={valueAt(home, ['league', 'goals', 'for', 'average', 'total'])} awayValue={valueAt(away, ['league', 'goals', 'for', 'average', 'total'])} tone={tone} compact={isSmall} />
-          <StatBox label="최대 승리" homeValue={valueAt(home, ['league', 'biggest', 'wins', 'home'])} awayValue={valueAt(away, ['league', 'biggest', 'wins', 'away'])} tone={tone} compact={isSmall} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: isSmall ? '1fr' : '1fr 1fr', gap: isSmall ? 12 : 22, marginTop: isSmall ? 14 : 24 }}>
-          <div style={{ borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSmall ? 14 : 24 }}>
-            <div style={{ color: colors.home, fontSize: isSmall ? 14 : 20, fontWeight: 900, marginBottom: isSmall ? 10 : 16 }}>{home.name} 시간대별 득점</div>
-            <MinuteBars team={home} tone={tone} color={colors.home} />
-          </div>
-          {!isSmall && (
-            <div style={{ borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: 24 }}>
-              <div style={{ color: colors.away, fontSize: 20, fontWeight: 900, marginBottom: 16, textAlign: 'right' }}>{away.name} 시간대별 득점</div>
-              <MinuteBars team={away} tone={tone} color={colors.away} />
-            </div>
-          )}
-        </div>
-        <div style={{ marginTop: isSmall ? 12 : 24 }}>
-          <StatBox label="언더/오버 2.5 득점" homeValue={`O ${valueAt(home, ['league', 'goals', 'for', 'under_over', '2.5', 'over'])} / U ${valueAt(home, ['league', 'goals', 'for', 'under_over', '2.5', 'under'])}`} awayValue={`O ${valueAt(away, ['league', 'goals', 'for', 'under_over', '2.5', 'over'])} / U ${valueAt(away, ['league', 'goals', 'for', 'under_over', '2.5', 'under'])}`} tone={tone} compact={isSmall} />
+        {dataTopBrand}
+        {dataBottomBrand}
+        <TeamHeader data={chartData} tone={tone} scale={contentScale} />
+        <div style={{ marginTop: titleTop, color: colors.accent, fontSize: sectionTitleSize, fontWeight: sectionTitleWeight }}>득점 흐름</div>
+        <div style={{ ...panelStyle, marginTop: panelTop, borderRadius: panelRadius, padding: panelPad, overflow: 'hidden' }}>
+          <GoalsFlowTable data={chartData} tone={tone} scale={goalsScale} />
         </div>
       </div>
     );
   }
 
   if (template === 'h2h') {
+    const h2hScale = contentScale;
     return (
       <div style={frameStyle}>
-        <TeamHeader data={chartData} tone={tone} compact={isSmall} />
-        <div style={{ marginTop: isSmall ? 24 : 42 }}>
-          <div style={{ color: colors.accent, fontSize: isSmall ? 22 : 32, fontWeight: 950, marginBottom: 8 }}>최근 맞대결</div>
-          <div style={{ color: colors.muted, fontSize: isSmall ? 14 : 19, fontWeight: 750 }}>최근 상대전적 스코어</div>
+        {dataTopBrand}
+        {dataBottomBrand}
+        <TeamHeader data={chartData} tone={tone} scale={contentScale} />
+        <div style={{ marginTop: sectionTitleTop }}>
+          <div style={{ color: colors.accent, fontSize: sectionTitleSize, fontWeight: sectionTitleWeight, marginBottom: 10 * h2hScale }}>최근 맞대결</div>
+          <div style={{ color: colors.muted, fontSize: 22 * h2hScale, fontWeight: 750 }}>최근 상대전적 스코어</div>
         </div>
-        <div style={{ marginTop: isSmall ? 24 : 58, borderRadius: panelRadius, background: colors.panel, border: `1px solid ${colors.line}`, padding: isSmall ? 20 : 44 }}>
-          <RecentH2HMiniBlock data={chartData} tone={tone} compact={isSmall} />
+        <div style={{ ...panelStyle, marginTop: dataPanelTop, borderRadius: panelRadius, padding: 54 * h2hScale }}>
+          <RecentH2HMiniBlock data={chartData} tone={tone} scale={h2hScale} />
         </div>
       </div>
     );
@@ -1365,19 +1781,6 @@ function PredictionThumbnail({
         </div>
       )}
 
-      <div
-        style={{
-          position: 'absolute',
-          right: pad,
-          bottom: isSmall ? 22 : pad,
-          color: colors.muted,
-          fontSize: Math.max(13, 20 * unit),
-          fontWeight: 800,
-          opacity: isSmall ? 0.75 : 1,
-        }}
-      >
-        4590football.com
-      </div>
     </div>
   );
 }
@@ -1393,7 +1796,9 @@ export default function PredictionThumbnailMaker() {
   const [showLogo, setShowLogo] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAll, setIsSavingAll] = useState(false);
   const thumbnailRef = useRef<HTMLDivElement>(null);
+  const exportRefs = useRef<Partial<Record<ThumbnailTemplate, HTMLDivElement | null>>>({});
 
   const selectedSize = useMemo(
     () => THUMBNAIL_SIZES.find((item) => item.id === sizeId) ?? THUMBNAIL_SIZES[0],
@@ -1437,7 +1842,7 @@ export default function PredictionThumbnailMaker() {
       });
 
       const link = document.createElement('a');
-      link.download = `${makeFileName(source, selectedSize)}-${selectedSize.width}x${selectedSize.height}.png`;
+      link.download = `${makeFileName(source, selectedSize)}-${template}-${selectedSize.width}x${selectedSize.height}.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {
@@ -1446,6 +1851,52 @@ export default function PredictionThumbnailMaker() {
     } finally {
       node.style.transform = previousTransform;
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (!source) return;
+
+    setIsSavingAll(true);
+    try {
+      const { toPng } = await import('html-to-image');
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const files: Array<{ name: string; bytes: Uint8Array }> = [];
+
+      for (const item of EXPORT_TEMPLATES) {
+        const node = exportRefs.current[item.id];
+        if (!node) continue;
+
+        const dataUrl = await toPng(node, {
+          width: selectedSize.width,
+          height: selectedSize.height,
+          canvasWidth: selectedSize.width,
+          canvasHeight: selectedSize.height,
+          pixelRatio: 1,
+          cacheBust: true,
+          backgroundColor: TONES[tone].bg,
+        });
+
+        files.push({
+          name: `${makeFileName(source, selectedSize)}-${item.id}-${selectedSize.width}x${selectedSize.height}.png`,
+          bytes: dataUrlToBytes(dataUrl),
+        });
+      }
+
+      const zipUrl = URL.createObjectURL(createZipBlob(files));
+      const link = document.createElement('a');
+      link.download = `${makeFileName(source, selectedSize)}-all-${selectedSize.width}x${selectedSize.height}.zip`;
+      link.href = zipUrl;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+
+      toast.success('전체 썸네일 ZIP 저장을 시작했습니다.');
+    } catch (error) {
+      console.error('thumbnail batch export failed', error);
+      toast.error('전체 ZIP 저장에 실패했습니다. 로고 이미지 로딩 후 다시 시도해 보세요.');
+    } finally {
+      setIsSavingAll(false);
     }
   };
 
@@ -1469,11 +1920,20 @@ export default function PredictionThumbnailMaker() {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!source || isSaving}
+            disabled={!source || isSaving || isSavingAll}
             className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-2 text-[13px] font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#F0F0F0] dark:text-gray-900 dark:hover:bg-white"
           >
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             PNG 저장
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveAll}
+            disabled={!source || isSaving || isSavingAll}
+            className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-2 text-[13px] font-medium text-gray-800 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-[#262626] dark:text-gray-200 dark:hover:bg-[#333333]"
+          >
+            {isSavingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            전체 ZIP 저장
           </button>
         </div>
       </div>
@@ -1572,8 +2032,7 @@ export default function PredictionThumbnailMaker() {
             </div>
           </section>
 
-          {template === 'versus' && (
-            <section>
+          <section>
               <h2 className="mb-2 text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">배경</h2>
               <div className="grid gap-2">
                 {POSTER_BACKGROUNDS.map((item) => (
@@ -1614,8 +2073,7 @@ export default function PredictionThumbnailMaker() {
                   ))}
                 </div>
               )}
-            </section>
-          )}
+          </section>
 
           <label className="flex items-center justify-between rounded-md border border-black/10 bg-white px-3 py-2 text-[13px] font-medium text-gray-700 dark:border-white/10 dark:bg-[#262626] dark:text-gray-300">
             로고 표시
@@ -1672,6 +2130,42 @@ export default function PredictionThumbnailMaker() {
           )}
         </section>
       </div>
+
+      {source && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            left: -20000,
+            top: 0,
+            width: selectedSize.width,
+            pointerEvents: 'none',
+          }}
+        >
+          {EXPORT_TEMPLATES.map((item) => (
+            <div
+              key={item.id}
+              ref={(node) => {
+                exportRefs.current[item.id] = node;
+              }}
+              style={{
+                width: selectedSize.width,
+                height: selectedSize.height,
+              }}
+            >
+              <PredictionThumbnail
+                source={source}
+                size={selectedSize}
+                template={item.id}
+                tone={tone}
+                showLogo={showLogo}
+                posterBackground={posterBackground}
+                posterColors={posterColors}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
