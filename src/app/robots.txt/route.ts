@@ -144,6 +144,7 @@ export async function GET() {
     'Disallow: /boards/*/edit',
     '',
     'User-agent: SERankingBot',
+    'User-agent: SERankingBacklinksBot',
     'Disallow: /',
     '',
     `Host: ${new URL(siteConfig.url).host}`,
