@@ -73,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="theme-color" content="#ffffff" />
         <meta name="apple-mobile-web-app-title" content="4590" />
+        <meta name="p:domain_verify" content="093222e7675c8f952acbd872377e3c2b" />
         <link rel="shortcut icon" href={`${siteConfig.url}/favicon.ico`} type="image/x-icon" />
       </head>
 
