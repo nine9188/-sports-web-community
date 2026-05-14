@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
@@ -52,41 +52,50 @@ export default function LeagueStandings({
   const [standingsByLeague, setStandingsByLeague] = useState<Record<string, StandingsData | null>>({
     [initialLeague]: initialStandings,
   });
-  const [isPending, startTransition] = useTransition();
+  const [loadingLeagueId, setLoadingLeagueId] = useState<string | null>(null);
   const currentLeague = LEAGUES.find(league => league.id === activeLeagueId) ?? LEAGUES[0];
   const currentStandings = standingsByLeague[currentLeague.id] ?? null;
   const currentTeamLogoUrls = currentStandings?.teamLogoUrls || teamLogoUrls;
+  const isCurrentLeagueLoading = loadingLeagueId === currentLeague.id;
 
   const getLeagueLogo = (id?: number) => (id ? leagueLogoUrls[id] : undefined) || LEAGUE_PLACEHOLDER;
   const getLeagueLogoDark = (id?: number) =>
     (id ? leagueLogoUrlsDark[id] || leagueLogoUrls[id] : undefined) || LEAGUE_PLACEHOLDER;
   const getTeamLogo = (id: number) => currentTeamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getTeamHref = (team: { team_id: number; name: string }) => buildTeamHref(team);
-  const handleLeagueChange = (leagueId: string) => {
-    if (leagueId === activeLeagueId || isPending) return;
-
-    setActiveLeagueId(leagueId);
-
+  const loadLeagueStandings = async (leagueId: string) => {
     if (Object.prototype.hasOwnProperty.call(standingsByLeague, leagueId)) {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/sidebar/standings/${encodeURIComponent(leagueId)}`);
-        const payload = await response.json() as { data?: StandingsData | null };
+    setLoadingLeagueId(leagueId);
 
-        setStandingsByLeague((prev) => ({
-          ...prev,
-          [leagueId]: response.ok ? payload.data ?? null : null,
-        }));
-      } catch {
-        setStandingsByLeague((prev) => ({
-          ...prev,
-          [leagueId]: null,
-        }));
-      }
-    });
+    try {
+      const response = await fetch(`/api/sidebar/standings/${encodeURIComponent(leagueId)}`);
+      const payload = await response.json() as { data?: StandingsData | null };
+
+      setStandingsByLeague((prev) => ({
+        ...prev,
+        [leagueId]: response.ok ? payload.data ?? null : null,
+      }));
+    } catch {
+      setStandingsByLeague((prev) => ({
+        ...prev,
+        [leagueId]: null,
+      }));
+    } finally {
+      setLoadingLeagueId((current) => (current === leagueId ? null : current));
+    }
+  };
+  const handleLeagueChange = (leagueId: string) => {
+    if (leagueId === activeLeagueId) return;
+
+    if (!Object.prototype.hasOwnProperty.call(standingsByLeague, leagueId)) {
+      setLoadingLeagueId(leagueId);
+    }
+
+    setActiveLeagueId(leagueId);
+    void loadLeagueStandings(leagueId);
   };
 
   return (
@@ -103,12 +112,11 @@ export default function LeagueStandings({
               key={league.id}
               type="button"
               onClick={() => handleLeagueChange(league.id)}
-              disabled={isPending}
               className={`flex-1 px-1.5 py-2 text-center text-[11px] transition-colors ${
                 isActive
                   ? 'bg-white text-gray-900 font-semibold dark:bg-[#1D1D1D] dark:text-[#F0F0F0]'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-[#F0F0F0]'
-              } ${isPending ? 'cursor-wait' : ''}`}
+              } ${loadingLeagueId === league.id ? 'cursor-wait opacity-80' : ''}`}
               aria-pressed={isActive}
             >
               {league.name}
@@ -132,7 +140,11 @@ export default function LeagueStandings({
       </div>
 
       <div className="bg-white dark:bg-[#1D1D1D]">
-        {currentStandings?.standings?.[0]?.length ? (
+        {isCurrentLeagueLoading && !currentStandings ? (
+          <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
+            불러오는 중...
+          </div>
+        ) : currentStandings?.standings?.[0]?.length ? (
           <table className="w-full text-xs border-collapse table-fixed">
             <colgroup>
               <col className="w-[30px]" />
