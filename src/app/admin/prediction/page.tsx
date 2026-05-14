@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import Image from 'next/image';
 import { toast } from 'sonner';
 import { TabList, type TabItem, Button } from '@/shared/components/ui';
 import { RefreshCw, Check, X, Target, Eye, CalendarDays } from 'lucide-react';
 import { formatDate } from '@/shared/utils/dateUtils';
 import Spinner from '@/shared/components/Spinner';
 import Calendar from '@/shared/components/Calendar';
+import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -81,7 +81,7 @@ export default function PredictionAdminPage() {
       } else {
         toast.error(result.error || '미리보기 데이터를 불러올 수 없습니다.');
       }
-    } catch (error) {
+    } catch {
       toast.error('미리보기 로드 실패');
     } finally {
       setPreviewLoading(false);
@@ -239,7 +239,6 @@ export default function PredictionAdminPage() {
 
     startTransition(async () => {
       try {
-        let successCount = 0;
         let errorCount = 0;
         let totalMatchesProcessed = 0;
         const errorMessages: string[] = [];
@@ -250,7 +249,6 @@ export default function PredictionAdminPage() {
             const result = await generateSingleLeaguePrediction(formatDateToString(selectedDate), group.league.id, 'manual', matchIds);
 
             if (result.status === 'success') {
-              successCount++;
               totalMatchesProcessed += result.matches_count;
             } else if (result.status === 'error') {
               errorCount++;
@@ -487,12 +485,13 @@ export default function PredictionAdminPage() {
                           onChange={() => toggleLeagueMatches(group.league.id)}
                           className="w-5 h-5 mr-3 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-500 cursor-pointer"
                         />
-                        <Image
-                          src={group.league.logo}
+                        <UnifiedSportsImageClient
+                          src={group.league.logo || '/images/placeholder-league.svg'}
                           alt={group.league.name}
                           width={32}
                           height={32}
-                          className="w-8 h-8 mr-3"
+                          className="mr-3"
+                          fallbackSrc="/images/placeholder-league.svg"
                         />
                         <label htmlFor={`league-${group.league.id}`} className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] cursor-pointer">
                           {group.league.name}
@@ -704,4 +703,3 @@ export default function PredictionAdminPage() {
     </div>
   );
 }
-
