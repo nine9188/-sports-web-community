@@ -30,6 +30,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
               alt={teamDisplayName}
               width={24}
               height={24}
+              unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
           </div>
@@ -44,6 +45,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
             alt={displayName}
             width={64}
             height={64}
+            unoptimized
             style={{ width: '64px', height: '64px', objectFit: 'cover' }}
           />
         </div>

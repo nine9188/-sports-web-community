@@ -34,6 +34,7 @@ export default function LeagueLogo({
         sizes={`${size}px`}
         onError={() => setImgSrc(fallbackSrc)}
         priority={priority}
+        unoptimized
         className="object-contain"
       />
     </div>
