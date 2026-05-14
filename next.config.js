@@ -11,6 +11,9 @@ const nextConfig = {
     optimizeCss: true,
   },
   images: {
+    // Vercel Image Optimization can return 402 when quota/policy is hit.
+    // Serve already-optimized WebP/CDN assets directly so sports logos never break.
+    unoptimized: true,
     localPatterns: [
       {
         pathname: '/api/proxy-image',
