@@ -2,6 +2,7 @@ import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches }
 import { Container } from '@/shared/components/ui';
 import LeagueToggleClient from './LeagueToggleClient';
 import LeagueHeader from './LeagueHeader';
+import LiveScoreWidgetAutoRefresh from './LiveScoreWidgetAutoRefresh';
 import MatchCardServer from './MatchCardServer';
 import WidgetHeader from './WidgetHeader';
 import type { WidgetLeague, WidgetMatch } from './types';
@@ -109,6 +110,8 @@ const LEAGUE_PRIORITY: Record<number, number> = {
   10: 9,
 };
 
+const FINAL_STATUS_CODES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'ABD']);
+
 export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeague[] {
   if (!result.success || !result.data) return [];
 
@@ -131,9 +134,14 @@ interface LiveScoreWidgetV2ServerProps {
 }
 
 export default async function LiveScoreWidgetV2Server({ leagues }: LiveScoreWidgetV2ServerProps) {
+  const shouldAutoRefresh = leagues.some((league) =>
+    league.matches.some((match) => !FINAL_STATUS_CODES.has(match.status))
+  );
+
   if (leagues.length === 0) {
     return (
       <Container className="bg-white dark:bg-[#1D1D1D]">
+        <LiveScoreWidgetAutoRefresh enabled={false} />
         <WidgetHeader />
         <div className="py-4 px-4 text-center">
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-2">
@@ -149,6 +157,7 @@ export default async function LiveScoreWidgetV2Server({ leagues }: LiveScoreWidg
 
   return (
     <div className="space-y-4">
+      <LiveScoreWidgetAutoRefresh enabled={shouldAutoRefresh} />
       {leagues.map((league, index) => {
         const isFirst = index === 0;
 

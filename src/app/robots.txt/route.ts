@@ -1,21 +1,10 @@
 import { siteConfig } from '@/shared/config';
-import {
-  getMatchSitemapCount,
-  getPlayerSitemapCount,
-  getPostSitemapCount,
-  getTeamSitemapCount,
-  sitemapPageCount,
-  siteUrl,
-} from '@/shared/seo/sitemap';
-
-function generatedSitemapUrls(path: string, total: number): string[] {
-  return sitemapPageCount(total).map(({ id }) => siteUrl(`${path}/sitemap/${id}.xml`));
-}
+import { siteUrl } from '@/shared/seo/sitemap';
 
 const DAUM_WEBMASTER_PIN =
   '#DaumWebMasterTool:01765042dd66f6f3757a98813cab0c841580123d8059d5895751b2575132466f:Qc8LDKHH1AV7wtQw2Sv8Rw==';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 const publicCrawlerRules = [
   'Allow: /',
@@ -42,18 +31,6 @@ const publicCrawlerRules = [
 ];
 
 export async function GET() {
-  const [
-    postSitemapCount,
-    teamSitemapCount,
-    playerSitemapCount,
-    matchSitemapCount,
-  ] = await Promise.all([
-    getPostSitemapCount(),
-    getTeamSitemapCount(),
-    getPlayerSitemapCount(),
-    getMatchSitemapCount(),
-  ]);
-
   const lines = [
     'User-agent: *',
     'Allow: /',
@@ -163,14 +140,6 @@ export async function GET() {
     '',
     `Host: ${new URL(siteConfig.url).host}`,
     `Sitemap: ${siteUrl('/sitemap.xml')}`,
-    `Sitemap: ${siteUrl('/boards/sitemap.xml')}`,
-    ...generatedSitemapUrls('/boards/posts', postSitemapCount).map((url) => `Sitemap: ${url}`),
-    `Sitemap: ${siteUrl('/livescore/football/leagues/sitemap.xml')}`,
-    ...generatedSitemapUrls('/livescore/football/team', teamSitemapCount).map((url) => `Sitemap: ${url}`),
-    ...generatedSitemapUrls('/livescore/football/player', playerSitemapCount).map((url) => `Sitemap: ${url}`),
-    ...generatedSitemapUrls('/livescore/football/match', matchSitemapCount).map((url) => `Sitemap: ${url}`),
-    `Sitemap: ${siteUrl('/transfers/sitemap.xml')}`,
-    `Sitemap: ${siteUrl('/shop/sitemap.xml')}`,
     '',
     DAUM_WEBMASTER_PIN,
     '',

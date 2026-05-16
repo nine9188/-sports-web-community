@@ -6,6 +6,7 @@ import { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 import MatchHeader, { type HeaderGoalEvent } from './MatchHeader';
+import MatchAutoRefresh from './MatchAutoRefresh';
 import MatchSidebar from './sidebar/MatchSidebar';
 import TabContent from './TabContent';
 import TabNavigation from './TabNavigation';
@@ -51,9 +52,12 @@ export default function MatchPageClient({
 }: MatchPageClientProps) {
   const currentTab = initialTab;
   const sidebarData = initialSidebarData ?? null;
+  const statusCode = initialData.match?.status.code;
+  const startDate = initialData.match?.time.date;
 
   return (
     <div className="container">
+      <MatchAutoRefresh statusCode={statusCode} startDate={startDate} />
       <div className="flex gap-4">
         <div className="flex-1 min-w-0">
           <MatchHeader

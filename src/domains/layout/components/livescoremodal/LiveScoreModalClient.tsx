@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
+import { useVisibilityActivityRefresh } from '@/shared/hooks/useVisibilityActivityRefresh';
 import Link from 'next/link';
 import {
   fetchTodayMatches,
@@ -65,6 +66,19 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
       cancelled = true;
     };
   }, [isOpen, matchesByDate, selectedDate]);
+
+  useVisibilityActivityRefresh({
+    enabled: isOpen && selectedDate === 'today',
+    intervalMs: 60_000,
+    onRefresh: async () => {
+      try {
+        const matches = (await fetchTodayMatches()).data?.today?.matches || [];
+        setMatchesByDate((prev) => ({ ...prev, today: matches }));
+      } catch (error) {
+        console.error('[LiveScoreModal] failed to refresh today matches:', error);
+      }
+    },
+  });
 
   // 탭 변경 핸들러
   const handleTabChange = (newDate: 'yesterday' | 'today' | 'tomorrow') => {

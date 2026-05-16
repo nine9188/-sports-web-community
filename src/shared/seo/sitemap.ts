@@ -137,6 +137,44 @@ export function sitemapPageCount(total: number): Array<{ id: number }> {
   return Array.from({ length: Math.max(1, Math.ceil(total / SITEMAP_PAGE_SIZE)) }, (_, id) => ({ id }));
 }
 
+export function getStaticSitemap(): MetadataRoute.Sitemap {
+  return [
+    {
+      url: siteUrl('/'),
+    },
+    {
+      url: siteUrl('/about'),
+    },
+    {
+      url: siteUrl('/guide'),
+    },
+    {
+      url: siteUrl('/contact'),
+    },
+    {
+      url: siteUrl('/transfers'),
+    },
+    {
+      url: siteUrl('/livescore/football'),
+    },
+    {
+      url: siteUrl('/livescore/football/leagues'),
+    },
+    {
+      url: siteUrl('/shop'),
+    },
+    {
+      url: siteUrl('/shop/emoticon-studio'),
+    },
+    {
+      url: siteUrl('/boards/all'),
+    },
+    {
+      url: siteUrl('/boards/popular'),
+    },
+  ];
+}
+
 function pageRange(id: string | number): { from: number; to: number } {
   const page = Number(id);
   const from = Number.isFinite(page) && page > 0 ? page * SITEMAP_PAGE_SIZE : 0;

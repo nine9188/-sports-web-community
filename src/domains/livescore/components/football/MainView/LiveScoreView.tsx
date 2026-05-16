@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { useVisibilityActivityRefresh } from '@/shared/hooks/useVisibilityActivityRefresh';
 import { isLiveMatch } from '../../../constants/match-status';
 import { Match } from '@/domains/livescore/types/match';
 import LeagueMatchList from './LeagueMatchList';
@@ -58,6 +59,16 @@ export default function LiveScoreView({
     const id = scheduleNextKstMidnight();
     return () => window.clearTimeout(id);
   }, [router]);
+
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = kst.toISOString().split('T')[0];
+  const shouldAutoRefresh = showLiveOnly || initialDate === today;
+
+  useVisibilityActivityRefresh({
+    enabled: shouldAutoRefresh,
+    intervalMs: 60_000,
+    onRefresh: () => router.refresh(),
+  });
 
   const filteredMatches = useMemo(() => {
     return initialMatches.filter(match => {

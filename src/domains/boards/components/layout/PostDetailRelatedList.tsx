@@ -134,7 +134,7 @@ export default function PostDetailRelatedList({
       </div>
 
       {pageCount > 1 && (
-        <div className="px-4 sm:px-6 mt-4">
+        <div className="px-4 sm:px-6 mt-4 mb-4">
           <Pagination
             currentPage={currentPage}
             totalPages={pageCount}

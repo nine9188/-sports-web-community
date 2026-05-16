@@ -232,8 +232,19 @@ export interface TodayMatchesResult {
 
 // ── API 호출 ──
 
+type FootballApiFetchOptions = {
+  cache?: 'default' | 'no-store';
+  revalidate?: number;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const fetchFromFootballApi = async (endpoint: string, params: Record<string, string | number> = {}): Promise<any> => {
+type FootballApiResponse = any;
+
+export const fetchFromFootballApi = async (
+  endpoint: string,
+  params: Record<string, string | number> = {},
+  options: FootballApiFetchOptions = {}
+): Promise<FootballApiResponse> => {
   // URL 파라미터 구성
   const queryParams = new URLSearchParams();
 
@@ -280,14 +291,17 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 
   for (let attempt = 1; attempt <= FOOTBALL_API_MAX_ATTEMPTS; attempt += 1) {
     try {
-    const response = await fetch(url, {
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': API_KEY,
-      },
-      // ⭐ endpoint별 최적 캐시 전략 (Vercel Data Cache)
-      next: { revalidate: getRevalidateTime(endpoint) }
-    });
+      const shouldNoStore = options.cache === 'no-store' || (endpoint === 'fixtures' && queryParams.has('id'));
+      const response = await fetch(url, {
+        headers: {
+          'x-rapidapi-host': 'v3.football.api-sports.io',
+          'x-rapidapi-key': API_KEY,
+        },
+        // ⭐ endpoint별 최적 캐시 전략 (Vercel Data Cache)
+        ...(shouldNoStore
+          ? { cache: 'no-store' as const }
+          : { next: { revalidate: options.revalidate ?? getRevalidateTime(endpoint) } })
+      });
 
     if (!response.ok) {
       throw new Error(`API 응답 오류: ${response.status}`);
@@ -327,7 +341,12 @@ export const fetchFromFootballApi = async (endpoint: string, params: Record<stri
 /** API 호출 + 리그 필터링만, 이미지 URL은 빈 문자열 */
 async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
   try {
-    const data = await fetchFromFootballApi('fixtures', { date });
+    const isToday = date === toKstDateString(new Date());
+    const data = await fetchFromFootballApi(
+      'fixtures',
+      { date },
+      isToday ? { revalidate: 15 } : {}
+    );
 
     if (!data.response) {
       return [];
@@ -527,9 +546,8 @@ export const fetchMatchesByDateCached = cache(async (date: string): Promise<Matc
 
 // ── 메인페이지 최적화 함수 ──
 
-// 오늘 경기 데이터 (unstable_cache: 동적 렌더링에서도 서버 전체 공유 캐시)
-const _fetchTodayMatchesCached = unstable_cache(
-  async (): Promise<TodayMatchesResult> => {
+// 오늘 경기 데이터: 서버 전체 공유 캐시는 쓰지 않고 렌더 사이클 안에서만 중복 호출을 줄입니다.
+const _fetchTodayMatchesCached = async (): Promise<TodayMatchesResult> => {
     const nowUtc = new Date();
     const todayFormatted = toKstDateString(nowUtc);
 
@@ -556,10 +574,7 @@ const _fetchTodayMatchesCached = unstable_cache(
         error: '데이터를 가져오는데 실패했습니다.'
       };
     }
-  },
-  ['livescore-today'],
-  { revalidate: 120, tags: ['livescore'] }
-);
+};
 
 // React cache()로 같은 렌더 사이클 내 중복 호출도 방지
 export const fetchTodayMatches = cache(_fetchTodayMatchesCached);

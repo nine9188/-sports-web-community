@@ -2,11 +2,11 @@ const baseUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'htt
 
 const checks = [
   { path: '/sitemap.xml', minLocs: 8 },
-  { path: '/boards/posts/sitemap/0.xml', minLocs: 100 },
-  { path: '/livescore/football/team/sitemap/0.xml', minLocs: 100 },
-  { path: '/livescore/football/player/sitemap/0.xml', minLocs: 100 },
-  { path: '/livescore/football/match/sitemap/0.xml', minLocs: 100 },
-  { path: '/transfers/sitemap.xml', minLocs: 100 },
+  { path: '/sitemaps/posts/sitemap/0.xml', minLocs: 100 },
+  { path: '/sitemaps/teams/sitemap/0.xml', minLocs: 100 },
+  { path: '/sitemaps/players/sitemap/0.xml', minLocs: 100 },
+  { path: '/sitemaps/matches/sitemap/0.xml', minLocs: 100 },
+  { path: '/sitemaps/transfers/sitemap.xml', minLocs: 100 },
 ];
 
 function absoluteUrl(path) {
