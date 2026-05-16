@@ -65,7 +65,7 @@ export async function generateMetadata({
   const teamName = team.name;
   const canonicalSlug = await resolveTeamCanonicalSlug(id);
   const teamSlug = canonicalSlug || (isUsableTeamSlug(id, slug) ? slug : '') || slugify(teamName);
-  const teamLogoUrl = await getTeamLogoUrl(Number(id), 'md');
+  const teamLogoUrl = team.logo || await getTeamLogoUrl(Number(id), 'md');
   const ogImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
   const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
 
@@ -89,11 +89,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
   try {
     const canonicalSlug = await resolveTeamCanonicalSlug(id);
 
-    if (!canonicalSlug) {
-      return notFound();
-    }
-
-    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
+    if (canonicalSlug && normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       const tabParam = tab && tab !== 'overview' ? `?tab=${tab}` : '';
       permanentRedirect(`/livescore/football/team/${id}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
@@ -128,21 +124,15 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
         matchLimit: 10,
       }),
-      initialTab === 'overview'
-        ? fetchTeamOverviewPlayerRankingsData(id, 5)
-        : Promise.resolve(null),
-      initialTab === 'overview'
-        ? fetchTeamOverviewTransfersData(id)
-        : Promise.resolve(null),
+      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewPlayerRankingsData>> | null),
+      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewTransfersData>> | null),
       initialTab === 'overview'
         ? fetchTeamOverviewRecentMatchesData(id, 5)
         : Promise.resolve(null),
       initialTab === 'overview'
         ? fetchTeamOverviewUpcomingMatchesData(id, 5)
         : Promise.resolve(null),
-      initialTab === 'overview'
-        ? fetchTeamOverviewStandingsData(id)
-        : Promise.resolve(null),
+      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewStandingsData>> | null),
     ]);
 
     if (!initialData.success || !initialData.teamData?.team) {
@@ -278,7 +268,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       (member: { position?: string }) => member.position === 'Coach'
     ) as { id?: number; name?: string } | undefined;
 
-    const teamSlug = canonicalSlug;
+    const teamSlug = canonicalSlug || slug;
     const teamUrl = `${siteConfig.url}/livescore/football/team/${id}/${teamSlug}`;
     const leagueId = leagueIdFromData;
     const leagueNameForSlug = initialData.standings?.data?.[0]?.league?.name || leagueMapping?.name_ko;

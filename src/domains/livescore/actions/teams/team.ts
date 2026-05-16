@@ -5,6 +5,7 @@ import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { fetchCachedTeamShell } from './teamShell';
 
 // 팀 정보 인터페이스
 export interface TeamData {
@@ -454,15 +455,18 @@ export const fetchTeamSeoData = cache(
       };
     }
 
-    const teamMapping = await getTeamById(numericTeamId);
-    if (teamMapping) {
+    const shellResult = await fetchCachedTeamShell(teamId);
+    if (shellResult.status === 'found') {
+      const team = shellResult.shell;
       return {
         success: true,
         message: '팀 SEO 데이터를 성공적으로 가져왔습니다',
         team: {
           id: numericTeamId,
-          name: teamMapping.name_ko || teamMapping.name_en,
-          country: teamMapping.country_ko || teamMapping.country_en,
+          name: team.name_ko || team.name,
+          country: team.country_ko || team.country,
+          founded: team.founded || undefined,
+          logo: team.logo || undefined,
         },
       };
     }

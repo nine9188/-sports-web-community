@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getTeamLinkSlug } from '@/domains/livescore/utils/entityLinks';
+import { fetchCachedTeamShell } from './teamShell';
 
 type TeamSlugRow = {
   slug?: string | null;
@@ -71,12 +72,18 @@ async function resolveTeamCanonicalSlugInternal(teamId: string): Promise<string 
   const numericId = Number(teamId);
   if (!Number.isFinite(numericId) || numericId <= 0) return null;
 
-  const dbRow = await fetchTeamSlugRowFromDb(teamId);
-  if (isUsableTeamSlug(teamId, dbRow?.slug)) return dbRow.slug;
+  const shellResult = await fetchCachedTeamShell(teamId);
+  if (shellResult.status === 'found') {
+    if (isUsableTeamSlug(teamId, shellResult.shell.slug)) return shellResult.shell.slug;
 
-  if (dbRow) {
-    const dbNameSlug = getTeamLinkSlug({ id: teamId, ...dbRow });
-    if (isUsableTeamSlug(teamId, dbNameSlug)) return dbNameSlug;
+    const shellSlug = getTeamLinkSlug({
+      id: teamId,
+      name: shellResult.shell.name_en || shellResult.shell.name,
+      name_ko: shellResult.shell.name_ko || shellResult.shell.name,
+      display_name: shellResult.shell.displayName || shellResult.shell.name,
+      short_name: shellResult.shell.shortName || undefined,
+    });
+    if (isUsableTeamSlug(teamId, shellSlug)) return shellSlug;
   }
 
   const apiName = await fetchTeamNameFromApi(teamId);

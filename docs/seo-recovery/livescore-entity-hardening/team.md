@@ -1,102 +1,204 @@
 # Team Detail Hardening
 
-## Goal
+## Status
 
-team 상세는 DB shell이 꽤 충분하다. API fallback은 유지하되, metadata와 canonical slug는 DB shell 우선으로 처리하고, overview 본문의 무거운 데이터 fan-out을 줄인다.
+2026-05-16 기준 team 상세 페이지 hardening 1차 구현은 완료했다.
+
+목표는 `/livescore/football/team/[id]/[slug]`의 metadata, canonical slug, 기본 팀 프로필을 DB shell 중심으로 처리하고, overview 첫 SSR에서 무거운 데이터 fan-out을 줄이는 것이다. API-Football은 계속 사용하지만, 크롤링 URL 생존에 필요한 최소 team shell은 `football_teams` DB를 먼저 사용한다.
+
+## 문제 요약
+
+기존 team 상세 구조는 다음 이유로 Googlebot 재크롤 burst 때 부담이 커질 수 있었다.
+
+1. metadata에서 `fetchTeamSeoData(id)`와 `resolveTeamCanonicalSlug(id)`를 각각 호출했다.
+2. 본문에서 `resolveTeamCanonicalSlug(id)`를 다시 호출했다.
+3. 본문에서 `fetchTeamFullData(id, options)`를 호출했다.
+4. overview 첫 진입에서 아래 데이터를 동시에 SSR 했다.
+   - player rankings
+   - transfers
+   - recent matches
+   - upcoming matches
+   - standings
+5. `resolveTeamCanonicalSlug()`는 DB slug가 없으면 API `teams` fallback을 탔다.
+6. canonical slug가 없으면 `/team/[id]/[slug]` 본문이 바로 404가 될 수 있었다.
+
+team은 DB shell이 이미 충분한 편이라, player/match보다 더 DB 우선으로 가져가기 좋다.
 
 ## DB 확인 결과
 
+MCP로 확인한 `football_teams` 주요 상태:
+
 - `football_teams`: 1,368 rows
-- `league_id` 보유: 1,368 rows
-- `slug` 보유: 1,298 rows
-- `name_ko` 보유: 523 rows
-- `logo_cached_url`은 현재 0 rows지만 `asset_cache`에는 `team_logo` ready row가 9,922개 있음
+- `league_id`: NOT NULL
+- `league_name`: NOT NULL
+- `country`: NOT NULL
+- `slug`: 대부분 보유
+- `name_ko`: 일부 보유
+- `logo_cached_url`: 현재 거의 비어 있음
+- `asset_cache`: `team_logo` ready row가 다수 존재
 - `leagues`: 37 rows
 
-즉 team SEO shell은 DB에서 대부분 처리 가능하다. 한글명이 없는 팀은 영문명 fallback을 사용하면 된다.
+`football_teams` shell에 실제로 있는 주요 컬럼:
 
-## Current Hot Path
+- `team_id`
+- `name`
+- `name_ko`
+- `display_name`
+- `short_name`
+- `code`
+- `logo_url`
+- `logo_cached_url`
+- `league_id`
+- `league_name`
+- `league_name_ko`
+- `league_logo_url`
+- `country`
+- `country_ko`
+- `founded`
+- `venue_id`
+- `venue_name`
+- `venue_city`
+- `venue_capacity`
+- `venue_address`
+- `venue_surface`
+- `current_season`
+- `slug`
+- `is_active`
+- `last_api_sync`
+- `api_data`
 
-- `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
-  - metadata: `fetchTeamSeoData(id)`
-  - metadata: `resolveTeamCanonicalSlug(id)`
-  - 본문: `resolveTeamCanonicalSlug(id)`
-  - 본문: `fetchTeamFullData(id, options)`
-  - overview일 때 추가 병렬 호출:
-    - `fetchTeamOverviewPlayerRankingsData(id, 5)`
-    - `fetchTeamOverviewTransfersData(id)`
-    - `fetchTeamOverviewRecentMatchesData(id, 5)`
-    - `fetchTeamOverviewUpcomingMatchesData(id, 5)`
-    - `fetchTeamOverviewStandingsData(id)`
-- `src/domains/livescore/actions/teams/team.ts`
-  - `fetchTeamSeoData`
-  - `fetchTeamFullData`
-  - overview helper actions
-- `src/domains/livescore/actions/teams/slug.ts`
-  - DB slug 조회
-  - 없으면 API `teams` fallback
+결론:
 
-## Problems
+- team metadata, canonical slug, 기본 header, JSON-LD 일부는 DB shell만으로 처리 가능하다.
+- DB에 없는 팀은 API fallback이 필요하지만, 저장하려면 `league_id`, `league_name`, `country`가 필요하다.
 
-1. metadata는 비교적 가볍지만 본문 overview가 한 요청에서 여러 데이터 소스를 병렬 호출한다.
-2. `fetchTeamFullData()` 내부에서 team 기본 정보와 stats를 만들기 위해 API `leagues`, `teams/statistics` fallback을 탈 수 있다.
-3. overview 첫 진입에서 rankings, transfers, recent, upcoming, standings를 모두 SSR한다. Googlebot burst 때 DB/API 연결 수가 커진다.
-4. slug 없는 팀 약 70개는 API fallback 또는 name 기반 slug 생성이 필요하다.
-5. API로 확인된 신규/누락 팀 shell을 저장하는 명확한 경로가 약하다.
+## 코드 변경
 
-## Target Shape
+### 1. Team shell read path 추가
 
-### 1. Team shell read path 추가 또는 강화
-
-새 server action 후보:
+파일:
 
 - `src/domains/livescore/actions/teams/teamShell.ts`
 
-역할:
+추가한 역할:
 
-- `football_teams`에서 최소 shell 조회
-- `leagues` 매핑 붙이기
-- slug가 없으면 DB name 기반으로 slug 생성 후 저장
-- shell이 없을 때만 API `teams` fallback
-- API fallback 성공 시 최소 shell + slug upsert
-- API transient failure와 real missing 구분
+- `football_teams.team_id`로 DB shell을 먼저 조회
+- 팀 이름, 한국어 이름, slug, logo, league, venue 정보를 shell로 구성
+- DB shell이 있으면 API 호출 없이 `TeamShellResult` 반환
+- DB shell이 없을 때만 API-Football `teams` fallback
+- API fallback 시 `leagues?team&season`으로 주 리그를 확인
+- 리그까지 확인되는 경우에만 `football_teams`에 최소 shell upsert
+- API temporary failure와 real missing을 구분
 
-저장할 최소 컬럼:
+반환 타입:
 
-```txt
-team_id
-name
-name_ko 가능하면
-slug
-country
-country_ko 가능하면
-league_id
-league_name
-league_name_ko
-logo_url
-current_season
-updated_at
+```ts
+type TeamShellResult =
+  | { status: 'found'; shell: TeamShell; source: 'db' | 'api' }
+  | { status: 'missing' }
+  | { status: 'temporary-error'; error: string };
 ```
 
-### 2. Metadata는 team shell만 사용
+저장 기준:
 
-수정 대상:
+- `teams` API 응답만으로는 `league_id`를 알 수 없다.
+- 그래서 API fallback 저장은 `leagues` fallback으로 리그를 확인한 경우에만 수행한다.
+- `football_teams.league_id`, `league_name`, `country`가 NOT NULL이라 불완전한 row를 만들지 않는다.
 
-- `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
-- `src/domains/livescore/actions/teams/team.ts`
+### 2. Canonical slug를 shell-first로 변경
+
+파일:
+
 - `src/domains/livescore/actions/teams/slug.ts`
 
-`fetchTeamSeoData()`와 `resolveTeamCanonicalSlug()`가 같은 shell read path를 공유하도록 정리한다. metadata에서는 `fetchTeamFullData()` 또는 stats API path를 타지 않는다.
+변경 전:
 
-### 3. Overview SSR fan-out 줄이기
+- Supabase REST로 slug row 조회
+- slug가 없으면 API `teams` fallback
 
-수정 대상:
+변경 후:
+
+- `fetchCachedTeamShell(teamId)`를 먼저 사용한다.
+- shell에 slug가 있으면 그대로 사용한다.
+- slug가 없으면 shell 이름으로 `getTeamLinkSlug()`를 만든다.
+- shell도 없을 때만 기존 API fallback을 유지한다.
+
+핵심 효과:
+
+- DB에 있는 팀의 canonical slug 생성은 API 없이 끝난다.
+- API fallback으로 확인된 신규 팀은 리그까지 확인되면 DB shell로 저장된다.
+
+### 3. Team SEO data를 shell 기반으로 변경
+
+파일:
+
+- `src/domains/livescore/actions/teams/team.ts`
+
+변경 전:
+
+- `fetchTeamSeoData()`가 `getTeamById()`를 먼저 보고, 없으면 API `teams` fallback을 탔다.
+
+변경 후:
+
+- `fetchTeamSeoData()`가 `fetchCachedTeamShell()`을 먼저 사용한다.
+- shell에서 name, country, founded, logo를 반환한다.
+- shell이 없을 때만 기존 API fallback을 유지한다.
+
+핵심 효과:
+
+- metadata와 slug가 같은 shell read path를 공유한다.
+- DB에 있는 팀은 metadata에서도 API를 타지 않는다.
+
+### 4. Metadata 이미지 조회 완화
+
+파일:
 
 - `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
-- `src/domains/livescore/components/football/team/TeamPageClient.tsx`
-- 필요 시 team tab API route 또는 server action
 
-현재 overview에서 한 번에 SSR하는 후보:
+변경 전:
+
+- metadata에서 항상 `getTeamLogoUrl(Number(id), 'md')`를 호출했다.
+
+변경 후:
+
+- `fetchTeamSeoData()` shell에 logo가 있으면 그것을 먼저 사용한다.
+- logo가 없을 때만 `getTeamLogoUrl()` fallback을 사용한다.
+
+핵심 효과:
+
+- team shell에 logo가 있는 경우 metadata 이미지 조회가 더 가벼워진다.
+
+### 5. Team 본문 canonical 404 완화
+
+파일:
+
+- `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
+
+변경 전:
+
+```ts
+if (!canonicalSlug) {
+  return notFound();
+}
+```
+
+변경 후:
+
+- canonical slug가 있을 때만 slug mismatch redirect를 수행한다.
+- canonical slug가 없으면 현재 요청 slug로 본문 렌더링을 계속 시도한다.
+- JSON-LD URL도 `canonicalSlug || slug`를 사용한다.
+
+핵심 효과:
+
+- slug 생성만 실패했다는 이유로 본문이 바로 404가 되지 않는다.
+
+### 6. Overview SSR fan-out 축소
+
+파일:
+
+- `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
+
+변경 전 overview SSR:
 
 ```txt
 fetchTeamFullData
@@ -107,41 +209,80 @@ fetchTeamOverviewUpcomingMatchesData
 fetchTeamOverviewStandingsData
 ```
 
-목표:
+변경 후 overview SSR:
 
 ```txt
-SSR:
-  team shell
-  최근/예정 경기 중 첫 화면에 필요한 최소 block 1~2개
-
-Lazy/API route:
-  player rankings
-  transfers
-  full standings
-  player stats
-  squad
+fetchTeamFullData
+fetchTeamOverviewRecentMatchesData
+fetchTeamOverviewUpcomingMatchesData
 ```
 
-Googlebot에는 첫 화면 shell과 주요 링크만 안정적으로 제공하고, 무거운 block은 cache된 API route 또는 client lazy load로 분리한다.
+제외한 SSR preview:
 
-### 4. Asset cache 활용 정리
+- player rankings
+- transfers preview
+- standings preview
 
-현재 `football_teams.logo_cached_url`은 비어 있지만 `asset_cache`에는 team logo ready row가 많다. 페이지마다 `getTeamLogoUrl()`을 직접 여러 번 호출하는 대신 shell 단계에서 asset lookup을 batch/cache로 붙이는 방식을 유지하거나, 자주 쓰는 팀은 `logo_cached_url` backfill을 검토한다.
+핵심 효과:
 
-## Implementation Order
+- overview 첫 요청의 병렬 DB/API fan-out을 줄였다.
+- Googlebot burst 때 squad/player-stats/transfers/standings 계열 호출이 첫 응답에서 빠진다.
+- 각 탭으로 직접 진입하는 경우에는 기존처럼 해당 탭 데이터를 서버에서 준비한다.
 
-1. `teamShell.ts` 추가 또는 `fetchTeamSeoData()`를 shell 중심으로 리팩터링
-2. slug 없는 팀은 name 기반 slug 생성 후 저장
-3. API fallback 성공 시 최소 team shell upsert
-4. `resolveTeamCanonicalSlug()`를 shell-first로 변경
-5. team metadata가 shell path만 쓰도록 정리
-6. overview SSR에서 heavy blocks를 분리
-7. heavy block API/server action에 `unstable_cache` 또는 TTL 정책 적용
+주의:
 
-## Expected Result
+- overview 화면에서 랭킹/이적/순위 preview는 initial SSR 데이터가 없을 수 있다.
+- 이 블록들을 다시 보여줘야 한다면 client lazy load 또는 별도 cached route로 분리하는 것이 다음 단계다.
 
-- 팀 metadata/canonical은 대부분 DB shell로 처리
-- DB에 없는 팀만 API fallback
-- API fallback 성공 시 다음 요청부터 DB shell 사용
-- team overview 첫 요청의 DB/API fan-out 감소
-- Googlebot burst 때 서버 연결 실패 가능성 감소
+## API와 DB 의존성에 대한 결론
+
+API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 API 또는 기존 action/cache 경로로 사용한다.
+
+- 시즌 경기
+- 스쿼드
+- 선수 통계
+- 순위
+- 이적
+- 팀 통계
+
+이번 변경은 모든 데이터를 DB에 복제하는 것이 아니라, team URL 생존과 SEO에 필요한 최소 shell을 DB 우선으로 쓰는 것이다.
+
+## 404 완화 범위
+
+완화된 경우:
+
+- `football_teams`에 해당 `team_id`가 있는 팀 URL
+- canonical slug 생성이 실패했지만 요청 slug가 usable한 팀 URL
+- API fallback 성공 후 리그가 확인되어 DB shell로 저장된 신규 팀 URL
+- overview 첫 요청에서 heavy preview 중 일부가 실패해도 전체 페이지를 막지 않는 경우
+
+여전히 404 또는 missing 처리가 맞는 경우:
+
+- `team_id`가 숫자가 아닌 경우
+- 요청 slug가 `team`, `team-123`, `123` 같은 unusable slug인 경우
+- DB shell도 없고 API에서도 팀을 찾지 못하는 경우
+- API team은 찾았지만 리그/country 조건이 불완전해 DB shell로 저장할 수 없고, 이후 API도 계속 실패하는 경우
+
+## 남은 운영 작업
+
+1. `asset_cache`의 `team_logo` ready row를 `football_teams.logo_cached_url`로 backfill할지 결정한다.
+2. overview의 rankings/transfers/standings preview를 client lazy load 또는 cached API route로 분리할지 결정한다.
+3. `fetchTeamData()` 내부의 `teams/statistics` 호출도 overview에서 완전히 빼려면 `fetchTeamStats` 옵션을 별도로 추가하는 2차 작업이 필요하다.
+4. team sitemap에서 slug 없는 약 70개 팀은 shell 기반 slug 저장/backfill을 별도로 수행하면 더 좋다.
+
+## Verification
+
+아래 검증을 통과했다.
+
+```bash
+npm.cmd run typecheck
+npm.cmd run build
+```
+
+빌드 결과:
+
+- TypeScript compile 통과
+- Next.js production build 통과
+- `/livescore/football/team/[id]`
+- `/livescore/football/team/[id]/[slug]`
+- team sitemap route 포함 전체 app build 성공
