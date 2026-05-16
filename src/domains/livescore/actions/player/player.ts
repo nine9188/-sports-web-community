@@ -153,10 +153,7 @@ export async function fetchPlayerData(id: string): Promise<PlayerData> {
     const currentSeason = getCurrentSeason();
     const dbPlayerData = await fetchPlayerDataFromDb(id);
     if (dbPlayerData && hasPlayerBio(dbPlayerData) && !isPlayerProfileStale(dbPlayerData)) {
-      const freshApiPlayerData = await fetchFreshPlayerDataFromApi(id);
-      return freshApiPlayerData
-        ? mergePlayerProfileFromApi(dbPlayerData, freshApiPlayerData)
-        : dbPlayerData;
+      return dbPlayerData;
     }
 
     // 여러 시즌에서 선수 데이터 시도

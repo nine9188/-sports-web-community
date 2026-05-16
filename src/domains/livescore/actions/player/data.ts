@@ -15,6 +15,7 @@ import { getPlayerPhotoUrl, getTeamLogoUrl, getTeamLogoUrls, getLeagueLogoUrls }
 import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
 import { resolvePlayerSeasonContext } from './seasonContext';
+import { fetchCachedPlayerShell, type PlayerShell } from './playerShell';
 
 const PLAYER_STATS_CACHE_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -120,6 +121,77 @@ interface FetchOptions {
   fetchInjuries?: boolean;
   fetchRankings?: boolean;
   season?: number; // 조회할 특정 시즌
+}
+
+function buildPlayerFullDataFromShell(shell: PlayerShell): PlayerFullDataResponse {
+  const statistic = shell.team ? {
+    team: {
+      id: shell.team.id,
+      name: shell.team.name,
+      logo: shell.team.logo || '',
+    },
+    league: {
+      id: shell.league?.id || 0,
+      name: shell.league?.name || '',
+      country: shell.league?.country || '',
+      logo: shell.league?.logo || '',
+      season: shell.league?.season || getDefaultPlayerSeason(),
+    },
+    games: {
+      appearences: 0,
+      lineups: 0,
+      minutes: 0,
+      number: shell.number || undefined,
+      position: shell.position || '',
+      rating: '',
+      captain: false,
+    },
+    substitutes: { in: 0, out: 0, bench: 0 },
+    goals: { total: 0, assists: 0, saves: 0, conceded: 0, cleansheets: 0 },
+    shots: { total: 0, on: 0 },
+    passes: { total: 0, key: 0, accuracy: '', cross: 0 },
+    tackles: { total: 0, blocks: 0, interceptions: 0, clearances: 0 },
+    duels: { total: 0, won: 0 },
+    dribbles: { attempts: 0, success: 0, past: 0 },
+    fouls: { drawn: 0, committed: 0 },
+    cards: { yellow: 0, yellowred: 0, red: 0 },
+    penalty: { won: 0, commited: 0, scored: 0, missed: 0, saved: 0 },
+  } : null;
+
+  return {
+    success: true,
+    message: 'Player shell data loaded from player cache.',
+    playerData: {
+      info: {
+        id: shell.id,
+        name: shell.name,
+        firstname: shell.name_en || shell.name,
+        lastname: '',
+        age: shell.age || 0,
+        birth: {
+          date: '',
+          place: '',
+          country: '',
+        },
+        nationality: shell.nationality || '',
+        height: shell.height || '',
+        weight: shell.weight || '',
+        injured: false,
+        photo: shell.photo || '',
+      },
+      statistics: statistic ? [statistic] : [],
+    },
+    statistics: statistic ? [statistic] : [],
+    playerPhotoUrl: shell.photo || '/images/placeholder-player.svg',
+    teamLogoUrl: shell.team?.logo || '/images/placeholder-team.svg',
+    currentTeamLeague: shell.league?.id ? {
+      id: shell.league.id,
+      name: shell.league.name,
+      country: shell.league.country || undefined,
+      season: shell.league.season || getDefaultPlayerSeason(),
+    } : undefined,
+    cachedAt: Date.now(),
+  };
 }
 
 /**
@@ -504,6 +576,11 @@ export const fetchPlayerFullData = async (
 
     // 필수 데이터인 playerData가 없으면 실패로 처리
     if (!response.playerData) {
+      const shellResult = await fetchCachedPlayerShell(playerId);
+      if (shellResult.status === 'found') {
+        return buildPlayerFullDataFromShell(shellResult.shell);
+      }
+
       console.error(`[fetchPlayerFullData] playerData 없음 - playerId: ${playerId}`);
       return {
         success: false,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getPostPageData } from '@/domains/boards/actions';
 import { getCachedBoardBySlug } from '@/domains/boards/actions/getCachedBoards';
 import { getCachedPostMeta } from '@/domains/boards/actions/getCachedPostMeta';
@@ -45,19 +45,6 @@ function extractFirstImage(content: unknown): string | null {
   }
 
   return traverse(doc.content);
-}
-
-function buildQueryString(
-  searchParams: { from?: string; page?: string; listPage?: string; sort?: string },
-  keys: Array<'from' | 'page' | 'listPage' | 'sort'>
-): string {
-  const params = new URLSearchParams();
-  keys.forEach((key) => {
-    const value = searchParams[key];
-    if (value) params.set(key, value);
-  });
-  const query = params.toString();
-  return query ? `?${query}` : '';
 }
 
 function compactSeoText(value?: string | null): string {
@@ -559,19 +546,29 @@ export default async function PostDetailPage({
   searchParams
 }: {
   params: Promise<{ slug: string, postNumber: string }>,
-  searchParams: Promise<{ from?: string, page?: string, listPage?: string }>
+  searchParams: Promise<{ from?: string, page?: string, listPage?: string, sort?: string }>
 }) {
   const [{ slug, postNumber }, resolvedSearchParams] = await Promise.all([
     params,
     searchParams
   ]);
 
+  if (resolvedSearchParams?.from || resolvedSearchParams?.page || resolvedSearchParams?.sort) {
+    const listPage = resolvedSearchParams?.listPage;
+    const parsedListPage = listPage ? Number(listPage) : undefined;
+    const listPageQuery = parsedListPage && Number.isFinite(parsedListPage) && parsedListPage > 1
+      ? `?listPage=${Math.floor(parsedListPage)}`
+      : '';
+
+    permanentRedirect(`/boards/${slug}/${postNumber}${listPageQuery}`);
+  }
+
   const fromBoardId = resolvedSearchParams?.from;
   const pageFromQuery = resolvedSearchParams?.listPage ?? resolvedSearchParams?.page;
   const parsedPage = pageFromQuery ? Number(pageFromQuery) : undefined;
   const safePage = parsedPage && Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : undefined;
-  const detailQueryString = buildQueryString(resolvedSearchParams, ['from', 'page', 'listPage', 'sort']);
-  const returnHref = `/boards/${slug}${buildQueryString(resolvedSearchParams, ['from', 'page', 'sort'])}`;
+  const detailQueryString = '';
+  const returnHref = `/boards/${slug}`;
 
   if (!slug || !postNumber) {
     return notFound();

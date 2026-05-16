@@ -74,8 +74,16 @@ export default function PostDetailRelatedList({
 
   const updateUrl = (page: number) => {
     const url = new URL(window.location.href);
-    url.searchParams.set("listPage", String(page));
-    window.history.pushState(null, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
+    url.searchParams.delete("page");
+    url.searchParams.delete("from");
+    url.searchParams.delete("sort");
+    if (page <= 1) {
+      url.searchParams.delete("listPage");
+    } else {
+      url.searchParams.set("listPage", String(page));
+    }
+    const query = url.searchParams.toString();
+    window.history.pushState(null, "", `${url.pathname}${query ? `?${query}` : ""}${url.hash}`);
   };
 
   const handlePageChange = (page: number) => {

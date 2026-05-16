@@ -8,16 +8,10 @@ import { DEFAULT_MAX_HEIGHT } from './constants';
 export function buildPostDetailHref(
   postSlug: string,
   postNumber: number,
-  currentBoardId: string,
-  currentPage?: number
+  _currentBoardId: string,
+  _currentPage?: number
 ): string {
-  const searchParams = new URLSearchParams();
-  if (currentBoardId) searchParams.set('from', currentBoardId);
-  if (typeof currentPage === 'number' && Number.isFinite(currentPage) && currentPage > 0) {
-    searchParams.set('page', String(currentPage));
-  }
-  const query = searchParams.toString();
-  return `/boards/${postSlug}/${postNumber}${query ? `?${query}` : ''}`;
+  return `/boards/${postSlug}/${postNumber}`;
 }
 
 // 공용 위치로 이동됨 (서버/클라이언트 공용). 하위 호환을 위해 re-export.

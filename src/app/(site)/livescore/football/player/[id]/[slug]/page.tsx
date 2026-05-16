@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
-import { fetchCachedPlayerData, fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
+import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { isUsablePlayerSlug, resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
+import { fetchCachedPlayerShell } from '@/domains/livescore/actions/player/playerShell';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
@@ -47,26 +48,19 @@ export async function generateMetadata({
   }
 
   // metadata는 전체 탭 로더가 아니라 선수 기본 데이터만 조회한다.
-  const playerData = await fetchCachedPlayerData(id);
+  const shellResult = await fetchCachedPlayerShell(id);
 
-  if (!playerData?.info) {
+  if (shellResult.status !== 'found') {
     return buildMissingPlayerMetadata(id);
   }
 
-  if (getPlayerSeoQuality(playerData) === 'worthless') {
-    return buildMissingPlayerMetadata(id);
-  }
-
-  const player = playerData.info;
-  const statistics = playerData.statistics;
+  const player = shellResult.shell;
 
   // 한글 매핑 (서버 액션으로 DB 조회)
-  const playerName = await getSafePlayerKoreanName(player.id) || player.name;
-  const teamId = statistics?.[0]?.team?.id;
-  const teamMapping = teamId ? await getSafeTeamById(teamId) : null;
-  const currentTeam = teamMapping?.name_ko || statistics?.[0]?.team?.name || '';
-  const position = statistics?.[0]?.games?.position || '';
-  const playerPhotoUrl = player.photo;
+  const playerName = player.name_ko || player.name;
+  const currentTeam = player.team?.name_ko || player.team?.name || '';
+  const position = player.position || '';
+  const playerPhotoUrl = player.photo || '';
   const ogImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
 
   const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
@@ -150,15 +144,11 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
   try {
     const canonicalSlug = await resolvePlayerCanonicalSlug(playerId);
 
-    if (!canonicalSlug) {
-      return notFound();
-    }
-
     const initialTab: PlayerTabType = VALID_TABS.includes(tab as PlayerTabType)
       ? (tab as PlayerTabType)
       : 'stats';
 
-    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
+    if (canonicalSlug && normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       permanentRedirect(
         `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}${buildPlayerDetailQuery(initialTab, page)}`
       );
@@ -246,7 +236,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       ? await getSafeTeamById(currentTeam.id)
       : null;
     const playerDisplayName = playerKoreanName || playerInfo?.name || '';
-    const playerSlug = canonicalSlug;
+    const playerSlug = canonicalSlug || slug;
     const playerUrl = `${siteConfig.url}/livescore/football/player/${playerId}/${playerSlug}`;
     const teamDisplayName = currentTeamMapping?.name_ko || currentTeam?.name || '';
     const teamUrl = currentTeam?.id && currentTeam?.name

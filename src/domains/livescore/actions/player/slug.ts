@@ -2,6 +2,7 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getPlayerLinkSlug } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeasonCandidates } from './currentSeason';
 import { cache } from 'react';
+import { fetchCachedPlayerShell } from './playerShell';
 
 type PlayerSlugRow = {
   slug?: string | null;
@@ -84,12 +85,17 @@ async function resolvePlayerCanonicalSlugInternal(playerId: string): Promise<str
   const numericId = Number(playerId);
   if (!Number.isFinite(numericId) || numericId <= 0) return null;
 
-  const dbRow = await fetchPlayerSlugRowFromDb(playerId);
-  if (isUsablePlayerSlug(dbRow?.slug)) return dbRow.slug;
+  const shellResult = await fetchCachedPlayerShell(playerId);
+  if (shellResult.status === 'found') {
+    if (isUsablePlayerSlug(shellResult.shell.slug)) return shellResult.shell.slug;
 
-  if (dbRow) {
-    const dbNameSlug = getPlayerLinkSlug({ id: playerId, ...dbRow, name_ko: dbRow.korean_name });
-    if (isUsablePlayerSlug(dbNameSlug)) return dbNameSlug;
+    const shellSlug = getPlayerLinkSlug({
+      id: playerId,
+      name: shellResult.shell.name_en || shellResult.shell.name,
+      name_ko: shellResult.shell.name_ko || shellResult.shell.name,
+      display_name: shellResult.shell.name,
+    });
+    if (isUsablePlayerSlug(shellSlug)) return shellSlug;
   }
 
   const playerName =

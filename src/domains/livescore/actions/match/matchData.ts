@@ -12,6 +12,7 @@ import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 // 4590 표준: 이미지 URL 함수
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
+import { fetchCachedMatchShell, isFinishedMatchStatus, type MatchShell } from './matchShell';
 
 // 매치 상세 데이터 응답 타입
 export interface MatchFullDataResponse {
@@ -40,6 +41,76 @@ export interface MatchFullDataResponse {
 }
 
 // 매치 전체 데이터 가져오기 (옵션에 따라 필요한 부분만)
+function buildMatchFullDataFromShell(shell: MatchShell): MatchFullDataResponse {
+  return {
+    success: true,
+    match: {
+      id: shell.id,
+      status: shell.status,
+      time: shell.time,
+      league: {
+        id: shell.league.id,
+        name: shell.league.name,
+        country: shell.league.country,
+        logo: shell.league.logo,
+        flag: shell.league.flag,
+      },
+      teams: {
+        home: {
+          id: shell.teams.home.id,
+          name: shell.teams.home.name,
+          logo: shell.teams.home.logo,
+          winner: shell.teams.home.winner,
+        },
+        away: {
+          id: shell.teams.away.id,
+          name: shell.teams.away.name,
+          logo: shell.teams.away.logo,
+          winner: shell.teams.away.winner,
+        },
+      },
+      goals: {
+        home: shell.goals.home ?? 0,
+        away: shell.goals.away ?? 0,
+      },
+    },
+    matchData: {
+      fixture: {
+        id: shell.id,
+        date: shell.time.date,
+        timestamp: shell.time.timestamp,
+        timezone: shell.time.timezone,
+        venue: shell.venue,
+        status: {
+          short: shell.status.code,
+          long: shell.status.name,
+          elapsed: shell.status.elapsed,
+        },
+      },
+      league: {
+        id: shell.league.id,
+        name: shell.league.name,
+        country: shell.league.country,
+        season: shell.league.season,
+        round: shell.league.round,
+      },
+      teams: shell.teams,
+      goals: shell.goals,
+    } as Record<string, unknown>,
+    homeTeam: {
+      id: shell.teams.home.id,
+      name: shell.teams.home.name,
+      logo: shell.teams.home.logo,
+    },
+    awayTeam: {
+      id: shell.teams.away.id,
+      name: shell.teams.away.name,
+      logo: shell.teams.away.logo,
+    },
+    message: 'Match shell data loaded from fixture cache.',
+  };
+}
+
 export async function fetchMatchFullData(
   matchId: string, 
   options: {
@@ -55,6 +126,11 @@ export async function fetchMatchFullData(
     const matchData = await fetchCachedMatchData(matchId);
 
     if (!matchData.success || !matchData.data) {
+      const shellResult = await fetchCachedMatchShell(matchId);
+      if (shellResult.status === 'found') {
+        return buildMatchFullDataFromShell(shellResult.shell);
+      }
+
       return {
         success: false,
         error: matchData.error || '매치 정보를 찾을 수 없습니다.'
@@ -293,11 +369,10 @@ async function fetchMatchFullDataCached(
   options: Parameters<typeof fetchMatchFullData>[1] = {}
 ): Promise<MatchFullDataResponse> {
   // 먼저 경기 상태 확인 (가벼운 호출, fetchFromFootballApi의 revalidate 적용)
-  const basicData = await fetchCachedMatchData(matchId);
-  const statusCode = basicData.data?.fixture?.status?.short ?? '';
-  const finishedCodes = ['FT', 'AET', 'PEN'];
+  const shellResult = await fetchCachedMatchShell(matchId);
+  const statusCode = shellResult.status === 'found' ? shellResult.shell.status.code : '';
 
-  if (finishedCodes.includes(statusCode) && !options.fetchEvents) {
+  if (isFinishedMatchStatus(statusCode) && !options.fetchEvents) {
     // options를 캐시 키에 포함 — generateMetadata(all false)가 풀 데이터 캐시를 오염시키는 버그 방지
     const optionsKey = [
       options.fetchEvents ? '1' : '0',

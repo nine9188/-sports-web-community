@@ -1,11 +1,11 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
-import { fetchCachedMatchFullData } from './matchData';
 import { slugify } from '@/domains/livescore/utils/slugs';
 import { getMatchLinkSlug, getTeamLinkSlug } from '@/domains/livescore/utils/entityLinks';
 import { isUsableTeamSlug } from '@/domains/livescore/actions/teams/slug';
 import { cache } from 'react';
+import { fetchCachedMatchShell } from './matchShell';
 
 type TeamSlugRow = {
   team_id: number;
@@ -138,23 +138,19 @@ async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Pr
   const id = Number(fixtureId);
   if (!Number.isFinite(id) || id <= 0) return null;
 
-  const matchData = await fetchCachedMatchFullData(String(id), {
-    fetchEvents: false,
-    fetchLineups: false,
-    fetchStats: false,
-    fetchStandings: false,
-  });
+  const shellResult = await fetchCachedMatchShell(String(id));
 
-  if (matchData.success && matchData.match) {
+  if (shellResult.status === 'found') {
+    const { shell } = shellResult;
     const fromIds = await getTeamSlugsFromIds(
-      matchData.match.teams?.home?.id,
-      matchData.match.teams?.away?.id
+      shell.teams?.home?.id,
+      shell.teams?.away?.id
     );
     if (isUsableMatchSlug(id, fromIds)) return fromIds;
 
     const fromNames = getMatchLinkSlug(
-      matchData.match.teams?.home || {},
-      matchData.match.teams?.away || {},
+      shell.teams?.home || {},
+      shell.teams?.away || {},
       id
     );
     if (isUsableMatchSlug(id, fromNames)) return fromNames;

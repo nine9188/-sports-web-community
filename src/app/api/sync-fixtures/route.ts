@@ -3,22 +3,13 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
 
-// 동기화 대상 리그 (하이라이트 지원 리그 + 5대 리그 전체)
+// Highlight-supported leagues plus the transfer league set.
 const SYNC_LEAGUE_IDS = [...new Set([1, 2, 3, ...TRANSFER_LEAGUE_IDS])];
 
 const API_BASE = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';
 
-function toDateStr(d: Date): string {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-async function fetchFixturesForLeague(
-  leagueId: number,
-  season: number,
-  from: string,
-  to: string
-): Promise<{
+type FixtureShellSyncRow = {
   fixture_id: number;
   home_team_id: number;
   away_team_id: number;
@@ -26,8 +17,24 @@ async function fetchFixturesForLeague(
   season: number;
   match_date: string;
   status_short: string;
+  status_long: string;
+  home_goals: number | null;
+  away_goals: number | null;
+  venue_name: string | null;
+  venue_city: string | null;
   round: string;
-}[]> {
+};
+
+function toDateStr(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+async function fetchFixturesForLeague(
+  leagueId: number,
+  season: number,
+  from: string,
+  to: string
+): Promise<FixtureShellSyncRow[]> {
   const params = new URLSearchParams({
     league: String(leagueId),
     season: String(season),
@@ -59,7 +66,7 @@ async function fetchFixturesForLeague(
   if (!Array.isArray(response)) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return response.map((item: any) => ({
+  return response.map((item: any): FixtureShellSyncRow => ({
     fixture_id: item.fixture.id,
     home_team_id: item.teams.home.id,
     away_team_id: item.teams.away.id,
@@ -67,12 +74,16 @@ async function fetchFixturesForLeague(
     season: item.league.season,
     match_date: item.fixture.date,
     status_short: item.fixture.status.short,
+    status_long: item.fixture.status.long || '',
+    home_goals: item.goals?.home ?? null,
+    away_goals: item.goals?.away ?? null,
+    venue_name: item.fixture.venue?.name || null,
+    venue_city: item.fixture.venue?.city || null,
     round: item.league.round || '',
   }));
 }
 
 export async function GET(request: Request) {
-  // Vercel Cron 또는 수동 호출 인증 (개발 환경에서는 스킵)
   if (process.env.NODE_ENV !== 'development') {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
@@ -86,7 +97,6 @@ export async function GET(request: Request) {
   }
 
   const now = new Date();
-  // 과거 60일 ~ 미래 28일 범위
   const from = toDateStr(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000));
   const to = toDateStr(new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000));
 
@@ -103,8 +113,7 @@ export async function GET(request: Request) {
         continue;
       }
 
-      const upsertRows = rows.map(r => ({ ...r, updated_at: now.toISOString() }));
-
+      const upsertRows = rows.map((row) => ({ ...row, updated_at: now.toISOString() }));
       const { error } = await supabase
         .from('fixtures')
         .upsert(upsertRows, { onConflict: 'fixture_id' });
@@ -116,24 +125,20 @@ export async function GET(request: Request) {
         results[leagueId] = { fetched: rows.length, upserted: rows.length };
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[sync-fixtures] league=${leagueId} error:`, msg);
-      results[leagueId] = { fetched: 0, upserted: 0, error: msg };
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[sync-fixtures] league=${leagueId} error:`, message);
+      results[leagueId] = { fetched: 0, upserted: 0, error: message };
     }
   }
 
-  // 60일 이상 지난 경기 삭제
-  const cutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
-  const { error: deleteError } = await supabase
-    .from('fixtures')
-    .delete()
-    .lt('match_date', cutoff);
+  const total = Object.values(results).reduce((sum, result) => sum + result.upserted, 0);
 
-  if (deleteError) {
-    console.error('[sync-fixtures] 오래된 경기 삭제 오류:', deleteError.message);
-  }
-
-  const total = Object.values(results).reduce((s, r) => s + r.upserted, 0);
-
-  return NextResponse.json({ ok: true, from, to, total, results });
+  return NextResponse.json({
+    ok: true,
+    from,
+    to,
+    total,
+    results,
+    cleanup: 'skipped: fixture shell rows are retained for crawled match URLs',
+  });
 }

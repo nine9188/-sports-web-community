@@ -291,7 +291,7 @@ export const fetchFromFootballApi = async (
 
   for (let attempt = 1; attempt <= FOOTBALL_API_MAX_ATTEMPTS; attempt += 1) {
     try {
-      const shouldNoStore = options.cache === 'no-store' || (endpoint === 'fixtures' && queryParams.has('id'));
+      const shouldNoStore = options.cache === 'no-store';
       const response = await fetch(url, {
         headers: {
           'x-rapidapi-host': 'v3.football.api-sports.io',

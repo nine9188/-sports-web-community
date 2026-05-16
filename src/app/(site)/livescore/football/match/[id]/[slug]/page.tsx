@@ -9,6 +9,7 @@ import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
+import { fetchCachedMatchShell } from '@/domains/livescore/actions/match/matchShell';
 import { getTeamsByIds, getLeagueById, isCupLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
@@ -92,14 +93,9 @@ export async function generateMetadata({
   const [{ id, slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const hasTabState = Boolean(resolvedSearchParams?.tab);
 
-  const matchData = await fetchCachedMatchFullData(id, {
-    fetchEvents: false,
-    fetchLineups: false,
-    fetchStats: false,
-    fetchStandings: false,
-  });
+  const shellResult = await fetchCachedMatchShell(id);
 
-  if (!matchData.success || !matchData.match) {
+  if (shellResult.status !== 'found') {
     return buildMetadata({
       title: '경기 정보를 찾을 수 없습니다',
       description: '요청하신 경기 정보가 존재하지 않습니다.',
@@ -108,20 +104,14 @@ export async function generateMetadata({
     });
   }
 
-  const { match } = matchData;
-
-  const [teamMap, leagueMapping] = await Promise.all([
-    getTeamsByIds([match.teams.home.id, match.teams.away.id]),
-    getLeagueById(match.league.id),
-  ]);
-  const homeTeamMapping = teamMap[match.teams.home.id];
-  const awayTeamMapping = teamMap[match.teams.away.id];
-  const homeTeam = homeTeamMapping?.name_ko || match.teams.home.name;
-  const awayTeam = awayTeamMapping?.name_ko || match.teams.away.name;
-  const leagueName = leagueMapping?.name_ko || match.league.name;
+  const match = shellResult.shell;
+  const homeTeam = match.teams.home.name_ko || match.teams.home.name;
+  const awayTeam = match.teams.away.name_ko || match.teams.away.name;
+  const leagueName = match.league.name;
 
   const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
-  const score = isNotStarted ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
+  const hasScore = match.goals.home !== null && match.goals.away !== null;
+  const score = isNotStarted || !hasScore ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
 
   const matchDate = match.time?.date ? new Date(match.time.date) : null;
   const dateStr = matchDate
@@ -163,11 +153,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       : DEFAULT_TAB;
     const canonicalSlug = await resolveCanonicalMatchSlug(matchId);
 
-    if (!canonicalSlug) {
-      return notFound();
-    }
-
-    if (normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
+    if (canonicalSlug && normalizeRouteSlug(slug) !== normalizeRouteSlug(canonicalSlug)) {
       const tabParam = initialTab !== DEFAULT_TAB ? `?tab=${initialTab}` : '';
       permanentRedirect(`/livescore/football/match/${matchId}/${encodeURIComponent(canonicalSlug)}${tabParam}`);
     }
@@ -217,7 +203,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const matchEndDate = matchStartDate
       ? addHoursToIsoDate(matchStartDate, 2)
       : undefined;
-    const matchSlug = canonicalSlug;
+    const matchSlug = canonicalSlug || slug;
     const matchUrl = `${siteConfig.url}/livescore/football/match/${matchId}/${matchSlug}`;
     const leagueUrl = match?.league?.id
       ? `${siteConfig.url}/livescore/football/leagues/${match.league.id}/${getLeagueSlug(match.league.id, match.league.name)}`
