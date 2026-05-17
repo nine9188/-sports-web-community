@@ -43,6 +43,25 @@ interface AssetCacheRow {
 }
 
 const ALL_SIZES: ImageSize[] = ['sm', 'md'];
+const SOURCE_FETCH_TIMEOUT_MS = 4500;
+const MAX_SOURCE_IMAGE_BYTES = 5 * 1024 * 1024;
+
+class ExpectedAssetCacheMissError extends Error {}
+
+function isSupportedImageBuffer(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => buffer[index] === byte);
+  const textPrefix = buffer.subarray(0, 128).toString('utf8').trimStart().toLowerCase();
+
+  return (
+    startsWith(0x89, 0x50, 0x4e, 0x47) ||
+    startsWith(0xff, 0xd8, 0xff) ||
+    startsWith(0x47, 0x49, 0x46, 0x38) ||
+    startsWith(0x52, 0x49, 0x46, 0x46) ||
+    textPrefix.startsWith('<svg')
+  );
+}
 
 function getStoragePublicUrl(type: AssetType, entityId: number, size: ImageSize = 'md'): string {
   const bucket = BUCKET_MAP[type];
@@ -198,20 +217,37 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
 
     const response = await fetch(sourceUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(SOURCE_FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
-      throw new Error(`Download failed: ${response.status}`);
+      throw new ExpectedAssetCacheMissError(`Download failed: ${response.status}`);
     }
 
-    const imageBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+    if (contentType && !contentType.startsWith('image/')) {
+      throw new ExpectedAssetCacheMissError(`Unsupported source content-type: ${contentType}`);
+    }
+
+    const contentLength = Number(response.headers.get('content-length') ?? 0);
+    if (contentLength > MAX_SOURCE_IMAGE_BYTES) {
+      throw new ExpectedAssetCacheMissError(`Source image too large: ${contentLength} bytes`);
+    }
+
+    const imageBuffer = Buffer.from(await response.arrayBuffer());
+    if (imageBuffer.length > MAX_SOURCE_IMAGE_BYTES) {
+      throw new ExpectedAssetCacheMissError(`Source image too large: ${imageBuffer.length} bytes`);
+    }
+    if (!isSupportedImageBuffer(imageBuffer)) {
+      throw new ExpectedAssetCacheMissError('Unsupported source image format');
+    }
+
     const bucket = BUCKET_MAP[type];
     const sizeConfig = type === 'venue_photo' ? VENUE_SIZE_CONFIG : SIZE_CONFIG;
 
     for (const s of ALL_SIZES) {
       const maxDim = sizeConfig[s];
-      const webpBuffer = await sharp(Buffer.from(imageBuffer))
+      const webpBuffer = await sharp(imageBuffer)
         .resize(maxDim, maxDim, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toBuffer();
@@ -258,7 +294,11 @@ async function cacheAsset(type: AssetType, entityId: number, size: ImageSize = '
       .eq('type', type)
       .eq('entity_id', entityId);
 
-    console.error(`[cacheAsset] Failed for ${type}/${entityId}:`, errorMessage);
+    if (error instanceof ExpectedAssetCacheMissError || errorMessage.includes('The operation was aborted')) {
+      console.warn(`[cacheAsset] Skipped ${type}/${entityId}:`, errorMessage);
+    } else {
+      console.error(`[cacheAsset] Failed for ${type}/${entityId}:`, errorMessage);
+    }
     return PLACEHOLDER_URLS[type];
   }
 }
