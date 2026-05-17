@@ -39,7 +39,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [siteConfig.defaultOgImage],
   },
-  manifest: '/site.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -75,6 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-title" content="4590" />
         <meta name="p:domain_verify" content="093222e7675c8f952acbd872377e3c2b" />
         <link rel="shortcut icon" href={`${siteConfig.url}/favicon.ico`} type="image/x-icon" />
+        <link rel="icon" href={`${siteConfig.url}/favicon.ico`} type="image/x-icon" />
+        <link rel="icon" href={`${siteConfig.url}/icon.png`} type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href={`${siteConfig.url}/apple-icon.png`} type="image/png" sizes="180x180" />
+        <link rel="manifest" href={`${siteConfig.url}/site.webmanifest`} />
       </head>
 
       <body className="w-full h-full overflow-x-hidden">

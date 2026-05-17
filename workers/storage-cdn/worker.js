@@ -42,6 +42,7 @@ const SEARCH_CRAWLER_UA =
 
 const ORIGIN_TIMEOUT_MS = 2500;
 const ORIGIN_ATTEMPTS = 2;
+const BUFFER_TIMEOUT_MS = 4000;
 
 const worker = {
   async fetch(request, env, ctx) {
@@ -132,8 +133,53 @@ async function fetchWithRetry(resource, init = {}) {
   throw lastError;
 }
 
+async function readBodyWithTimeout(response) {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    return response.arrayBuffer();
+  }
+
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('body-timeout')), BUFFER_TIMEOUT_MS);
+  });
+
+  const readPromise = (async () => {
+    const chunks = [];
+    let totalLength = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      chunks.push(value);
+      totalLength += value.byteLength;
+    }
+
+    const body = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      body.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    return body;
+  })();
+
+  try {
+    return await Promise.race([readPromise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function normalizeImagePath(pathname) {
+  return pathname.replace(/(\.(?:webp|png|jpe?g|gif|svg))\/+$/i, '$1');
+}
+
 async function handleStorageProxy(request, url, ctx, isHead) {
-  const segments = url.pathname.split('/').filter(Boolean);
+  const normalizedPathname = normalizeImagePath(url.pathname);
+  const segments = normalizedPathname.split('/').filter(Boolean);
   if (segments.length < 1) {
     return new Response(isHead ? null : 'Not Found', { status: 404 });
   }
@@ -150,7 +196,9 @@ async function handleStorageProxy(request, url, ctx, isHead) {
   }
 
   const cache = caches.default;
-  const cacheKey = new Request(url.toString(), { method: 'GET' });
+  const cacheUrl = new URL(url.toString());
+  cacheUrl.pathname = normalizedPathname;
+  const cacheKey = new Request(cacheUrl.toString(), { method: 'GET' });
   let response = await cache.match(cacheKey);
 
   if (response) {
@@ -162,7 +210,7 @@ async function handleStorageProxy(request, url, ctx, isHead) {
     });
   }
 
-  const supabaseUrl = `${SUPABASE_STORAGE_ORIGIN}${url.pathname}`;
+  const supabaseUrl = `${SUPABASE_STORAGE_ORIGIN}${normalizedPathname}`;
 
   try {
     const originResponse = await fetchWithRetry(supabaseUrl, {
@@ -175,10 +223,13 @@ async function handleStorageProxy(request, url, ctx, isHead) {
 
     const originContentType =
       originResponse.headers.get('content-type') || 'application/octet-stream';
-    response = new Response(originResponse.body, {
+    const body = await readBodyWithTimeout(originResponse);
+
+    response = new Response(body, {
       status: 200,
       headers: {
         'Content-Type': originContentType,
+        'Content-Length': String(body.byteLength),
         'Cache-Control': 'public, s-maxage=31536000, max-age=86400',
         'CDN-Cache-Control': 'max-age=31536000',
         'Access-Control-Allow-Origin': '*',
@@ -190,8 +241,8 @@ async function handleStorageProxy(request, url, ctx, isHead) {
     return isHead
       ? new Response(null, { status: response.status, headers: response.headers })
       : response;
-  } catch {
-    return fallbackImageResponse(isHead, 'origin-timeout');
+  } catch (error) {
+    return fallbackImageResponse(isHead, error?.message === 'body-timeout' ? 'origin-body-timeout' : 'origin-timeout');
   }
 }
 
@@ -273,10 +324,13 @@ async function handleExternalProxy(request, url, ctx, isHead) {
       });
     }
 
-    response = new Response(originResponse.body, {
+    const body = await readBodyWithTimeout(originResponse);
+
+    response = new Response(body, {
       status: 200,
       headers: {
         'Content-Type': contentType,
+        'Content-Length': String(body.byteLength),
         'Cache-Control': 'public, s-maxage=86400, max-age=3600',
         'CDN-Cache-Control': 'max-age=86400',
         'Access-Control-Allow-Origin': '*',
@@ -289,8 +343,8 @@ async function handleExternalProxy(request, url, ctx, isHead) {
     return isHead
       ? new Response(null, { status: response.status, headers: response.headers })
       : response;
-  } catch {
-    return fallbackImageResponse(isHead, 'proxy-origin-timeout');
+  } catch (error) {
+    return fallbackImageResponse(isHead, error?.message === 'body-timeout' ? 'proxy-origin-body-timeout' : 'proxy-origin-timeout');
   }
 }
 

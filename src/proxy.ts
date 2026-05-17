@@ -343,7 +343,8 @@ export const config = {
      * - Next.js image optimizer
      * - favicon and static public files
      * - API routes
+     * - match detail pages, which do not need proxy-side auth or redirects
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|ads\\.txt|llms\\.txt|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|livescore/football/match/|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|ads\\.txt|llms\\.txt|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',
   ],
 } 

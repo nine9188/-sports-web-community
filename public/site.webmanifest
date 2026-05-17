@@ -9,19 +9,19 @@
   "lang": "ko",
   "icons": [
     {
-      "src": "/android-chrome-192x192-new.png",
+      "src": "https://4590football.com/android-chrome-192x192-new.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/android-chrome-512x512-new.png",
+      "src": "https://4590football.com/android-chrome-512x512-new.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/apple-icon.png",
+      "src": "https://4590football.com/apple-icon.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
