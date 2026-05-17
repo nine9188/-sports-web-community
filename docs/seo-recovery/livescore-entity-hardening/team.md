@@ -4,7 +4,14 @@
 
 2026-05-16 기준 team 상세 페이지 hardening 1차 구현은 완료했다.
 
-목표는 `/livescore/football/team/[id]/[slug]`의 metadata, canonical slug, 기본 팀 프로필을 DB shell 중심으로 처리하고, overview 첫 SSR에서 무거운 데이터 fan-out을 줄이는 것이다. API-Football은 계속 사용하지만, 크롤링 URL 생존에 필요한 최소 team shell은 `football_teams` DB를 먼저 사용한다.
+목표는 `/livescore/football/team/[id]/[slug]`의 metadata, canonical slug, 기본 팀 프로필을 DB shell 중심으로 처리하고, overview 첫 SSR 데이터를 유지하면서 외부 API fan-out 위험을 줄이는 것이다. API-Football은 계속 사용하지만, 크롤링 URL 생존에 필요한 최소 team shell은 `football_teams` DB를 먼저 사용한다.
+
+중요한 전제:
+
+- SSR을 제거하지 않는다.
+- overview preview 데이터를 임의로 제거하지 않는다.
+- 필요한 데이터는 SSR에 유지하되 DB/cache 우선, API fallback, 블록별 실패 격리로 안정화한다.
+- DB에 모든 데이터를 복제하지 않는다. URL 생존과 첫 HTML에 필요한 shell/preview만 우선 저장하거나 캐시한다.
 
 ## 문제 요약
 
@@ -22,7 +29,7 @@
 5. `resolveTeamCanonicalSlug()`는 DB slug가 없으면 API `teams` fallback을 탔다.
 6. canonical slug가 없으면 `/team/[id]/[slug]` 본문이 바로 404가 될 수 있었다.
 
-team은 DB shell이 이미 충분한 편이라, player/match보다 더 DB 우선으로 가져가기 좋다.
+team은 DB shell이 이미 충분한 편이라, player/match보다 더 DB 우선으로 가져가기 좋다. 다만 DB에 없는 overview 데이터는 API fallback이 필요하므로, 목표는 API 제거가 아니라 API 실패가 페이지 전체 실패로 번지는 것을 막는 것이다.
 
 ## DB 확인 결과
 
@@ -217,7 +224,7 @@ fetchTeamOverviewStandingsData
 - recent/upcoming matches preview 필요
 - 위 preview들은 첫 SSR 결과에 포함되어야 한다.
 
-이번 변경에서는 preview를 제거하지 않는다. 대신 team shell-first, canonical 404 완화, metadata 경량화를 먼저 적용했다.
+이번 변경에서는 preview를 제거하지 않는다. "overview SSR이 무겁다"는 말은 preview를 빼라는 뜻이 아니라, preview를 만드는 방식이 외부 API 실시간 호출에 과하게 묶이지 않게 하라는 뜻이다. 대신 team shell-first, canonical 404 완화, metadata 경량화를 먼저 적용했다.
 
 최선의 후속 방향:
 
@@ -225,6 +232,20 @@ fetchTeamOverviewStandingsData
 - preview 블록별로 `unstable_cache` key와 TTL을 분리한다.
 - rankings/transfers/standings/recent/upcoming 각각 실패 격리를 적용한다.
 - 전체 squad/transfers/standings를 매번 새로 계산하지 않고 overview preview payload를 작게 유지한다.
+- DB/cache miss인 블록만 API fallback을 호출한다.
+- API fallback 성공 시 다음 요청을 위해 preview cache 또는 최소 shell을 저장한다.
+- API fallback 실패 시 해당 블록만 fallback UI/빈 preview/이전 캐시로 처리하고, 팀 페이지 전체는 가능한 한 유지한다.
+
+권장 처리 순서:
+
+```txt
+1. team shell 조회
+2. overview preview별 DB/cache 조회
+3. miss인 preview만 API fallback
+4. API 성공 결과 write-back
+5. 실패한 preview만 fallback 처리
+6. team shell이 있으면 페이지 200 유지
+```
 
 추천 TTL:
 
@@ -247,6 +268,14 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 
 이번 변경은 모든 데이터를 DB에 복제하는 것이 아니라, team URL 생존과 SEO에 필요한 최소 shell을 DB 우선으로 쓰는 것이다.
 
+정책을 더 구체적으로 쓰면 다음과 같다.
+
+- team shell은 SSR의 기반 데이터이므로 DB 우선이다.
+- overview preview는 SSR에 남기되 block별 cache와 fallback을 둔다.
+- 전체 탭 데이터는 필요에 따라 탭 SSR 또는 기존 API/cache 경로를 유지한다.
+- temporary API failure는 block fallback 대상이다.
+- real missing은 404 또는 noindex missing 처리 대상이다.
+
 ## 404 완화 범위
 
 완화된 경우:
@@ -266,7 +295,7 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 ## 남은 운영 작업
 
 1. `asset_cache`의 `team_logo` ready row를 `football_teams.logo_cached_url`로 backfill할지 결정한다.
-2. overview preview는 SSR 유지가 요구사항이다. client lazy load가 아니라 preview별 `unstable_cache`/TTL/실패 격리를 적용한다.
+2. overview preview는 SSR 유지가 요구사항이다. client lazy load로 무조건 빼지 말고 preview별 `unstable_cache`/TTL/실패 격리를 적용한다.
 3. `fetchTeamData()` 내부의 `teams/statistics` 호출도 overview에서 더 가볍게 하려면 `fetchTeamStats` 옵션 또는 stats cache 분리가 필요하다.
 4. team sitemap에서 slug 없는 약 70개 팀은 shell 기반 slug 저장/backfill을 별도로 수행하면 더 좋다.
 

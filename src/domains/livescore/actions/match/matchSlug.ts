@@ -6,6 +6,7 @@ import { getMatchLinkSlug, getTeamLinkSlug } from '@/domains/livescore/utils/ent
 import { isUsableTeamSlug } from '@/domains/livescore/actions/teams/slug';
 import { cache } from 'react';
 import { fetchCachedMatchShell } from './matchShell';
+import { fetchCachedMatchData } from '@/domains/livescore/utils/matchDataApi';
 
 type TeamSlugRow = {
   team_id: number;
@@ -74,7 +75,9 @@ function isUsableMatchSlug(fixtureId: number | string, slug?: string | null): sl
     normalized &&
     normalized !== 'match' &&
     normalized !== normalizedId &&
-    normalized !== `match-${normalizedId}`
+    normalized !== `match-${normalizedId}` &&
+    normalized.includes('-vs-') &&
+    !/(^|-)team-\d+(?=$|-)/.test(normalized)
   );
 }
 
@@ -134,6 +137,19 @@ async function getTeamSlugsFromHighlightTitle(fixtureId: number): Promise<string
   return isUsableMatchSlug(fixtureId, slug) ? slug : null;
 }
 
+async function getTeamSlugsFromApi(fixtureId: number): Promise<string | null> {
+  const result = await fetchCachedMatchData(String(fixtureId));
+  if (!result.success || !result.data?.teams) return null;
+
+  const slug = getMatchLinkSlug(
+    result.data.teams.home,
+    result.data.teams.away,
+    fixtureId
+  );
+
+  return isUsableMatchSlug(fixtureId, slug) ? slug : null;
+}
+
 async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Promise<string | null> {
   const id = Number(fixtureId);
   if (!Number.isFinite(id) || id <= 0) return null;
@@ -156,7 +172,10 @@ async function resolveCanonicalMatchSlugInternal(fixtureId: number | string): Pr
     if (isUsableMatchSlug(id, fromNames)) return fromNames;
   }
 
-  return getTeamSlugsFromHighlightTitle(id);
+  const fromHighlight = await getTeamSlugsFromHighlightTitle(id);
+  if (isUsableMatchSlug(id, fromHighlight)) return fromHighlight;
+
+  return getTeamSlugsFromApi(id);
 }
 
 export const resolveCanonicalMatchSlug = cache(resolveCanonicalMatchSlugInternal);

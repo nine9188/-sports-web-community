@@ -93,7 +93,9 @@ export function getLeagueSlug(leagueId: number, leagueName?: string | null): str
 }
 
 export function getTeamSlugFromName(name: string): string {
-  return slugify(name);
+  const slug = slugify(name);
+  if (slug === 'team' || /^team-\d+$/.test(slug)) return '';
+  return slug;
 }
 
 export function getPlayerSlugFromName(name: string): string {
@@ -103,12 +105,10 @@ export function getPlayerSlugFromName(name: string): string {
 }
 
 export function getMatchSlug(homeTeam: string, awayTeam: string): string {
-  const homeSlug = slugify(homeTeam || '');
-  const awaySlug = slugify(awayTeam || '');
+  const homeSlug = getTeamSlugFromName(homeTeam || '');
+  const awaySlug = getTeamSlugFromName(awayTeam || '');
 
   if (homeSlug && awaySlug) return `${homeSlug}-vs-${awaySlug}`;
-  if (homeSlug) return homeSlug;
-  if (awaySlug) return awaySlug;
 
   return '';
 }

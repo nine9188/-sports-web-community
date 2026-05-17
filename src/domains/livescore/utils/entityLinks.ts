@@ -149,8 +149,6 @@ export function getMatchLinkSlug(
   const awaySlug = firstText(awayTeam.slug) || getTeamSlugFromName(awaySource);
 
   if (homeSlug && awaySlug) return `${homeSlug}-vs-${awaySlug}`;
-  if (homeSlug) return homeSlug;
-  if (awaySlug) return awaySlug;
 
   return getMatchSlug(homeSource, awaySource) || `match-${matchId || 'match'}`;
 }

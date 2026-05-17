@@ -1,80 +1,57 @@
 # 09. 최종 검증 체크리스트
 
-## URL 정책 검증
-
-```txt
-/boards/foreign-news?page=2
-  - 허용
-  - 게시판 목록 2페이지
-
-/boards/foreign-news/4468
-  - 허용
-  - 게시글 상세 clean URL
-
-/boards/foreign-news/4468?page=2
-  - 내부 링크에서 생성 금지
-  - 외부 요청 시 clean URL로 301 권장
-
-/boards/foreign-news/4468?from=root
-  - 내부 링크에서 생성 금지
-  - 외부 요청 시 clean URL로 301 권장
-
-/boards/foreign-news/4468?listPage=2
-  - 필요 시 허용
-  - canonical은 clean URL
-  - robots는 noindex, follow
-
-/boards/foreign-news/4468?page=2&listPage=3
-  - 생성 금지
-  - 발견 시 page 제거 또는 clean URL 정리 필요
-```
-
-## sitemap 검증
+## Sitemap
 
 ```txt
 /sitemap.xml
-  - 권장: sitemap index
-  - Search Console 대표 제출 대상
-
-/sitemaps/posts/sitemap/0.xml
-  - 게시글 canonical URL만 포함
-
-/sitemaps/players/sitemap/0.xml
-  - 선수 canonical URL만 포함
-
-/sitemaps/teams/sitemap/0.xml
-  - 팀 canonical URL만 포함
-
-/sitemaps/matches/sitemap/0.xml
-  - 경기 canonical URL만 포함
-
-/robots.txt
-  - 대표 sitemap index 하나만 안내 권장
+  - 200
+  - application/xml
+  - <urlset>
+  - loc 수 1,000개 이상
+  - livescore team/player/match URL은 slug 포함
 ```
 
-## 서버 안정성 검증
+과거 sitemap URL은 모두 `/sitemap.xml`로 301 redirect되어야 한다.
 
-- `/robots.txt` 빠른 200
-- `/sitemap.xml` 빠른 200
-- 주요 하위 sitemap 빠른 200
-- 게시글 상세 URL 빠른 200
-- 선수/팀/경기 상세 URL 빠른 200
-- Googlebot user-agent 요청이 429/challenge에 걸리지 않음
-- Vercel function timeout 없음
-- Search Console 서버 연결 실패율 감소
+```txt
+/sitemap-index.xml
+/sitemap-*.xml
+/sitemaps/*
+/boards/sitemap.xml
+/boards/posts/sitemap/*
+/livescore/football/leagues/sitemap.xml
+/livescore/football/team/sitemap/*
+/livescore/football/player/sitemap/*
+/livescore/football/match/sitemap/*
+/shop/sitemap.xml
+/transfers/sitemap.xml
+```
 
-## Search Console 검증
+## Robots And AI Files
 
-- `/sitemap.xml` 대표 제출
-- 하위 sitemap 발견 확인
-- sitemap 읽기 성공 확인
-- `리디렉션 포함 페이지` 신규 증가 중단
-- `사용자가 선택한 표준이 없는 중복 페이지` 신규 증가 중단
-- `크롤링됨 - 현재 색인이 생성되지 않음` 증가세 둔화
-- indexed URL 회복 추세 확인
+```txt
+/robots.txt
+  - 200
+  - Sitemap: https://4590football.com/sitemap.xml 하나만 포함
+  - Disallow: /cdn-cgi/ 포함
 
-## 최종 목표
+/ai.txt
+  - Sitemap: https://4590football.com/sitemap.xml 하나만 포함
+  - Disallow: /cdn-cgi/ 포함
 
-게시판 목록의 `?page=N`은 유지하되, 게시글 상세 URL은 clean URL을 기본으로 합니다.
+/llms.txt
+  - Sitemap: https://4590football.com/sitemap.xml 하나만 포함
+```
 
-sitemap은 root `/sitemap.xml` 하나가 전체 하위 sitemap을 대표하는 sitemap index 구조로 정리합니다.
+## 서버 안정성
+
+- `/robots.txt`, `/sitemap.xml`, `/ads.txt`는 Googlebot UA와 일반 요청 모두 200이어야 한다.
+- Vercel Firewall의 SEO 파일 bypass 룰에는 `robots.txt`, `ads.txt`, `sitemap.xml`, `sitemap-*.xml`, `/sitemaps/*`가 포함되어야 한다.
+- Googlebot UA 요청이 429/challenge에 걸리지 않아야 한다.
+- Cloudflare Speed Brain을 끈 뒤 503이 감소하는지 1시간/24시간 단위로 비교한다.
+
+## Search Console
+
+- Search Console에는 `/sitemap.xml` 하나만 제출한다.
+- `/sitemap-index.xml` 또는 `/sitemaps/*`는 새로 제출하지 않는다.
+- 과거 sitemap URL은 301 redirect로 자연스럽게 정리되도록 둔다.

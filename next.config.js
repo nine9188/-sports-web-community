@@ -118,6 +118,55 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/sitemap-index.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/:file(sitemap-.+\\.xml)',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemaps/:path*',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/boards/sitemap.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/boards/posts/sitemap/:path*',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/livescore/football/:kind(leagues|team|player|match)/sitemap.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/livescore/football/:kind(team|player|match)/sitemap/:path*',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/shop/sitemap.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/transfers/sitemap.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+    ];
+  },
   turbopack: {
     // Turbopack 설정 (Next.js 16 기본값)
     resolveAlias: {

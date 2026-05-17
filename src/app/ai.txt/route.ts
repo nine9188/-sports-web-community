@@ -31,6 +31,7 @@ Allow: /sitemap.xml
 # Private, account, write, and API surfaces are not for crawling.
 Disallow: /api/
 Disallow: /admin/
+Disallow: /cdn-cgi/
 Disallow: /settings/
 Disallow: /user/
 Disallow: /signin
