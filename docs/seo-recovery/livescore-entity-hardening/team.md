@@ -192,13 +192,13 @@ if (!canonicalSlug) {
 
 - slug 생성만 실패했다는 이유로 본문이 바로 404가 되지 않는다.
 
-### 6. Overview SSR fan-out 축소
+### 6. Overview SSR preview 유지
 
 파일:
 
 - `src/app/(site)/livescore/football/team/[id]/[slug]/page.tsx`
 
-변경 전 overview SSR:
+overview SSR에는 아래 preview 데이터를 유지한다.
 
 ```txt
 fetchTeamFullData
@@ -209,30 +209,30 @@ fetchTeamOverviewUpcomingMatchesData
 fetchTeamOverviewStandingsData
 ```
 
-변경 후 overview SSR:
+요구사항:
 
-```txt
-fetchTeamFullData
-fetchTeamOverviewRecentMatchesData
-fetchTeamOverviewUpcomingMatchesData
-```
+- rankings preview 필요
+- transfers preview 필요
+- standings preview 필요
+- recent/upcoming matches preview 필요
+- 위 preview들은 첫 SSR 결과에 포함되어야 한다.
 
-제외한 SSR preview:
+이번 변경에서는 preview를 제거하지 않는다. 대신 team shell-first, canonical 404 완화, metadata 경량화를 먼저 적용했다.
 
-- player rankings
-- transfers preview
-- standings preview
+최선의 후속 방향:
 
-핵심 효과:
+- preview SSR은 유지한다.
+- preview 블록별로 `unstable_cache` key와 TTL을 분리한다.
+- rankings/transfers/standings/recent/upcoming 각각 실패 격리를 적용한다.
+- 전체 squad/transfers/standings를 매번 새로 계산하지 않고 overview preview payload를 작게 유지한다.
 
-- overview 첫 요청의 병렬 DB/API fan-out을 줄였다.
-- Googlebot burst 때 squad/player-stats/transfers/standings 계열 호출이 첫 응답에서 빠진다.
-- 각 탭으로 직접 진입하는 경우에는 기존처럼 해당 탭 데이터를 서버에서 준비한다.
+추천 TTL:
 
-주의:
-
-- overview 화면에서 랭킹/이적/순위 preview는 initial SSR 데이터가 없을 수 있다.
-- 이 블록들을 다시 보여줘야 한다면 client lazy load 또는 별도 cached route로 분리하는 것이 다음 단계다.
+- rankings preview: 6시간
+- transfers preview: 12시간~24시간
+- standings preview: 30분~1시간
+- recent/upcoming matches preview: 2분~10분
+- team shell: 7일 또는 tag 기반 revalidate
 
 ## API와 DB 의존성에 대한 결론
 
@@ -254,7 +254,7 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 - `football_teams`에 해당 `team_id`가 있는 팀 URL
 - canonical slug 생성이 실패했지만 요청 slug가 usable한 팀 URL
 - API fallback 성공 후 리그가 확인되어 DB shell로 저장된 신규 팀 URL
-- overview 첫 요청에서 heavy preview 중 일부가 실패해도 전체 페이지를 막지 않는 경우
+- overview preview 중 일부가 실패해도 전체 페이지를 막지 않는 경우
 
 여전히 404 또는 missing 처리가 맞는 경우:
 
@@ -266,8 +266,8 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 ## 남은 운영 작업
 
 1. `asset_cache`의 `team_logo` ready row를 `football_teams.logo_cached_url`로 backfill할지 결정한다.
-2. overview의 rankings/transfers/standings preview를 client lazy load 또는 cached API route로 분리할지 결정한다.
-3. `fetchTeamData()` 내부의 `teams/statistics` 호출도 overview에서 완전히 빼려면 `fetchTeamStats` 옵션을 별도로 추가하는 2차 작업이 필요하다.
+2. overview preview는 SSR 유지가 요구사항이다. client lazy load가 아니라 preview별 `unstable_cache`/TTL/실패 격리를 적용한다.
+3. `fetchTeamData()` 내부의 `teams/statistics` 호출도 overview에서 더 가볍게 하려면 `fetchTeamStats` 옵션 또는 stats cache 분리가 필요하다.
 4. team sitemap에서 slug 없는 약 70개 팀은 shell 기반 slug 저장/backfill을 별도로 수행하면 더 좋다.
 
 ## Verification

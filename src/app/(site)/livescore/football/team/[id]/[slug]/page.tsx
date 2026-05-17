@@ -124,15 +124,21 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         fetchMatchesMode: initialTab === 'overview' ? 'recent' : 'season',
         matchLimit: 10,
       }),
-      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewPlayerRankingsData>> | null),
-      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewTransfersData>> | null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewPlayerRankingsData(id, 5)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewTransfersData(id)
+        : Promise.resolve(null),
       initialTab === 'overview'
         ? fetchTeamOverviewRecentMatchesData(id, 5)
         : Promise.resolve(null),
       initialTab === 'overview'
         ? fetchTeamOverviewUpcomingMatchesData(id, 5)
         : Promise.resolve(null),
-      Promise.resolve(null as Awaited<ReturnType<typeof fetchTeamOverviewStandingsData>> | null),
+      initialTab === 'overview'
+        ? fetchTeamOverviewStandingsData(id)
+        : Promise.resolve(null),
     ]);
 
     if (!initialData.success || !initialData.teamData?.team) {
