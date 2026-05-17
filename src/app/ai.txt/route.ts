@@ -32,6 +32,7 @@ Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /admin/
 Disallow: /cdn-cgi/
+Disallow: /_next/image
 Disallow: /settings/
 Disallow: /user/
 Disallow: /signin

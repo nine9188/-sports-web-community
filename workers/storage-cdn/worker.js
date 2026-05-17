@@ -1,19 +1,15 @@
 /**
- * Cloudflare Worker — Storage CDN + 외부 이미지 프록시
+ * Cloudflare Worker for cdn.4590football.com.
  *
- * 1. Storage: https://cdn.4590football.com/players/md/123.webp
- *    → Supabase Storage에서 가져와 1년 캐시
- *
- * 2. 외부 이미지: https://cdn.4590football.com/proxy?url=https://img.mydaily.co.kr/...
- *    → 외부 이미지를 가져와 24시간 캐시
- *
- * 배포: cd workers/storage-cdn && npx wrangler deploy
+ * - Storage assets:
+ *   /players/md/123.webp -> Supabase Storage public object
+ * - External news image proxy:
+ *   /proxy?url=https://img.mydaily.co.kr/...
  */
 
 const SUPABASE_STORAGE_ORIGIN =
   'https://vnjjfhsuzoxcljqqwwvx.supabase.co/storage/v1/object/public';
 
-// 허용 버킷 (보안: 다른 경로 접근 차단)
 const ALLOWED_BUCKETS = new Set([
   'players',
   'teams',
@@ -27,89 +23,113 @@ const ALLOWED_BUCKETS = new Set([
   'emoticon-submissions',
 ]);
 
-// 허용 확장자
 const ALLOWED_EXTENSIONS = new Set(['webp', 'png', 'jpg', 'jpeg', 'gif', 'svg']);
 
-// 프록시 요청 허용 Referer/Origin (우리 사이트에서만 사용 가능)
 const ALLOWED_ORIGINS = [
   '4590football.com',
   'localhost',
 ];
 
+const ALLOWED_PROXY_SOURCE_HOSTS = new Set([
+  'img.mydaily.co.kr',
+]);
+
+const SEARCH_CRAWLER_UA =
+  /(Googlebot|Googlebot-Image|Google-InspectionTool|bingbot|Yeti|DuckDuckBot|Applebot)/i;
+
 const worker = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const isHead = request.method === 'HEAD';
 
-    // GET만 허용
-    if (request.method !== 'GET') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method Not Allowed', { status: 405 });
     }
 
-    const pathname = url.pathname;
-
-    // ─── /proxy 경로: 외부 이미지 프록시 ───
-    if (pathname === '/proxy') {
-      return handleExternalProxy(request, url, ctx);
+    if (url.pathname === '/robots.txt') {
+      return handleRobotsTxt(isHead);
     }
 
-    // ─── 루트 ───
-    if (pathname === '/' || pathname === '') {
-      return new Response('4590 Storage CDN', { status: 200 });
+    if (url.pathname === '/proxy') {
+      return handleExternalProxy(request, url, ctx, isHead);
     }
 
-    // ─── Storage 프록시 ───
-    return handleStorageProxy(request, url, ctx, pathname);
+    if (url.pathname === '/' || url.pathname === '') {
+      return new Response(isHead ? null : '4590 Storage CDN', { status: 200 });
+    }
+
+    return handleStorageProxy(request, url, ctx, isHead);
   },
 };
 
 export default worker;
 
-/**
- * Supabase Storage 프록시 (기존 기능)
- */
-async function handleStorageProxy(request, url, ctx, pathname) {
-  const segments = pathname.split('/').filter(Boolean);
+function handleRobotsTxt(isHead) {
+  const body = [
+    'User-agent: *',
+    'Disallow: /proxy',
+    'Allow: /players/',
+    'Allow: /teams/',
+    'Allow: /leagues/',
+    'Allow: /coachs/',
+    'Allow: /venues/',
+    'Allow: /profile-icons/',
+    '',
+  ].join('\n');
+
+  return new Response(isHead ? null : body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+}
+
+async function handleStorageProxy(request, url, ctx, isHead) {
+  const segments = url.pathname.split('/').filter(Boolean);
   if (segments.length < 1) {
-    return new Response('Not Found', { status: 404 });
+    return new Response(isHead ? null : 'Not Found', { status: 404 });
   }
 
-  // 버킷 검증
   const bucket = segments[0];
   if (!ALLOWED_BUCKETS.has(bucket)) {
-    return new Response('Not Found', { status: 404 });
+    return new Response(isHead ? null : 'Not Found', { status: 404 });
   }
 
-  // 확장자 검증
   const lastSegment = segments[segments.length - 1];
   const ext = lastSegment.split('.').pop()?.toLowerCase();
   if (!ext || !ALLOWED_EXTENSIONS.has(ext)) {
-    return new Response('Not Found', { status: 404 });
+    return new Response(isHead ? null : 'Not Found', { status: 404 });
   }
 
-  // 캐시 확인
   const cache = caches.default;
-  const cacheKey = new Request(url.toString(), request);
+  const cacheKey = new Request(url.toString(), { method: 'GET' });
   let response = await cache.match(cacheKey);
 
   if (response) {
     const headers = new Headers(response.headers);
     headers.set('X-Cache', 'HIT');
-    return new Response(response.body, { ...response, headers });
+    return new Response(isHead ? null : response.body, {
+      status: response.status,
+      headers,
+    });
   }
 
-  // Supabase에서 가져오기
-  const supabaseUrl = `${SUPABASE_STORAGE_ORIGIN}${pathname}`;
+  const supabaseUrl = `${SUPABASE_STORAGE_ORIGIN}${url.pathname}`;
 
   try {
     const originResponse = await fetch(supabaseUrl, {
-      headers: { 'Accept': 'image/*' },
+      headers: { Accept: 'image/*' },
     });
 
     if (!originResponse.ok) {
-      return new Response('Not Found', { status: 404 });
+      return new Response(isHead ? null : 'Not Found', { status: 404 });
     }
 
-    const originContentType = originResponse.headers.get('content-type') || 'application/octet-stream';
+    const originContentType =
+      originResponse.headers.get('content-type') || 'application/octet-stream';
     response = new Response(originResponse.body, {
       status: 200,
       headers: {
@@ -122,64 +142,72 @@ async function handleStorageProxy(request, url, ctx, pathname) {
     });
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
+    return isHead
+      ? new Response(null, { status: response.status, headers: response.headers })
+      : response;
   } catch {
-    return new Response('Origin Error', { status: 502 });
+    return new Response(isHead ? null : 'Origin Error', { status: 502 });
   }
 }
 
-/**
- * 외부 이미지 프록시 (뉴스 이미지 등)
- */
-async function handleExternalProxy(request, url, ctx) {
+async function handleExternalProxy(request, url, ctx, isHead) {
   const imageUrl = url.searchParams.get('url');
 
   if (!imageUrl) {
-    return new Response('URL parameter is required', { status: 400 });
+    return new Response(isHead ? null : 'URL parameter is required', { status: 400 });
   }
 
-  // URL 검증
   let parsedUrl;
   try {
     parsedUrl = new URL(imageUrl);
   } catch {
-    return new Response('Invalid URL', { status: 400 });
+    return new Response(isHead ? null : 'Invalid URL', { status: 400 });
   }
 
-  // HTTPS만 허용
   if (parsedUrl.protocol !== 'https:') {
-    return new Response('Only HTTPS URLs are allowed', { status: 400 });
+    return new Response(isHead ? null : 'Only HTTPS URLs are allowed', { status: 400 });
   }
 
-  // Referer/Origin 검증 (우리 사이트에서만 프록시 사용 가능)
   const referer = request.headers.get('referer') || '';
   const origin = request.headers.get('origin') || '';
   const isAllowedOrigin = ALLOWED_ORIGINS.some(
-    (d) => referer.includes(d) || origin.includes(d)
+    (domain) => referer.includes(domain) || origin.includes(domain)
   );
-  if (!isAllowedOrigin) {
-    return new Response('Forbidden', { status: 403 });
+  const userAgent = request.headers.get('user-agent') || '';
+  const isAllowedCrawler =
+    ALLOWED_PROXY_SOURCE_HOSTS.has(parsedUrl.hostname) &&
+    SEARCH_CRAWLER_UA.test(userAgent);
+
+  if (!isAllowedOrigin && !isAllowedCrawler) {
+    return new Response(isHead ? null : 'Forbidden', {
+      status: 403,
+      headers: {
+        'X-Robots-Tag': 'noindex, noimageindex',
+      },
+    });
   }
 
-  // 캐시 확인 (원본 URL 기반 캐시키)
   const cache = caches.default;
-  const cacheKey = new Request(url.toString(), request);
+  const cacheKey = new Request(url.toString(), { method: 'GET' });
   let response = await cache.match(cacheKey);
 
   if (response) {
     const headers = new Headers(response.headers);
     headers.set('X-Cache', 'HIT');
-    return new Response(response.body, { ...response, headers });
+    return new Response(isHead ? null : response.body, {
+      status: response.status,
+      headers,
+    });
   }
 
-  // 외부 이미지 fetch
   try {
     const originResponse = await fetch(imageUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': `https://${parsedUrl.hostname}/`,
+        Referer: `https://${parsedUrl.hostname}/`,
         'Sec-Fetch-Dest': 'image',
         'Sec-Fetch-Mode': 'no-cors',
         'Sec-Fetch-Site': 'same-site',
@@ -187,13 +215,22 @@ async function handleExternalProxy(request, url, ctx) {
     });
 
     if (!originResponse.ok) {
-      return new Response('Failed to fetch image', { status: originResponse.status });
+      return new Response(isHead ? null : 'Failed to fetch image', {
+        status: originResponse.status,
+        headers: {
+          'X-Robots-Tag': 'noindex, noimageindex',
+        },
+      });
     }
 
-    // Content-Type 확인
     const contentType = originResponse.headers.get('content-type') || '';
     if (!contentType.startsWith('image/')) {
-      return new Response('URL is not an image', { status: 400 });
+      return new Response(isHead ? null : 'URL is not an image', {
+        status: 400,
+        headers: {
+          'X-Robots-Tag': 'noindex, noimageindex',
+        },
+      });
     }
 
     response = new Response(originResponse.body, {
@@ -203,13 +240,21 @@ async function handleExternalProxy(request, url, ctx) {
         'Cache-Control': 'public, s-maxage=86400, max-age=3600',
         'CDN-Cache-Control': 'max-age=86400',
         'Access-Control-Allow-Origin': '*',
+        'X-Robots-Tag': 'noindex, noimageindex',
         'X-Cache': 'MISS',
       },
     });
 
     ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
+    return isHead
+      ? new Response(null, { status: response.status, headers: response.headers })
+      : response;
   } catch {
-    return new Response('Origin Error', { status: 502 });
+    return new Response(isHead ? null : 'Origin Error', {
+      status: 502,
+      headers: {
+        'X-Robots-Tag': 'noindex, noimageindex',
+      },
+    });
   }
 }

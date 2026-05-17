@@ -11,6 +11,7 @@ const nextConfig = {
     optimizeCss: true,
   },
   images: {
+    unoptimized: true,
     localPatterns: [
       {
         pathname: '/api/proxy-image',

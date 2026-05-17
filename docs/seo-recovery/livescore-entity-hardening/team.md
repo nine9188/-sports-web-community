@@ -4,6 +4,12 @@
 
 2026-05-16 기준 team 상세 페이지 hardening 1차 구현은 완료했다.
 
+2026-05-17 추가 보강:
+
+- team slug 품질이 match canonical slug에도 직접 영향을 준다는 점을 명시했다.
+- `team-123` 같은 placeholder slug는 usable slug가 아니며, team 상세와 match 상세 모두에서 canonical 후보로 쓰면 안 된다.
+- match URL에서 `team-숫자-vs-team-숫자`가 생기지 않으려면 `football_teams`의 name/slug backfill이 필요하다.
+
 목표는 `/livescore/football/team/[id]/[slug]`의 metadata, canonical slug, 기본 팀 프로필을 DB shell 중심으로 처리하고, overview 첫 SSR 데이터를 유지하면서 외부 API fan-out 위험을 줄이는 것이다. API-Football은 계속 사용하지만, 크롤링 URL 생존에 필요한 최소 team shell은 `football_teams` DB를 먼저 사용한다.
 
 중요한 전제:
@@ -28,6 +34,7 @@
    - standings
 5. `resolveTeamCanonicalSlug()`는 DB slug가 없으면 API `teams` fallback을 탔다.
 6. canonical slug가 없으면 `/team/[id]/[slug]` 본문이 바로 404가 될 수 있었다.
+7. team slug/name이 부족한 팀은 match 상세의 `home-vs-away` canonical 생성에서도 placeholder slug를 만들 수 있었다.
 
 team은 DB shell이 이미 충분한 편이라, player/match보다 더 DB 우선으로 가져가기 좋다. 다만 DB에 없는 overview 데이터는 API fallback이 필요하므로, 목표는 API 제거가 아니라 API 실패가 페이지 전체 실패로 번지는 것을 막는 것이다.
 
@@ -134,6 +141,8 @@ type TeamShellResult =
 
 - DB에 있는 팀의 canonical slug 생성은 API 없이 끝난다.
 - API fallback으로 확인된 신규 팀은 리그까지 확인되면 DB shell로 저장된다.
+- `team`, `team-123`, `123` 같은 placeholder slug는 canonical로 쓰지 않는다.
+- team slug가 부족하면 team 상세뿐 아니라 match 상세 canonical도 품질이 떨어지므로 backfill 대상이다.
 
 ### 3. Team SEO data를 shell 기반으로 변경
 
@@ -271,6 +280,8 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 정책을 더 구체적으로 쓰면 다음과 같다.
 
 - team shell은 SSR의 기반 데이터이므로 DB 우선이다.
+- team slug는 team 상세 URL뿐 아니라 match 상세의 `home-vs-away` slug 재료다.
+- `team-숫자` placeholder는 URL 생존용 fallback이 아니라 품질 문제로 보고 보정한다.
 - overview preview는 SSR에 남기되 block별 cache와 fallback을 둔다.
 - 전체 탭 데이터는 필요에 따라 탭 SSR 또는 기존 API/cache 경로를 유지한다.
 - temporary API failure는 block fallback 대상이다.
@@ -298,6 +309,8 @@ API를 제거한 것이 아니다. 팀 상세는 여전히 다음 데이터를 A
 2. overview preview는 SSR 유지가 요구사항이다. client lazy load로 무조건 빼지 말고 preview별 `unstable_cache`/TTL/실패 격리를 적용한다.
 3. `fetchTeamData()` 내부의 `teams/statistics` 호출도 overview에서 더 가볍게 하려면 `fetchTeamStats` 옵션 또는 stats cache 분리가 필요하다.
 4. team sitemap에서 slug 없는 약 70개 팀은 shell 기반 slug 저장/backfill을 별도로 수행하면 더 좋다.
+5. match canonical에서 `team-숫자-vs-team-숫자`가 다시 나오지 않도록 `football_teams`의 `name`, `display_name`, `slug` 누락 팀을 주기적으로 점검한다.
+6. API fallback으로 확인된 신규 팀은 리그/country 조건이 맞으면 가능한 한 shell로 저장해 다음 match slug 생성에서 DB만으로 해결되게 한다.
 
 ## Verification
 
