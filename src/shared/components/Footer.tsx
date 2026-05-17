@@ -135,6 +135,20 @@ export default function Footer() {
             </a>
           </div>
         </div>
+        <div className="mx-auto mt-6 max-w-3xl border-t border-black/5 pt-4 text-center text-[11px] leading-relaxed text-gray-500 [word-break:keep-all] dark:border-white/10 dark:text-gray-400 sm:text-xs">
+          <p>
+            4590 Football은 스포츠 경기 데이터 및 분석 정보를 제공하는
+            <br className="sm:hidden" /> 정보 플랫폼입니다.
+          </p>
+          <p>
+            제공되는 정보는 참고용이며, 특정 결과를 보장하거나
+            <br className="sm:hidden" /> 베팅·투자·사행성 행위를 유도하지 않습니다.
+          </p>
+          <p>
+            본 사이트는 불법 스포츠도박, 사설 토토,
+            <br className="sm:hidden" /> 해외 무허가 베팅 서비스와 어떠한 제휴 또는 연관도 없습니다.
+          </p>
+        </div>
       </div>
     </footer>
   )

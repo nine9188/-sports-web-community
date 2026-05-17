@@ -7,7 +7,7 @@ import { motion, useInView } from 'framer-motion';
 import {
   Trophy, Users, User, Tv, ArrowLeftRight, PenTool,
   ChevronRight, ChevronDown, ArrowDown, ArrowUp, BookOpen,
-  ShoppingBag, Palette, Bot, Bell, Search,
+  ShoppingBag, Palette, Bot, Bell, Search, ShieldCheck,
 } from 'lucide-react';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 
@@ -54,6 +54,7 @@ const TOC_ITEMS = [
   { id: 'chatbot', icon: Bot, label: '고객센터 문의', desc: '이용문의, 신고, 의견 제출' },
   { id: 'notification', icon: Bell, label: '알림', desc: '댓글, 추천, 멘션 알림' },
   { id: 'search', icon: Search, label: '검색', desc: '게시글, 팀, 선수 통합 검색' },
+  { id: 'service-notice', icon: ShieldCheck, label: '서비스 이용 안내', desc: '정보 제공 범위와 금지 행위' },
 ];
 
 /* ─────────────────────────────────────────────
@@ -3985,6 +3986,54 @@ export default function GuidePageClient({ demoImages }: { demoImages: GuideDemoI
           </GuideBox>
 
           <SearchDemo images={demoImages} />
+          <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+            <ArrowUp className="w-3.5 h-3.5" />
+            목차로
+          </button>
+        </Section>}
+
+        {/* ───── 12. 서비스 이용 안내 ───── */}
+        {isSectionVisible('service-notice') && <Section id="service-notice" className="scroll-mt-20 space-y-4 bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-white/10 px-4 py-6 md:px-6">
+          <SectionHeader icon={ShieldCheck} title="서비스 이용 안내" desc="정보 제공 범위와 금지되는 이용 방식" color="green" />
+
+          <GuideBox title="4590 Football은 어떤 서비스인가요?">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              4590 Football은 스포츠 경기 일정, 결과, 통계, 순위, 경기 흐름, 데이터 기반 분석 정보를 제공하는 정보 플랫폼입니다.<br />
+              사이트에서 제공되는 정보는 스포츠 경기를 더 잘 이해하기 위한 참고 자료이며, 특정 경기 결과를 보장하지 않습니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="베팅 서비스가 아닙니다">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              4590 Football은 베팅, 도박, 사행성 행위 또는 금전적 이익을 목적으로 한 의사결정을 유도하지 않습니다.<br />
+              또한 불법 스포츠도박, 사설 토토, 해외 무허가 베팅 서비스와 어떠한 제휴 또는 연관도 없습니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="정보는 참고용으로만 이용해 주세요">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              경기 데이터와 분석 정보는 수집 시점, 제공처, 경기 상황, 업데이트 지연 등에 따라 실제 결과 또는 공식 기록과 차이가 있을 수 있습니다.<br />
+              제공되는 정보의 활용 여부와 그에 따른 최종 판단 및 책임은 이용자 본인에게 있습니다.
+            </p>
+          </GuideBox>
+
+          <GuideBox title="금지되는 이용 방식">
+            <ul className="text-[13px] text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
+              <li>불법 스포츠도박 또는 사설 토토 이용을 위한 정보 활용</li>
+              <li>무허가 베팅 사이트, 사행성 서비스, 도박 관련 링크 홍보</li>
+              <li>게시글, 댓글, 닉네임, 프로필 등을 통한 불법 사이트 광고</li>
+              <li>특정 베팅 행위, 배당, 수익 보장 등을 암시하거나 권유하는 행위</li>
+              <li>기타 대한민국 관계 법령을 위반하거나 위법 행위를 조장하는 행위</li>
+            </ul>
+          </GuideBox>
+
+          <GuideBox title="운영 방침">
+            <p className="text-[13px] text-gray-700 dark:text-gray-300">
+              운영자는 위와 같은 행위가 확인될 경우 관련 콘텐츠를 삭제하거나 이용을 제한할 수 있습니다.<br />
+              4590 Football은 건전한 스포츠 정보 이용 환경을 유지하기 위해 불법 스포츠도박 및 사행성 행위와 관련된 콘텐츠를 허용하지 않습니다.
+            </p>
+          </GuideBox>
+
           <button type="button" onClick={scrollToToc} className="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             <ArrowUp className="w-3.5 h-3.5" />
             목차로

@@ -19,6 +19,12 @@ function isPublicCrawlerUserAgent(userAgent: string | null) {
   return Boolean(userAgent && PUBLIC_CRAWLER_USER_AGENT_PATTERN.test(userAgent))
 }
 
+function hasSupabaseAuthCookie(request: NextRequest) {
+  return request.cookies
+    .getAll()
+    .some(cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token'))
+}
+
 function isUsableTeamSlug(teamId: string | number, slug?: string | null): slug is string {
   const normalized = String(slug ?? '').trim().toLowerCase()
   const normalizedId = String(teamId ?? '').trim().toLowerCase()
@@ -181,7 +187,14 @@ export async function proxy(request: NextRequest) {
   const isAdmin = pathname.startsWith('/admin')
   const isAuthException = authExceptionPaths.some(path => pathname.startsWith(path)) || pathname.startsWith('/auth')
   const hasNicknameCookie = request.cookies.get('has_nickname')?.value === '1'
+  const hasAuthCookie = hasSupabaseAuthCookie(request)
   const isPublicCrawler = isPublicCrawlerUserAgent(request.headers.get('user-agent'))
+
+  // Anonymous public traffic does not need a Supabase auth lookup in middleware.
+  // This avoids public page timeouts caused by auth verification latency.
+  if (!isProtected && !isAuthPage && !isAdmin && !isAuthException && !hasAuthCookie) {
+    return NextResponse.next({ request: { headers: request.headers } })
+  }
 
   // Fast path: public pages with a verified nickname cookie skip Supabase auth lookup.
   // This keeps common /boards and /livescore visits from paying auth middleware cost.

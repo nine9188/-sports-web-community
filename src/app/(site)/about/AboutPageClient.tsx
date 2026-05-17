@@ -1116,6 +1116,50 @@ export default function AboutPageClient({
         </div>
       </Section>
 
+      {/* 정보 제공 원칙 */}
+      <Section className="bg-white dark:bg-[#1D1D1D] md:rounded-lg border border-black/7 dark:border-0 mt-4 px-6 py-14 md:px-12 md:py-20">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-green-50 dark:bg-green-900/20 mb-4">
+              <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">Service Principle</p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] mb-3">4590은 스포츠 정보 플랫폼입니다</h2>
+            <p className="text-[13px] md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed [word-break:keep-all]">
+              4590 Football은 경기 일정, 결과, 통계, 순위, 경기 흐름과 분석 정보를 제공하는 서비스입니다.<br />
+              제공되는 모든 정보는 축구를 더 잘 이해하기 위한 참고 자료이며, 특정 결과를 보장하지 않습니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              {
+                title: '참고용 데이터',
+                desc: '경기 데이터와 분석 정보는 제공처, 경기 상황, 업데이트 시점에 따라 실제 결과 또는 공식 기록과 차이가 있을 수 있습니다.',
+              },
+              {
+                title: '베팅 유도 없음',
+                desc: '베팅, 도박, 사행성 행위, 투자 판단 또는 금전적 이익을 목적으로 한 의사결정을 유도하거나 권장하지 않습니다.',
+              },
+              {
+                title: '불법도박 무관',
+                desc: '불법 스포츠도박, 사설 토토, 해외 무허가 베팅 서비스와 어떠한 제휴, 광고, 중개 또는 운영상 연관이 없습니다.',
+              },
+            ].map((item) => (
+              <motion.div key={item.title} variants={fadeUp} className="rounded-xl bg-[#F9FAFB] dark:bg-[#262626] border border-black/5 dark:border-white/5 p-5">
+                <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-2">{item.title}</p>
+                <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400 [word-break:keep-all]">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <p className="mt-6 text-center text-xs leading-relaxed text-gray-500 dark:text-gray-400 [word-break:keep-all]">
+            이용자는 제공되는 정보를 관계 법령과 공서양속에 반하지 않는 범위에서 이용해야 하며,<br className="hidden sm:block" />
+            불법 스포츠도박 또는 사행성 행위에 활용해서는 안 됩니다.
+          </p>
+        </div>
+      </Section>
+
       {/* FAQ */}
       <Section className="bg-[#F5F5F5] dark:bg-[#262626] md:rounded-lg border border-black/7 dark:border-0 mt-4 px-6 py-14 md:px-12 md:py-20">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-[#F0F0F0] text-center mb-10">자주 묻는 질문</h2>

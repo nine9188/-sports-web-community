@@ -172,7 +172,21 @@ export default function TermsPage() {
 
           {/* 제11조 */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제11조 (면책 조항)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제11조 (스포츠 정보 제공 및 불법도박 금지)</h2>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>본 서비스는 축구를 포함한 스포츠 경기 일정, 결과, 통계, 데이터, 분석 정보 등을 제공하는 정보 플랫폼입니다.</li>
+              <li>서비스에서 제공되는 모든 정보는 이용자의 이해와 참고를 돕기 위한 자료이며, 경기 결과, 특정 팀 또는 선수의 성과, 기타 어떠한 결과도 보장하지 않습니다.</li>
+              <li>서비스는 베팅, 도박, 사행성 행위, 투자 판단 또는 금전적 이익을 목적으로 한 의사결정을 유도하거나 권장하지 않습니다.</li>
+              <li>서비스는 「국민체육진흥법」 등 대한민국 관계 법령을 위반하는 불법 스포츠도박, 사설 토토, 해외 무허가 베팅 서비스와 어떠한 제휴, 광고, 중개, 홍보 또는 운영상 연관이 없습니다.</li>
+              <li>이용자는 서비스에서 제공되는 정보를 관련 법령과 공서양속에 반하지 않는 범위에서 이용해야 하며, 해당 정보를 불법 스포츠도박, 사행성 행위, 기타 위법 행위에 활용해서는 안 됩니다.</li>
+              <li>서비스에서 제공되는 정보의 활용 여부와 그에 따른 최종 판단 및 책임은 이용자 본인에게 있습니다. 운영자는 이용자가 서비스의 정보를 이용하여 행한 불법 행위 또는 그로 인한 손해에 대해 책임을 지지 않습니다.</li>
+              <li>운영자는 불법 스포츠도박, 사행성 행위, 무허가 베팅 서비스 홍보 또는 이와 유사한 목적으로 작성된 게시물, 댓글, 링크, 광고성 콘텐츠를 사전 통지 없이 제한, 삭제하거나 관련 계정의 이용을 제한할 수 있습니다.</li>
+            </ol>
+          </section>
+
+          {/* 제12조 */}
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제12조 (면책 조항)</h2>
             <ol className="list-decimal pl-5 space-y-2">
               <li>운영자는 천재지변, 전쟁, 테러, 해킹 등 불가항력적 사유로 인한 서비스 중단에 대해 책임을 지지 않습니다.</li>
               <li>운영자는 회원 간 또는 회원과 제3자 간의 분쟁에 대해 개입할 의무가 없으며, 이로 인한 손해에 대해 책임을 지지 않습니다.</li>
@@ -181,9 +195,9 @@ export default function TermsPage() {
             </ol>
           </section>
 
-          {/* 제12조 */}
+          {/* 제13조 */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제12조 (저작권 및 지식재산권)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제13조 (저작권 및 지식재산권)</h2>
             <ol className="list-decimal pl-5 space-y-2">
               <li>서비스의 디자인, 로고, 소프트웨어 등에 대한 저작권은 운영자에게 귀속됩니다.</li>
               <li>이용자는 서비스를 통해 얻은 정보를 운영자의 사전 승낙 없이 상업적으로 이용할 수 없습니다.</li>
@@ -191,9 +205,9 @@ export default function TermsPage() {
             </ol>
           </section>
 
-          {/* 제13조 */}
+          {/* 제14조 */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제13조 (분쟁 해결)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제14조 (분쟁 해결)</h2>
             <ol className="list-decimal pl-5 space-y-2">
               <li>본 약관은 대한민국 법률에 따라 해석됩니다.</li>
               <li>서비스 이용과 관련하여 분쟁이 발생한 경우, 운영자와 이용자는 원만한 해결을 위해 성실히 협의합니다.</li>
@@ -201,9 +215,9 @@ export default function TermsPage() {
             </ol>
           </section>
 
-          {/* 제14조 */}
+          {/* 제15조 */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제14조 (문의)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0]">제15조 (문의)</h2>
             <p>서비스 이용과 관련한 문의사항은 아래 연락처로 문의하실 수 있습니다.</p>
             <div className="bg-[#F5F5F5] dark:bg-[#2D2D2D] p-4 rounded-lg mt-4">
               <ul className="list-none space-y-1 text-gray-700 dark:text-gray-300">

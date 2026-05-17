@@ -30,12 +30,18 @@ const ALLOWED_ORIGINS = [
   'localhost',
 ];
 
+const PRIVATE_DEV_HOST =
+  /^(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/;
+
 const ALLOWED_PROXY_SOURCE_HOSTS = new Set([
   'img.mydaily.co.kr',
 ]);
 
 const SEARCH_CRAWLER_UA =
   /(Googlebot|Googlebot-Image|Google-InspectionTool|bingbot|Yeti|DuckDuckBot|Applebot)/i;
+
+const ORIGIN_TIMEOUT_MS = 2500;
+const ORIGIN_ATTEMPTS = 2;
 
 const worker = {
   async fetch(request, env, ctx) {
@@ -87,6 +93,45 @@ function handleRobotsTxt(isHead) {
   });
 }
 
+function fallbackImageResponse(isHead, reason) {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>';
+
+  return new Response(isHead ? null : svg, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/svg+xml; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=300, max-age=60',
+      'CDN-Cache-Control': 'max-age=300',
+      'Access-Control-Allow-Origin': '*',
+      'X-Robots-Tag': 'noindex, noimageindex',
+      'X-Asset-Fallback': reason,
+    },
+  });
+}
+
+async function fetchWithRetry(resource, init = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= ORIGIN_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), ORIGIN_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(resource, {
+        ...init,
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return response;
+    } catch (error) {
+      clearTimeout(timeout);
+      lastError = error;
+    }
+  }
+
+  throw lastError;
+}
+
 async function handleStorageProxy(request, url, ctx, isHead) {
   const segments = url.pathname.split('/').filter(Boolean);
   if (segments.length < 1) {
@@ -120,12 +165,12 @@ async function handleStorageProxy(request, url, ctx, isHead) {
   const supabaseUrl = `${SUPABASE_STORAGE_ORIGIN}${url.pathname}`;
 
   try {
-    const originResponse = await fetch(supabaseUrl, {
+    const originResponse = await fetchWithRetry(supabaseUrl, {
       headers: { Accept: 'image/*' },
     });
 
     if (!originResponse.ok) {
-      return new Response(isHead ? null : 'Not Found', { status: 404 });
+      return fallbackImageResponse(isHead, `origin-${originResponse.status}`);
     }
 
     const originContentType =
@@ -146,7 +191,7 @@ async function handleStorageProxy(request, url, ctx, isHead) {
       ? new Response(null, { status: response.status, headers: response.headers })
       : response;
   } catch {
-    return new Response(isHead ? null : 'Origin Error', { status: 502 });
+    return fallbackImageResponse(isHead, 'origin-timeout');
   }
 }
 
@@ -172,7 +217,7 @@ async function handleExternalProxy(request, url, ctx, isHead) {
   const origin = request.headers.get('origin') || '';
   const isAllowedOrigin = ALLOWED_ORIGINS.some(
     (domain) => referer.includes(domain) || origin.includes(domain)
-  );
+  ) || isPrivateDevOrigin(referer) || isPrivateDevOrigin(origin);
   const userAgent = request.headers.get('user-agent') || '';
   const isAllowedCrawler =
     ALLOWED_PROXY_SOURCE_HOSTS.has(parsedUrl.hostname) &&
@@ -201,7 +246,7 @@ async function handleExternalProxy(request, url, ctx, isHead) {
   }
 
   try {
-    const originResponse = await fetch(imageUrl, {
+    const originResponse = await fetchWithRetry(imageUrl, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -215,12 +260,7 @@ async function handleExternalProxy(request, url, ctx, isHead) {
     });
 
     if (!originResponse.ok) {
-      return new Response(isHead ? null : 'Failed to fetch image', {
-        status: originResponse.status,
-        headers: {
-          'X-Robots-Tag': 'noindex, noimageindex',
-        },
-      });
+      return fallbackImageResponse(isHead, `proxy-origin-${originResponse.status}`);
     }
 
     const contentType = originResponse.headers.get('content-type') || '';
@@ -250,11 +290,16 @@ async function handleExternalProxy(request, url, ctx, isHead) {
       ? new Response(null, { status: response.status, headers: response.headers })
       : response;
   } catch {
-    return new Response(isHead ? null : 'Origin Error', {
-      status: 502,
-      headers: {
-        'X-Robots-Tag': 'noindex, noimageindex',
-      },
-    });
+    return fallbackImageResponse(isHead, 'proxy-origin-timeout');
+  }
+}
+
+function isPrivateDevOrigin(value) {
+  if (!value) return false;
+
+  try {
+    return PRIVATE_DEV_HOST.test(new URL(value).hostname);
+  } catch {
+    return false;
   }
 }
