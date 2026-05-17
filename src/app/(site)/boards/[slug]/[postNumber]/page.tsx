@@ -115,7 +115,8 @@ export async function generateMetadata({
   });
 
   return buildMetadata({
-    title: `${post.title} - ${board.name}`,
+    title: post.title,
+    titleOnly: true,
     description,
     path: `/boards/${slug}/${postNumber}`,
     type: 'article',
@@ -478,7 +479,6 @@ async function PostDetailContent({
       <>
         {/* 게시판 타입별 구조화 데이터 */}
         <DaumWebmasterHints
-          title={`${postTitle} - ${boardName}`}
           content={seoDescription}
           datetime={result.post.created_at}
         />
