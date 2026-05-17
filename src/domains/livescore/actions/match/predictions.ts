@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
-import { getSupabaseAction } from '@/shared/lib/supabase/server';
+import { getSupabaseAction, getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 
 export type PredictionType = 'home' | 'draw' | 'away';
 
@@ -181,7 +181,7 @@ export async function updatePredictionStatsManually(matchId: string) {
 
 export const getPredictionStats = cache(async (matchId: string) => {
   try {
-    const supabase = await getSupabaseAction();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('match_prediction_stats')
@@ -225,7 +225,7 @@ export const getPredictionStats = cache(async (matchId: string) => {
 
 export const getUserPrediction = cache(async (matchId: string) => {
   try {
-    const supabase = await getSupabaseAction();
+    const supabase = await getSupabaseServer();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
