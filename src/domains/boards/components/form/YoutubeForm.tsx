@@ -1,179 +1,115 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { toast } from 'sonner';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/shared/components/ui';
+import { Check, X } from 'lucide-react';
 
 interface YoutubeFormProps {
   onCancel: () => void;
-  onYoutubeAdd: (url: string, caption?: string) => void;
+  onYoutubeAdd: (url: string) => Promise<void>;
   isOpen: boolean;
 }
 
-// YouTube ID를 추출하는 정규식 함수 - YoutubeExtension과 동일한 로직 사용
-const getYoutubeId = (url: string): string | null => {
-  const regex = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+function getYoutubeId(url: string): string | null {
+  const regex = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|&v(?:i)?=))([^#&?]*).*/;
   const match = url.match(regex);
   return match && match[1].length === 11 ? match[1] : null;
-};
+}
 
-export default function YoutubeForm({ 
-  onCancel, 
+export default function YoutubeForm({
+  onCancel,
   onYoutubeAdd,
-  isOpen
+  isOpen,
 }: YoutubeFormProps) {
   const [url, setUrl] = useState('');
-  const [caption, setCaption] = useState('');
-  const [isValidUrl, setIsValidUrl] = useState(false);
-  const [youtubeId, setYoutubeId] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isValidUrl = !!getYoutubeId(url.trim());
 
-  // 외부 클릭 감지
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    }
-    
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onCancel]);
+    if (!isOpen) return;
 
-  // 드롭다운이 열릴 때마다 상태 초기화
-  useEffect(() => {
-    if (isOpen) {
-      setUrl('');
-      setCaption('');
-      setIsValidUrl(false);
-      setYoutubeId(null);
-    }
+    setUrl('');
+    setIsSubmitting(false);
+    const id = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(id);
   }, [isOpen]);
 
-  // URL 유효성 검사 및 YouTube ID 추출
-  const validateYoutubeUrl = (input: string) => {
-    const id = getYoutubeId(input);
-    setYoutubeId(id);
-    return !!id;
-  };
+  const handleSubmit = async () => {
+    const nextUrl = url.trim();
+    if (!nextUrl || !isValidUrl || isSubmitting) return;
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-    setUrl(input);
-    const isValid = validateYoutubeUrl(input);
-    setIsValidUrl(isValid);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!url.trim()) {
-      toast.error('YouTube URL을 입력해주세요.');
-      return;
+    setIsSubmitting(true);
+    try {
+      await onYoutubeAdd(nextUrl);
+      onCancel();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    onYoutubeAdd(url.trim(), caption.trim() || undefined);
-    
-    // 폼 초기화
-    setUrl('');
-    setCaption('');
   };
 
   if (!isOpen) return null;
 
   return (
-      <div
-        ref={dropdownRef}
-        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
-          <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">유튜브 추가</h3>
+    <div
+      data-editor-youtube-popover="true"
+      className="w-full rounded-md border border-black/10 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+      onMouseDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="url"
+            autoComplete="url"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void handleSubmit();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                onCancel();
+              }
+            }}
+            className={`min-w-0 flex-1 rounded-md border px-2.5 py-1.5 text-[13px] text-gray-900 outline-none placeholder:text-gray-500 focus:bg-[#F5F5F5] dark:bg-[#262626] dark:text-[#F0F0F0] dark:placeholder:text-gray-400 ${
+              url && !isValidUrl ? 'border-red-300 dark:border-red-500/60' : 'border-black/7 dark:border-white/10'
+            }`}
+            placeholder="https://youtu.be/... 또는 youtube.com/watch?v=..."
+            disabled={isSubmitting}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-gray-700 dark:text-gray-300"
+            title="Close"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            <X size={16} />
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="icon"
+            className="h-8 w-8"
+            title="Insert"
+            disabled={!isValidUrl || isSubmitting}
+            onClick={() => void handleSubmit()}
+          >
+            <Check size={16} />
+          </Button>
         </div>
-        <div className="p-4">
-          <div className="space-y-4">
-            <div>
-              <input
-                type="text"
-                id="youtubeUrl"
-                value={url}
-                onChange={handleUrlChange}
-                className={`w-full border ${isValidUrl ? 'border-green-500' : 'border-black/7 dark:border-white/10'} rounded-md px-3 py-2 text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors`}
-                placeholder="YouTube 동영상 URL을 입력하세요"
-              />
-            </div>
-
-            <div>
-              <input
-                type="text"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                className="w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
-                placeholder="동영상 설명(선택사항)"
-                maxLength={200}
-              />
-            </div>
-
-            {/* 유효한 ID가 있을 때 미리보기 표시 */}
-            {youtubeId && (
-              <div className="responsive-video-container border border-black/7 dark:border-white/10 rounded-md overflow-hidden">
-                <iframe
-                  src={`https://www.youtube.com/embed/${youtubeId}`}
-                  className="w-full"
-                  height="180"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ borderRadius: '8px' }}
-                />
-              </div>
-            )}
-
-            {!isValidUrl && url && (
-              <div className="text-xs text-red-500">
-                유효한 YouTube URL을 입력해주세요
-              </div>
-            )}
-
-            <div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">예시:</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ wordBreak: 'break-all' }}>
-                https://www.youtube.com/watch?v=XXXXXXXXXXX
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">또는:</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400" style={{ wordBreak: 'break-all' }}>
-                https://youtu.be/XXXXXXXXXXX
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                className="text-xs"
-              >
-                취소
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSubmit}
-                disabled={!url || !isValidUrl}
-                className="text-xs"
-              >
-                확인
-              </Button>
-            </div>
-          </div>
+        <div className="px-1 text-[11px] leading-4 text-gray-500 dark:text-gray-400">
+          YouTube 영상 주소를 붙여넣고 체크를 누르세요.
         </div>
       </div>
+    </div>
   );
-} 
+}

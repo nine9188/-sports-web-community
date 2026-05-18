@@ -5,54 +5,39 @@ import { getCachedAllBoards } from './getCachedBoards';
 import type { Board } from '@/domains/boards/types/board';
 import { calculateBoardViewerPermissions } from './permissions';
 
-/**
- * 계층 구조의 게시판을 flat 배열로 변환
- */
-function flattenBoards(boards: Board[]): Board[] {
-  const result: Board[] = [];
-  for (const board of boards) {
-    result.push(board);
-    if (board.children && board.children.length > 0) {
-      result.push(...flattenBoards(board.children));
-    }
-  }
-  return result;
-}
+type ViewerProfile = {
+  id?: string;
+  is_admin?: boolean | null;
+  is_suspended?: boolean | null;
+  suspended_until?: string | null;
+};
 
-/**
- * 게시글 수정 페이지에 필요한 데이터를 가져옵니다.
- */
 export async function getPostEditData(slug: string, postNumber: string) {
   try {
     const supabase = await getSupabaseServer();
-    
-    // 세션 정보 가져오기
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
-    
-    // 로그인 상태 확인
+
     if (!userId) {
       return {
         success: false,
-        redirectToLogin: true
+        redirectToLogin: true,
       };
     }
-    
-    // 게시판 정보 가져오기
+
     const { data: board, error: boardError } = await supabase
       .from('boards')
       .select('*')
       .eq('slug', slug)
       .single();
-      
+
     if (boardError || !board) {
       return {
         success: false,
-        error: '게시판을 찾을 수 없습니다.'
+        error: '게시판을 찾을 수 없습니다.',
       };
     }
-    
-    // 게시글 메타 정보 (content는 아래에서 별도 조회)
+
     const { data: postRaw, error: postError } = await supabase
       .from('posts')
       .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name)')
@@ -63,131 +48,82 @@ export async function getPostEditData(slug: string, postNumber: string) {
     if (postError || !postRaw) {
       return {
         success: false,
-        error: '게시글을 찾을 수 없습니다.'
+        error: '게시글을 찾을 수 없습니다.',
       };
     }
 
-    // 작성자 확인
     if (postRaw.user_id !== userId) {
       return {
         success: false,
-        redirectToPost: true
+        redirectToPost: true,
       };
     }
 
-    // posts_content 별도 쿼리 (PostgREST 관계 추론 회피)
     const { data: contentRow } = await supabase
       .from('posts_content')
       .select('content')
       .eq('post_id', postRaw.id)
       .maybeSingle();
 
-    const post = {
-      ...postRaw,
-      content: contentRow?.content ?? null,
-    };
-
-    // 성공적으로 데이터를 가져온 경우
     return {
       success: true,
-      post,
-      board
+      post: {
+        ...postRaw,
+        content: contentRow?.content ?? null,
+      },
+      board,
     };
   } catch (error) {
     console.error('게시글 수정 데이터 로드 오류:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : '게시글 정보를 불러오는 중 오류가 발생했습니다.'
+      error: error instanceof Error ? error.message : '게시글 정보를 불러오는 중 오류가 발생했습니다.',
     };
   }
 }
 
-/**
- * 게시글 작성 페이지에 필요한 데이터를 가져옵니다.
- * getBoardsForNavigation을 재사용하여 중복 쿼리 방지 (layout.tsx와 공유)
- */
-export async function getCreatePostData(slug: string) {
+export async function getCreatePostData(slug: string, viewerProfile?: ViewerProfile | null) {
   if (!slug) {
-    console.error('게시글 작성: 슬러그가 제공되지 않음');
     return {
       success: false,
-      error: '게시판 정보가 올바르지 않습니다.'
+      error: '게시판 정보가 올바르지 않습니다.',
     };
   }
 
   try {
-    const supabase = await getSupabaseServer();
-
-    // getBoardsForNavigation은 cache()로 래핑되어 있어 같은 요청 내 중복 호출 방지
-    // layout.tsx에서 이미 호출했다면 캐시된 결과 재사용
-    const [boardResult, navigationData] = await Promise.all([
-      // 현재 게시판 정보 가져오기
-      supabase
-        .from('boards')
-        .select('*')
-        .eq('slug', slug)
-        .single(),
-      // 모든 게시판 정보 (캐시된 getCachedAllBoards 사용)
-      getCachedAllBoards()
-    ]);
-
-    const { data: board, error: boardError } = boardResult;
-
-    if (boardError) {
-      console.error('게시판 정보 조회 오류:', boardError.message, boardError.details || '');
-      return {
-        success: false,
-        error: '게시판을 찾을 수 없습니다.'
-      };
-    }
+    const allBoards = (await getCachedAllBoards()) as Board[];
+    const board = allBoards.find((item) => item.slug === slug || item.id === slug);
 
     if (!board) {
-      console.error(`슬러그 "${slug}"에 해당하는 게시판이 없음`);
       return {
         success: false,
-        error: '게시판을 찾을 수 없습니다.'
+        error: '게시판을 찾을 수 없습니다.',
       };
     }
 
-    // flat 배열 (BoardSelector가 flat 배열 기대)
-    let allBoards = (navigationData ?? []) as Board[];
+    const permissions = calculateBoardViewerPermissions(board, viewerProfile ?? null);
 
-    // 관리자가 아니면 공지사항 게시판 제외
-    const { data: { user } } = await supabase.auth.getUser();
-    let isAdmin = false;
-    let canWrite = false;
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin, is_suspended, suspended_until')
-        .eq('id', user.id)
-        .single();
-      isAdmin = profile?.is_admin || false;
-      canWrite = calculateBoardViewerPermissions(board, profile).canWrite;
-    }
-
-    if (!canWrite) {
+    if (!permissions.canWrite) {
       return {
         success: false,
-        error: '이 게시판에 글을 작성할 권한이 없습니다.'
+        error: '이 게시판에 글을 작성할 권한이 없습니다.',
       };
     }
 
-    if (!isAdmin) {
-      allBoards = allBoards.filter(b => b.slug !== 'notice');
-    }
+    const writableBoards = permissions.isAdmin
+      ? allBoards
+      : allBoards.filter((item) => item.slug !== 'notice' && item.slug !== 'notices');
 
-    // 성공적으로 데이터를 가져온 경우
     return {
       success: true,
       board,
-      allBoards
+      allBoards: writableBoards,
     };
   } catch (error) {
     console.error('게시글 작성 데이터 로드 오류:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
-      error: error instanceof Error ? error.message : '게시판 정보를 불러오는 중 오류가 발생했습니다.'
+      error: error instanceof Error ? error.message : '게시판 정보를 불러오는 중 오류가 발생했습니다.',
     };
   }
-} 
+}

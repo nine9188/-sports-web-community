@@ -22,6 +22,24 @@
   }
 }
 
+.tippy-box[data-theme~='editor-menu'] {
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.tippy-box[data-theme~='editor-menu'] > .tippy-content {
+  padding: 0;
+}
+
+.tippy-box[data-theme~='editor-menu'] > .tippy-arrow::before {
+  color: #ffffff;
+}
+
+.dark .tippy-box[data-theme~='editor-menu'] > .tippy-arrow::before {
+  color: #1D1D1D;
+}
+
 @layer components {
   /* 입력 필드 자동완성 스타일 */
   input:-webkit-autofill,

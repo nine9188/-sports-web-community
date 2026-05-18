@@ -686,13 +686,78 @@ iframe[src*="youtu.be/"] {
    ===================================================== */
 
 .ProseMirror {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   padding: 1rem;
   min-height: 500px;
   color: #111827;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ProseMirror * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dark .ProseMirror {
   color: #F0F0F0;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.75rem;
+  line-height: 1.7;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror .editor-empty-placeholder {
+  position: relative;
+}
+
+.ProseMirror .editor-empty-placeholder::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  inset: 0 auto auto 0;
+  max-width: min(520px, 100%);
+  white-space: pre-line;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  pointer-events: none;
+}
+
+.ProseMirror.ProseMirror-focused .editor-empty-placeholder::before {
+  content: '';
+}
+
+.dark .ProseMirror .editor-empty-placeholder::before {
+  color: #6b7280;
+}
+
+.ProseMirror p:empty:has(+ .youtube-container),
+.ProseMirror p:empty:has(+ .responsive-video-container),
+.ProseMirror p:empty:has(+ .video-wrapper),
+.ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .youtube-container),
+.ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .responsive-video-container),
+.ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .video-wrapper) {
+  display: none;
+  min-height: 0;
+  margin: 0;
+  line-height: 0;
+}
+
+.ProseMirror .editor-persistent-selection {
+  background: rgba(37, 99, 235, 0.24);
+  border-radius: 2px;
+}
+
+.dark .ProseMirror .editor-persistent-selection {
+  background: rgba(96, 165, 250, 0.32);
 }
 
 /* 에디터 내 제목 스타일 */
@@ -724,7 +789,47 @@ iframe[src*="youtu.be/"] {
 /* 에디터 내부 YouTube 컨테이너 스타일 조정 */
 .ProseMirror .youtube-container,
 .ProseMirror .responsive-video-container {
-  margin: 1rem 0;
+  margin: 0.5rem 0;
+}
+
+.ProseMirror .video-wrapper:not(.responsive-video-container) {
+  position: relative;
+  width: 100%;
+  height: auto;
+  margin: 0.5rem 0;
+  padding: 0;
+  overflow: visible;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ProseMirror .video-wrapper:not(.responsive-video-container) video {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+}
+
+.ProseMirror > .youtube-container:first-child,
+.ProseMirror > .responsive-video-container:first-child,
+.ProseMirror > .video-wrapper:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror > .youtube-container:last-child,
+.ProseMirror > .responsive-video-container:last-child,
+.ProseMirror > .video-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror .responsive-video-container + p,
+.ProseMirror .video-wrapper + p,
+.ProseMirror p + .responsive-video-container,
+.ProseMirror p + .video-wrapper {
+  margin-top: 0.25rem;
 }
 
 /* 모바일 최적화 */
@@ -793,6 +898,49 @@ iframe[src*="youtu.be/"] {
 .social-embed {
   margin: 1.5rem 0;
   width: 100%;
+}
+
+.ProseMirror .social-embed-editor-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 0.5rem;
+  background: #F5F5F5;
+  overflow: hidden;
+}
+
+.dark .ProseMirror .social-embed-editor-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #262626;
+}
+
+.ProseMirror .social-embed-editor-card__label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #003CA6;
+}
+
+.dark .ProseMirror .social-embed-editor-card__label {
+  color: #8EA4D8;
+}
+
+.ProseMirror .social-embed-editor-card__url {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.dark .ProseMirror .social-embed-editor-card__url {
+  color: #bdbdbd;
 }
 
 /* YouTube 임베드 스타일 */

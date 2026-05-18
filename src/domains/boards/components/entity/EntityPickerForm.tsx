@@ -1,28 +1,23 @@
 'use client'
 
-/**
- * 4590 표준 적용:
- * - 리그/팀/선수 이미지: UnifiedSportsImageClient 사용
- * - URL은 props로 전달받거나 placeholder 사용
- */
-
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronLeft, X } from 'lucide-react'
 import { useClickOutside } from '@/shared/hooks/useClickOutside'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
-import { type TeamMapping } from '@/domains/boards/hooks/useEntityQueries'
+import { Button } from '@/shared/components/ui'
+import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
-import { ChevronLeft, Users, User } from 'lucide-react'
-import { Button, TabList, type TabItem } from '@/shared/components/ui'
-import { useLeagueTeams, useTeamPlayers } from '@/domains/boards/hooks/useEntityQueries';
-import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
+import {
+  type TeamMapping,
+  useLeagueTeams,
+  useTeamPlayers,
+} from '@/domains/boards/hooks/useEntityQueries'
 
-// 4590 표준: placeholder 및 Storage URL
-const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
-const SUPABASE_URL = 'https://cdn.4590football.com';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg'
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg'
+const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg'
+const SUPABASE_URL = 'https://cdn.4590football.com'
 
-// 주요 리그
 const LEAGUES = [
   { id: 39, name: '프리미어리그', country: '잉글랜드' },
   { id: 140, name: '라리가', country: '스페인' },
@@ -32,7 +27,6 @@ const LEAGUES = [
   { id: 292, name: 'K리그1', country: '대한민국' },
 ]
 
-// 리그 정보 인터페이스
 interface LeagueInfo {
   id: number
   name: string
@@ -41,45 +35,52 @@ interface LeagueInfo {
 
 interface EntityPickerFormProps {
   isOpen: boolean
+  mode: 'team' | 'player'
   onClose: () => void
   onSelectTeam: (team: TeamMapping, league: LeagueInfo) => void
   onSelectPlayer: (player: Player, team: TeamMapping, koreanName?: string) => void
 }
 
-type Tab = 'team' | 'player'
 type Step = 'league' | 'team' | 'player'
+
+function LoadingRows({ variant = 'grid' }: { variant?: 'grid' | 'list' }) {
+  const count = variant === 'grid' ? 6 : 8
+
+  return (
+    <div className={variant === 'grid' ? 'grid grid-cols-3 gap-2' : 'space-y-2'}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className={
+            variant === 'grid'
+              ? 'h-[72px] rounded-md bg-black/5 dark:bg-white/10'
+              : 'h-10 rounded-md bg-black/5 dark:bg-white/10'
+          }
+        />
+      ))}
+    </div>
+  )
+}
 
 export function EntityPickerForm({
   isOpen,
+  mode,
   onClose,
   onSelectTeam,
   onSelectPlayer,
 }: EntityPickerFormProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('team')
+  const panelRef = useRef<HTMLDivElement>(null)
   const [step, setStep] = useState<Step>('league')
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // 선택 상태
   const [selectedLeagueId, setSelectedLeagueId] = useState<number | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamMapping | null>(null)
-
-  // 4590 표준: 다크모드 감지
   const [isDark, setIsDark] = useState(false)
-  useEffect(() => {
-    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'))
-    checkDark()
-    const observer = new MutationObserver(checkDark)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
-  }, [])
 
-  // React Query로 데이터 관리 (의존 쿼리, 4590 표준: Storage URL 포함)
   const {
     data: teams = [],
     isLoading: isLoadingTeams,
     error: teamsError,
     teamLogoUrls,
-  } = useLeagueTeams(selectedLeagueId);
+  } = useLeagueTeams(selectedLeagueId)
 
   const {
     data: playerData = { players: [], koreanNames: {} },
@@ -88,313 +89,268 @@ export function EntityPickerForm({
     refetch: refetchPlayers,
     playerPhotoUrls,
     teamLogoUrl: selectedTeamLogoUrl,
-  } = useTeamPlayers(activeTab === 'player' ? selectedTeam?.id ?? null : null);
+  } = useTeamPlayers(mode === 'player' ? selectedTeam?.id ?? null : null)
 
-  const { players, koreanNames } = playerData;
+  const { players, koreanNames } = playerData
 
-  // 4590 표준: URL 헬퍼 함수 (리그는 다크모드 지원, 직접 Storage URL 생성)
-  const getLeagueLogo = (id: number) => {
-    if (!id) return LEAGUE_PLACEHOLDER
-    const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(id)
-    if (isDark && hasDarkMode) {
-      return `${SUPABASE_URL}/leagues/md/${id}-1.webp`
-    }
-    return `${SUPABASE_URL}/leagues/md/${id}.webp`
-  }
-  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
-  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER;
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'))
+    checkDark()
 
-  // 에러 메시지 변환
-  const teamError = teamsError ? '팀 목록을 불러올 수 없습니다' : null;
-  const playerError = playersError ? '선수 정보를 불러올 수 없습니다' : null;
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
 
+  useEffect(() => {
+    if (!isOpen) return
 
-  // 리그 선택 시 자동으로 팀 목록 step으로 이동
+    setStep('league')
+    setSelectedLeagueId(null)
+    setSelectedTeam(null)
+  }, [isOpen, mode])
+
   useEffect(() => {
     if (selectedLeagueId && teams.length > 0 && step === 'league') {
       setStep('team')
     }
-  }, [selectedLeagueId, teams.length, step])
+  }, [selectedLeagueId, step, teams.length])
 
-  // 뒤로가기
+  const handleClose = useCallback(() => {
+    setStep('league')
+    setSelectedLeagueId(null)
+    setSelectedTeam(null)
+    onClose()
+  }, [onClose])
+
+  useClickOutside(panelRef, handleClose, isOpen)
+
+  const selectedLeague = LEAGUES.find((league) => league.id === selectedLeagueId)
+  const selectedLeagueName = selectedLeague?.name
+  const stepLabel = step === 'league' ? '리그를 선택하세요' : step === 'team' ? '팀을 선택하세요' : '선수를 선택하세요'
+
+  const getLeagueLogo = (id: number) => {
+    if (!id) return LEAGUE_PLACEHOLDER
+    if (isDark && DARK_MODE_LEAGUE_IDS.includes(id)) {
+      return `${SUPABASE_URL}/leagues/md/${id}-1.webp`
+    }
+    return `${SUPABASE_URL}/leagues/md/${id}.webp`
+  }
+
+  const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER
+  const getPlayerPhoto = (id: number) => playerPhotoUrls[id] || PLAYER_PLACEHOLDER
+
   const handleBack = () => {
     if (step === 'player') {
       setStep('team')
       setSelectedTeam(null)
-    } else if (step === 'team') {
+      return
+    }
+
+    if (step === 'team') {
       setStep('league')
       setSelectedLeagueId(null)
     }
   }
 
-  // 탭 변경 시 초기화
-  const handleTabChange = (tab: Tab) => {
-    setActiveTab(tab)
-    setStep('league')
-    setSelectedLeagueId(null)
-    setSelectedTeam(null)
-  }
-
-  // 리그 선택
-  const handleLeagueSelect = (leagueId: number) => {
-    setSelectedLeagueId(leagueId)
-  }
-
-  // 팀 선택
   const handleTeamSelect = (team: TeamMapping) => {
-    if (activeTab === 'team') {
-      // 팀 탭: 바로 선택 완료
-      const selectedLeague = LEAGUES.find(l => l.id === selectedLeagueId)
-      if (selectedLeague) {
-        onSelectTeam(team, {
-          id: selectedLeague.id,
-          name: selectedLeague.name,
-          koreanName: selectedLeague.name
-        })
-      }
+    if (!selectedLeague) return
+
+    if (mode === 'team') {
+      onSelectTeam(team, {
+        id: selectedLeague.id,
+        name: selectedLeague.name,
+        koreanName: selectedLeague.name,
+      })
       handleClose()
-    } else {
-      // 선수 탭: 선수 목록으로 이동 (React Query가 자동으로 데이터 로드)
-      setSelectedTeam(team)
-      setStep('player')
+      return
     }
+
+    setSelectedTeam(team)
+    setStep('player')
   }
 
-  // 선수 선택
   const handlePlayerSelect = (player: Player) => {
-    if (selectedTeam) {
-      const koreanName = koreanNames[player.id] || undefined
-      onSelectPlayer(player, selectedTeam, koreanName)
-      handleClose()
-    }
+    if (!selectedTeam) return
+
+    onSelectPlayer(player, selectedTeam, koreanNames[player.id] || undefined)
+    handleClose()
   }
-
-  // 모달 닫기 시 초기화
-  const handleClose = () => {
-    setActiveTab('team')
-    setStep('league')
-    setSelectedLeagueId(null)
-    setSelectedTeam(null)
-    onClose()
-  }
-
-  // 외부 클릭 감지
-  useClickOutside(dropdownRef, handleClose, isOpen)
-
-  // 선택된 리그 이름
-  const selectedLeagueName = LEAGUES.find(l => l.id === selectedLeagueId)?.name
 
   if (!isOpen) return null
 
   return (
-      <div
-        ref={dropdownRef}
-        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={(e) => e.preventDefault()}
-      >
-        {/* 헤더 */}
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center justify-between border-b border-black/10 dark:border-white/15">
-          <div className="flex items-center gap-2">
-            {step !== 'league' && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={handleBack}
-                className="w-6 h-6"
-              >
-                <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </Button>
-            )}
-            <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">
-              {activeTab === 'team' ? '팀 선택' : '선수 선택'}
-            </h3>
+    <div
+      ref={panelRef}
+      data-editor-entity-popover="true"
+      className="w-full overflow-hidden rounded-md border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex h-11 items-center justify-between gap-2 border-b border-black/10 bg-[#F5F5F5] px-2 dark:border-white/10 dark:bg-[#262626]">
+        <div className="flex min-w-0 items-center gap-1">
+          {step !== 'league' && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleBack}
+              className="h-8 w-8 shrink-0"
+              title="뒤로"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <div className="min-w-0">
+            <div className="truncate text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
+              {mode === 'team' ? '팀 추가' : '선수 추가'}
+            </div>
           </div>
         </div>
+        <div className="flex min-w-0 shrink-0 items-center gap-1">
+          <span className="hidden truncate text-[11px] text-gray-500 dark:text-gray-400 sm:inline">
+            {stepLabel}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="h-8 w-8 shrink-0"
+            title="닫기"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-        {/* 탭 */}
-        <TabList
-          tabs={[
-            { id: 'team', label: '팀', icon: <Users className="h-3.5 w-3.5" /> },
-            { id: 'player', label: '선수', icon: <User className="h-3.5 w-3.5" /> },
-          ] as TabItem[]}
-          activeTab={activeTab}
-          onTabChange={(id) => handleTabChange(id as Tab)}
-          variant="contained"
-          className="mb-0"
-        />
-
-        {/* 브레드크럼 - 탭과 연결 */}
-        {step !== 'league' && (
-          <div className="flex items-center gap-2 px-4 py-2 text-xs text-gray-500 dark:text-gray-400 bg-[#FAFAFA] dark:bg-[#232323]">
-            <span>{selectedLeagueName}</span>
-            {selectedTeam && (
-              <>
-                <span>›</span>
-                <span>{selectedTeam.name_ko}</span>
-              </>
-            )}
+      <div className="max-h-[360px] overflow-y-auto p-2">
+        {step === 'league' && (
+          <div className="grid grid-cols-3 gap-2">
+            {LEAGUES.map((league) => (
+              <button
+                key={league.id}
+                type="button"
+                onClick={() => setSelectedLeagueId(league.id)}
+                className="flex h-[74px] flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
+              >
+                <UnifiedSportsImageClient
+                  src={getLeagueLogo(league.id)}
+                  alt={league.name}
+                  width={30}
+                  height={30}
+                  className="h-7 w-7 object-contain"
+                />
+                <span className="mt-1.5 max-w-full truncate text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                  {league.name}
+                </span>
+              </button>
+            ))}
           </div>
         )}
 
-        {/* 콘텐츠 영역 */}
-        <div className="max-h-[300px] overflow-y-auto p-4">
-          {/* Step 1: 리그 선택 */}
-          {step === 'league' && (
-            <div className="grid grid-cols-3 gap-2">
-              {LEAGUES.map(league => (
-                <button
-                  key={league.id}
-                  type="button"
-                  onClick={() => handleLeagueSelect(league.id)}
-                  className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
-                >
-                  <UnifiedSportsImageClient
-                    src={getLeagueLogo(league.id)}
-                    alt={league.name}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain"
-                  />
-                  <span className="mt-1.5 text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center leading-tight">
-                    {league.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Step 2: 팀 선택 */}
-          {step === 'team' && (
-            <>
-              {isLoadingTeams ? (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
-                  <span>불러오는 중...</span>
-                </div>
-              ) : teamError ? (
-                <div className="flex items-center justify-center h-40 text-red-500 dark:text-red-400 text-xs">
-                  {teamError}
-                </div>
-              ) : teams.length === 0 ? (
-                <div className="flex items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
-                  팀 정보를 불러올 수 없습니다
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {teams.map(team => (
-                    <button
-                      key={team.id}
-                      type="button"
-                      onClick={() => handleTeamSelect(team)}
-                      className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
-                    >
-                      <UnifiedSportsImageClient
-                        src={getTeamLogo(team.id)}
-                        alt={team.name_ko}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 object-contain"
-                      />
-                      <span className="mt-1.5 text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center line-clamp-1 leading-tight">
-                        {team.name_ko}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Step 3: 선수 선택 */}
-          {step === 'player' && (
-            <>
-              {isLoadingPlayers ? (
-                <div className="flex items-center justify-center h-40">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">불러오는 중...</span>
-                </div>
-              ) : playerError ? (
-                <div className="flex flex-col items-center justify-center h-40 text-center px-4">
-                  <span className="text-red-500 dark:text-red-400 text-xs">{playerError}</span>
-                  <Button
+        {step === 'team' && (
+          <>
+            {isLoadingTeams ? (
+              <LoadingRows />
+            ) : teamsError ? (
+              <div className="flex h-28 items-center justify-center text-xs text-red-500 dark:text-red-400">
+                팀 목록을 가져오지 못했습니다.
+              </div>
+            ) : teams.length === 0 ? (
+              <div className="flex h-28 items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+                팀 정보가 없습니다.
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {teams.map((team) => (
+                  <button
+                    key={team.id}
                     type="button"
-                    variant="ghost"
-                    onClick={() => refetchPlayers()}
-                    className="mt-3 h-auto px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-[#F0F0F0]"
+                    onClick={() => handleTeamSelect(team)}
+                    className="flex h-[74px] flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
                   >
-                    다시 시도
-                  </Button>
-                </div>
-              ) : players.length === 0 ? (
-                <div className="flex items-center justify-center h-40 text-gray-500 dark:text-gray-400 text-xs">
-                  선수 정보가 없습니다
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {players.map(player => {
-                    const displayName = koreanNames[player.id] || player.name
+                    <UnifiedSportsImageClient
+                      src={getTeamLogo(team.id)}
+                      alt={team.name_ko}
+                      width={30}
+                      height={30}
+                      className="h-7 w-7 object-contain"
+                    />
+                    <span className="mt-1.5 max-w-full truncate text-[11px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                      {team.name_ko}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
-                    return (
-                      <button
-                        key={player.id}
-                        type="button"
-                        onClick={() => handlePlayerSelect(player)}
-                        className="flex flex-col items-center p-2 rounded-lg bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors outline-none focus:outline-none"
-                      >
-                        {/* 선수 이미지 */}
-                        <div className="relative">
-                          <div className="w-8 h-8 rounded-full border border-black/7 dark:border-white/10 overflow-hidden">
+        {step === 'player' && (
+          <>
+            {isLoadingPlayers ? (
+              <LoadingRows />
+            ) : playersError ? (
+              <div className="flex h-28 flex-col items-center justify-center gap-2 text-xs text-red-500 dark:text-red-400">
+                선수 정보를 가져오지 못했습니다.
+                <Button type="button" variant="secondary" className="h-7 px-2 text-xs" onClick={() => refetchPlayers()}>
+                  다시 시도
+                </Button>
+              </div>
+            ) : players.length === 0 ? (
+              <div className="flex h-28 items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+                선수 정보가 없습니다.
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {players.map((player) => {
+                  const displayName = koreanNames[player.id] || player.name
+
+                  return (
+                    <button
+                      key={player.id}
+                      type="button"
+                      onClick={() => handlePlayerSelect(player)}
+                      className="flex h-[86px] min-w-0 flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
+                    >
+                      <div className="relative h-9 w-9 shrink-0 overflow-visible">
+                        <div className="h-9 w-9 overflow-hidden rounded-full border border-black/7 dark:border-white/10">
+                          <UnifiedSportsImageClient
+                            src={getPlayerPhoto(player.id)}
+                            alt={displayName}
+                            width={36}
+                            height={36}
+                            className="h-full w-full object-cover"
+                            variant="circle"
+                          />
+                        </div>
+                        {selectedTeam && (
+                          <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow dark:bg-[#1D1D1D]">
                             <UnifiedSportsImageClient
-                              src={getPlayerPhoto(player.id)}
-                              alt={displayName}
-                              width={32}
-                              height={32}
-                              className="w-full h-full object-cover"
-                              variant="circle"
+                              src={selectedTeamLogoUrl || TEAM_PLACEHOLDER}
+                              alt={selectedTeam.name_ko}
+                              width={14}
+                              height={14}
+                              className="h-3.5 w-3.5 object-contain"
                             />
                           </div>
-                          {/* 팀 로고 뱃지 */}
-                          {selectedTeam && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#1D1D1D] shadow flex items-center justify-center">
-                              <UnifiedSportsImageClient
-                                src={selectedTeamLogoUrl || TEAM_PLACEHOLDER}
-                                alt={selectedTeam.name_ko}
-                                width={10}
-                                height={10}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        <span className="mt-1 text-[10px] font-medium text-gray-900 dark:text-[#F0F0F0] text-center line-clamp-1 leading-tight w-full">
-                          {displayName}
-                        </span>
-                        <span className="text-[9px] text-gray-500 dark:text-gray-400 leading-tight">
-                          {player.number && `#${player.number}`}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* 하단 버튼 */}
-        <div className="p-4 border-t border-black/7 dark:border-white/10">
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleClose}
-              className="px-3 py-1.5 text-xs"
-            >
-              취소
-            </Button>
-          </div>
-        </div>
+                        )}
+                      </div>
+                      <div className="mt-1.5 min-w-0 max-w-full truncate text-[11px] font-medium leading-tight text-gray-900 dark:text-[#F0F0F0]">
+                        {displayName}
+                      </div>
+                      <div className="mt-0.5 min-h-3 truncate text-[9px] leading-none text-gray-500 dark:text-gray-400">
+                        {player.number ? `#${player.number}` : player.position || ''}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
       </div>
+    </div>
   )
 }

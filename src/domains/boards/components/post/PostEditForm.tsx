@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -13,23 +16,134 @@ import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, NativeSelect } from '@/shared/components/ui';
 import { useEditorHandlers } from './post-edit-form/hooks';
+import { uploadPostImageFile } from './post-edit-form/utils/uploadPostImageFile';
+import { uploadPostVideoFile } from './post-edit-form/utils/uploadPostVideoFile';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
-import ImageUploadForm from '@/domains/boards/components/form/ImageUploadForm';
 import LinkForm from '@/domains/boards/components/form/LinkForm';
 import YoutubeForm from '@/domains/boards/components/form/YoutubeForm';
-import VideoForm from '@/domains/boards/components/form/VideoForm';
 import MatchResultForm from '@/domains/boards/components/form/MatchResultForm';
 import SocialEmbedForm from '@/domains/boards/components/form/SocialEmbedForm';
 import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPickerForm';
+import { Bold, Heading2, Heading3, Italic, Link as LinkIcon } from 'lucide-react';
 
 // 핫딜 옵션
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
 const SHIPPING_SELECT_OPTIONS = SHIPPING_OPTIONS.map(option => ({ value: option, label: option }));
+const persistentSelectionHighlightKey = new PluginKey('persistentSelectionHighlight');
+const SELECTION_MENU_WIDTH = 200;
+const SELECTION_MENU_HEIGHT = 42;
+const LINK_POPOVER_WIDTH = 300;
+const LINK_POPOVER_HEIGHT = 96;
+const YOUTUBE_POPOVER_WIDTH = 320;
+const SOCIAL_POPOVER_WIDTH = 360;
+const MATCH_POPOVER_WIDTH = 430;
+const TEAM_POPOVER_WIDTH = 360;
+const PLAYER_POPOVER_WIDTH = 390;
+const EDITOR_EMPTY_PLACEHOLDER = '자유롭게 팬들과 소통하세요!\n이미지, 링크, 경기, 팀/선수를 본문에 추가할 수 있습니다.\n도박, 불법 홍보 관련 내용은 작성할 수 없습니다.\n욕설, 도배, 허위 정보는 삭제될 수 있습니다.';
+type SelectionPositionAnchor = {
+  from: number;
+  to: number;
+  popoverContentTop?: number;
+  popoverLeft?: number;
+};
+type LocalPopoverPosition = {
+  top: number;
+  left: number;
+  width: number;
+};
+
+function createPersistentSelectionDecorations(state: EditorState) {
+  const { selection } = state;
+
+  if (selection.empty) {
+    return DecorationSet.empty;
+  }
+
+  return DecorationSet.create(state.doc, [
+    Decoration.inline(selection.from, selection.to, {
+      class: 'editor-persistent-selection',
+    }),
+  ]);
+}
+
+const PersistentSelectionHighlight = Extension.create({
+  name: 'persistentSelectionHighlight',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: persistentSelectionHighlightKey,
+        state: {
+          init: (_config, state) => createPersistentSelectionDecorations(state),
+          apply: (transaction, oldDecorations, _oldState, newState) => {
+            if (transaction.selectionSet || transaction.docChanged) {
+              return createPersistentSelectionDecorations(newState);
+            }
+
+            return oldDecorations.map(transaction.mapping, transaction.doc);
+          },
+        },
+        props: {
+          decorations(state) {
+            return persistentSelectionHighlightKey.getState(state);
+          },
+        },
+      }),
+    ];
+  },
+});
+
+function createEditorPlaceholderDecorations(state: EditorState) {
+  const firstChild = state.doc.firstChild;
+  const isEmpty =
+    state.doc.childCount === 1 &&
+    firstChild?.type.name === 'paragraph' &&
+    firstChild.content.size === 0;
+
+  if (!isEmpty || !firstChild) {
+    return DecorationSet.empty;
+  }
+
+  return DecorationSet.create(state.doc, [
+    Decoration.node(0, firstChild.nodeSize, {
+      class: 'editor-empty-placeholder',
+      'data-placeholder': EDITOR_EMPTY_PLACEHOLDER,
+    }),
+  ]);
+}
+
+const EditorEmptyPlaceholder = Extension.create({
+  name: 'editorEmptyPlaceholder',
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('editorEmptyPlaceholder'),
+        state: {
+          init: (_config, state) => createEditorPlaceholderDecorations(state),
+          apply: (transaction, oldDecorations, _oldState, newState) => {
+            if (transaction.docChanged || transaction.selectionSet) {
+              return createEditorPlaceholderDecorations(newState);
+            }
+
+            return oldDecorations.map(transaction.mapping, transaction.doc);
+          },
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          },
+        },
+      }),
+    ];
+  },
+});
 
 // 모듈 레벨에서 확장 preload 시작 (컴포넌트 마운트 전에 로딩 시작)
 // 이렇게 하면 PostEditForm이 dynamic import될 때 확장들도 병렬로 로딩됨
-const extensionsPreloadPromise = Promise.all([
+function loadAdditionalEditorExtensions() {
+  return Promise.all([
   import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
   import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
   import('@/shared/components/editor/tiptap/MatchCardExtension').then(mod => mod.MatchCardExtension),
@@ -40,6 +154,7 @@ const extensionsPreloadPromise = Promise.all([
   console.error('확장 preload 실패:', error);
   return null;
 });
+}
 
 interface PostEditFormProps {
   postId?: string;
@@ -70,6 +185,22 @@ export default function PostEditForm({
   const [content, setContent] = useState(initialContent);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkPopoverSource, setLinkPopoverSource] = useState<'selection' | 'toolbar' | null>(null);
+  const [toolbarLinkPopoverPosition, setToolbarLinkPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarYoutubePopoverPosition, setToolbarYoutubePopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarSocialPopoverPosition, setToolbarSocialPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarMatchPopoverPosition, setToolbarMatchPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarTeamPopoverPosition, setToolbarTeamPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarPlayerPopoverPosition, setToolbarPlayerPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [selectionLinkPopoverPosition, setSelectionLinkPopoverPosition] = useState<{ top: number; left: number } | null>(null);
+  const [selectionMenuPosition, setSelectionMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [editorViewportElement, setEditorViewportElement] = useState<HTMLDivElement | null>(null);
+  const editorShellRef = useRef<HTMLDivElement>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const linkPopoverAnchorRef = useRef<SelectionPositionAnchor | null>(null);
 
   // 최신 상태를 ref로 관리 (useCallback 의존성 최소화)
   const formStateRef = useRef({ title, content, categoryId: externalCategoryId || '' });
@@ -110,12 +241,15 @@ export default function PostEditForm({
   // 기본 확장 (변경되지 않음)
   const baseExtensions = useMemo(() => [
     StarterKit,
+    PersistentSelectionHighlight,
+    EditorEmptyPlaceholder,
     Image.configure({
       inline: false,
       allowBase64: false,
     }),
     Link.configure({
-      openOnClick: true,
+      openOnClick: false,
+      autolink: false,
       HTMLAttributes: {
         target: '_blank',
         rel: 'noopener noreferrer',
@@ -126,6 +260,7 @@ export default function PostEditForm({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [additionalExtensions, setAdditionalExtensions] = useState<any[]>([]);
   const [extensionsLoaded, setExtensionsLoaded] = useState(false);
+  const loadingExtensionsRef = useRef<Promise<boolean> | null>(null);
 
   // 전체 확장 목록 (기본 + 추가)
   const loadedExtensions = useMemo(() => [
@@ -141,7 +276,7 @@ export default function PostEditForm({
     const loadAdditionalExtensions = async () => {
       try {
         // 모듈 레벨에서 시작된 preload Promise 사용 (워터폴 방지)
-        const result = await extensionsPreloadPromise;
+        const result = await loadAdditionalEditorExtensions();
 
         if (!result) {
           setExtensionsLoaded(true);
@@ -174,7 +309,52 @@ export default function PostEditForm({
       }
     };
 
-    loadAdditionalExtensions();
+    // 고급 확장은 초기 진입에서 당겨오지 않고, 관련 도구를 처음 열 때만 로드한다.
+    void loadAdditionalExtensions;
+  }, [extensionsLoaded]);
+
+  const ensureAdditionalExtensions = useCallback(async () => {
+    if (extensionsLoaded) return true;
+    if (loadingExtensionsRef.current) return loadingExtensionsRef.current;
+
+    loadingExtensionsRef.current = loadAdditionalEditorExtensions()
+      .then((result) => {
+        if (!result) {
+          setExtensionsLoaded(true);
+          return false;
+        }
+
+        const [
+          YoutubeExtension,
+          VideoExtension,
+          MatchCardExt,
+          SocialEmbedsModule,
+          TeamCardExt,
+          PlayerCardExt
+        ] = result;
+
+        setAdditionalExtensions([
+          YoutubeExtension,
+          VideoExtension,
+          MatchCardExt,
+          SocialEmbedsModule.SocialEmbedExtension,
+          SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
+          TeamCardExt,
+          PlayerCardExt
+        ]);
+        setExtensionsLoaded(true);
+        return true;
+      })
+      .catch((error) => {
+        console.error('추가 에디터 확장 로드 실패:', error);
+        setExtensionsLoaded(true);
+        return false;
+      })
+      .finally(() => {
+        loadingExtensionsRef.current = null;
+      });
+
+    return loadingExtensionsRef.current;
   }, [extensionsLoaded]);
 
   // 핫딜 URL 입력 시 쇼핑몰 자동 감지
@@ -234,13 +414,18 @@ export default function PostEditForm({
 
   // 에디터 핸들러 훅
   const {
-    showImageModal,
     showYoutubeModal,
-    showVideoModal,
     showMatchModal,
     showLinkModal,
     showSocialModal,
-    showEntityModal,
+    showTeamModal,
+    showPlayerModal,
+    setShowLinkModal,
+    setShowYoutubeModal,
+    setShowMatchModal,
+    setShowSocialModal,
+    setShowTeamModal,
+    setShowPlayerModal,
     handleToggleDropdown,
     handleAddImage,
     handleAddYoutube,
@@ -254,6 +439,463 @@ export default function PostEditForm({
     editor,
     extensionsLoaded
   });
+
+  const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player') => {
+    if (dropdown === 'youtube' || dropdown === 'match' || dropdown === 'social' || dropdown === 'team' || dropdown === 'player') {
+      void ensureAdditionalExtensions();
+    }
+    if (dropdown === 'link') {
+      if (editor?.isActive('link')) {
+        editor.chain().focus().extendMarkRange('link').run();
+      }
+      setLinkPopoverSource('toolbar');
+      setShowLinkModal(true);
+      return;
+    }
+    setLinkPopoverSource(null);
+    handleToggleDropdown(dropdown);
+  }, [editor, ensureAdditionalExtensions, handleToggleDropdown, setShowLinkModal]);
+
+  const linkState = useMemo(() => {
+    if (!editor) {
+      return { currentUrl: '', selectedText: '', isActive: false };
+    }
+
+    const { from, to } = editor.state.selection;
+    return {
+      currentUrl: String(editor.getAttributes('link').href || ''),
+      selectedText: editor.state.doc.textBetween(from, to, ' '),
+      isActive: editor.isActive('link'),
+    };
+  }, [editor, showLinkModal]);
+
+  const handleRemoveLink = useCallback(() => {
+    editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+  }, [editor]);
+
+  const closeLinkPopover = useCallback(() => {
+    linkPopoverAnchorRef.current = null;
+    setLinkPopoverSource(null);
+    setToolbarLinkPopoverPosition(null);
+    setSelectionLinkPopoverPosition(null);
+    setShowLinkModal(false);
+  }, [setShowLinkModal]);
+
+  const closeYoutubePopover = useCallback(() => {
+    setToolbarYoutubePopoverPosition(null);
+    setShowYoutubeModal(false);
+  }, [setShowYoutubeModal]);
+
+  const closeSocialPopover = useCallback(() => {
+    setToolbarSocialPopoverPosition(null);
+    setShowSocialModal(false);
+  }, [setShowSocialModal]);
+
+  const closeMatchPopover = useCallback(() => {
+    setToolbarMatchPopoverPosition(null);
+    setShowMatchModal(false);
+  }, [setShowMatchModal]);
+
+  const closeTeamPopover = useCallback(() => {
+    setToolbarTeamPopoverPosition(null);
+    setShowTeamModal(false);
+  }, [setShowTeamModal]);
+
+  const closePlayerPopover = useCallback(() => {
+    setToolbarPlayerPopoverPosition(null);
+    setShowPlayerModal(false);
+  }, [setShowPlayerModal]);
+
+  const handleImageToolbarClick = useCallback(() => {
+    if (isImageUploading) return;
+
+    closeLinkPopover();
+    closeYoutubePopover();
+    closeSocialPopover();
+    closeMatchPopover();
+    closeTeamPopover();
+    closePlayerPopover();
+    imageFileInputRef.current?.click();
+  }, [
+    closeLinkPopover,
+    closeMatchPopover,
+    closePlayerPopover,
+    closeSocialPopover,
+    closeTeamPopover,
+    closeYoutubePopover,
+    isImageUploading,
+  ]);
+
+  const handleImageFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+
+    if (!file) return;
+    if (!editor) {
+      toast.error('?먮뵒?곌? 以鍮꾨릺吏 ?딆븯?듬땲??');
+      return;
+    }
+
+    setIsImageUploading(true);
+
+    try {
+      const { publicUrl, altText } = await uploadPostImageFile(file);
+      handleAddImage(publicUrl, altText);
+    } catch (error) {
+      console.error('이미지 업로드 오류:', error);
+      toast.error(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.');
+    } finally {
+      setIsImageUploading(false);
+    }
+  }, [editor, handleAddImage]);
+
+  const handleVideoToolbarClick = useCallback(() => {
+    if (isVideoUploading) return;
+
+    closeLinkPopover();
+    closeYoutubePopover();
+    closeSocialPopover();
+    closeMatchPopover();
+    closeTeamPopover();
+    closePlayerPopover();
+    void ensureAdditionalExtensions();
+    videoFileInputRef.current?.click();
+  }, [
+    closeLinkPopover,
+    closeMatchPopover,
+    closePlayerPopover,
+    closeSocialPopover,
+    closeTeamPopover,
+    closeYoutubePopover,
+    ensureAdditionalExtensions,
+    isVideoUploading,
+  ]);
+
+  const handleVideoFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+
+    if (!file) return;
+    if (!editor) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    setIsVideoUploading(true);
+
+    try {
+      const [{ publicUrl, caption }] = await Promise.all([
+        uploadPostVideoFile(file),
+        ensureAdditionalExtensions(),
+      ]);
+      await handleAddVideo(publicUrl, caption);
+    } catch (error) {
+      console.error('동영상 업로드 오류:', error);
+      toast.error(error instanceof Error ? error.message : '동영상 업로드에 실패했습니다.');
+    } finally {
+      setIsVideoUploading(false);
+    }
+  }, [editor, ensureAdditionalExtensions, handleAddVideo]);
+
+  const calculateSelectionPopoverPosition = useCallback((
+    preferredWidth: number,
+    estimatedHeight: number,
+    options: { anchor?: SelectionPositionAnchor | null; useDomSelection?: boolean; horizontalAlign?: 'center' | 'end' } = {}
+  ) => {
+    if (!editor || !editorViewportElement) return null;
+
+    const docSize = editor.state.doc.content.size;
+    const anchor = options.anchor ?? editor.state.selection;
+    const from = Math.min(Math.max(anchor.from, 0), docSize);
+    const to = Math.min(Math.max(anchor.to, from), docSize);
+    const boundary = editorViewportElement.getBoundingClientRect();
+    const padding = 8;
+    const scrollbarWidth = Math.max(0, editorViewportElement.offsetWidth - editorViewportElement.clientWidth);
+    const contentRight = boundary.right - scrollbarWidth;
+    const contentBottom = boundary.bottom;
+    const contentWidth = editorViewportElement.clientWidth;
+    const width = Math.min(preferredWidth, Math.max(120, contentWidth - padding * 2));
+    const start = editor.view.coordsAtPos(from);
+    const end = editor.view.coordsAtPos(to);
+    const domSelection = options.useDomSelection === false ? null : window.getSelection();
+    const rects = domSelection && domSelection.rangeCount > 0
+      ? Array.from(domSelection.getRangeAt(0).getClientRects()).filter((rect) => {
+          return rect.width > 0
+            && rect.height > 0
+            && rect.bottom >= boundary.top
+            && rect.top <= boundary.bottom
+            && rect.right >= boundary.left
+            && rect.left <= contentRight;
+        })
+      : [];
+    const anchorRect = rects.length > 0
+      ? rects[rects.length - 1]
+      : {
+          left: Math.min(start.left, end.left),
+          right: Math.max(start.right, end.right),
+          top: Math.min(start.top, end.top),
+          bottom: Math.max(start.bottom, end.bottom),
+        };
+    const selectionRect = {
+      left: Math.max(anchorRect.left, boundary.left + padding),
+      right: Math.min(anchorRect.right, contentRight - padding),
+      top: anchorRect.top,
+      bottom: anchorRect.bottom,
+    };
+
+    if (selectionRect.bottom < boundary.top || selectionRect.top > contentBottom) {
+      return null;
+    }
+
+    const selectionCenterX = selectionRect.left + (selectionRect.right - selectionRect.left) / 2;
+    const preferredLeft = options.horizontalAlign === 'end'
+      ? selectionRect.right - boundary.left - width
+      : selectionCenterX - boundary.left - width / 2;
+    const minLeft = padding;
+    const maxLeft = contentWidth - width - padding;
+    const left = Math.min(Math.max(preferredLeft, minLeft), Math.max(minLeft, maxLeft));
+    const aboveTop = selectionRect.top - boundary.top - estimatedHeight - padding;
+    const belowTop = selectionRect.bottom - boundary.top + padding;
+    const minTop = padding;
+    const maxTop = editorViewportElement.clientHeight - estimatedHeight - padding;
+    const top = aboveTop >= minTop
+      ? aboveTop
+      : Math.min(Math.max(belowTop, minTop), Math.max(minTop, maxTop));
+
+    return { top, left };
+  }, [editor, editorViewportElement]);
+
+  const calculateSelectionLinkPopoverPosition = useCallback(() => {
+    const anchor = linkPopoverAnchorRef.current;
+    if (anchor?.popoverContentTop !== undefined && anchor.popoverLeft !== undefined && editorViewportElement) {
+      const padding = 8;
+      const contentWidth = editorViewportElement.clientWidth;
+      const width = Math.min(LINK_POPOVER_WIDTH, Math.max(120, contentWidth - padding * 2));
+      const maxLeft = contentWidth - width - padding;
+      const top = anchor.popoverContentTop - editorViewportElement.scrollTop;
+
+      if (top + LINK_POPOVER_HEIGHT < 0 || top > editorViewportElement.clientHeight) {
+        return null;
+      }
+
+      return {
+        top,
+        left: Math.min(Math.max(anchor.popoverLeft, padding), Math.max(padding, maxLeft)),
+      };
+    }
+
+    return calculateSelectionPopoverPosition(LINK_POPOVER_WIDTH, LINK_POPOVER_HEIGHT, {
+      anchor,
+      useDomSelection: false,
+      horizontalAlign: 'end',
+    });
+  }, [calculateSelectionPopoverPosition, editorViewportElement]);
+
+  const calculateSelectionMenuPosition = useCallback(() => {
+    return calculateSelectionPopoverPosition(SELECTION_MENU_WIDTH, SELECTION_MENU_HEIGHT, {
+      useDomSelection: true,
+      horizontalAlign: 'end',
+    });
+  }, [calculateSelectionPopoverPosition]);
+
+  const openLinkPopover = useCallback(() => {
+    if (editor?.isActive('link')) {
+      editor.chain().focus().extendMarkRange('link').run();
+    }
+
+    if (!editor || editor.state.selection.empty) return;
+
+    const { from, to } = editor.state.selection;
+    const position = calculateSelectionPopoverPosition(LINK_POPOVER_WIDTH, LINK_POPOVER_HEIGHT, {
+      anchor: { from, to },
+      useDomSelection: true,
+      horizontalAlign: 'end',
+    });
+    if (!position) {
+      linkPopoverAnchorRef.current = null;
+      return;
+    }
+
+    linkPopoverAnchorRef.current = {
+      from,
+      to,
+      popoverContentTop: position.top + (editorViewportElement?.scrollTop ?? 0),
+      popoverLeft: position.left,
+    };
+
+    setLinkPopoverSource('selection');
+    setToolbarLinkPopoverPosition(null);
+    setSelectionMenuPosition(null);
+    setSelectionLinkPopoverPosition(position);
+    setShowLinkModal(true);
+  }, [calculateSelectionPopoverPosition, editor, editorViewportElement, setShowLinkModal]);
+
+  const calculateToolbarPopoverPosition = useCallback((rect: DOMRect, preferredWidth: number) => {
+    const shell = editorShellRef.current;
+    if (!shell) return null;
+
+    const boundary = shell.getBoundingClientRect();
+    const padding = 8;
+    const width = Math.min(preferredWidth, Math.max(120, boundary.width - padding * 2));
+    const left = Math.min(
+      Math.max(rect.left - boundary.left, padding),
+      Math.max(padding, boundary.width - width - padding)
+    );
+    const top = rect.bottom - boundary.top + 6;
+
+    return { top, left, width };
+  }, []);
+
+  const handleToolbarLinkButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarLinkPopoverPosition(calculateToolbarPopoverPosition(rect, LINK_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarYoutubeButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarYoutubePopoverPosition(calculateToolbarPopoverPosition(rect, YOUTUBE_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarSocialButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarSocialPopoverPosition(calculateToolbarPopoverPosition(rect, SOCIAL_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarMatchButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarMatchPopoverPosition(calculateToolbarPopoverPosition(rect, MATCH_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarTeamButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarTeamPopoverPosition(calculateToolbarPopoverPosition(rect, TEAM_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarPlayerButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarPlayerPopoverPosition(calculateToolbarPopoverPosition(rect, PLAYER_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  useEffect(() => {
+    if (!showLinkModal) return;
+
+    const handlePointerOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('[data-editor-link-popover="true"]')) return;
+
+      closeLinkPopover();
+    };
+
+    document.addEventListener('mousedown', handlePointerOutside);
+    document.addEventListener('touchstart', handlePointerOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerOutside);
+      document.removeEventListener('touchstart', handlePointerOutside);
+    };
+  }, [closeLinkPopover, showLinkModal]);
+
+  useEffect(() => {
+    if (!showYoutubeModal) return;
+
+    const handlePointerOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('[data-editor-youtube-popover="true"]')) return;
+
+      closeYoutubePopover();
+    };
+
+    document.addEventListener('mousedown', handlePointerOutside);
+    document.addEventListener('touchstart', handlePointerOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerOutside);
+      document.removeEventListener('touchstart', handlePointerOutside);
+    };
+  }, [closeYoutubePopover, showYoutubeModal]);
+
+  useEffect(() => {
+    if (!showLinkModal || linkPopoverSource !== 'selection') return;
+
+    const updatePosition = (keepHorizontalPosition = false) => {
+      const position = calculateSelectionLinkPopoverPosition();
+      if (position) {
+        setSelectionLinkPopoverPosition((previousPosition) => {
+          if (!keepHorizontalPosition || !previousPosition) {
+            return position;
+          }
+
+          return {
+            top: position.top,
+            left: previousPosition.left,
+          };
+        });
+      } else {
+        closeLinkPopover();
+      }
+    };
+    const updateVerticalPositionOnEditorScroll = () => updatePosition(true);
+    const updateFullPositionOnResize = () => updatePosition(false);
+
+    editorViewportElement?.addEventListener('scroll', updateVerticalPositionOnEditorScroll, { passive: true });
+    window.addEventListener('resize', updateFullPositionOnResize);
+
+    return () => {
+      editorViewportElement?.removeEventListener('scroll', updateVerticalPositionOnEditorScroll);
+      window.removeEventListener('resize', updateFullPositionOnResize);
+    };
+  }, [calculateSelectionLinkPopoverPosition, closeLinkPopover, editorViewportElement, linkPopoverSource, showLinkModal]);
+
+  useEffect(() => {
+    if (!editor || !editorViewportElement) return;
+
+    const updateSelectionMenuPosition = () => {
+      if (showLinkModal) {
+        setSelectionMenuPosition(null);
+        return;
+      }
+
+      if (editor.state.selection.empty && !editor.isActive('link')) {
+        setSelectionMenuPosition(null);
+        return;
+      }
+
+      setSelectionMenuPosition(calculateSelectionMenuPosition());
+    };
+
+    const hideOnPageScroll = () => {
+      setSelectionMenuPosition(null);
+      closeLinkPopover();
+    };
+    const hideSelectionMenu = () => setSelectionMenuPosition(null);
+
+    editor.on('selectionUpdate', updateSelectionMenuPosition);
+    editor.on('focus', updateSelectionMenuPosition);
+    editor.on('blur', hideSelectionMenu);
+    editorViewportElement.addEventListener('scroll', updateSelectionMenuPosition, { passive: true });
+    window.addEventListener('resize', updateSelectionMenuPosition);
+    window.addEventListener('scroll', hideOnPageScroll, { passive: true });
+
+    updateSelectionMenuPosition();
+
+    return () => {
+      editor.off('selectionUpdate', updateSelectionMenuPosition);
+      editor.off('focus', updateSelectionMenuPosition);
+      editor.off('blur', hideSelectionMenu);
+      editorViewportElement.removeEventListener('scroll', updateSelectionMenuPosition);
+      window.removeEventListener('resize', updateSelectionMenuPosition);
+      window.removeEventListener('scroll', hideOnPageScroll);
+    };
+  }, [calculateSelectionMenuPosition, closeLinkPopover, editor, editorViewportElement, showLinkModal]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!editor) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        openLinkPopover();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor, openLinkPopover]);
 
   
   // 카테고리 변경 핸들러
@@ -382,9 +1024,7 @@ export default function PostEditForm({
     const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
 
     toast.success('게시글이 작성되었습니다.');
-    setTimeout(() => {
-      router.push(`/boards/${boardSlug}/${post.post_number}`);
-    }, 500);
+    router.push(`/boards/${boardSlug}/${post.post_number}`);
   }, [isHotdeal, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
 
   // 게시글 수정 처리 (refs 사용으로 의존성 최소화)
@@ -408,9 +1048,7 @@ export default function PostEditForm({
     }
 
     toast.success('게시글이 수정되었습니다.');
-    setTimeout(() => {
-      router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-    }, 500);
+    router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
   }, [postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
 
   // 폼 제출 핸들러
@@ -608,77 +1246,250 @@ export default function PostEditForm({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div ref={editorShellRef} className="relative space-y-2">
             <label htmlFor="content" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
             
             {/* 에디터 툴바 컴포넌트 (버튼만) */}
             <EditorToolbar
               editor={editor}
-              extensionsLoaded={extensionsLoaded}
-              showImageModal={showImageModal}
+              extensionsLoaded={true}
+              isImageUploading={isImageUploading}
+              isVideoUploading={isVideoUploading}
               showLinkModal={showLinkModal}
               showYoutubeModal={showYoutubeModal}
-              showVideoModal={showVideoModal}
               showMatchModal={showMatchModal}
               showSocialModal={showSocialModal}
-              showEntityModal={showEntityModal}
-              handleToggleDropdown={handleToggleDropdown}
+              showTeamModal={showTeamModal}
+              showPlayerModal={showPlayerModal}
+              handleToggleDropdown={handleEditorToolToggle}
+              onImageClick={handleImageToolbarClick}
+              onVideoClick={handleVideoToolbarClick}
+              onToolbarLinkButtonRect={handleToolbarLinkButtonRect}
+              onToolbarYoutubeButtonRect={handleToolbarYoutubeButtonRect}
+              onToolbarSocialButtonRect={handleToolbarSocialButtonRect}
+              onToolbarMatchButtonRect={handleToolbarMatchButtonRect}
+              onToolbarTeamButtonRect={handleToolbarTeamButtonRect}
+              onToolbarPlayerButtonRect={handleToolbarPlayerButtonRect}
             />
-
-            {/* 인라인 패널 영역 - 툴바와 에디터 사이에 표시 */}
-            {showImageModal && (
-                <ImageUploadForm
-                  onCancel={() => handleToggleDropdown('image')}
-                  onImageUrlAdd={handleAddImage}
-                  isOpen={showImageModal}
-                />
-            )}
-            {showLinkModal && (
+            <input
+              ref={imageFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageFileChange}
+            />
+            <input
+              ref={videoFileInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleVideoFileChange}
+            />
+            {showLinkModal && linkPopoverSource === 'toolbar' && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarLinkPopoverPosition?.top ?? 0,
+                  left: toolbarLinkPopoverPosition?.left ?? 12,
+                  width: toolbarLinkPopoverPosition?.width,
+                }}
+              >
                 <LinkForm
-                  onCancel={() => handleToggleDropdown('link')}
+                  onCancel={closeLinkPopover}
                   onLinkAdd={handleAddLink}
+                  onLinkRemove={handleRemoveLink}
                   isOpen={showLinkModal}
+                  currentUrl={linkState.currentUrl}
+                  selectedText={linkState.selectedText}
+                  canRemove={linkState.isActive}
                 />
+              </div>
             )}
+            {/* 인라인 패널 영역 - 툴바와 에디터 사이에 표시 */}
             {showYoutubeModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarYoutubePopoverPosition?.top ?? 0,
+                  left: toolbarYoutubePopoverPosition?.left ?? 12,
+                  width: toolbarYoutubePopoverPosition?.width,
+                }}
+              >
                 <YoutubeForm
-                  onCancel={() => handleToggleDropdown('youtube')}
+                  onCancel={closeYoutubePopover}
                   onYoutubeAdd={handleAddYoutube}
                   isOpen={showYoutubeModal}
                 />
-            )}
-            {showVideoModal && (
-                <VideoForm
-                  onCancel={() => handleToggleDropdown('video')}
-                  onVideoAdd={handleAddVideo}
-                  isOpen={showVideoModal}
-                />
+              </div>
             )}
             {showSocialModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarSocialPopoverPosition?.top ?? 0,
+                  left: toolbarSocialPopoverPosition?.left ?? 12,
+                  width: toolbarSocialPopoverPosition?.width,
+                }}
+              >
                 <SocialEmbedForm
                   isOpen={showSocialModal}
-                  onCancel={() => handleToggleDropdown('social')}
+                  onCancel={closeSocialPopover}
                   onSocialEmbedAdd={handleAddSocialEmbed}
                 />
+              </div>
             )}
             {showMatchModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarMatchPopoverPosition?.top ?? 0,
+                  left: toolbarMatchPopoverPosition?.left ?? 12,
+                  width: toolbarMatchPopoverPosition?.width,
+                }}
+              >
                 <MatchResultForm
                   isOpen={showMatchModal}
-                  onCancel={() => handleToggleDropdown('match')}
+                  onCancel={closeMatchPopover}
                   onMatchAdd={handleAddMatch}
                 />
+              </div>
             )}
-            {showEntityModal && (
+            {showTeamModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarTeamPopoverPosition?.top ?? 0,
+                  left: toolbarTeamPopoverPosition?.left ?? 12,
+                  width: toolbarTeamPopoverPosition?.width,
+                }}
+              >
                 <EntityPickerForm
-                  isOpen={showEntityModal}
-                  onClose={() => handleToggleDropdown('entity')}
+                  isOpen={showTeamModal}
+                  mode="team"
+                  onClose={closeTeamPopover}
                   onSelectTeam={handleAddTeam}
                   onSelectPlayer={handleAddPlayer}
                 />
+              </div>
+            )}
+            {showPlayerModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarPlayerPopoverPosition?.top ?? 0,
+                  left: toolbarPlayerPopoverPosition?.left ?? 12,
+                  width: toolbarPlayerPopoverPosition?.width,
+                }}
+              >
+                <EntityPickerForm
+                  isOpen={showPlayerModal}
+                  mode="player"
+                  onClose={closePlayerPopover}
+                  onSelectTeam={handleAddTeam}
+                  onSelectPlayer={handleAddPlayer}
+                />
+              </div>
             )}
 
             {/* 에디터 컨텐츠 영역 - 스타일은 globals.css에서 관리 */}
-            <div className="border border-black/7 dark:border-white/10 rounded-b-md min-h-[500px] bg-white dark:bg-[#262626]">
+            <div
+              ref={setEditorViewportElement}
+              className="relative border border-black/7 dark:border-white/10 rounded-b-md h-[60vh] min-h-[420px] max-h-[680px] overflow-x-hidden overflow-y-auto overscroll-contain bg-white dark:bg-[#262626]"
+            >
+              <div className="sticky left-0 top-0 z-20 h-0 w-full overflow-visible">
+                {editor && selectionMenuPosition && !showLinkModal && (
+                <div
+                  className="absolute z-20 flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+                  style={{
+                    top: selectionMenuPosition.top,
+                    left: selectionMenuPosition.left,
+                  }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          editor.chain().focus().toggleHeading({ level: 2 }).run();
+                        }}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('heading', { level: 2 }) ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                        aria-label="제목 2"
+                      >
+                        <Heading2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          editor.chain().focus().toggleHeading({ level: 3 }).run();
+                        }}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('heading', { level: 3 }) ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                        aria-label="제목 3"
+                      >
+                        <Heading3 size={16} />
+                      </button>
+                      <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          editor.chain().focus().toggleBold().run();
+                        }}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('bold') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                        aria-label="굵게"
+                      >
+                        <Bold size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          editor.chain().focus().toggleItalic().run();
+                        }}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('italic') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                        aria-label="기울임"
+                      >
+                        <Italic size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openLinkPopover();
+                        }}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('link') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
+                        aria-label="링크"
+                      >
+                        <LinkIcon size={16} />
+                      </button>
+                    </div>
+                )}
+                {showLinkModal && linkPopoverSource === 'selection' && selectionLinkPopoverPosition && (
+                <div
+                  className="absolute z-20"
+                  style={{
+                    top: selectionLinkPopoverPosition.top,
+                    left: selectionLinkPopoverPosition.left,
+                  }}
+                >
+                  <LinkForm
+                    onCancel={closeLinkPopover}
+                    onLinkAdd={handleAddLink}
+                    onLinkRemove={handleRemoveLink}
+                    isOpen={showLinkModal}
+                    currentUrl={linkState.currentUrl}
+                    selectedText={linkState.selectedText}
+                    canRemove={linkState.isActive}
+                  />
+                </div>
+                )}
+              </div>
               <EditorContent editor={editor} />
             </div>
           </div>

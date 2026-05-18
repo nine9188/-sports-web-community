@@ -35,7 +35,7 @@ export const Video = Node.create<VideoOptions>({
       HTMLAttributes: {
         class: 'video-wrapper',
       },
-      responsive: true, // 기본값을 true로 설정
+      responsive: false,
     };
   },
   
@@ -66,7 +66,7 @@ export const Video = Node.create<VideoOptions>({
         default: true,
       },
       preload: {
-        default: 'metadata',
+        default: 'none',
       },
     };
   },
@@ -85,11 +85,11 @@ export const Video = Node.create<VideoOptions>({
     const videoAttrs = mergeAttributes(attrs, { 
       controls: 'true',
       playsinline: 'true',
-      preload: attrs.preload || 'metadata',
+      preload: attrs.preload || 'none',
     });
     
-    const wrapperClass = this.options.responsive 
-      ? `${this.options.HTMLAttributes.class} responsive-video-container` 
+    const wrapperClass = this.options.responsive
+      ? `${this.options.HTMLAttributes.class} responsive-video-container`
       : this.options.HTMLAttributes.class;
     
     return [

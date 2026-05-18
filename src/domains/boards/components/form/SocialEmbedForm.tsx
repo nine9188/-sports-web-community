@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { detectPlatform, type SocialPlatform } from '@/shared/components/editor/tiptap/extensions/social-embeds';
-import { Button } from '@/shared/components/ui';
 
 interface SocialEmbedFormProps {
   onCancel: () => void;
@@ -11,12 +11,12 @@ interface SocialEmbedFormProps {
 }
 
 const PLATFORM_NAMES: Record<SocialPlatform, string> = {
-  twitter: '트위터 (X)',
-  instagram: '인스타그램',
-  tiktok: '틱톡',
-  youtube: '유튜브',
-  facebook: '페이스북',
-  linkedin: '링크드인',
+  twitter: 'X',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  facebook: 'Facebook',
+  linkedin: 'LinkedIn',
 };
 
 export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: SocialEmbedFormProps) {
@@ -24,149 +24,124 @@ export default function SocialEmbedForm({ onCancel, onSocialEmbedAdd, isOpen }: 
   const [detectedPlatform, setDetectedPlatform] = useState<SocialPlatform | null>(null);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
-  // 외부 클릭 감지
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    }
+    if (!isOpen) return;
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+    const handlePointerDown = (event: PointerEvent) => {
+      if (popoverRef.current?.contains(event.target as Node)) return;
+      onCancel();
     };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isOpen, onCancel]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (url.trim()) {
-      const platform = detectPlatform(url);
-      setDetectedPlatform(platform);
-      if (platform) {
-        setError('');
-      } else {
-        setError('지원하지 않는 URL입니다.');
-      }
-    } else {
+    const nextUrl = url.trim();
+
+    if (!nextUrl) {
       setDetectedPlatform(null);
       setError('');
+      return;
     }
+
+    const platform = detectPlatform(nextUrl);
+    setDetectedPlatform(platform);
+    setError(platform ? '' : '지원하지 않는 URL입니다.');
   }, [url]);
 
-  const handleSubmit = (e?: { preventDefault?: () => void }) => {
-    e?.preventDefault?.();
-
-    if (!url.trim()) {
-      setError('URL을 입력해주세요.');
-      return;
-    }
-
-    const platform = detectPlatform(url);
-    if (!platform) {
-      setError('지원하지 않는 URL입니다. 트위터, 인스타그램, 틱톡, 유튜브, 페이스북, 링크드인 링크를 입력하세요.');
-      return;
-    }
-
-    onSocialEmbedAdd(platform, url.trim());
+  const reset = () => {
     setUrl('');
     setDetectedPlatform(null);
     setError('');
   };
 
+  const handleSubmit = () => {
+    const nextUrl = url.trim();
+    const platform = detectPlatform(nextUrl);
+
+    if (!nextUrl) {
+      setError('URL을 입력해주세요.');
+      return;
+    }
+
+    if (!platform) {
+      setError('X, Instagram, TikTok, YouTube, Facebook, LinkedIn 링크를 입력해주세요.');
+      return;
+    }
+
+    onSocialEmbedAdd(platform, nextUrl);
+    reset();
+  };
+
   const handleCancel = () => {
-    setUrl('');
-    setDetectedPlatform(null);
-    setError('');
+    reset();
     onCancel();
   };
 
   if (!isOpen) return null;
 
   return (
-      <div
-        ref={dropdownRef}
-        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
-          <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">소셜 미디어 추가</h3>
-        </div>
-        <div className="p-4">
-          <div className="space-y-3">
-            <div>
-              <input
-                ref={inputRef}
-                type="url"
-                id="social-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="https://twitter.com/..."
-                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors text-[13px]"
-              />
-              {detectedPlatform && (
-                <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-                  ✓ {PLATFORM_NAMES[detectedPlatform]} 링크가 감지되었습니다
-                </p>
-              )}
-              {error && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                  {error}
-                </p>
-              )}
-            </div>
-
-            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-              <p className="font-medium">지원하는 플랫폼:</p>
-              <ul className="list-disc list-inside space-y-0.5 ml-2">
-                <li>트위터 (X) - https://twitter.com/... 또는 https://x.com/...</li>
-                <li>인스타그램 - https://instagram.com/p/...</li>
-                <li>틱톡 - https://tiktok.com/@.../video/...</li>
-                <li>유튜브 - https://youtube.com/watch?v=... 또는 https://youtu.be/...</li>
-                <li>페이스북 - https://facebook.com/.../posts/...</li>
-                <li>링크드인 - https://linkedin.com/posts/...</li>
-              </ul>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                className="text-[13px]"
-              >
-                취소
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={() => handleSubmit()}
-                disabled={!detectedPlatform}
-                className="text-[13px]"
-              >
-                추가
-              </Button>
-            </div>
-          </div>
-        </div>
+    <div
+      ref={popoverRef}
+      className="w-full rounded-md border border-black/10 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="url"
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              handleSubmit();
+            }
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              handleCancel();
+            }
+          }}
+          placeholder="소셜 URL"
+          className="h-9 min-w-0 flex-1 rounded border border-black/10 bg-[#F5F5F5] px-3 text-[13px] text-gray-900 outline-none placeholder:text-gray-500 focus:bg-white dark:border-white/10 dark:bg-[#262626] dark:text-[#F0F0F0] dark:placeholder:text-gray-400 dark:focus:bg-[#1D1D1D]"
+        />
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded text-gray-600 hover:bg-[#EAEAEA] dark:text-gray-300 dark:hover:bg-[#333333]"
+          aria-label="닫기"
+        >
+          <X size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!detectedPlatform}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[#003CA6] text-white disabled:bg-[#8EA4D8] disabled:text-white/80"
+          aria-label="추가"
+        >
+          <Check size={16} />
+        </button>
       </div>
+      <div className="mt-1 min-h-4 px-1 text-[11px] leading-4">
+        {detectedPlatform ? (
+          <span className="text-gray-500 dark:text-gray-400">{PLATFORM_NAMES[detectedPlatform]} 링크</span>
+        ) : error ? (
+          <span className="text-red-600 dark:text-red-400">{error}</span>
+        ) : (
+          <span className="text-gray-500 dark:text-gray-400">X, Instagram, TikTok, YouTube, Facebook, LinkedIn</span>
+        )}
+      </div>
+    </div>
   );
 }

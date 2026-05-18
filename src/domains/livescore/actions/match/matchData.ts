@@ -14,6 +14,8 @@ import { cache } from 'react';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import { fetchCachedMatchShell, isFinishedMatchStatus, type MatchShell } from './matchShell';
 
+const FINISHED_MATCH_FREEZE_DELAY_MS = 4 * 60 * 60 * 1000;
+
 // 매치 상세 데이터 응답 타입
 export interface MatchFullDataResponse {
   success: boolean;
@@ -41,7 +43,13 @@ export interface MatchFullDataResponse {
 }
 
 // 매치 전체 데이터 가져오기 (옵션에 따라 필요한 부분만)
-function buildMatchFullDataFromShell(shell: MatchShell): MatchFullDataResponse {
+async function buildMatchFullDataFromShell(shell: MatchShell): Promise<MatchFullDataResponse> {
+  const [teamLogoUrls, leagueLogoUrl, leagueLogoDarkUrl] = await Promise.all([
+    getTeamLogoUrls([shell.teams.home.id, shell.teams.away.id]),
+    shell.league.id ? getLeagueLogoUrl(shell.league.id) : Promise.resolve(''),
+    shell.league.id ? getLeagueLogoUrl(shell.league.id, true) : Promise.resolve(''),
+  ]);
+
   return {
     success: true,
     match: {
@@ -107,6 +115,9 @@ function buildMatchFullDataFromShell(shell: MatchShell): MatchFullDataResponse {
       name: shell.teams.away.name,
       logo: shell.teams.away.logo,
     },
+    teamLogoUrls,
+    leagueLogoUrl,
+    leagueLogoDarkUrl,
     message: 'Match shell data loaded from fixture cache.',
   };
 }
@@ -371,8 +382,12 @@ async function fetchMatchFullDataCached(
   // 먼저 경기 상태 확인 (가벼운 호출, fetchFromFootballApi의 revalidate 적용)
   const shellResult = await fetchCachedMatchShell(matchId);
   const statusCode = shellResult.status === 'found' ? shellResult.shell.status.code : '';
+  const matchTime = shellResult.status === 'found' ? new Date(shellResult.shell.time.date).getTime() : NaN;
+  const canFreezeFinishedMatch =
+    Number.isFinite(matchTime) &&
+    Date.now() - matchTime >= FINISHED_MATCH_FREEZE_DELAY_MS;
 
-  if (isFinishedMatchStatus(statusCode) && !options.fetchEvents) {
+  if (isFinishedMatchStatus(statusCode) && canFreezeFinishedMatch && !options.fetchEvents) {
     // options를 캐시 키에 포함 — generateMetadata(all false)가 풀 데이터 캐시를 오염시키는 버그 방지
     const optionsKey = [
       options.fetchEvents ? '1' : '0',

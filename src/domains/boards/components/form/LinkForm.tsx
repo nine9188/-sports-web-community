@@ -1,112 +1,143 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/shared/components/ui';
+import { Check, Link2Off, X } from 'lucide-react';
 
 interface LinkFormProps {
   onCancel: () => void;
   onLinkAdd: (url: string, text?: string) => void;
+  onLinkRemove?: () => void;
   isOpen: boolean;
+  currentUrl?: string;
+  selectedText?: string;
+  canRemove?: boolean;
 }
 
-export default function LinkForm({ 
-  onCancel, 
+function normalizeUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+export default function LinkForm({
+  onCancel,
   onLinkAdd,
-  isOpen
+  onLinkRemove,
+  isOpen,
+  currentUrl = '',
+  selectedText = '',
+  canRemove = false,
 }: LinkFormProps) {
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
-  // 외부 클릭 감지
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    }
-    
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onCancel]);
+    if (!isOpen) return;
 
-  // 드롭다운이 열릴 때마다 상태 초기화
-  useEffect(() => {
-    if (isOpen) {
-      setUrl('');
-      setText('');
-    }
-  }, [isOpen]);
+    setUrl(currentUrl);
+    setText(selectedText);
+    const id = window.setTimeout(() => urlInputRef.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(id);
+  }, [currentUrl, isOpen, selectedText]);
 
   const handleSubmit = () => {
-    if (!url) return;
-    // text가 비어있으면 undefined로 전달
-    onLinkAdd(url, text || undefined);
+    const nextUrl = normalizeUrl(url);
+    if (!nextUrl) return;
+
+    onLinkAdd(nextUrl, text.trim() || undefined);
+    onCancel();
   };
 
   if (!isOpen) return null;
 
   return (
-      <div
-        ref={dropdownRef}
-        className="bg-white dark:bg-[#1D1D1D] border-x border-black/7 dark:border-white/10 overflow-hidden w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-[#F5F5F5] dark:bg-[#262626] h-12 px-4 flex items-center">
-          <h3 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">링크 추가</h3>
+    <div
+      data-editor-link-popover="true"
+      className="w-full rounded-md border border-black/10 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+      onMouseDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          <input
+            ref={urlInputRef}
+            type="text"
+            inputMode="url"
+            autoComplete="url"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSubmit();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                onCancel();
+              }
+            }}
+            className="min-w-0 flex-1 rounded-md border border-black/7 bg-white px-2.5 py-1.5 text-[13px] text-gray-900 outline-none placeholder:text-gray-500 focus:bg-[#F5F5F5] dark:border-white/10 dark:bg-[#262626] dark:text-[#F0F0F0] dark:placeholder:text-gray-400"
+            placeholder="https://example.com"
+          />
+          {canRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-700 dark:text-gray-300"
+              title="링크 제거"
+              onClick={() => {
+                onLinkRemove?.();
+                onCancel();
+              }}
+            >
+              <Link2Off size={15} />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-gray-700 dark:text-gray-300"
+            title="닫기"
+            onClick={onCancel}
+          >
+            <X size={16} />
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="icon"
+            className="h-8 w-8"
+            title="적용"
+            disabled={!url.trim()}
+            onClick={handleSubmit}
+          >
+            <Check size={16} />
+          </Button>
         </div>
-        <div className="p-4">
-          <div className="space-y-4">
-            <div>
-              <input
-                type="text"
-                id="linkUrl"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
-                placeholder="URL을 입력하세요"
-              />
-            </div>
-
-            <div>
-              <input
-                type="text"
-                id="linkText"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="w-full border border-black/7 dark:border-white/10 rounded-md px-3 py-2 text-xs bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-[#F5F5F5] dark:focus:bg-[#262626] transition-colors"
-                placeholder="표시할 텍스트 (선택사항)"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                className="text-xs"
-              >
-                취소
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSubmit}
-                disabled={!url}
-                className="text-xs"
-              >
-                확인
-              </Button>
-            </div>
-          </div>
-        </div>
+        <input
+          type="text"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              handleSubmit();
+            }
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              onCancel();
+            }
+          }}
+          className="w-full rounded-md border border-black/7 bg-white px-2.5 py-1.5 text-[13px] text-gray-900 outline-none placeholder:text-gray-500 focus:bg-[#F5F5F5] dark:border-white/10 dark:bg-[#262626] dark:text-[#F0F0F0] dark:placeholder:text-gray-400"
+          placeholder="표시 텍스트"
+        />
       </div>
+    </div>
   );
-} 
+}

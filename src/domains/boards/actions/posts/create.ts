@@ -3,7 +3,6 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkReferralMilestone } from '@/shared/actions/referral-actions';
-import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
@@ -62,10 +61,21 @@ async function createPostInternal(params: {
     }
 
     // 정지 확인 + 게시판 조회 병렬 실행
-    const [suspensionCheck, boardResult] = await Promise.all([
-      checkSuspensionGuard(userId),
+    const [boardResult, profileResult] = await Promise.all([
       supabase.from('boards').select('id, name, slug, access_level').eq('id', boardId).single(),
+      supabase
+        .from('profiles')
+        .select('is_admin, is_suspended, suspended_until')
+        .eq('id', userId)
+        .single(),
     ]);
+
+    const { data: profile } = profileResult;
+    const suspendedUntil = profile?.suspended_until ? new Date(profile.suspended_until).getTime() : null;
+    const suspensionCheck = {
+      isSuspended: Boolean(profile?.is_suspended && (!suspendedUntil || suspendedUntil > Date.now())),
+      message: '계정이 정지되어 게시글을 작성할 수 없습니다.',
+    };
 
     if (suspensionCheck.isSuspended) {
       return { success: false, error: suspensionCheck.message || '계정이 정지되어 게시글을 작성할 수 없습니다.' };
@@ -75,12 +85,6 @@ async function createPostInternal(params: {
     if (boardError || !boardData) {
       return { success: false, error: '게시판 정보를 찾을 수 없습니다.' };
     }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin, is_suspended, suspended_until')
-      .eq('id', userId)
-      .single();
 
     const permissions = calculateBoardViewerPermissions(boardData, profile);
     if (!permissions.canWrite) {

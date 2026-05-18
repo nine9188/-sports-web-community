@@ -88,6 +88,8 @@ export type MatchShellResult =
   | { status: 'temporary-error'; error: string };
 
 const FINISHED_STATUS_CODES = new Set(['FT', 'AET', 'PEN']);
+const STABLE_SHELL_STATUS_CODES = new Set(['FT', 'AET', 'PEN', 'CANC', 'ABD', 'AWD', 'WO']);
+const SHELL_REFRESH_BEFORE_KICKOFF_MS = 10 * 60 * 1000;
 
 function statusNameFromCode(code: string): string {
   switch (code) {
@@ -145,6 +147,20 @@ function isTemporaryMatchDataError(error?: string): boolean {
     '503',
     '504',
   ].some((needle) => text.includes(needle));
+}
+
+function shouldUseFixtureShellRow(row: FixtureShellRow): boolean {
+  const statusCode = String(row.status_short || '');
+  if (STABLE_SHELL_STATUS_CODES.has(statusCode)) {
+    return true;
+  }
+
+  const matchTime = row.match_date ? new Date(row.match_date).getTime() : NaN;
+  if (!Number.isFinite(matchTime)) {
+    return false;
+  }
+
+  return Date.now() < matchTime - SHELL_REFRESH_BEFORE_KICKOFF_MS;
 }
 
 async function fetchFixtureShellRow(matchId: number): Promise<FixtureShellRow | null> {
@@ -353,12 +369,18 @@ async function fetchMatchShellInternal(matchId: string): Promise<MatchShellResul
     return { status: 'missing' };
   }
 
+  let fallbackShell: MatchShell | null = null;
+
   try {
     const row = await fetchFixtureShellRow(id);
     if (row) {
       const shell = await buildShellFromFixtureRow(row);
       if (shell) {
-        return { status: 'found', shell, source: 'db' };
+        if (shouldUseFixtureShellRow(row)) {
+          return { status: 'found', shell, source: 'db' };
+        }
+
+        fallbackShell = shell;
       }
     }
   } catch (error) {
@@ -366,7 +388,12 @@ async function fetchMatchShellInternal(matchId: string): Promise<MatchShellResul
     return { status: 'temporary-error', error: message };
   }
 
-  return fetchMatchShellFromApi(id);
+  const apiResult = await fetchMatchShellFromApi(id);
+  if (apiResult.status === 'temporary-error' && fallbackShell) {
+    return { status: 'found', shell: fallbackShell, source: 'db' };
+  }
+
+  return apiResult;
 }
 
 export function isFinishedMatchStatus(statusCode: string | null | undefined): boolean {

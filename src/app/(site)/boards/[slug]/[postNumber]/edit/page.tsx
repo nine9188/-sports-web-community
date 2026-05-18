@@ -2,33 +2,20 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import dynamicImport from 'next/dynamic';
+import PostEditForm from '@/domains/boards/components/post/PostEditForm';
 import { getPostEditData } from '@/domains/boards/actions';
 import type { DealInfo } from '@/domains/boards/types/hotdeal';
 import { errorBoxStyles, errorTitleStyles, errorMessageStyles, errorLinkStyles } from '@/shared/styles';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import '@/styles/post-content.css';
 
-// Dynamic import로 Tiptap 에디터 번들을 lazy load
-const PostEditForm = dynamicImport(
-  () => import('@/domains/boards/components/post/PostEditForm'),
-  {
-    loading: () => (
-      <div className="py-20 text-center text-[13px] text-gray-500 dark:text-gray-400">
-        불러오는 중...
-      </div>
-    )
-  }
-);
-
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-// 메타데이터
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ slug: string; postNumber: string }>
+  params: Promise<{ slug: string; postNumber: string }>;
 }): Promise<Metadata> {
   const { slug, postNumber } = await params;
   return buildMetadata({
@@ -39,24 +26,23 @@ export async function generateMetadata({
   });
 }
 
-export default async function EditPostPage({ params }: { params: Promise<{ slug: string, postNumber: string }> }) {
+export default async function EditPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string; postNumber: string }>;
+}) {
   try {
     const { slug, postNumber } = await params;
-
-    // 서버 액션을 통해 데이터 로드
     const result = await getPostEditData(slug, postNumber);
 
-    // 로그인 필요한 경우 리다이렉트
     if (result.redirectToLogin) {
-      redirect(`/login?message=로그인이+필요한+기능입니다&redirect=/boards/${slug}/${postNumber}`);
+      redirect(`/signin?redirect=${encodeURIComponent(`/boards/${slug}/${postNumber}/edit`)}&message=${encodeURIComponent('로그인이 필요한 기능입니다.')}`);
     }
 
-    // 권한 없는 경우 리다이렉트
     if (result.redirectToPost) {
-      redirect(`/boards/${slug}/${postNumber}?message=본인+작성글만+수정할+수+있습니다`);
+      redirect(`/boards/${slug}/${postNumber}?message=${encodeURIComponent('본인이 작성한 글만 수정할 수 있습니다.')}`);
     }
 
-    // 오류 처리
     if (!result.success || !result.post || !result.board) {
       return (
         <div className="container mx-auto">
@@ -83,7 +69,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ slug:
       </div>
     );
   } catch (error) {
-    console.error('EditPostPage 오류:', error);
+    console.error('EditPostPage error:', error);
     return notFound();
   }
 }
