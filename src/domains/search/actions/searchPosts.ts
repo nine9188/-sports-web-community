@@ -11,6 +11,28 @@ interface SearchPostsParams {
   offset?: number
 }
 
+function normalizeTagQuery(query: string): string | null {
+  const tag = query
+    .replace(/^#+/, '')
+    .replace(/[,[\]{}"']/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  return tag || null
+}
+
+function buildPostSearchFilter(query: string): string {
+  const filters = [`title.ilike.%${query}%`]
+  const tag = normalizeTagQuery(query)
+
+  if (tag) {
+    const escapedTag = tag.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    filters.push(`tags.cs.{"${escapedTag}"}`)
+  }
+
+  return filters.join(',')
+}
+
 export async function searchPosts({
   query,
   sortBy = 'latest',
@@ -46,6 +68,7 @@ export async function searchPosts({
     }
 
     // COUNT 쿼리는 필요할 때만 실행 (성능 최적화)
+    const searchFilter = buildPostSearchFilter(query)
     let totalCount = 0
     if (!skipCount) {
       const { count } = await supabase
@@ -54,7 +77,7 @@ export async function searchPosts({
         .eq('is_published', true)
         .not('is_hidden', 'eq', true)
         .not('is_deleted', 'eq', true)
-        .or(`title.ilike.%${query}%`)
+        .or(searchFilter)
       
       totalCount = count || 0
     }
@@ -70,6 +93,7 @@ export async function searchPosts({
         created_at,
         views,
         likes,
+        tags,
         post_number,
         board_id,
         profiles!posts_user_id_fkey(
@@ -84,7 +108,7 @@ export async function searchPosts({
       .eq('is_published', true)
       .not('is_hidden', 'eq', true)
       .not('is_deleted', 'eq', true)
-      .or(`title.ilike.%${query}%`)
+      .or(searchFilter)
 
     // 정렬 적용
     switch (sortBy) {

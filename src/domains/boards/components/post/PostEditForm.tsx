@@ -20,6 +20,9 @@ import { uploadPostImageFile } from './post-edit-form/utils/uploadPostImageFile'
 import { uploadPostVideoFile } from './post-edit-form/utils/uploadPostVideoFile';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
+import { extractAutoTagsFromContent } from '../../utils/post/extractAutoTagsFromContent';
+import { extractRelatedCtasFromContent } from '../../utils/post/extractRelatedCtasFromContent';
+import type { RelatedPostCta } from '../../utils/post/extractRelatedCtasFromContent';
 import LinkForm from '@/domains/boards/components/form/LinkForm';
 import YoutubeForm from '@/domains/boards/components/form/YoutubeForm';
 import MatchResultForm from '@/domains/boards/components/form/MatchResultForm';
@@ -29,7 +32,7 @@ import PollForm from '@/domains/boards/components/form/PollForm';
 import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPickerForm';
 import type { PostPollDraft } from '@/domains/boards/types/poll';
 import { PollBlockExtension } from '@/shared/components/editor/tiptap/PollBlockExtension';
-import { Bold, Heading2, Heading3, Italic, Link as LinkIcon, Trash2 } from 'lucide-react';
+import { Bold, CalendarDays, Heading2, Heading3, Italic, Link as LinkIcon, Shield, Trash2, UserRound } from 'lucide-react';
 
 // Hotdeal options
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
@@ -89,6 +92,12 @@ function findPollBlock(editor: Editor): PollBlockMatch | null {
 function isPollBlockSelected(editor: Editor) {
   const { selection } = editor.state;
   return selection instanceof NodeSelection && selection.node.type.name === 'pollBlock';
+}
+
+function RelatedConnectionIcon({ type }: { type: RelatedPostCta['type'] }) {
+  if (type === 'match') return <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />;
+  if (type === 'player') return <UserRound className="h-3.5 w-3.5" aria-hidden="true" />;
+  return <Shield className="h-3.5 w-3.5" aria-hidden="true" />;
 }
 
 function findCurrentTableEnd(editor: Editor) {
@@ -271,6 +280,8 @@ export default function PostEditForm({
   const [toolbarPollPopoverPosition, setToolbarPollPopoverPosition] = useState<LocalPopoverPosition | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
   const [pollDraft, setPollDraft] = useState<PostPollDraft | null>(null);
+  const [autoTags, setAutoTags] = useState<string[]>([]);
+  const [relatedConnections, setRelatedConnections] = useState<RelatedPostCta[]>([]);
   const [selectionLinkPopoverPosition, setSelectionLinkPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   const [selectionMenuPosition, setSelectionMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [tableMenuPosition, setTableMenuPosition] = useState<{ top: number; left: number } | null>(null);
@@ -499,8 +510,11 @@ export default function PostEditForm({
     extensions: loadedExtensions,
     content: parsedInitialContent,
     onUpdate: ({ editor }) => {
-      const jsonContent = JSON.stringify(editor.getJSON());
+      const editorJson = editor.getJSON();
+      const jsonContent = JSON.stringify(editorJson);
       setContent(jsonContent);
+      setAutoTags(extractAutoTagsFromContent(editorJson));
+      setRelatedConnections(extractRelatedCtasFromContent(editorJson));
 
       const pollBlock = findPollBlock(editor);
       const currentPoll = pollDraftRef.current;
@@ -564,6 +578,13 @@ export default function PostEditForm({
     if (existingPoll) {
       setPollDraft(existingPoll.draft);
     }
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const editorJson = editor.getJSON();
+    setAutoTags(extractAutoTagsFromContent(editorJson));
+    setRelatedConnections(extractRelatedCtasFromContent(editorJson));
   }, [editor]);
 
   const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player' | 'table' | 'poll') => {
@@ -1327,6 +1348,10 @@ export default function PostEditForm({
       formData.append('poll', JSON.stringify(pollDraft));
     }
 
+    if (autoTags.length > 0) {
+      formData.append('tags', JSON.stringify(autoTags));
+    }
+
     const result = await createPost(formData);
 
     if (!result.success) {
@@ -1343,7 +1368,7 @@ export default function PostEditForm({
 
     toast.success('게시글이 작성되었습니다.');
     router.push(`/boards/${boardSlug}/${post.post_number}`);
-  }, [editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
+  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
 
   // 寃뚯떆湲 ?섏젙 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const handleUpdatePost = useCallback(async () => {
@@ -1355,7 +1380,7 @@ export default function PostEditForm({
     const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
     const dealInfoToUpdate = isHotdeal ? buildDealInfo(true) : null;
 
-    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate);
+    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate, autoTags);
 
     if (!result.success) {
       handleErrorResponse(result.error || '', '寃뚯떆湲 ?섏젙???ㅽ뙣?덉뒿?덈떎.');
@@ -1368,7 +1393,7 @@ export default function PostEditForm({
 
     toast.success('게시글이 수정되었습니다.');
     router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-  }, [editor, postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
+  }, [autoTags, editor, postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
 
   // ???쒖텧 ?몃뱾??
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -1975,6 +2000,49 @@ export default function PostEditForm({
               <EditorContent editor={editor} />
             </div>
 
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">관련 연결</span>
+              <span className="hidden text-[12px] text-gray-500 dark:text-gray-400 sm:inline">
+                팀/선수/경기 카드를 삽입하면 관련 페이지 연결이 자동 등록됩니다.
+              </span>
+            </div>
+            <div className="rounded-md border border-black/7 bg-[#FAFAFA] px-3 py-2 dark:border-white/10 dark:bg-[#262626]">
+              {relatedConnections.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {relatedConnections.map((connection) => (
+                      <span
+                        key={connection.key}
+                        className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border border-black/7 bg-white px-2.5 text-[12px] font-medium text-gray-700 dark:border-white/10 dark:bg-[#1D1D1D] dark:text-gray-300"
+                        title={`${connection.label} ${connection.actionLabel}`}
+                      >
+                        <span className="shrink-0 text-gray-500 dark:text-gray-400">
+                          <RelatedConnectionIcon type={connection.type} />
+                        </span>
+                        <span className="truncate">{connection.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                  {autoTags.length > relatedConnections.length && (
+                    <p className="text-[12px] text-gray-500 dark:text-gray-400">
+                      분류 키워드 {autoTags.length}개가 함께 저장됩니다.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400">
+                    아직 연결된 카드가 없습니다.
+                  </p>
+                  <p className="text-[12px] text-gray-400 dark:text-gray-500">
+                    경기, 팀, 선수 카드를 본문에 추가해보세요.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 踰꾪듉 ?곸뿭 */}

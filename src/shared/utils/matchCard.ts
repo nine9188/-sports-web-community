@@ -331,7 +331,7 @@ export function generateMatchCardHtml(
         </div>
 
         <div class="match-footer">
-          <span class="footer-link">매치 상세 정보</span>
+          <span class="footer-link">경기 상세 보기 &gt;</span>
         </div>
       </a>
     </div>
@@ -431,7 +431,7 @@ function generateInlineStyleHtml(
         </div>
 
         <div style="padding: 8px 12px; background-color: #f9fafb; border-top: 1px solid rgba(0, 0, 0, 0.05); text-align: center;">
-          <span style="font-size: 12px; color: #2563eb;">매치 상세 정보</span>
+          <span style="font-size: 12px; color: #2563eb;">경기 상세 보기 &gt;</span>
         </div>
       </a>
     </div>

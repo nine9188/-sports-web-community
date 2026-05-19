@@ -74,7 +74,7 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
         </div>
 
         <div class="match-footer">
-          <span class="footer-link">선수 정보 확인</span>
+          <span class="footer-link">선수 페이지 보기 &gt;</span>
         </div>
       </a>
     </div>

@@ -23,6 +23,8 @@ import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
 import PostHashScroller from "./PostHashScroller";
 import PostPollCard from "../post/PostPollCard";
 import type { PostPoll } from "../../types/poll";
+import { extractRelatedCtasFromContent } from "../../utils/post/extractRelatedCtasFromContent";
+import type { RelatedPostCta } from "../../utils/post/extractRelatedCtasFromContent";
 
 interface PostAuthor {
   nickname: string | null;
@@ -45,6 +47,7 @@ interface PostDetailLayoutProps {
     views: number | null;
     likes: number | null;
     dislikes: number | null;
+    tags?: string[] | null;
     board_id: string | null;
     post_number: number;
     is_hidden?: boolean;
@@ -119,6 +122,38 @@ interface PostDetailLayoutProps {
   detailQueryString: string;
 }
 
+function getRelatedCtaTypeLabel(type: RelatedPostCta['type']) {
+  if (type === 'match') return '경기';
+  if (type === 'player') return '선수';
+  return '팀';
+}
+
+function RelatedPostCtas({ ctas }: { ctas: RelatedPostCta[] }) {
+  return (
+    <div className="px-4 sm:px-6 pb-4">
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-black/5 pt-3 dark:border-white/10">
+        <span className="mr-1 text-[12px] font-semibold text-gray-500 dark:text-gray-400">
+          관련
+        </span>
+        {ctas.map((cta) => (
+          <Link
+            key={cta.key}
+            href={cta.href}
+            prefetch={false}
+            title={`${cta.label} ${cta.actionLabel}`}
+            className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border border-black/7 bg-[#FAFAFA] px-2.5 text-[12px] font-medium text-gray-700 transition-colors hover:border-brand-primary/40 hover:bg-[#F3F6FF] hover:text-brand-primary dark:border-white/10 dark:bg-[#262626] dark:text-gray-300 dark:hover:border-brand-primary-dark/40 dark:hover:bg-[#222A3A] dark:hover:text-brand-primary-dark"
+          >
+            <span className="shrink-0 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+              {getRelatedCtaTypeLabel(cta.type)}
+            </span>
+            <span className="truncate">{cta.label}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PostDetailLayout({
   post,
   board,
@@ -143,6 +178,8 @@ export default function PostDetailLayout({
   returnHref,
   detailQueryString,
 }: PostDetailLayoutProps) {
+  const relatedCtas = extractRelatedCtasFromContent(post.content);
+
   // 게시글 상세 정보 구성
   const author: PostAuthor = {
     nickname: post.profiles?.nickname || null,
@@ -322,7 +359,10 @@ export default function PostDetailLayout({
           <PostPollCard poll={poll} isLoggedIn={isLoggedIn} />
         )}
 
+        {relatedCtas.length > 0 && <RelatedPostCtas ctas={relatedCtas} />}
+
         {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
+
         <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">
           <div className="flex flex-col space-y-4">
             {/* 추천/비추천 버튼 */}

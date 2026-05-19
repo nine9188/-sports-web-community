@@ -72,7 +72,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
         </div>
 
         <div class="match-footer">
-          <span class="footer-link">팀 정보 확인</span>
+          <span class="footer-link">팀 페이지 보기 &gt;</span>
         </div>
       </a>
     </div>

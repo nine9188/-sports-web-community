@@ -12,6 +12,110 @@ import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl'
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary'
 import { submitIndexNowUrl } from '@/shared/seo/indexnow'
+
+type PredictionPostPollDraft = {
+  question: string
+  options: string[]
+}
+
+type TiptapNode = Record<string, unknown>
+
+function truncatePollText(value: string, maxLength: number) {
+  return value.trim().slice(0, maxLength)
+}
+
+function createMatchPredictionPoll(homeName: string, awayName: string): PredictionPostPollDraft {
+  const home = truncatePollText(homeName, 58)
+  const away = truncatePollText(awayName, 58)
+
+  return {
+    question: truncatePollText(`${home} vs ${away}, 결과를 어떻게 예상하시나요?`, 120),
+    options: [
+      truncatePollText(`${home} 승`, 80),
+      '무승부',
+      truncatePollText(`${away} 승`, 80),
+    ],
+  }
+}
+
+async function insertPredictionPostPoll(params: {
+  supabase: ReturnType<typeof getSupabaseAdmin>
+  postId: string
+  userId: string
+  poll: PredictionPostPollDraft
+}) {
+  const { supabase, postId, userId, poll } = params
+  const supabaseAny = supabase as unknown as {
+    from: (table: string) => {
+      insert: (row: unknown) => {
+        select: (columns: string) => {
+          single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>
+        }
+      } | Promise<{ error: { message: string } | null }>
+    }
+  }
+
+  const pollInsert = supabaseAny.from('post_polls').insert({
+    post_id: postId,
+    question: poll.question,
+    created_by: userId,
+  }) as {
+    select: (columns: string) => {
+      single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>
+    }
+  }
+
+  const { data: pollRow, error: pollError } = await pollInsert.select('id').single()
+  if (pollError || !pollRow) {
+    throw new Error(pollError?.message || '투표 생성 실패')
+  }
+
+  const optionRows = poll.options.map((optionText, index) => ({
+    poll_id: pollRow.id,
+    option_text: optionText,
+    display_order: index,
+  }))
+
+  const { error: optionError } = await supabaseAny.from('post_poll_options').insert(optionRows) as { error: { message: string } | null }
+  if (optionError) {
+    throw new Error(optionError.message)
+  }
+}
+
+function getTiptapHeadingText(node: TiptapNode) {
+  if (node.type !== 'heading') return ''
+  const content = node.content
+  if (!Array.isArray(content)) return ''
+
+  return content
+    .map((child) => (child && typeof child === 'object' && 'text' in child ? String(child.text || '') : ''))
+    .join('')
+    .trim()
+}
+
+function findFirstHeadingIndex(nodes: TiptapNode[], matcher: (heading: string) => boolean) {
+  return nodes.findIndex((node) => {
+    const heading = getTiptapHeadingText(node)
+    return heading.length > 0 && matcher(heading)
+  })
+}
+
+function createEmptyParagraphNode(): TiptapNode {
+  return { type: 'paragraph', content: [{ type: 'text', text: '' }] }
+}
+
+function createMatchCardIntroNode(): TiptapNode {
+  return {
+    type: 'paragraph',
+    content: [
+      {
+        type: 'text',
+        text: '경기내용, 라인업, 통계를 아래 경기 카드에서 확인할 수 있습니다.',
+        marks: [{ type: 'bold' }],
+      },
+    ],
+  }
+}
 // predictMatch는 OpenAI SDK를 사용하므로 동적 import로 처리
 // (모듈 레벨 import 시 OPENAI_API_KEY 누락 등으로 전체 모듈 로드 실패 방지)
 async function loadPredictMatch() {
@@ -659,7 +763,7 @@ async function generateMatchPredictionPost(
   }] : []
 
   // AI 분석글을 Tiptap 문단으로 변환
-  const aiParagraphs: any[] = []
+  const aiParagraphs: TiptapNode[] = []
 
   // 줄 단위로 처리 (빈 줄과 단일 줄바꿈 모두 처리)
   const lines = aiAnalysis.split('\n').map(l => l.trim()).filter(l => l.length > 0)
@@ -742,18 +846,54 @@ async function generateMatchPredictionPost(
     }
   }
 
+  const predictionPoll = createMatchPredictionPoll(homeNameKo, awayNameKo)
+  const pollBlockNode = {
+    type: 'pollBlock',
+    attrs: {
+      question: predictionPoll.question,
+      options: predictionPoll.options,
+    },
+  }
+
+  const insightStartIndex = findFirstHeadingIndex(aiParagraphs, (heading) => (
+    heading.includes('관전') || heading.includes('맞대결') || heading.toLowerCase().includes('h2h')
+  ))
+  const teamAnalysisStartIndex = findFirstHeadingIndex(aiParagraphs, (heading) => (
+    heading.includes('홈팀') || heading.includes('어웨이') || heading.includes('원정') || heading.includes('Home') || heading.includes('Away')
+  ))
+  const pollInsertIndex = teamAnalysisStartIndex >= 0
+    ? teamAnalysisStartIndex
+    : insightStartIndex >= 0
+      ? insightStartIndex
+      : aiParagraphs.length
+
+  const overviewNodes = aiParagraphs.slice(0, pollInsertIndex)
+  const analysisEndIndex = insightStartIndex >= 0 ? insightStartIndex : aiParagraphs.length
+  const teamAnalysisNodes = aiParagraphs.slice(pollInsertIndex, analysisEndIndex)
+  const insightNodes = insightStartIndex >= 0 ? aiParagraphs.slice(insightStartIndex) : []
+
   const tiptapContent = {
     type: 'doc',
     content: [
       // 예측 차트 (데이터가 있을 때만)
       ...chartNode,
-      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
-      // AI 분석글 본문
-      ...aiParagraphs,
-      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
-      // 매치 카드 (분석글 아래)
+      createEmptyParagraphNode(),
+      // 경기 개요
+      ...overviewNodes,
+      createEmptyParagraphNode(),
+      // 투표
+      pollBlockNode,
+      createEmptyParagraphNode(),
+      // 홈/어웨이 분석
+      ...teamAnalysisNodes,
+      createEmptyParagraphNode(),
+      // 매치 카드 (관전 포인트 전)
+      createMatchCardIntroNode(),
       matchCardNode,
-      { type: 'paragraph', content: [{ type: 'text', text: '' }] },
+      createEmptyParagraphNode(),
+      // 맞대결/관전 포인트
+      ...insightNodes,
+      createEmptyParagraphNode(),
       { type: 'horizontalRule' },
       {
         type: 'paragraph',
@@ -783,7 +923,8 @@ async function generateMatchPredictionPost(
     targetBoardId,
     userId,
     ['AI분석', leagueNameKo, '경기예측', `${homeNameKo} vs ${awayNameKo}`],
-    metaData
+    metaData,
+    predictionPoll
   )
 }
 
@@ -1115,7 +1256,8 @@ async function createPredictionPost(
   boardId: string,
   userId: string,
   tags: string[] = [],
-  meta: Record<string, unknown> | null = null
+  meta: Record<string, unknown> | null = null,
+  poll?: PredictionPostPollDraft
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
   const supabase = getSupabaseAdmin()
 
@@ -1147,6 +1289,19 @@ async function createPredictionPost(
     }
 
     // 2. posts_content 테이블에 본문 분리 저장
+    if (poll) {
+      try {
+        await insertPredictionPostPoll({ supabase, postId: post.id, userId, poll })
+      } catch (pollError) {
+        console.error('[prediction post_poll INSERT failed]', pollError)
+        await supabase.from('posts').delete().eq('id', post.id)
+        return {
+          success: false,
+          error: pollError instanceof Error ? `투표 생성 실패: ${pollError.message}` : '투표 생성 실패',
+        }
+      }
+    }
+
     const contentText = extractSummary(content, 10000)
     const { error: contentError } = await supabase
       .from('posts_content')

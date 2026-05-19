@@ -91,6 +91,19 @@ export default function PostSearchResults({
                 </div>
               )}
 
+              {post.tags && post.tags.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {post.tags.slice(0, 6).map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex h-6 items-center rounded-full border border-black/7 bg-[#FAFAFA] px-2.5 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-[#262626] dark:text-gray-300"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center space-x-3">
                   <span>{post.author_name || post.profiles?.nickname || '익명'}</span>

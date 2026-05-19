@@ -24,6 +24,26 @@ interface PostContentProps {
 }
 
 const POLL_PLACEHOLDER_HTML = '<div data-type="post-poll-placeholder"></div>';
+const RSS_CONTENT_OPEN_TAG = '<div class="rss-content">';
+
+function getInlinePollHtmlParts(processedHtml: string): string[] {
+  const trimmedHtml = processedHtml.trim();
+  const hasOuterRssWrapper =
+    trimmedHtml.startsWith(RSS_CONTENT_OPEN_TAG) && trimmedHtml.endsWith('</div>');
+
+  if (!hasOuterRssWrapper) {
+    return processedHtml.split(POLL_PLACEHOLDER_HTML);
+  }
+
+  const innerHtml = trimmedHtml.slice(
+    RSS_CONTENT_OPEN_TAG.length,
+    trimmedHtml.length - '</div>'.length,
+  );
+
+  return innerHtml
+    .split(POLL_PLACEHOLDER_HTML)
+    .map((part) => (part.trim() ? `${RSS_CONTENT_OPEN_TAG}${part}</div>` : part));
+}
 
 /**
  * 게시글 본문 컴포넌트
@@ -33,7 +53,7 @@ const POLL_PLACEHOLDER_HTML = '<div data-type="post-poll-placeholder"></div>';
  */
 export default function PostContent({ processedHtml, meta, poll, isLoggedIn = false }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const pollParts = poll ? processedHtml.split(POLL_PLACEHOLDER_HTML) : [processedHtml];
+  const pollParts = poll ? getInlinePollHtmlParts(processedHtml) : [processedHtml];
   const hasInlinePoll = Boolean(poll && pollParts.length > 1);
 
   // DOM 후처리: 소셜 임베드, 매치카드, 예측 차트, 이미지 에러 핸들링
@@ -125,7 +145,11 @@ export default function PostContent({ processedHtml, meta, poll, isLoggedIn = fa
 
     return () => {
       cancelAnimationFrame(rafId);
-      chartRoots.forEach((root) => root.unmount());
+      chartRoots.forEach((root) => {
+        setTimeout(() => {
+          root.unmount();
+        }, 0);
+      });
       if (observer) observer.disconnect();
       if (currentRef) cleanupMatchCardHover(currentRef);
     };

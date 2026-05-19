@@ -212,6 +212,22 @@ export { getPopularTeams, getTeamCountByLeague }
 /**
  * 개수만 가져오는 효율적인 함수들
  */
+function buildPostSearchFilter(query: string): string {
+  const filters = [`title.ilike.%${query}%`]
+  const tag = query
+    .replace(/^#+/, '')
+    .replace(/[,[\]{}"']/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (tag) {
+    const escapedTag = tag.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    filters.push(`tags.cs.{"${escapedTag}"}`)
+  }
+
+  return filters.join(',')
+}
+
 async function getPostsCount(query: string): Promise<number> {
   try {
     const supabase = await getSupabaseServer()
@@ -223,7 +239,7 @@ async function getPostsCount(query: string): Promise<number> {
       .eq('is_published', true)
       .not('is_hidden', 'eq', true)
       .not('is_deleted', 'eq', true)
-      .or(`title.ilike.%${query}%`)
+      .or(buildPostSearchFilter(query))
     
     return count || 0
   } catch {

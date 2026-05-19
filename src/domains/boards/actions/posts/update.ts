@@ -4,6 +4,7 @@ import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { extractAutoTagsFromContent } from '@/domains/boards/utils/post/extractAutoTagsFromContent';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { submitIndexNowUrl } from '@/shared/seo/indexnow';
@@ -19,7 +20,8 @@ export async function updatePost(
   postId: string,
   title: string,
   content: string,
-  dealInfo?: DealInfo | null
+  dealInfo?: DealInfo | null,
+  _clientTags?: string[]
 ): Promise<PostActionResponse> {
   if (!postId || !title || !content) {
     return {
@@ -89,17 +91,24 @@ export async function updatePost(
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
 
     // 게시글 업데이트 쿼리 (content는 posts_content 테이블에 분리 저장)
+    const parsedContentForTags = typeof content === 'string' && content.startsWith('{')
+      ? JSON.parse(content)
+      : content;
+    const autoTags = extractAutoTagsFromContent(parsedContentForTags);
+
     const updateData: {
       title: string;
       updated_at: string;
       thumbnail_url: string | null;
       summary: string;
+      tags: string[];
       deal_info?: DealInfo | null;
     } = {
       title: title.trim(),
       updated_at: new Date().toISOString(),
       thumbnail_url: extractFirstImageUrl(content),
       summary: extractSummary(content),
+      tags: autoTags,
     };
 
     // 핫딜 정보가 제공된 경우 추가

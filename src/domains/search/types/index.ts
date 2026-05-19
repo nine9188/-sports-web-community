@@ -9,6 +9,7 @@ export interface PostSearchResult {
   created_at: string | null
   views: number | null
   likes: number | null
+  tags?: string[] | null
   post_number: number
   board_id: string | null
   profiles: {

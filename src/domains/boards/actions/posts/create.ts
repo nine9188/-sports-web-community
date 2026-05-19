@@ -6,6 +6,7 @@ import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks';
+import { extractAutoTagsFromContent } from '@/domains/boards/utils/post/extractAutoTagsFromContent';
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
@@ -166,6 +167,7 @@ async function createPostInternal(params: {
     const parsedContent = typeof content === 'string' && content.startsWith('{')
       ? JSON.parse(content)
       : content;
+    const autoTags = extractAutoTagsFromContent(parsedContent);
 
     // 게시글 데이터 준비 (content는 posts_content 테이블에 분리 저장)
     const thumbnailUrl = extractFirstImageUrl(content);
@@ -175,6 +177,7 @@ async function createPostInternal(params: {
       board_id: boardId,
       thumbnail_url: thumbnailUrl,
       summary: extractSummary(content),
+      tags: autoTags,
     };
 
     // 핫딜 정보 추가
