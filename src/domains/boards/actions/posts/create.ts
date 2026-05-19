@@ -13,6 +13,7 @@ import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { cacheThumbnailToStorage } from './cacheThumbnail';
 import type { PostActionResponse } from './utils';
 import { calculateBoardViewerPermissions } from '../permissions';
+import type { PostPollDraft } from '@/domains/boards/types/poll';
 
 // 생성된 게시글 타입
 interface CreatedPost {
@@ -38,6 +39,70 @@ type CreatePostResult = {
   error: string;
 }
 
+function normalizePostPollDraft(value: unknown): PostPollDraft | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const draft = value as { question?: unknown; options?: unknown };
+  const question = typeof draft.question === 'string' ? draft.question.trim() : '';
+  const options = Array.isArray(draft.options)
+    ? draft.options
+        .map((option) => typeof option === 'string' ? option.trim() : '')
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
+
+  if (!question || options.length < 2) return null;
+
+  return {
+    question: question.slice(0, 120),
+    options: options.map((option) => option.slice(0, 80)),
+  };
+}
+
+async function insertPostPoll(params: {
+  supabase: unknown;
+  postId: string;
+  userId: string;
+  poll: PostPollDraft;
+}) {
+  const { supabase, postId, userId, poll } = params;
+  const supabaseAny = supabase as {
+    from: (table: string) => {
+      insert: (row: unknown) => {
+        select: (columns: string) => {
+          single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+        };
+      } | Promise<{ error: { message: string } | null }>;
+    };
+  };
+
+  const pollInsert = supabaseAny.from('post_polls').insert({
+    post_id: postId,
+    question: poll.question,
+    created_by: userId,
+  }) as {
+    select: (columns: string) => {
+      single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
+    };
+  };
+
+  const { data: pollRow, error: pollError } = await pollInsert.select('id').single();
+  if (pollError || !pollRow) {
+    throw new Error(pollError?.message || '투표 생성에 실패했습니다.');
+  }
+
+  const optionRows = poll.options.map((optionText, index) => ({
+    poll_id: pollRow.id,
+    option_text: optionText,
+    display_order: index,
+  }));
+
+  const { error: optionError } = await supabaseAny.from('post_poll_options').insert(optionRows) as { error: { message: string } | null };
+  if (optionError) {
+    throw new Error(optionError.message);
+  }
+}
+
 /**
  * 게시글 생성 공통 로직
  */
@@ -51,8 +116,9 @@ async function createPostInternal(params: {
   noticeBoards?: string[] | null;
   noticeOrder?: number;
   dealInfo?: Record<string, unknown> | null;
+  poll?: PostPollDraft | null;
 }): Promise<CreatePostResult> {
-  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, dealInfo } = params;
+  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, dealInfo, poll } = params;
 
   try {
     const supabase = await getSupabaseAction();
@@ -154,6 +220,19 @@ async function createPostInternal(params: {
     // 게시글 INSERT 이미 성공 → 사용자 응답 차단하지 않음
     const postId = data.id;
     const postNumber = data.post_number;
+
+    if (poll) {
+      try {
+        await insertPostPoll({ supabase, postId, userId, poll });
+      } catch (pollError) {
+        console.error('[post_poll INSERT 실패]', pollError);
+        return {
+          success: false,
+          error: pollError instanceof Error ? `투표 저장 실패: ${pollError.message}` : '투표 저장에 실패했습니다.',
+        };
+      }
+    }
+
     Promise.all([
       // posts_content 분리 저장
       (async () => {
@@ -289,6 +368,17 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
     // 매치카드는 TipTap JSON 그대로 저장 (HTML 변환 없음)
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
 
+    const pollStr = formData.get('poll') as string | null;
+    let poll: PostPollDraft | null = null;
+    if (pollStr) {
+      try {
+        poll = normalizePostPollDraft(JSON.parse(pollStr));
+      } catch (e) {
+        console.error('poll 파싱 실패:', e);
+        return { success: false, error: '투표 정보를 확인할 수 없습니다.' };
+      }
+    }
+
     return createPostInternal({
       title,
       content,
@@ -298,7 +388,8 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
       noticeType,
       noticeBoards,
       noticeOrder: noticeOrderStr ? parseInt(noticeOrderStr, 10) : 0,
-      dealInfo
+      dealInfo,
+      poll
     });
   } catch (error) {
     console.error('[createPost] 예외 발생:', error);

@@ -11,6 +11,7 @@ import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/
 import { getCachedAllBoards, getCachedBoardBySlug } from './getCachedBoards';
 import { getCachedTeamsByIds, getCachedLeaguesByIds } from './getCachedTeamsLeagues';
 import { getCachedShopItemIconUrl } from './getCachedShopItems';
+import type { PostPoll } from '../types/poll';
 
 const POST_DETAIL_LIST_PAGE_SIZE = 20;
 
@@ -115,6 +116,10 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       ...postRaw,
       content: contentRow?.content ?? null,
     } as typeof postRaw & { content: unknown };
+
+    const { data: pollData } = await (supabase as unknown as {
+      rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: PostPoll | null }>;
+    }).rpc('get_post_poll_for_post', { p_post_id: post.id });
 
     const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
     const { data: prevPostData } = prevPostResult;
@@ -411,6 +416,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         ...post,
         files: filesData || []
       },
+      poll: pollData || null,
       board,
       breadcrumbs,
       processedHtml,

@@ -14,6 +14,9 @@ export { deletePost } from './delete';
 // 좋아요/싫어요 관련
 export { likePost, dislikePost, getUserPostAction } from './likes';
 
+// 투표 관련
+export { votePostPoll } from './polls';
+
 // 공지사항 조회 관련
 export { getNotices, getGlobalNotices, getBoardNotices, getNoticesForBoard } from './notices';
 

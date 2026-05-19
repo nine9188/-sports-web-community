@@ -43,8 +43,37 @@ export function renderTipTapNode(node: TipTapNode): string {
     });
   }
 
+  if (node.type === 'pollBlock') {
+    return '<div data-type="post-poll-placeholder"></div>';
+  }
+
   if (node.type === 'horizontalRule') {
     return '<hr class="my-6 border-gray-300" />';
+  }
+
+  if (node.type === 'table' && Array.isArray(node.content)) {
+    const rows = node.content
+      .filter((row) => row.type === 'tableRow')
+      .map((row) => renderTipTapNode(row))
+      .join('');
+
+    return `<div class="table-wrapper"><table><tbody>${rows}</tbody></table></div>`;
+  }
+
+  if (node.type === 'tableRow' && Array.isArray(node.content)) {
+    const cells = node.content
+      .filter((cell) => cell.type === 'tableCell' || cell.type === 'tableHeader')
+      .map((cell) => renderTipTapNode(cell))
+      .join('');
+
+    return `<tr>${cells}</tr>`;
+  }
+
+  if ((node.type === 'tableCell' || node.type === 'tableHeader') && Array.isArray(node.content)) {
+    const tag = node.type === 'tableHeader' ? 'th' : 'td';
+    const content = node.content.map((child) => renderTipTapNode(child)).join('') || '<p></p>';
+
+    return `<${tag}>${content}</${tag}>`;
   }
 
   if (node.type === 'image' && node.attrs?.src) {

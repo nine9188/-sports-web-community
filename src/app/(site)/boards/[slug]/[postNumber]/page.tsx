@@ -503,6 +503,7 @@ async function PostDetailContent({
         board={result.board as Parameters<typeof PostDetailLayout>[0]['board']}
         breadcrumbs={result.breadcrumbs || []}
         processedHtml={result.processedHtml || ''}
+        poll={result.poll || null}
         comments={processedComments}
         isLoggedIn={result.isLoggedIn || false}
         isAuthor={result.isAuthor || false}

@@ -21,6 +21,8 @@ import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
 import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
 import PostHashScroller from "./PostHashScroller";
+import PostPollCard from "../post/PostPollCard";
+import type { PostPoll } from "../../types/poll";
 
 interface PostAuthor {
   nickname: string | null;
@@ -72,6 +74,7 @@ interface PostDetailLayoutProps {
   breadcrumbs: Breadcrumb[];
   /** 서버에서 미리 처리된 HTML (깜빡임 방지) */
   processedHtml: string;
+  poll?: PostPoll | null;
   comments: CommentType[];
   isLoggedIn: boolean;
   isAuthor: boolean;
@@ -121,6 +124,7 @@ export default function PostDetailLayout({
   board,
   breadcrumbs,
   processedHtml,
+  poll,
   comments,
   isLoggedIn,
   isAuthor,
@@ -307,7 +311,16 @@ export default function PostDetailLayout({
         )}
 
         {/* 게시글 본문 컴포넌트 */}
-        <PostContent processedHtml={processedHtml} meta={post.meta || null} />
+        <PostContent
+          processedHtml={processedHtml}
+          meta={post.meta || null}
+          poll={poll}
+          isLoggedIn={isLoggedIn}
+        />
+
+        {poll && !processedHtml.includes('data-type="post-poll-placeholder"') && (
+          <PostPollCard poll={poll} isLoggedIn={isLoggedIn} />
+        )}
 
         {/* 3. 추천/비추천 버튼 및 게시글 액션 */}
         <div className="px-4 sm:px-6 py-4 border-t border-black/5 dark:border-white/10">

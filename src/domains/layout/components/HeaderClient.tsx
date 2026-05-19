@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, ArrowLeft, User, Menu } from 'lucide-react';
@@ -20,6 +20,9 @@ const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { s
 import RecentlyVisited from './RecentlyVisited';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
+
+const MOBILE_HEADER_HIDE_AFTER = 80;
+const MOBILE_HEADER_SCROLL_DELTA = 6;
 
 type HeaderClientProps = {
   onProfileClick: () => void;
@@ -135,6 +138,9 @@ export default function HeaderClient({
 }: HeaderClientProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLiveScoreOpen, setIsLiveScoreOpen] = useState(false);
+  const [isMobileHeaderVisible, setIsMobileHeaderVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const tickingRef = useRef(false);
   const { iconUrl, updateUserIconState } = useIcon();
   const router = useRouter();
   const pathname = usePathname();
@@ -183,6 +189,63 @@ export default function HeaderClient({
   const goToSearchPage = useCallback(() => {
     router.push('/search');
   }, [router]);
+
+  useEffect(() => {
+    const shouldPinHeader = isMobileMenuOpen || isLiveScoreOpen || isSearchPage;
+
+    if (shouldPinHeader) {
+      setIsMobileHeaderVisible(true);
+    }
+
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+
+    const syncDesktopState = () => {
+      if (!mediaQuery.matches) {
+        setIsMobileHeaderVisible(true);
+      }
+      lastScrollYRef.current = Math.max(window.scrollY, 0);
+    };
+
+    const updateHeaderVisibility = () => {
+      tickingRef.current = false;
+
+      if (!mediaQuery.matches || shouldPinHeader) {
+        syncDesktopState();
+        return;
+      }
+
+      const currentScrollY = Math.max(window.scrollY, 0);
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (currentScrollY <= 16) {
+        setIsMobileHeaderVisible(true);
+      } else if (scrollDelta > MOBILE_HEADER_SCROLL_DELTA && currentScrollY > MOBILE_HEADER_HIDE_AFTER) {
+        setIsMobileHeaderVisible(false);
+      } else if (scrollDelta < -MOBILE_HEADER_SCROLL_DELTA) {
+        setIsMobileHeaderVisible(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    const handleScroll = () => {
+      if (tickingRef.current) return;
+
+      tickingRef.current = true;
+      window.requestAnimationFrame(updateHeaderVisibility);
+    };
+
+    syncDesktopState();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    mediaQuery.addEventListener('change', syncDesktopState);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      mediaQuery.removeEventListener('change', syncDesktopState);
+    };
+  }, [isMobileMenuOpen, isLiveScoreOpen, isSearchPage]);
 
   // 인증 상태에 따른 렌더링 결정
   const renderNotificationBell = useMemo(() => {
@@ -306,7 +369,11 @@ export default function HeaderClient({
       </header>
 
       {/* 모바일: 헤더 + 최근방문 sticky / 데스크탑: nav + 최근방문 sticky */}
-      <div className="sticky top-0 z-50 bg-white dark:bg-[#1D1D1D]">
+      <div
+        className={`sticky top-0 z-50 bg-white dark:bg-[#1D1D1D] transition-transform duration-200 ease-out will-change-transform md:translate-y-0 ${
+          isMobileHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         {/* 모바일 헤더 - sticky 영역 안에 포함 */}
         <div className="md:hidden border-b border-black/7 dark:border-white/10">
           <div className="w-full max-w-[1360px] mx-auto relative z-[999]">

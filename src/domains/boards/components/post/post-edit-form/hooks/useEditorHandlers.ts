@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
@@ -22,7 +22,7 @@ interface UseEditorHandlersProps {
   extensionsLoaded: boolean;
 }
 
-type ModalType = 'youtube' | 'match' | 'link' | 'social' | 'team' | 'player';
+type ModalType = 'youtube' | 'match' | 'link' | 'social' | 'team' | 'player' | 'table';
 
 interface UseEditorHandlersReturn {
   showYoutubeModal: boolean;
@@ -31,12 +31,14 @@ interface UseEditorHandlersReturn {
   showSocialModal: boolean;
   showTeamModal: boolean;
   showPlayerModal: boolean;
+  showTableModal: boolean;
   setShowYoutubeModal: (show: boolean) => void;
   setShowMatchModal: (show: boolean) => void;
   setShowLinkModal: (show: boolean) => void;
   setShowSocialModal: (show: boolean) => void;
   setShowTeamModal: (show: boolean) => void;
   setShowPlayerModal: (show: boolean) => void;
+  setShowTableModal: (show: boolean) => void;
   handleToggleDropdown: (dropdown: ModalType) => void;
   handleAddImage: (url: string, caption?: string) => void;
   handleAddYoutube: (url: string, caption?: string) => Promise<void>;
@@ -46,6 +48,7 @@ interface UseEditorHandlersReturn {
   handleAddSocialEmbed: (platform: string, url: string) => void;
   handleAddTeam: (team: TeamMapping, league: LeagueInfo) => Promise<void>;
   handleAddPlayer: (player: Player, team: TeamMapping, koreanName?: string) => Promise<void>;
+  handleAddTable: (rows: number, cols: number, selectionRange?: { from: number; to: number }) => void;
 }
 
 function insertContent(editor: Editor, content: Parameters<Editor['commands']['insertContent']>[0]) {
@@ -95,6 +98,7 @@ export function useEditorHandlers({
   const showSocialModal = activeModal === 'social';
   const showTeamModal = activeModal === 'team';
   const showPlayerModal = activeModal === 'player';
+  const showTableModal = activeModal === 'table';
 
   const setShowYoutubeModal = useCallback((show: boolean) => setActiveModal(show ? 'youtube' : null), []);
   const setShowMatchModal = useCallback((show: boolean) => setActiveModal(show ? 'match' : null), []);
@@ -102,6 +106,7 @@ export function useEditorHandlers({
   const setShowSocialModal = useCallback((show: boolean) => setActiveModal(show ? 'social' : null), []);
   const setShowTeamModal = useCallback((show: boolean) => setActiveModal(show ? 'team' : null), []);
   const setShowPlayerModal = useCallback((show: boolean) => setActiveModal(show ? 'player' : null), []);
+  const setShowTableModal = useCallback((show: boolean) => setActiveModal(show ? 'table' : null), []);
 
   const handleToggleDropdown = useCallback((dropdown: ModalType) => {
     setActiveModal((prev) => (prev === dropdown ? null : dropdown));
@@ -131,7 +136,7 @@ export function useEditorHandlers({
 
       toast.success('이미지가 추가되었습니다.');
     } catch (error) {
-      console.error('이미지 추가 오류:', error);
+      console.error('?대?吏 異붽? ?ㅻ쪟:', error);
       toast.error('이미지를 추가하는 데 실패했습니다.');
     }
   }, [editor]);
@@ -166,7 +171,7 @@ export function useEditorHandlers({
       toast.success('YouTube 영상이 추가되었습니다.');
       setShowYoutubeModal(false);
     } catch (error) {
-      console.error('YouTube 추가 오류:', error);
+      console.error('YouTube 異붽? ?ㅻ쪟:', error);
       toast.error('YouTube 영상을 추가하는 데 실패했습니다.');
     }
   }, [editor, extensionsLoaded, setShowYoutubeModal]);
@@ -198,7 +203,7 @@ export function useEditorHandlers({
         editor.commands.insertContent(`
           <div class="video-wrapper" style="margin: 1rem 0;">
             <video src="${videoUrl}" controls preload="none" style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
-              브라우저가 비디오를 지원하지 않습니다.
+              釉뚮씪?곗?媛 鍮꾨뵒?ㅻ? 吏?먰븯吏 ?딆뒿?덈떎.
             </video>
           </div>
           <p></p>
@@ -207,7 +212,7 @@ export function useEditorHandlers({
 
       toast.success('동영상이 추가되었습니다.');
     } catch (error) {
-      console.error('동영상 추가 오류:', error);
+      console.error('?숈쁺??異붽? ?ㅻ쪟:', error);
       toast.error('동영상을 추가하는 데 실패했습니다.');
     }
   }, [editor]);
@@ -241,7 +246,7 @@ export function useEditorHandlers({
       setShowMatchModal(false);
       toast.success('경기 결과가 추가되었습니다.');
     } catch (error) {
-      console.error('경기 추가 오류:', error);
+      console.error('寃쎄린 異붽? ?ㅻ쪟:', error);
       toast.error('경기 결과를 추가하는 데 실패했습니다.');
     }
   }, [editor, setShowMatchModal]);
@@ -277,7 +282,7 @@ export function useEditorHandlers({
         { type: 'paragraph' },
       ]);
     } catch (error) {
-      console.error('링크 추가 오류:', error);
+      console.error('留곹겕 異붽? ?ㅻ쪟:', error);
       toast.error('링크를 추가하는 데 실패했습니다.');
     }
   }, [editor]);
@@ -307,7 +312,7 @@ export function useEditorHandlers({
       setShowSocialModal(false);
       toast.success('소셜 임베드가 추가되었습니다.');
     } catch (error) {
-      console.error('소셜 임베드 추가 오류:', error);
+      console.error('?뚯뀥 ?꾨쿋??異붽? ?ㅻ쪟:', error);
       toast.error('소셜 임베드를 추가하는 데 실패했습니다.');
     }
   }, [editor, extensionsLoaded, setShowSocialModal]);
@@ -347,7 +352,7 @@ export function useEditorHandlers({
       setShowTeamModal(false);
       toast.success('팀 카드가 추가되었습니다.');
     } catch (error) {
-      console.error('팀 카드 추가 오류:', error);
+      console.error('? 移대뱶 異붽? ?ㅻ쪟:', error);
       toast.error('팀 카드를 추가하는 데 실패했습니다.');
     }
   }, [editor, extensionsLoaded, setShowTeamModal]);
@@ -399,10 +404,70 @@ export function useEditorHandlers({
       setShowPlayerModal(false);
       toast.success('선수 카드가 추가되었습니다.');
     } catch (error) {
-      console.error('선수 카드 추가 오류:', error);
+      console.error('?좎닔 移대뱶 異붽? ?ㅻ쪟:', error);
       toast.error('선수 카드를 추가하는 데 실패했습니다.');
     }
   }, [editor, extensionsLoaded, setShowPlayerModal]);
+
+  const handleAddTable = useCallback((rows: number, cols: number, selectionRange?: { from: number; to: number }) => {
+    if (!editor || !extensionsLoaded) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    try {
+      if (!editor.schema.nodes.table) {
+        toast.error('표 기능이 로드되지 않았습니다.');
+        return;
+      }
+
+      const tableContent = [
+        {
+          type: 'table',
+          content: Array.from({ length: rows }, () => ({
+            type: 'tableRow',
+            content: Array.from({ length: cols }, () => ({
+              type: 'tableCell',
+              content: [{ type: 'paragraph' }],
+            })),
+          })),
+        },
+        { type: 'paragraph' },
+      ];
+
+      if (selectionRange) {
+        const docSize = editor.state.doc.content.size;
+        const from = Math.min(Math.max(selectionRange.from, 0), docSize);
+        const to = Math.min(Math.max(selectionRange.to, from), docSize);
+        editor.commands.setTextSelection({ from, to });
+      }
+
+      const { $from } = editor.state.selection;
+      let currentTableEnd: number | null = null;
+
+      for (let depth = $from.depth; depth > 0; depth -= 1) {
+        if ($from.node(depth).type.name === 'table') {
+          currentTableEnd = $from.after(depth);
+          break;
+        }
+      }
+
+      const success = currentTableEnd
+        ? editor.chain().focus().insertContentAt(currentTableEnd, tableContent).focus().run()
+        : insertContent(editor, tableContent);
+
+      if (!success) {
+        toast.error('표를 추가하지 못했습니다.');
+        return;
+      }
+
+      setShowTableModal(false);
+      toast.success(`${rows} x ${cols} 표가 추가되었습니다.`);
+    } catch (error) {
+      console.error('??異붽? ?ㅻ쪟:', error);
+      toast.error('표를 추가하는 데 실패했습니다.');
+    }
+  }, [editor, extensionsLoaded, setShowTableModal]);
 
   return {
     showYoutubeModal,
@@ -411,12 +476,14 @@ export function useEditorHandlers({
     showSocialModal,
     showTeamModal,
     showPlayerModal,
+    showTableModal,
     setShowYoutubeModal,
     setShowMatchModal,
     setShowLinkModal,
     setShowSocialModal,
     setShowTeamModal,
     setShowPlayerModal,
+    setShowTableModal,
     handleToggleDropdown,
     handleAddImage,
     handleAddYoutube,
@@ -426,5 +493,7 @@ export function useEditorHandlers({
     handleAddSocialEmbed,
     handleAddTeam,
     handleAddPlayer,
+    handleAddTable,
   };
 }
+

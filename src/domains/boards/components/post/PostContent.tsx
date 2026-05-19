@@ -9,6 +9,8 @@ import {
   cleanupMatchCardHover,
   registerMatchCardHoverHandler
 } from './post-content/utils';
+import PostPollCard from './PostPollCard';
+import type { PostPoll } from '../../types/poll';
 
 // 전역 호버 핸들러 등록
 registerMatchCardHoverHandler();
@@ -17,7 +19,11 @@ interface PostContentProps {
   /** 서버에서 미리 처리된 HTML */
   processedHtml: string;
   meta?: Record<string, unknown> | null;
+  poll?: PostPoll | null;
+  isLoggedIn?: boolean;
 }
+
+const POLL_PLACEHOLDER_HTML = '<div data-type="post-poll-placeholder"></div>';
 
 /**
  * 게시글 본문 컴포넌트
@@ -25,8 +31,10 @@ interface PostContentProps {
  * - 서버에서 처리된 HTML을 바로 렌더링 (깜빡임 없음)
  * - 클라이언트에서 DOM 후처리만 수행 (소셜 임베드, 차트 등)
  */
-export default function PostContent({ processedHtml, meta }: PostContentProps) {
+export default function PostContent({ processedHtml, meta, poll, isLoggedIn = false }: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const pollParts = poll ? processedHtml.split(POLL_PLACEHOLDER_HTML) : [processedHtml];
+  const hasInlinePoll = Boolean(poll && pollParts.length > 1);
 
   // DOM 후처리: 소셜 임베드, 매치카드, 예측 차트, 이미지 에러 핸들링
   useEffect(() => {
@@ -243,9 +251,21 @@ export default function PostContent({ processedHtml, meta }: PostContentProps) {
       `}</style>
       <div
         ref={contentRef}
-        className="prose prose-sm sm:prose-sm lg:prose-base max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto dark:prose-invert p-4 sm:p-6"
-        dangerouslySetInnerHTML={{ __html: processedHtml }}
-      />
+        className="post-content prose prose-sm sm:prose-sm lg:prose-base max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto dark:prose-invert p-4 sm:p-6"
+      >
+        {hasInlinePoll ? (
+          pollParts.map((part, index) => (
+            <React.Fragment key={index}>
+              {part && <div dangerouslySetInnerHTML={{ __html: part }} />}
+              {index < pollParts.length - 1 && poll && (
+                <PostPollCard poll={poll} isLoggedIn={isLoggedIn} className="not-prose my-5 p-0" />
+              )}
+            </React.Fragment>
+          ))
+        ) : (
+          <div dangerouslySetInnerHTML={{ __html: processedHtml }} />
+        )}
+      </div>
     </>
   );
 }

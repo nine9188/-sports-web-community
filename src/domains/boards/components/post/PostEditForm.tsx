@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu, useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
+import { NodeSelection, Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -24,10 +24,14 @@ import LinkForm from '@/domains/boards/components/form/LinkForm';
 import YoutubeForm from '@/domains/boards/components/form/YoutubeForm';
 import MatchResultForm from '@/domains/boards/components/form/MatchResultForm';
 import SocialEmbedForm from '@/domains/boards/components/form/SocialEmbedForm';
+import TablePickerForm from '@/domains/boards/components/form/TablePickerForm';
+import PollForm from '@/domains/boards/components/form/PollForm';
 import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPickerForm';
-import { Bold, Heading2, Heading3, Italic, Link as LinkIcon } from 'lucide-react';
+import type { PostPollDraft } from '@/domains/boards/types/poll';
+import { PollBlockExtension } from '@/shared/components/editor/tiptap/PollBlockExtension';
+import { Bold, Heading2, Heading3, Italic, Link as LinkIcon, Trash2 } from 'lucide-react';
 
-// 핫딜 옵션
+// Hotdeal options
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
 const SHIPPING_SELECT_OPTIONS = SHIPPING_OPTIONS.map(option => ({ value: option, label: option }));
 const persistentSelectionHighlightKey = new PluginKey('persistentSelectionHighlight');
@@ -40,6 +44,10 @@ const SOCIAL_POPOVER_WIDTH = 360;
 const MATCH_POPOVER_WIDTH = 430;
 const TEAM_POPOVER_WIDTH = 360;
 const PLAYER_POPOVER_WIDTH = 390;
+const TABLE_POPOVER_WIDTH = 202;
+const POLL_POPOVER_WIDTH = 360;
+const TABLE_MENU_WIDTH = 274;
+const TABLE_MENU_HEIGHT = 42;
 const EDITOR_EMPTY_PLACEHOLDER = '자유롭게 팬들과 소통하세요!\n이미지, 링크, 경기, 팀/선수를 본문에 추가할 수 있습니다.\n도박, 불법 홍보 관련 내용은 작성할 수 없습니다.\n욕설, 도배, 허위 정보는 삭제될 수 있습니다.';
 type SelectionPositionAnchor = {
   from: number;
@@ -52,6 +60,69 @@ type LocalPopoverPosition = {
   left: number;
   width: number;
 };
+type PollBlockMatch = {
+  pos: number;
+  nodeSize: number;
+  draft: PostPollDraft;
+};
+
+function findPollBlock(editor: Editor): PollBlockMatch | null {
+  let match: PollBlockMatch | null = null;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'pollBlock') return true;
+
+    match = {
+      pos,
+      nodeSize: node.nodeSize,
+      draft: {
+        question: String(node.attrs.question || ''),
+        options: Array.isArray(node.attrs.options) ? node.attrs.options.filter((option): option is string => typeof option === 'string') : [],
+      },
+    };
+    return false;
+  });
+
+  return match;
+}
+
+function isPollBlockSelected(editor: Editor) {
+  const { selection } = editor.state;
+  return selection instanceof NodeSelection && selection.node.type.name === 'pollBlock';
+}
+
+function findCurrentTableEnd(editor: Editor) {
+  const { $from } = editor.state.selection;
+
+  for (let depth = $from.depth; depth > 0; depth -= 1) {
+    if ($from.node(depth).type.name === 'table') {
+      return $from.after(depth);
+    }
+  }
+
+  return null;
+}
+
+function findNearestTableCellTextPosition(editor: Editor, nearPosition: number) {
+  let nearestPosition: number | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return true;
+
+    const textPosition = Math.min(pos + 2, pos + node.nodeSize - 1);
+    const distance = Math.abs(pos - nearPosition);
+
+    if (distance < nearestDistance) {
+      nearestPosition = textPosition;
+      nearestDistance = distance;
+    }
+
+    return false;
+  });
+
+  return nearestPosition;
+}
 
 function createPersistentSelectionDecorations(state: EditorState) {
   const { selection } = state;
@@ -140,8 +211,8 @@ const EditorEmptyPlaceholder = Extension.create({
   },
 });
 
-// 모듈 레벨에서 확장 preload 시작 (컴포넌트 마운트 전에 로딩 시작)
-// 이렇게 하면 PostEditForm이 dynamic import될 때 확장들도 병렬로 로딩됨
+// 紐⑤뱢 ?덈꺼?먯꽌 ?뺤옣 preload ?쒖옉 (而댄룷?뚰듃 留덉슫???꾩뿉 濡쒕뵫 ?쒖옉)
+// ?대젃寃??섎㈃ PostEditForm??dynamic import?????뺤옣?ㅻ룄 蹂묐젹濡?濡쒕뵫??
 function loadAdditionalEditorExtensions() {
   return Promise.all([
   import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
@@ -149,9 +220,13 @@ function loadAdditionalEditorExtensions() {
   import('@/shared/components/editor/tiptap/MatchCardExtension').then(mod => mod.MatchCardExtension),
   import('@/shared/components/editor/tiptap/extensions/social-embeds'),
   import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
-  import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension)
+  import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension),
+  import('@tiptap/extension-table').then(mod => mod.default),
+  import('@tiptap/extension-table-row').then(mod => mod.default),
+  import('@tiptap/extension-table-cell').then(mod => mod.default),
+  import('@tiptap/extension-table-header').then(mod => mod.default)
 ]).catch(error => {
-  console.error('확장 preload 실패:', error);
+  console.error('?뺤옣 preload ?ㅽ뙣:', error);
   return null;
 });
 }
@@ -192,8 +267,13 @@ export default function PostEditForm({
   const [toolbarMatchPopoverPosition, setToolbarMatchPopoverPosition] = useState<LocalPopoverPosition | null>(null);
   const [toolbarTeamPopoverPosition, setToolbarTeamPopoverPosition] = useState<LocalPopoverPosition | null>(null);
   const [toolbarPlayerPopoverPosition, setToolbarPlayerPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarTablePopoverPosition, setToolbarTablePopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [toolbarPollPopoverPosition, setToolbarPollPopoverPosition] = useState<LocalPopoverPosition | null>(null);
+  const [showPollModal, setShowPollModal] = useState(false);
+  const [pollDraft, setPollDraft] = useState<PostPollDraft | null>(null);
   const [selectionLinkPopoverPosition, setSelectionLinkPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   const [selectionMenuPosition, setSelectionMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [tableMenuPosition, setTableMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [editorViewportElement, setEditorViewportElement] = useState<HTMLDivElement | null>(null);
   const editorShellRef = useRef<HTMLDivElement>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -201,27 +281,29 @@ export default function PostEditForm({
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const linkPopoverAnchorRef = useRef<SelectionPositionAnchor | null>(null);
+  const tableInsertionRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const pollDraftRef = useRef<PostPollDraft | null>(null);
 
-  // 최신 상태를 ref로 관리 (useCallback 의존성 최소화)
+  // 理쒖떊 ?곹깭瑜?ref濡?愿由?(useCallback ?섏〈??理쒖냼??
   const formStateRef = useRef({ title, content, categoryId: externalCategoryId || '' });
   const hotdealStateRef = useRef({ dealUrl: '', store: '', productName: '', price: '', originalPrice: '', shipping: '' });
 
-  // initialContent를 파싱하여 editor 초기화용 객체로 변환
+  // initialContent瑜??뚯떛?섏뿬 editor 珥덇린?붿슜 媛앹껜濡?蹂??
   const parsedInitialContent = useMemo(() => {
     if (!initialContent) return '';
     try {
-      // JSON string이면 파싱
+      // JSON string?대㈃ ?뚯떛
       const parsed = JSON.parse(initialContent);
       return parsed;
     } catch {
-      // 파싱 실패하면 HTML string으로 간주
+      // ?뚯떛 ?ㅽ뙣?섎㈃ HTML string?쇰줈 媛꾩＜
       return initialContent;
     }
   }, [initialContent]);
-  // 내부 상태로 categoryId 관리
+  // ?대? ?곹깭濡?categoryId 愿由?
   const [categoryId, setCategoryIdInternal] = useState(externalCategoryId || '');
 
-  // 핫딜 관련 state (수정 모드일 경우 초기값 설정)
+  // ?ル뵜 愿??state (?섏젙 紐⑤뱶??寃쎌슦 珥덇린媛??ㅼ젙)
   const [dealUrl, setDealUrl] = useState(initialDealInfo?.deal_url || '');
   const [store, setStore] = useState(initialDealInfo?.store || '');
   const [productName, setProductName] = useState(initialDealInfo?.product_name || '');
@@ -229,7 +311,7 @@ export default function PostEditForm({
   const [originalPrice, setOriginalPrice] = useState(initialDealInfo?.original_price ? String(initialDealInfo.original_price) : '');
   const [shipping, setShipping] = useState(initialDealInfo?.shipping || '');
 
-  // ref 동기화 (타이핑할 때 useCallback이 재생성되지 않도록)
+  // ref ?숆린??(??댄븨????useCallback???ъ깮?깅릺吏 ?딅룄濡?
   useEffect(() => {
     formStateRef.current = { title, content, categoryId };
   }, [title, content, categoryId]);
@@ -238,11 +320,16 @@ export default function PostEditForm({
     hotdealStateRef.current = { dealUrl, store, productName, price, originalPrice, shipping };
   }, [dealUrl, store, productName, price, originalPrice, shipping]);
 
-  // 기본 확장 (변경되지 않음)
+  useEffect(() => {
+    pollDraftRef.current = pollDraft;
+  }, [pollDraft]);
+
+  // 湲곕낯 ?뺤옣 (蹂寃쎈릺吏 ?딆쓬)
   const baseExtensions = useMemo(() => [
     StarterKit,
     PersistentSelectionHighlight,
     EditorEmptyPlaceholder,
+    PollBlockExtension,
     Image.configure({
       inline: false,
       allowBase64: false,
@@ -262,20 +349,20 @@ export default function PostEditForm({
   const [extensionsLoaded, setExtensionsLoaded] = useState(false);
   const loadingExtensionsRef = useRef<Promise<boolean> | null>(null);
 
-  // 전체 확장 목록 (기본 + 추가)
+  // ?꾩껜 ?뺤옣 紐⑸줉 (湲곕낯 + 異붽?)
   const loadedExtensions = useMemo(() => [
     ...baseExtensions,
     ...additionalExtensions
   ], [baseExtensions, additionalExtensions]);
 
-  // 초기 로딩 시 추가 확장 로드 (모듈 레벨에서 이미 preload 시작됨)
+  // 珥덇린 濡쒕뵫 ??異붽? ?뺤옣 濡쒕뱶 (紐⑤뱢 ?덈꺼?먯꽌 ?대? preload ?쒖옉??
   useEffect(() => {
-    // 이미 로드되었으면 중복 실행 방지
+    // ?대? 濡쒕뱶?섏뿀?쇰㈃ 以묐났 ?ㅽ뻾 諛⑹?
     if (extensionsLoaded) return;
 
     const loadAdditionalExtensions = async () => {
       try {
-        // 모듈 레벨에서 시작된 preload Promise 사용 (워터폴 방지)
+        // 紐⑤뱢 ?덈꺼?먯꽌 ?쒖옉??preload Promise ?ъ슜 (?뚰꽣??諛⑹?)
         const result = await loadAdditionalEditorExtensions();
 
         if (!result) {
@@ -292,7 +379,7 @@ export default function PostEditForm({
           PlayerCardExt
         ] = result;
 
-        // 추가 확장 설정 (중복 방지를 위해 prev 사용 안 함)
+        // 異붽? ?뺤옣 ?ㅼ젙 (以묐났 諛⑹?瑜??꾪빐 prev ?ъ슜 ????
         setAdditionalExtensions([
           YoutubeExtension,
           VideoExtension,
@@ -304,12 +391,12 @@ export default function PostEditForm({
         ]);
         setExtensionsLoaded(true);
       } catch (error) {
-        console.error('추가 확장 로딩 실패:', error);
+        console.error('異붽? ?뺤옣 濡쒕뵫 ?ㅽ뙣:', error);
         setExtensionsLoaded(true);
       }
     };
 
-    // 고급 확장은 초기 진입에서 당겨오지 않고, 관련 도구를 처음 열 때만 로드한다.
+    // 怨좉툒 ?뺤옣? 珥덇린 吏꾩엯?먯꽌 ?밴꺼?ㅼ? ?딄퀬, 愿???꾧뎄瑜?泥섏쓬 ???뚮쭔 濡쒕뱶?쒕떎.
     void loadAdditionalExtensions;
   }, [extensionsLoaded]);
 
@@ -330,7 +417,11 @@ export default function PostEditForm({
           MatchCardExt,
           SocialEmbedsModule,
           TeamCardExt,
-          PlayerCardExt
+          PlayerCardExt,
+          TableExtension,
+          TableRow,
+          TableCell,
+          TableHeader
         ] = result;
 
         setAdditionalExtensions([
@@ -340,13 +431,20 @@ export default function PostEditForm({
           SocialEmbedsModule.SocialEmbedExtension,
           SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
           TeamCardExt,
-          PlayerCardExt
+          PlayerCardExt,
+          TableExtension.configure({
+            resizable: false,
+            allowTableNodeSelection: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell
         ]);
         setExtensionsLoaded(true);
         return true;
       })
       .catch((error) => {
-        console.error('추가 에디터 확장 로드 실패:', error);
+        console.error('異붽? ?먮뵒???뺤옣 濡쒕뱶 ?ㅽ뙣:', error);
         setExtensionsLoaded(true);
         return false;
       })
@@ -357,7 +455,7 @@ export default function PostEditForm({
     return loadingExtensionsRef.current;
   }, [extensionsLoaded]);
 
-  // 핫딜 URL 입력 시 쇼핑몰 자동 감지
+  // ?ル뵜 URL ?낅젰 ???쇳븨紐??먮룞 媛먯?
   useEffect(() => {
     if (dealUrl && dealUrl.trim()) {
       const detectedStore = detectStoreFromUrl(dealUrl);
@@ -365,24 +463,24 @@ export default function PostEditForm({
     }
   }, [dealUrl]);
 
-  // 핫딜 게시판/게시글 체크
+  // ?ル뵜 寃뚯떆??寃뚯떆湲 泥댄겕
   const selectedBoard = useMemo(() => {
-    // 수정 모드에서는 boardId 사용
+    // ?섏젙 紐⑤뱶?먯꽌??boardId ?ъ슜
     const boardIdToFind = isCreateMode ? categoryId : (boardId || categoryId);
     return allBoardsFlat.find(b => b.id === boardIdToFind);
   }, [allBoardsFlat, categoryId, boardId, isCreateMode]);
 
   const isHotdeal = useMemo(() => {
-    // 수정 모드에서 initialDealInfo가 있으면 핫딜 게시글
+    // ?섏젙 紐⑤뱶?먯꽌 initialDealInfo媛 ?덉쑝硫??ル뵜 寃뚯떆湲
     if (!isCreateMode && initialDealInfo) {
       return true;
     }
-    // 생성 모드에서는 게시판 slug로 판단
+    // ?앹꽦 紐⑤뱶?먯꽌??寃뚯떆??slug濡??먮떒
     if (!selectedBoard?.slug) return false;
     return isHotdealBoard(selectedBoard.slug);
   }, [selectedBoard, isCreateMode, initialDealInfo]);
 
-  // 핫딜 게시판/게시글에서 제목 자동 생성 (생성/수정 모두)
+  // ?ル뵜 寃뚯떆??寃뚯떆湲?먯꽌 ?쒕ぉ ?먮룞 ?앹꽦 (?앹꽦/?섏젙 紐⑤몢)
   useEffect(() => {
     if (isHotdeal && productName && store && price && shipping) {
       const priceNum = parseFloat(price);
@@ -396,13 +494,29 @@ export default function PostEditForm({
 
   const router = useRouter();
   
-  // 에디터 초기화 - 기본 확장으로 먼저 생성 후 추가 확장 로드 시 재생성
+  // ?먮뵒??珥덇린??- 湲곕낯 ?뺤옣?쇰줈 癒쇱? ?앹꽦 ??異붽? ?뺤옣 濡쒕뱶 ???ъ깮??
   const editor = useEditor({
     extensions: loadedExtensions,
     content: parsedInitialContent,
     onUpdate: ({ editor }) => {
       const jsonContent = JSON.stringify(editor.getJSON());
       setContent(jsonContent);
+
+      const pollBlock = findPollBlock(editor);
+      const currentPoll = pollDraftRef.current;
+      if (!pollBlock && currentPoll) {
+        setPollDraft(null);
+      } else if (pollBlock) {
+        const nextPoll = pollBlock.draft;
+        const changed = !currentPoll
+          || currentPoll.question !== nextPoll.question
+          || currentPoll.options.length !== nextPoll.options.length
+          || currentPoll.options.some((option, index) => option !== nextPoll.options[index]);
+
+        if (changed) {
+          setPollDraft(nextPoll);
+        }
+      }
     },
     editorProps: {
       attributes: {
@@ -410,9 +524,9 @@ export default function PostEditForm({
       },
     },
     immediatelyRender: false
-  }, [loadedExtensions]); // loadedExtensions 변경 시 에디터 재생성
+  }, [loadedExtensions]); // loadedExtensions 蹂寃????먮뵒???ъ깮??
 
-  // 에디터 핸들러 훅
+  // ?먮뵒???몃뱾????
   const {
     showYoutubeModal,
     showMatchModal,
@@ -420,12 +534,14 @@ export default function PostEditForm({
     showSocialModal,
     showTeamModal,
     showPlayerModal,
+    showTableModal,
     setShowLinkModal,
     setShowYoutubeModal,
     setShowMatchModal,
     setShowSocialModal,
     setShowTeamModal,
     setShowPlayerModal,
+    setShowTableModal,
     handleToggleDropdown,
     handleAddImage,
     handleAddYoutube,
@@ -434,14 +550,40 @@ export default function PostEditForm({
     handleAddLink,
     handleAddSocialEmbed,
     handleAddTeam,
-    handleAddPlayer
+    handleAddPlayer,
+    handleAddTable
   } = useEditorHandlers({
     editor,
     extensionsLoaded
   });
 
-  const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player') => {
-    if (dropdown === 'youtube' || dropdown === 'match' || dropdown === 'social' || dropdown === 'team' || dropdown === 'player') {
+  useEffect(() => {
+    if (!editor || pollDraftRef.current) return;
+
+    const existingPoll = findPollBlock(editor);
+    if (existingPoll) {
+      setPollDraft(existingPoll.draft);
+    }
+  }, [editor]);
+
+  const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player' | 'table' | 'poll') => {
+    if (dropdown === 'poll') {
+      setLinkPopoverSource(null);
+      setShowPollModal((value) => !value);
+      return;
+    }
+    setShowPollModal(false);
+    setToolbarPollPopoverPosition(null);
+    if (dropdown === 'youtube' || dropdown === 'match' || dropdown === 'social' || dropdown === 'team' || dropdown === 'player' || dropdown === 'table') {
+      if (dropdown === 'table' && editor) {
+        const { from, to } = editor.state.selection;
+        tableInsertionRangeRef.current = { from, to };
+      }
+      if (dropdown === 'table' && !extensionsLoaded) {
+        setLinkPopoverSource(null);
+        void ensureAdditionalExtensions().then(() => handleToggleDropdown('table'));
+        return;
+      }
       void ensureAdditionalExtensions();
     }
     if (dropdown === 'link') {
@@ -454,7 +596,7 @@ export default function PostEditForm({
     }
     setLinkPopoverSource(null);
     handleToggleDropdown(dropdown);
-  }, [editor, ensureAdditionalExtensions, handleToggleDropdown, setShowLinkModal]);
+  }, [editor, ensureAdditionalExtensions, extensionsLoaded, handleToggleDropdown, setShowLinkModal]);
 
   const linkState = useMemo(() => {
     if (!editor) {
@@ -506,6 +648,95 @@ export default function PostEditForm({
     setShowPlayerModal(false);
   }, [setShowPlayerModal]);
 
+  const closeTablePopover = useCallback(() => {
+    setToolbarTablePopoverPosition(null);
+    setShowTableModal(false);
+  }, [setShowTableModal]);
+
+  const closePollPopover = useCallback(() => {
+    setToolbarPollPopoverPosition(null);
+    setShowPollModal(false);
+  }, []);
+
+  const handleSavePollDraft = useCallback((nextPoll: PostPollDraft) => {
+    if (!editor) {
+      toast.error('에디터가 준비되지 않았습니다.');
+      return;
+    }
+
+    const existingPoll = findPollBlock(editor);
+    const attrs = {
+      question: nextPoll.question,
+      options: nextPoll.options,
+    };
+
+    if (existingPoll) {
+      editor
+        .chain()
+        .focus()
+        .command(({ tr }) => {
+          tr.setNodeMarkup(existingPoll.pos, undefined, attrs);
+          return true;
+        })
+        .run();
+    } else {
+      const pollContent = [
+        { type: 'pollBlock', attrs },
+        { type: 'paragraph' },
+      ];
+      const tableEnd = findCurrentTableEnd(editor);
+
+      if (tableEnd !== null) {
+        editor.chain().focus().insertContentAt(tableEnd, pollContent).run();
+      } else {
+        editor.chain().focus().insertContent(pollContent).run();
+      }
+    }
+
+    setPollDraft(nextPoll);
+    toast.success(existingPoll || pollDraft ? '투표가 수정되었습니다.' : '투표가 추가되었습니다.');
+  }, [editor, pollDraft]);
+
+  const handleRemovePollDraft = useCallback(() => {
+    if (editor) {
+      const existingPoll = findPollBlock(editor);
+      if (existingPoll) {
+        editor
+          .chain()
+          .focus()
+          .deleteRange({ from: existingPoll.pos, to: existingPoll.pos + existingPoll.nodeSize })
+          .run();
+      }
+    }
+
+    setPollDraft(null);
+    toast.success('투표가 삭제되었습니다.');
+  }, [editor]);
+
+  const handleOpenSelectedPollEditor = useCallback(() => {
+    if (!editor) return;
+
+    const existingPoll = findPollBlock(editor);
+    if (existingPoll) {
+      setPollDraft(existingPoll.draft);
+    }
+
+    const shell = editorShellRef.current;
+    const selectionRect = editor.view.coordsAtPos(editor.state.selection.from);
+    const boundary = shell?.getBoundingClientRect();
+    const padding = 8;
+    const width = Math.min(POLL_POPOVER_WIDTH, Math.max(120, (boundary?.width ?? POLL_POPOVER_WIDTH) - padding * 2));
+
+    setToolbarPollPopoverPosition({
+      top: boundary ? selectionRect.bottom - boundary.top + 6 : 0,
+      left: boundary
+        ? Math.min(Math.max(selectionRect.left - boundary.left, padding), Math.max(padding, boundary.width - width - padding))
+        : 12,
+      width,
+    });
+    setShowPollModal(true);
+  }, [editor]);
+
   const handleImageToolbarClick = useCallback(() => {
     if (isImageUploading) return;
 
@@ -515,12 +746,16 @@ export default function PostEditForm({
     closeMatchPopover();
     closeTeamPopover();
     closePlayerPopover();
+    closeTablePopover();
+    closePollPopover();
     imageFileInputRef.current?.click();
   }, [
     closeLinkPopover,
     closeMatchPopover,
     closePlayerPopover,
+    closePollPopover,
     closeSocialPopover,
+    closeTablePopover,
     closeTeamPopover,
     closeYoutubePopover,
     isImageUploading,
@@ -532,7 +767,7 @@ export default function PostEditForm({
 
     if (!file) return;
     if (!editor) {
-      toast.error('?먮뵒?곌? 以鍮꾨릺吏 ?딆븯?듬땲??');
+      toast.error('에디터가 준비되지 않았습니다.');
       return;
     }
 
@@ -558,13 +793,17 @@ export default function PostEditForm({
     closeMatchPopover();
     closeTeamPopover();
     closePlayerPopover();
+    closeTablePopover();
+    closePollPopover();
     void ensureAdditionalExtensions();
     videoFileInputRef.current?.click();
   }, [
     closeLinkPopover,
     closeMatchPopover,
     closePlayerPopover,
+    closePollPopover,
     closeSocialPopover,
+    closeTablePopover,
     closeTeamPopover,
     closeYoutubePopover,
     ensureAdditionalExtensions,
@@ -698,6 +937,50 @@ export default function PostEditForm({
     });
   }, [calculateSelectionPopoverPosition]);
 
+  const calculateTableMenuPosition = useCallback(() => {
+    if (!editor || !editorViewportElement || !editor.isActive('table')) return null;
+
+    const boundary = editorViewportElement.getBoundingClientRect();
+    const padding = 8;
+    const width = Math.min(TABLE_MENU_WIDTH, Math.max(160, editorViewportElement.clientWidth - padding * 2));
+    const domAtPos = editor.view.domAtPos(editor.state.selection.from);
+    const sourceNode = domAtPos.node.nodeType === Node.ELEMENT_NODE
+      ? domAtPos.node as Element
+      : domAtPos.node.parentElement;
+    const tableElement = sourceNode?.closest('table');
+
+    if (!tableElement) return null;
+
+    const rect = tableElement.getBoundingClientRect();
+    const contentWidth = editorViewportElement.clientWidth;
+    const preferredLeft = rect.left - boundary.left;
+    const maxLeft = contentWidth - width - padding;
+    const left = Math.min(Math.max(preferredLeft, padding), Math.max(padding, maxLeft));
+    const aboveTop = rect.top - boundary.top - TABLE_MENU_HEIGHT - padding;
+    const belowTop = rect.bottom - boundary.top + padding;
+    const maxTop = editorViewportElement.clientHeight - TABLE_MENU_HEIGHT - padding;
+    const top = aboveTop >= padding
+      ? aboveTop
+      : Math.min(Math.max(belowTop, padding), Math.max(padding, maxTop));
+
+    return { top, left };
+  }, [editor, editorViewportElement]);
+
+  const updateTableMenuAfterCommand = useCallback((nearPosition: number, restoreSelection = false) => {
+    window.requestAnimationFrame(() => {
+      if (!editor) return;
+
+      if (restoreSelection && !editor.isActive('table')) {
+        const nextPosition = findNearestTableCellTextPosition(editor, nearPosition);
+        if (nextPosition !== null) {
+          editor.commands.setTextSelection(nextPosition);
+        }
+      }
+
+      setTableMenuPosition(calculateTableMenuPosition());
+    });
+  }, [calculateTableMenuPosition, editor]);
+
   const openLinkPopover = useCallback(() => {
     if (editor?.isActive('link')) {
       editor.chain().focus().extendMarkRange('link').run();
@@ -768,6 +1051,18 @@ export default function PostEditForm({
 
   const handleToolbarPlayerButtonRect = useCallback((rect: DOMRect) => {
     setToolbarPlayerPopoverPosition(calculateToolbarPopoverPosition(rect, PLAYER_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition]);
+
+  const handleToolbarTableButtonRect = useCallback((rect: DOMRect) => {
+    if (editor) {
+      const { from, to } = editor.state.selection;
+      tableInsertionRangeRef.current = { from, to };
+    }
+    setToolbarTablePopoverPosition(calculateToolbarPopoverPosition(rect, TABLE_POPOVER_WIDTH));
+  }, [calculateToolbarPopoverPosition, editor]);
+
+  const handleToolbarPollButtonRect = useCallback((rect: DOMRect) => {
+    setToolbarPollPopoverPosition(calculateToolbarPopoverPosition(rect, POLL_POPOVER_WIDTH));
   }, [calculateToolbarPopoverPosition]);
 
   useEffect(() => {
@@ -848,6 +1143,20 @@ export default function PostEditForm({
     const updateSelectionMenuPosition = () => {
       if (showLinkModal) {
         setSelectionMenuPosition(null);
+        setTableMenuPosition(null);
+        return;
+      }
+
+      if (editor.isActive('table')) {
+        setSelectionMenuPosition(null);
+        setTableMenuPosition(calculateTableMenuPosition());
+        return;
+      }
+
+      setTableMenuPosition(null);
+
+      if (isPollBlockSelected(editor)) {
+        setSelectionMenuPosition(null);
         return;
       }
 
@@ -861,9 +1170,13 @@ export default function PostEditForm({
 
     const hideOnPageScroll = () => {
       setSelectionMenuPosition(null);
+      setTableMenuPosition(null);
       closeLinkPopover();
     };
-    const hideSelectionMenu = () => setSelectionMenuPosition(null);
+    const hideSelectionMenu = () => {
+      setSelectionMenuPosition(null);
+      setTableMenuPosition(null);
+    };
 
     editor.on('selectionUpdate', updateSelectionMenuPosition);
     editor.on('focus', updateSelectionMenuPosition);
@@ -882,7 +1195,7 @@ export default function PostEditForm({
       window.removeEventListener('resize', updateSelectionMenuPosition);
       window.removeEventListener('scroll', hideOnPageScroll);
     };
-  }, [calculateSelectionMenuPosition, closeLinkPopover, editor, editorViewportElement, showLinkModal]);
+  }, [calculateSelectionMenuPosition, calculateTableMenuPosition, closeLinkPopover, editor, editorViewportElement, showLinkModal]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -898,7 +1211,7 @@ export default function PostEditForm({
   }, [editor, openLinkPopover]);
 
   
-  // 카테고리 변경 핸들러
+  // 移댄뀒怨좊━ 蹂寃??몃뱾??
   const handleCategoryChange = useCallback((id: string) => {
     setCategoryIdInternal(id);
     if (setCategoryId && typeof setCategoryId === 'function') {
@@ -906,7 +1219,7 @@ export default function PostEditForm({
     }
   }, [setCategoryId]);
 
-  // 핫딜 정보 생성 헬퍼 (refs 사용으로 의존성 최소화)
+  // ?ル뵜 ?뺣낫 ?앹꽦 ?ы띁 (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const buildDealInfo = useCallback((forUpdate = false): DealInfo => {
     const { store, productName, price, originalPrice, shipping, dealUrl } = hotdealStateRef.current;
     return {
@@ -922,12 +1235,12 @@ export default function PostEditForm({
     };
   }, [initialDealInfo]);
 
-  // 폼 유효성 검사 (refs 사용으로 의존성 최소화)
+  // ???좏슚??寃??(refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const validateForm = useCallback((): boolean => {
     const { title, content, categoryId } = formStateRef.current;
     const { dealUrl, store, productName, price, shipping } = hotdealStateRef.current;
 
-    // 제목 검증 (핫딜 게시판은 제목 자동 생성)
+    // ?쒕ぉ 寃利?(?ル뵜 寃뚯떆?먯? ?쒕ぉ ?먮룞 ?앹꽦)
     if (!title.trim() && !(isCreateMode && isHotdeal)) {
       toast.error('제목을 입력해주세요.');
       return false;
@@ -938,14 +1251,14 @@ export default function PostEditForm({
       return false;
     }
 
-    // 생성 모드 전용 검증
+    // ?앹꽦 紐⑤뱶 ?꾩슜 寃利?
     if (isCreateMode) {
       if (!categoryId) {
         toast.error('게시판을 선택해주세요.');
         return false;
       }
 
-      // 최상위 게시판에 하위가 있으면 하위 선택 필수
+      // 理쒖긽??寃뚯떆?먯뿉 ?섏쐞媛 ?덉쑝硫??섏쐞 ?좏깮 ?꾩닔
       const board = allBoardsFlat.find(b => b.id === categoryId);
       if (board && board.parent_id === null) {
         const hasChildren = allBoardsFlat.some(b => b.parent_id === categoryId);
@@ -956,7 +1269,7 @@ export default function PostEditForm({
       }
     }
 
-    // 핫딜 게시글 검증
+    // ?ル뵜 寃뚯떆湲 寃利?
     if (isHotdeal) {
       if (!dealUrl.trim()) {
         toast.error('상품 링크를 입력해주세요.');
@@ -983,9 +1296,9 @@ export default function PostEditForm({
     return true;
   }, [isCreateMode, isHotdeal, allBoardsFlat]);
 
-  // 에러 응답 처리 헬퍼
+  // ?먮윭 ?묐떟 泥섎━ ?ы띁
   const handleErrorResponse = useCallback((errorMsg: string, defaultMessage: string) => {
-    // 로그인 필요 에러인 경우 로그인 페이지로 이동
+    // 濡쒓렇???꾩슂 ?먮윭??寃쎌슦 濡쒓렇???섏씠吏濡??대룞
     if (errorMsg.includes('로그인') || errorMsg.includes('인증')) {
       toast.error('로그인이 필요합니다.');
       router.push('/signin');
@@ -996,28 +1309,33 @@ export default function PostEditForm({
     setIsSubmitting(false);
   }, [router]);
 
-  // 게시글 생성 처리 (refs 사용으로 의존성 최소화)
+  // 寃뚯떆湲 ?앹꽦 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const handleCreatePost = useCallback(async () => {
     const { title, content, categoryId } = formStateRef.current;
+    const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
 
     const formData = new FormData();
     formData.append('title', title.trim());
-    formData.append('content', content);
+    formData.append('content', currentContent);
     formData.append('boardId', categoryId);
 
     if (isHotdeal) {
       formData.append('deal_info', JSON.stringify(buildDealInfo(false)));
     }
 
+    if (pollDraft) {
+      formData.append('poll', JSON.stringify(pollDraft));
+    }
+
     const result = await createPost(formData);
 
     if (!result.success) {
-      handleErrorResponse(result.error || '', '게시글 작성에 실패했습니다.');
+      handleErrorResponse(result.error || '', '寃뚯떆湲 ?묒꽦???ㅽ뙣?덉뒿?덈떎.');
       return;
     }
 
     if (!result.post) {
-      throw new Error('게시글 데이터를 받아오지 못했습니다.');
+      throw new Error('寃뚯떆湲 ?곗씠?곕? 諛쏆븘?ㅼ? 紐삵뻽?듬땲??');
     }
 
     const { post } = result;
@@ -1025,33 +1343,34 @@ export default function PostEditForm({
 
     toast.success('게시글이 작성되었습니다.');
     router.push(`/boards/${boardSlug}/${post.post_number}`);
-  }, [isHotdeal, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
+  }, [editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
 
-  // 게시글 수정 처리 (refs 사용으로 의존성 최소화)
+  // 寃뚯떆湲 ?섏젙 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const handleUpdatePost = useCallback(async () => {
     if (!postId) {
-      throw new Error('게시글 ID가 제공되지 않았습니다.');
+      throw new Error('寃뚯떆湲 ID媛 ?쒓났?섏? ?딆븯?듬땲??');
     }
 
     const { title, content } = formStateRef.current;
+    const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
     const dealInfoToUpdate = isHotdeal ? buildDealInfo(true) : null;
 
-    const result = await updatePost(postId, title.trim(), content, dealInfoToUpdate);
+    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate);
 
     if (!result.success) {
-      handleErrorResponse(result.error || '', '게시글 수정에 실패했습니다.');
+      handleErrorResponse(result.error || '', '寃뚯떆湲 ?섏젙???ㅽ뙣?덉뒿?덈떎.');
       return;
     }
 
     if (!result.boardSlug || !result.postNumber) {
-      throw new Error('게시글 정보를 받아오지 못했습니다.');
+      throw new Error('寃뚯떆湲 ?뺣낫瑜?諛쏆븘?ㅼ? 紐삵뻽?듬땲??');
     }
 
     toast.success('게시글이 수정되었습니다.');
     router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-  }, [postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
+  }, [editor, postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
 
-  // 폼 제출 핸들러
+  // ???쒖텧 ?몃뱾??
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -1079,14 +1398,13 @@ export default function PostEditForm({
 
   return (
     <Container className="mt-0">
-      {/* 헤더 */}
       <ContainerHeader>
         <ContainerTitle>
           {isCreateMode ? '글쓰기' : '글 수정'} - {boardName}
         </ContainerTitle>
       </ContainerHeader>
 
-      {/* 컨텐츠 */}
+      {/* 而⑦뀗痢?*/}
       <ContainerContent className="pt-4">
         <form id="post-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {error && (
@@ -1095,7 +1413,7 @@ export default function PostEditForm({
             </div>
           )}
 
-          {/* 게시판 선택 필드 (생성 모드에서만 표시) */}
+          {/* 寃뚯떆???좏깮 ?꾨뱶 (?앹꽦 紐⑤뱶?먯꽌留??쒖떆) */}
           {isCreateMode && (
             <div className="space-y-2">
               <label htmlFor="categoryId" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
@@ -1111,7 +1429,7 @@ export default function PostEditForm({
           )}
 
 
-          {/* 제목 필드 - 핫딜 게시판이 아닐 때만 표시 (핫딜은 제목 자동 생성) */}
+          {/* ?쒕ぉ ?꾨뱶 - ?ル뵜 寃뚯떆?먯씠 ?꾨땺 ?뚮쭔 ?쒖떆 (?ル뵜? ?쒕ぉ ?먮룞 ?앹꽦) */}
           {!isHotdeal && (
             <div className="space-y-2">
               <label htmlFor="title" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
@@ -1128,20 +1446,20 @@ export default function PostEditForm({
             </div>
           )}
 
-          {/* 핫딜 정보 필드 - 핫딜 게시글일 때 표시 (생성/수정 모두) */}
+          {/* ?ル뵜 ?뺣낫 ?꾨뱶 - ?ル뵜 寃뚯떆湲?????쒖떆 (?앹꽦/?섏젙 紐⑤몢) */}
           {isHotdeal && (
             <div className="space-y-4 border-t border-black/7 dark:border-white/10 pt-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
-                  핫딜 정보
+                  ?ル뵜 ?뺣낫
                 </h3>
               </div>
 
-              {/* 상품 링크 */}
+              {/* ?곹뭹 留곹겕 */}
               <div className="space-y-2">
                 <label htmlFor="deal_url" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  상품 링크 <span className="text-red-500">*</span>
+                  ?곹뭹 留곹겕 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="url"
@@ -1153,10 +1471,10 @@ export default function PostEditForm({
                 />
               </div>
 
-              {/* 쇼핑몰 */}
+              {/* ?쇳븨紐?*/}
               <div className="space-y-2">
                 <label htmlFor="store" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  쇼핑몰 <span className="text-red-500">*</span>
+                  ?쇳븨紐?<span className="text-red-500">*</span>
                 </label>
                 <NativeSelect
                   value={store || ''}
@@ -1166,10 +1484,10 @@ export default function PostEditForm({
                 />
               </div>
 
-              {/* 상품명 */}
+              {/* ?곹뭹紐?*/}
               <div className="space-y-2">
                 <label htmlFor="product_name" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  상품명 <span className="text-red-500">*</span>
+                  ?곹뭹紐?<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1177,15 +1495,15 @@ export default function PostEditForm({
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                  placeholder="LG 통돌이 세탁기 19kg"
+                  placeholder="LG ?듬룎???명긽湲?19kg"
                 />
               </div>
 
-              {/* 가격 */}
+              {/* 媛寃?*/}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                    판매가 <span className="text-red-500">*</span>
+                    ?먮ℓ媛 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1198,14 +1516,14 @@ export default function PostEditForm({
                       min="0"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
-                      원
+                      ??
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label htmlFor="original_price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                    정가 <span className="text-gray-400 text-xs">(선택)</span>
+                    ?뺢? <span className="text-gray-400 text-xs">(?좏깮)</span>
                   </label>
                   <div className="relative">
                     <input
@@ -1218,17 +1536,17 @@ export default function PostEditForm({
                       min="0"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
-                      원
+                      ??
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">할인율 표시용</p>
                 </div>
               </div>
 
-              {/* 배송비 */}
+              {/* 諛곗넚鍮?*/}
               <div className="space-y-2">
                 <label htmlFor="shipping" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  배송비 <span className="text-red-500">*</span>
+                  諛곗넚鍮?<span className="text-red-500">*</span>
                 </label>
                 <NativeSelect
                   value={shipping || ''}
@@ -1240,7 +1558,7 @@ export default function PostEditForm({
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <p className="text-[13px] text-blue-800 dark:text-blue-300">
-                  💡 <strong>팁:</strong> 상품 링크를 입력하면 쇼핑몰이 자동으로 선택됩니다.
+                  ?뮕 <strong>??</strong> ?곹뭹 留곹겕瑜??낅젰?섎㈃ ?쇳븨紐곗씠 ?먮룞?쇰줈 ?좏깮?⑸땲??
                 </p>
               </div>
             </div>
@@ -1249,10 +1567,10 @@ export default function PostEditForm({
           <div ref={editorShellRef} className="relative space-y-2">
             <label htmlFor="content" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
             
-            {/* 에디터 툴바 컴포넌트 (버튼만) */}
+            {/* ?먮뵒???대컮 而댄룷?뚰듃 (踰꾪듉留? */}
             <EditorToolbar
               editor={editor}
-              extensionsLoaded={true}
+              extensionsLoaded={extensionsLoaded}
               isImageUploading={isImageUploading}
               isVideoUploading={isVideoUploading}
               showLinkModal={showLinkModal}
@@ -1261,6 +1579,8 @@ export default function PostEditForm({
               showSocialModal={showSocialModal}
               showTeamModal={showTeamModal}
               showPlayerModal={showPlayerModal}
+              showTableModal={showTableModal}
+              showPollModal={showPollModal}
               handleToggleDropdown={handleEditorToolToggle}
               onImageClick={handleImageToolbarClick}
               onVideoClick={handleVideoToolbarClick}
@@ -1270,6 +1590,8 @@ export default function PostEditForm({
               onToolbarMatchButtonRect={handleToolbarMatchButtonRect}
               onToolbarTeamButtonRect={handleToolbarTeamButtonRect}
               onToolbarPlayerButtonRect={handleToolbarPlayerButtonRect}
+              onToolbarTableButtonRect={handleToolbarTableButtonRect}
+              onToolbarPollButtonRect={handleToolbarPollButtonRect}
             />
             <input
               ref={imageFileInputRef}
@@ -1305,7 +1627,7 @@ export default function PostEditForm({
                 />
               </div>
             )}
-            {/* 인라인 패널 영역 - 툴바와 에디터 사이에 표시 */}
+            {/* ?몃씪???⑤꼸 ?곸뿭 - ?대컮? ?먮뵒???ъ씠???쒖떆 */}
             {showYoutubeModal && (
               <div
                 className="absolute z-[10000]"
@@ -1354,6 +1676,39 @@ export default function PostEditForm({
                 />
               </div>
             )}
+            {showTableModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarTablePopoverPosition?.top ?? 0,
+                  left: toolbarTablePopoverPosition?.left ?? 12,
+                  width: toolbarTablePopoverPosition?.width,
+                }}
+              >
+                <TablePickerForm
+                  isOpen={showTableModal}
+                  onCancel={closeTablePopover}
+                  onTableAdd={(rows, cols) => handleAddTable(rows, cols, tableInsertionRangeRef.current ?? undefined)}
+                />
+              </div>
+            )}
+            {showPollModal && (
+              <div
+                className="absolute z-[10000]"
+                style={{
+                  top: toolbarPollPopoverPosition?.top ?? 0,
+                  left: toolbarPollPopoverPosition?.left ?? 12,
+                  width: toolbarPollPopoverPosition?.width,
+                }}
+              >
+                <PollForm
+                  isOpen={showPollModal}
+                  initialPoll={pollDraft}
+                  onCancel={closePollPopover}
+                  onSave={handleSavePollDraft}
+                />
+              </div>
+            )}
             {showTeamModal && (
               <div
                 className="absolute z-[10000]"
@@ -1391,12 +1746,139 @@ export default function PostEditForm({
               </div>
             )}
 
-            {/* 에디터 컨텐츠 영역 - 스타일은 globals.css에서 관리 */}
+            {/* ?먮뵒??而⑦뀗痢??곸뿭 - ?ㅽ??쇱? globals.css?먯꽌 愿由?*/}
             <div
               ref={setEditorViewportElement}
               className="relative border border-black/7 dark:border-white/10 rounded-b-md h-[60vh] min-h-[420px] max-h-[680px] overflow-x-hidden overflow-y-auto overscroll-contain bg-white dark:bg-[#262626]"
             >
+              {editor && (
+                <BubbleMenu
+                  editor={editor}
+                  pluginKey="pollBubbleMenu"
+                  updateDelay={0}
+                  shouldShow={({ editor }) => isPollBlockSelected(editor) && !showPollModal}
+                  tippyOptions={{
+                    appendTo: () => editorViewportElement ?? document.body,
+                    duration: 0,
+                    maxWidth: 'none',
+                    zIndex: 30,
+                    popperOptions: {
+                      modifiers: [
+                        {
+                          name: 'preventOverflow',
+                          options: {
+                            boundary: editorViewportElement ?? 'clippingParents',
+                            padding: 8,
+                          },
+                        },
+                        {
+                          name: 'flip',
+                          options: {
+                            boundary: editorViewportElement ?? 'clippingParents',
+                            padding: 8,
+                          },
+                        },
+                      ],
+                    },
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={handleOpenSelectedPollEditor}
+                    >
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      title="투표 삭제"
+                      onClick={handleRemovePollDraft}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </BubbleMenu>
+              )}
+
               <div className="sticky left-0 top-0 z-20 h-0 w-full overflow-visible">
+                {editor && tableMenuPosition && !showTableModal && (
+                  <div
+                    className="absolute z-20 flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+                    style={{
+                      top: tableMenuPosition.top,
+                      left: tableMenuPosition.left,
+                    }}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={() => {
+                        const nearPosition = editor.state.selection.from;
+                        editor.chain().focus().addRowAfter().run();
+                        updateTableMenuAfterCommand(nearPosition);
+                      }}
+                    >
+                      행+
+                    </button>
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={() => {
+                        const nearPosition = editor.state.selection.from;
+                        editor.chain().focus().addColumnAfter().run();
+                        updateTableMenuAfterCommand(nearPosition);
+                      }}
+                    >
+                      열+
+                    </button>
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={() => {
+                        const nearPosition = editor.state.selection.from;
+                        editor.chain().focus().deleteRow().run();
+                        updateTableMenuAfterCommand(nearPosition, true);
+                      }}
+                    >
+                      행-
+                    </button>
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={() => {
+                        const nearPosition = editor.state.selection.from;
+                        editor.chain().focus().deleteColumn().run();
+                        updateTableMenuAfterCommand(nearPosition, true);
+                      }}
+                    >
+                      열-
+                    </button>
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      title="표 삭제"
+                      onClick={() => {
+                        editor.chain().focus().deleteTable().run();
+                        setTableMenuPosition(null);
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
                 {editor && selectionMenuPosition && !showLinkModal && (
                 <div
                   className="absolute z-20 flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
@@ -1492,9 +1974,10 @@ export default function PostEditForm({
               </div>
               <EditorContent editor={editor} />
             </div>
+
           </div>
 
-          {/* 버튼 영역 */}
+          {/* 踰꾪듉 ?곸뿭 */}
           <div className="flex justify-end space-x-2 mt-6">
             <Button
               type="button"

@@ -1,10 +1,9 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Editor } from '@tiptap/react';
 import {
   Bold,
-  CalendarCheck,
   Heading2,
   Heading3,
   Image as ImageIcon,
@@ -15,15 +14,14 @@ import {
   Minus,
   Redo,
   Share2,
-  Shield,
+  Table2,
   Undo,
-  User,
   Video as VideoIcon,
   Youtube as YoutubeIcon,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 
-type DropdownType = 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player';
+type DropdownType = 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player' | 'table' | 'poll';
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -36,6 +34,8 @@ interface EditorToolbarProps {
   showSocialModal: boolean;
   showTeamModal: boolean;
   showPlayerModal: boolean;
+  showTableModal: boolean;
+  showPollModal?: boolean;
   handleToggleDropdown: (dropdown: DropdownType) => void;
   onImageClick: () => void;
   onVideoClick: () => void;
@@ -45,11 +45,13 @@ interface EditorToolbarProps {
   onToolbarMatchButtonRect?: (rect: DOMRect) => void;
   onToolbarTeamButtonRect?: (rect: DOMRect) => void;
   onToolbarPlayerButtonRect?: (rect: DOMRect) => void;
+  onToolbarTableButtonRect?: (rect: DOMRect) => void;
+  onToolbarPollButtonRect?: (rect: DOMRect) => void;
 }
 
 const toolButtonClass = 'h-7 w-7 shrink-0 p-0 text-gray-900 dark:text-[#F0F0F0] md:h-8 md:w-8';
+const textToolButtonClass = 'h-7 w-9 shrink-0 p-0 text-[11px] font-semibold text-gray-900 dark:text-[#F0F0F0] md:h-8 md:w-10 md:text-[12px]';
 const activeClass = 'bg-[#EAEAEA] dark:bg-[#333333]';
-const disabledClass = 'opacity-50 cursor-not-allowed';
 const iconSize = 16;
 
 export default function EditorToolbar({
@@ -63,6 +65,8 @@ export default function EditorToolbar({
   showSocialModal,
   showTeamModal,
   showPlayerModal,
+  showTableModal,
+  showPollModal = false,
   handleToggleDropdown,
   onImageClick,
   onVideoClick,
@@ -72,13 +76,15 @@ export default function EditorToolbar({
   onToolbarMatchButtonRect,
   onToolbarTeamButtonRect,
   onToolbarPlayerButtonRect,
+  onToolbarTableButtonRect,
+  onToolbarPollButtonRect,
 }: EditorToolbarProps) {
   if (!editor) {
     return <div className="h-11 rounded-t-md border border-black/7 bg-[#F5F5F5] p-2 dark:border-white/10 dark:bg-[#262626]" />;
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 overflow-visible rounded-t-md border border-black/7 bg-[#F5F5F5] px-1.5 py-1.5 dark:border-white/10 dark:bg-[#262626] md:flex-nowrap">
+    <div className="flex flex-wrap items-center gap-0.5 overflow-visible rounded-t-md border border-black/7 bg-[#F5F5F5] px-1.5 py-1.5 dark:border-white/10 dark:bg-[#262626]">
       <Button
         type="button"
         variant="ghost"
@@ -135,8 +141,6 @@ export default function EditorToolbar({
       >
         <Minus size={iconSize} />
       </Button>
-
-      <div className="mx-0.5 hidden h-5 w-px shrink-0 bg-black/7 dark:bg-white/10 md:block" />
 
       <Button
         type="button"
@@ -200,7 +204,7 @@ export default function EditorToolbar({
           onToolbarYoutubeButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('youtube');
         }}
-        className={`${toolButtonClass} ${showYoutubeModal ? activeClass : ''} ${!extensionsLoaded ? disabledClass : ''}`}
+        className={`${toolButtonClass} ${showYoutubeModal ? activeClass : ''}`}
         title="YouTube 추가"
       >
         <YoutubeIcon size={iconSize} />
@@ -212,7 +216,7 @@ export default function EditorToolbar({
         size="icon"
         onClick={onVideoClick}
         disabled={isVideoUploading}
-        className={`${toolButtonClass} ${isVideoUploading ? `${activeClass} opacity-60` : ''} ${!extensionsLoaded ? disabledClass : ''}`}
+        className={`${toolButtonClass} ${isVideoUploading ? `${activeClass} opacity-60` : ''}`}
         title="동영상 파일 추가"
       >
         <VideoIcon size={iconSize} />
@@ -226,13 +230,13 @@ export default function EditorToolbar({
           onToolbarSocialButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('social');
         }}
-        className={`${toolButtonClass} ${showSocialModal ? activeClass : ''} ${!extensionsLoaded ? disabledClass : ''}`}
+        className={`${toolButtonClass} ${showSocialModal ? activeClass : ''}`}
         title="소셜 추가"
       >
         <Share2 size={iconSize} />
       </Button>
 
-      <div className="mx-0.5 hidden h-5 w-px shrink-0 bg-black/7 dark:bg-white/10 md:block" />
+      <div className="hidden basis-full pt-1.5 md:block" />
 
       <Button
         type="button"
@@ -242,10 +246,10 @@ export default function EditorToolbar({
           onToolbarMatchButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('match');
         }}
-        className={`${toolButtonClass} ${showMatchModal ? activeClass : ''}`}
+        className={`${textToolButtonClass} ${showMatchModal ? activeClass : ''}`}
         title="경기 결과 추가"
       >
-        <CalendarCheck size={iconSize} />
+        경기
       </Button>
 
       <Button
@@ -256,10 +260,10 @@ export default function EditorToolbar({
           onToolbarTeamButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('team');
         }}
-        className={`${toolButtonClass} ${showTeamModal ? activeClass : ''} ${!extensionsLoaded ? disabledClass : ''}`}
+        className={`${textToolButtonClass} ${showTeamModal ? activeClass : ''}`}
         title="팀 추가"
       >
-        <Shield size={iconSize} />
+        팀
       </Button>
 
       <Button
@@ -270,13 +274,43 @@ export default function EditorToolbar({
           onToolbarPlayerButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('player');
         }}
-        className={`${toolButtonClass} ${showPlayerModal ? activeClass : ''} ${!extensionsLoaded ? disabledClass : ''}`}
+        className={`${textToolButtonClass} ${showPlayerModal ? activeClass : ''}`}
         title="선수 추가"
       >
-        <User size={iconSize} />
+        선수
       </Button>
 
-      <div className="mx-0.5 hidden h-5 w-px shrink-0 bg-black/7 dark:bg-white/10 md:block" />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onToolbarTableButtonRect?.(event.currentTarget.getBoundingClientRect());
+          handleToggleDropdown('table');
+        }}
+        className={`${toolButtonClass} ${showTableModal ? activeClass : ''}`}
+        title="표 추가"
+      >
+        <Table2 size={iconSize} />
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onToolbarPollButtonRect?.(event.currentTarget.getBoundingClientRect());
+          handleToggleDropdown('poll');
+        }}
+        className={`${textToolButtonClass} ${showPollModal ? activeClass : ''}`}
+        title="투표 추가"
+      >
+        투표
+      </Button>
 
       <Button
         type="button"
@@ -304,3 +338,4 @@ export default function EditorToolbar({
     </div>
   );
 }
+
