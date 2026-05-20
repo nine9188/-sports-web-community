@@ -13,6 +13,8 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 export const SITEMAP_PAGE_SIZE = 50000;
 const SITEMAP_QUERY_MAX_ATTEMPTS = 3;
 const SITEMAP_QUERY_RETRY_DELAYS_MS = [250, 1000];
+const FIXTURE_TEAM_QUERY_CHUNK_SIZE = 500;
+const sitemapQueryFailures = new Set<string>();
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -88,6 +90,22 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function resetSitemapQueryFailures() {
+  sitemapQueryFailures.clear();
+}
+
+export function getSitemapQueryFailures(): string[] {
+  return [...sitemapQueryFailures];
+}
+
+function chunks<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    result.push(items.slice(index, index + size));
+  }
+  return result;
+}
+
 function errorText(error: unknown): string {
   if (!error) return '';
   if (error instanceof Error) return error.message;
@@ -129,6 +147,10 @@ async function runSitemapQuery<T extends SupabaseQueryResult>(
     console.warn(`[sitemap] ${label} retry ${attempt}/${SITEMAP_QUERY_MAX_ATTEMPTS - 1}:`, result.error);
     await sleep(SITEMAP_QUERY_RETRY_DELAYS_MS[attempt - 1] ?? 1000);
     result = await query();
+  }
+
+  if (result.error) {
+    sitemapQueryFailures.add(label);
   }
 
   return result;
@@ -611,18 +633,21 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
 
   const teamSlugById = new Map<number, string>();
   if (teamIds.length) {
-    const { data: teams, error: teamsError } = await runSitemapQuery('fixture team slug query', () => supabase
-      .from('football_teams')
-      .select('team_id, slug, updated_at, name, name_ko, display_name, short_name')
-      .in('team_id', teamIds));
+    for (const teamIdChunk of chunks(teamIds, FIXTURE_TEAM_QUERY_CHUNK_SIZE)) {
+      const { data: teams, error: teamsError } = await runSitemapQuery('fixture team slug query', () => supabase
+        .from('football_teams')
+        .select('team_id, slug, updated_at, name, name_ko, display_name, short_name')
+        .in('team_id', teamIdChunk));
 
-    if (teamsError) {
-      console.error('[sitemap] fixture team slug query failed:', teamsError);
-    }
+      if (teamsError) {
+        console.error('[sitemap] fixture team slug query failed:', teamsError);
+        continue;
+      }
 
-    for (const team of (teams || []) as TeamRow[]) {
-      const slug = canonicalTeamSlugFromRow(team);
-      if (team.team_id && slug) teamSlugById.set(team.team_id, slug);
+      for (const team of (teams || []) as TeamRow[]) {
+        const slug = canonicalTeamSlugFromRow(team);
+        if (team.team_id && slug) teamSlugById.set(team.team_id, slug);
+      }
     }
   }
 

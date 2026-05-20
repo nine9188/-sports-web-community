@@ -3,6 +3,7 @@
 import { searchTeams } from './searchTeams'
 import { searchPlayers } from './searchPlayers'
 import { getPlayerPhotoUrls, PLACEHOLDER_URLS } from '@/domains/livescore/actions/images'
+import { teamLogoUrl } from '@/shared/images/urls'
 import type { TeamCardData } from '@/shared/types/teamCard'
 import type { PlayerCardData } from '@/shared/types/playerCard'
 
@@ -55,13 +56,13 @@ export async function searchEntities(
               id: team.team_id,
               name: team.name,
               koreanName: team.name_ko || team.display_name,
-              imageUrl: team.logo_url || `https://cdn.4590football.com/teams/md/${team.team_id}.webp`,
+              imageUrl: team.logo_url || teamLogoUrl(team.team_id),
               subtitle: team.league_name_ko || team.league_name,
               cardData: {
                 id: team.team_id,
                 name: team.name,
                 koreanName: team.name_ko || team.display_name,
-                logo: team.logo_url || `https://cdn.4590football.com/teams/md/${team.team_id}.webp`,
+                logo: team.logo_url || teamLogoUrl(team.team_id),
                 league: {
                   id: team.league_id,
                   name: team.league_name,
@@ -107,7 +108,7 @@ export async function searchEntities(
                   id: player.team_id,
                   name: player.team_name,
                   koreanName: player.team_name_ko,
-                  logo: player.team_logo_url || `https://cdn.4590football.com/teams/md/${player.team_id}.webp`
+                  logo: player.team_logo_url || teamLogoUrl(player.team_id)
                 },
                 position: player.position,
                 number: player.number,
@@ -174,7 +175,7 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
         name: 'Son Heung-Min',
         koreanName: '손흥민',
         photo: playerPhotos[306] || PLACEHOLDER_URLS.player_photo,
-        team: { id: 47, name: 'Tottenham', koreanName: '토트넘', logo: 'https://cdn.4590football.com/teams/md/47.webp' },
+        team: { id: 47, name: 'Tottenham', koreanName: '토트넘', logo: teamLogoUrl(47) },
         position: 'Attacker',
         number: 7
       } as PlayerCardData
@@ -191,7 +192,7 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
         name: 'Kim Min-Jae',
         koreanName: '김민재',
         photo: playerPhotos[1485] || PLACEHOLDER_URLS.player_photo,
-        team: { id: 157, name: 'Bayern Munich', koreanName: '바이에른 뮌헨', logo: 'https://cdn.4590football.com/teams/md/157.webp' },
+        team: { id: 157, name: 'Bayern Munich', koreanName: '바이에른 뮌헨', logo: teamLogoUrl(157) },
         position: 'Defender',
         number: 3
       } as PlayerCardData
@@ -201,13 +202,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 47,
       name: 'Tottenham',
       koreanName: '토트넘',
-      imageUrl: 'https://cdn.4590football.com/teams/md/47.webp',
+      imageUrl: teamLogoUrl(47),
       subtitle: '프리미어리그',
       cardData: {
         id: 47,
         name: 'Tottenham',
         koreanName: '토트넘',
-        logo: 'https://cdn.4590football.com/teams/md/47.webp',
+        logo: teamLogoUrl(47),
         league: { id: 39, name: 'Premier League', koreanName: '프리미어리그' },
         country: 'England'
       } as TeamCardData
@@ -217,13 +218,13 @@ export async function getPopularEntities(limit: number = 8): Promise<EntitySearc
       id: 541,
       name: 'Real Madrid',
       koreanName: '레알 마드리드',
-      imageUrl: 'https://cdn.4590football.com/teams/md/541.webp',
+      imageUrl: teamLogoUrl(541),
       subtitle: '라리가',
       cardData: {
         id: 541,
         name: 'Real Madrid',
         koreanName: '레알 마드리드',
-        logo: 'https://cdn.4590football.com/teams/md/541.webp',
+        logo: teamLogoUrl(541),
         league: { id: 140, name: 'La Liga', koreanName: '라리가' },
         country: 'Spain'
       } as TeamCardData

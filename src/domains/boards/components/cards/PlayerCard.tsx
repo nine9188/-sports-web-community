@@ -4,10 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
 import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
+import { playerPhotoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-const CDN_URL = 'https://cdn.4590football.com';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
   const { name, koreanName, team, photo } = playerData;
@@ -16,8 +16,8 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
   const teamId = typeof team?.id === 'string' ? parseInt(team.id, 10) : team?.id;
 
-  const teamLogo = teamId ? `${CDN_URL}/teams/md/${teamId}.webp` : TEAM_PLACEHOLDER;
-  const playerPhoto = photo && numericPlayerId ? `${CDN_URL}/players/md/${numericPlayerId}.webp` : PLAYER_PLACEHOLDER;
+  const teamLogo = teamId ? teamLogoUrl(teamId) : TEAM_PLACEHOLDER;
+  const playerPhoto = photo && numericPlayerId ? playerPhotoUrl(numericPlayerId) : PLAYER_PLACEHOLDER;
   const href = getPlayerHref({ ...playerData, id: numericPlayerId });
 
   const CardContent = () => (
@@ -30,6 +30,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
               alt={teamDisplayName}
               width={24}
               height={24}
+              draggable={false}
               unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
@@ -45,6 +46,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
             alt={displayName}
             width={64}
             height={64}
+            draggable={false}
             unoptimized
             style={{ width: '64px', height: '64px', objectFit: 'cover' }}
           />

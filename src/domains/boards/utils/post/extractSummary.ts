@@ -70,6 +70,7 @@ function collectTexts(nodes: unknown[]): string {
       n.type === 'matchCard' ||
       n.type === 'teamCard' ||
       n.type === 'playerCard' ||
+      n.type === 'entityCardGroup' ||
       n.type === 'predictionChart' ||
       n.type === 'image' ||
       n.type === 'video' ||

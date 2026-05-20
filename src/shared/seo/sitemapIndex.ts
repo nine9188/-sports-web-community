@@ -6,9 +6,12 @@ import {
   getPostSitemap,
   getShopSitemap,
   getStaticSitemap,
+  getSitemapQueryFailures,
   getTeamSitemap,
   getTransferTeamSitemap,
+  resetSitemapQueryFailures,
 } from '@/shared/seo/sitemap';
+import { assertCompleteMainSitemap } from '@/shared/seo/sitemapSnapshot';
 import { sitemapUrlsetXml } from '@/shared/seo/sitemapXml';
 
 type SitemapEntry = Awaited<ReturnType<typeof getPostSitemap>>[number];
@@ -24,6 +27,8 @@ function uniqueSitemapEntries(entries: SitemapEntry[]): SitemapEntry[] {
 }
 
 export async function buildMainSitemapXml(): Promise<string> {
+  resetSitemapQueryFailures();
+
   const [
     boardEntries,
     postEntries,
@@ -44,6 +49,11 @@ export async function buildMainSitemapXml(): Promise<string> {
     getShopSitemap(),
   ]);
 
+  const failures = getSitemapQueryFailures();
+  if (failures.length) {
+    throw new Error(`Main sitemap generation failed queries: ${failures.join(', ')}`);
+  }
+
   const entries = uniqueSitemapEntries([
     ...getStaticSitemap(),
     ...boardEntries,
@@ -56,7 +66,10 @@ export async function buildMainSitemapXml(): Promise<string> {
     ...shopEntries,
   ]);
 
-  return sitemapUrlsetXml(entries);
+  const xml = sitemapUrlsetXml(entries);
+  assertCompleteMainSitemap(xml);
+
+  return xml;
 }
 
 export async function buildMainSitemapIndexXml(): Promise<string> {

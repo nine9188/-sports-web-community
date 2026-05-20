@@ -7,106 +7,205 @@
 
 ## Day 1 - 2026-05-13 (100 URLs)
 
-001. https://4590football.com/
-002. https://4590football.com/livescore/football
-003. https://4590football.com/livescore/football/leagues
-004. https://4590football.com/transfers
-005. https://4590football.com/boards/all
-006. https://4590football.com/boards/popular
-007. https://4590football.com/shop
-008. https://4590football.com/about
-009. https://4590football.com/guide
-010. https://4590football.com/contact
-011. https://4590football.com/shop/emoticon-studio
-012. https://4590football.com/boards/notice
-013. https://4590football.com/boards/soccer
-014. https://4590football.com/boards/k-league
-015. https://4590football.com/boards/news
-016. https://4590football.com/boards/data-analysis
-017. https://4590football.com/boards/free
-018. https://4590football.com/boards/hotdeal
-019. https://4590football.com/boards/market
-020. https://4590football.com/boards/review
-021. https://4590football.com/boards/creative
-022. https://4590football.com/boards/free-talk
-023. https://4590football.com/boards/market-free
-024. https://4590football.com/boards/liverpool
-025. https://4590football.com/boards/hotdeal-food
-026. https://4590football.com/boards/creative-fanart
-027. https://4590football.com/boards/review-purchase
-028. https://4590football.com/boards/barcelona
-029. https://4590football.com/boards/premier
-030. https://4590football.com/boards/humor
-031. https://4590football.com/boards/market-review
-032. https://4590football.com/boards/creative-gif
-033. https://4590football.com/boards/review-stadium
-034. https://4590football.com/boards/foreign-analysis-premier
-035. https://4590football.com/boards/domestic-analysis-k-league-1
-036. https://4590football.com/boards/hotdeal-game
-037. https://4590football.com/boards/creative-video
-038. https://4590football.com/boards/issue
-039. https://4590football.com/boards/foreign-analysis-laliga
-040. https://4590football.com/boards/market-deal
-041. https://4590football.com/boards/review-general
-042. https://4590football.com/boards/domestic-analysis-k-league-2
-043. https://4590football.com/boards/hotdeal-pc
-044. https://4590football.com/boards/qna
-045. https://4590football.com/boards/market-click
-046. https://4590football.com/boards/hotdeal-appliance
-047. https://4590football.com/boards/foreign-analysis-bundesliga
-048. https://4590football.com/boards/market-share
-049. https://4590football.com/boards/hotdeal-living
-050. https://4590football.com/boards/tips
-051. https://4590football.com/boards/foreign-analysis-serie-a
-052. https://4590football.com/boards/hotdeal-fashion
-053. https://4590football.com/boards/foreign-analysis-ligue1
-054. https://4590football.com/boards/market-lottery
-055. https://4590football.com/boards/market-quiz
-056. https://4590football.com/boards/hotdeal-sale
-057. https://4590football.com/boards/market-ali
-058. https://4590football.com/boards/hotdeal-beauty
-059. https://4590football.com/boards/market-groupbuy
-060. https://4590football.com/boards/hotdeal-mobile
-061. https://4590football.com/boards/market-exchange
-062. https://4590football.com/boards/hotdeal-package
-063. https://4590football.com/boards/bucheon-fc-1995
-064. https://4590football.com/boards/angers
-065. https://4590football.com/boards/market-sell
-066. https://4590football.com/boards/laliga
-067. https://4590football.com/boards/lazio
-068. https://4590football.com/boards/arsenal
-069. https://4590football.com/boards/official
-070. https://4590football.com/boards/bayern-muenchen
-071. https://4590football.com/boards/real-madrid
-072. https://4590football.com/boards/hotdeal-coupon
-073. https://4590football.com/boards/k-league-1
-074. https://4590football.com/boards/market-buy
-075. https://4590football.com/boards/hotdeal-apptech
-076. https://4590football.com/boards/hotdeal-sports
-077. https://4590football.com/boards/hotdeal-overseas
-078. https://4590football.com/boards/hotdeal-etc
-079. https://4590football.com/boards/lille
-080. https://4590football.com/boards/gangwon-fc
-081. https://4590football.com/boards/nottingham-forest
-082. https://4590football.com/boards/sassuolo
-083. https://4590football.com/boards/sc-freiburg
-084. https://4590football.com/boards/foreign-news
-085. https://4590football.com/boards/k-league-2
-086. https://4590football.com/boards/lyon
-087. https://4590football.com/boards/LIGUE1
-088. https://4590football.com/boards/manchester-city
-089. https://4590football.com/boards/athletic-club
-090. https://4590football.com/boards/atletico-madrid
-091. https://4590football.com/boards/vfl-wolfsburg
-092. https://4590football.com/boards/domestic-news
-093. https://4590football.com/boards/ac-milan
-094. https://4590football.com/boards/fc-anyang
-095. https://4590football.com/boards/information
-096. https://4590football.com/boards/newcastle
-097. https://4590football.com/boards/werder-bremen
-098. https://4590football.com/boards/marseille
-099. https://4590football.com/boards/cagliari
-100. https://4590football.com/boards/bundesliga
+https://4590football.com/
+
+https://4590football.com/livescore/football
+
+https://4590football.com/livescore/football/leagues
+
+https://4590football.com/transfers
+
+https://4590football.com/boards/all
+
+https://4590football.com/boards/popular
+
+https://4590football.com/shop
+
+https://4590football.com/about
+
+https://4590football.com/guide
+
+https://4590football.com/contact
+
+https://4590football.com/shop/emoticon-studio
+
+https://4590football.com/boards/notice
+
+https://4590football.com/boards/soccer
+
+https://4590football.com/boards/k-league
+
+https://4590football.com/boards/news
+
+https://4590football.com/boards/data-analysis
+
+https://4590football.com/boards/free
+
+https://4590football.com/boards/hotdeal
+
+https://4590football.com/boards/market
+
+https://4590football.com/boards/review
+
+https://4590football.com/boards/creative
+
+https://4590football.com/boards/free-talk
+
+https://4590football.com/boards/market-free
+
+https://4590football.com/boards/liverpool
+
+https://4590football.com/boards/hotdeal-food
+
+https://4590football.com/boards/creative-fanart
+
+https://4590football.com/boards/review-purchase
+
+https://4590football.com/boards/barcelona
+
+https://4590football.com/boards/premier
+
+https://4590football.com/boards/humor
+
+https://4590football.com/boards/market-review
+
+https://4590football.com/boards/creative-gif
+
+https://4590football.com/boards/review-stadium
+
+https://4590football.com/boards/foreign-analysis-premier
+
+https://4590football.com/boards/domestic-analysis-k-league-1
+
+https://4590football.com/boards/hotdeal-game
+
+https://4590football.com/boards/creative-video
+
+https://4590football.com/boards/issue
+
+https://4590football.com/boards/foreign-analysis-laliga
+
+https://4590football.com/boards/market-deal
+
+https://4590football.com/boards/review-general
+
+https://4590football.com/boards/domestic-analysis-k-league-2
+
+https://4590football.com/boards/hotdeal-pc
+
+https://4590football.com/boards/qna
+
+https://4590football.com/boards/market-click
+
+https://4590football.com/boards/hotdeal-appliance
+
+https://4590football.com/boards/foreign-analysis-bundesliga
+
+https://4590football.com/boards/market-share
+
+https://4590football.com/boards/hotdeal-living
+
+https://4590football.com/boards/tips
+
+https://4590football.com/boards/foreign-analysis-serie-a
+
+https://4590football.com/boards/hotdeal-fashion
+
+https://4590football.com/boards/foreign-analysis-ligue1
+
+https://4590football.com/boards/market-lottery
+
+https://4590football.com/boards/market-quiz
+
+https://4590football.com/boards/hotdeal-sale
+
+https://4590football.com/boards/market-ali
+
+https://4590football.com/boards/hotdeal-beauty
+
+https://4590football.com/boards/market-groupbuy
+
+https://4590football.com/boards/hotdeal-mobile
+
+https://4590football.com/boards/market-exchange
+
+https://4590football.com/boards/hotdeal-package
+
+https://4590football.com/boards/bucheon-fc-1995
+
+https://4590football.com/boards/angers
+
+https://4590football.com/boards/market-sell
+
+https://4590football.com/boards/laliga
+
+https://4590football.com/boards/lazio
+
+https://4590football.com/boards/arsenal
+
+https://4590football.com/boards/official
+
+https://4590football.com/boards/bayern-muenchen
+
+https://4590football.com/boards/real-madrid
+
+https://4590football.com/boards/hotdeal-coupon
+
+https://4590football.com/boards/k-league-1
+
+https://4590football.com/boards/market-buy
+
+https://4590football.com/boards/hotdeal-apptech
+
+https://4590football.com/boards/hotdeal-sports
+
+https://4590football.com/boards/hotdeal-overseas
+
+https://4590football.com/boards/hotdeal-etc
+
+https://4590football.com/boards/lille
+
+https://4590football.com/boards/gangwon-fc
+
+https://4590football.com/boards/nottingham-forest
+
+https://4590football.com/boards/sassuolo
+
+https://4590football.com/boards/sc-freiburg
+
+https://4590football.com/boards/foreign-news
+
+https://4590football.com/boards/k-league-2
+
+https://4590football.com/boards/lyon
+
+https://4590football.com/boards/LIGUE1
+
+https://4590football.com/boards/manchester-city
+
+https://4590football.com/boards/athletic-club
+
+https://4590football.com/boards/atletico-madrid
+
+https://4590football.com/boards/vfl-wolfsburg
+
+https://4590football.com/boards/domestic-news
+
+https://4590football.com/boards/ac-milan
+
+https://4590football.com/boards/fc-anyang
+
+https://4590football.com/boards/information
+
+https://4590football.com/boards/newcastle
+
+https://4590football.com/boards/werder-bremen 끝 
+
+https://4590football.com/boards/marseille
+
+https://4590football.com/boards/cagliari
+
+https://4590football.com/boards/bundesliga
 
 ## Day 2 - 2026-05-14 (100 URLs)
 

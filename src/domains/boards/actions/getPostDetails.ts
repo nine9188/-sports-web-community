@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
@@ -14,6 +15,7 @@ import { getCachedShopItemIconUrl } from './getCachedShopItems';
 import type { PostPoll } from '../types/poll';
 
 const POST_DETAIL_LIST_PAGE_SIZE = 20;
+const POLL_VISITOR_COOKIE = 'post_poll_visitor_id';
 
 type BoardStructureRow = {
   id: string;
@@ -117,9 +119,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       content: contentRow?.content ?? null,
     } as typeof postRaw & { content: unknown };
 
+    const cookieStore = await cookies();
+    const pollVisitorId = cookieStore.get(POLL_VISITOR_COOKIE)?.value || null;
     const { data: pollData } = await (supabase as unknown as {
       rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: PostPoll | null }>;
-    }).rpc('get_post_poll_for_post', { p_post_id: post.id });
+    }).rpc('get_post_poll_for_post', {
+      p_post_id: post.id,
+      p_visitor_id: pollVisitorId,
+    });
 
     const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
     const { data: prevPostData } = prevPostResult;

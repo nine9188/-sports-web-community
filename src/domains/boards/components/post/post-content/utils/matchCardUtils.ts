@@ -1,5 +1,5 @@
 import { normalizeMatchCardData, generateMatchCardHtml, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
-const SUPABASE_URL = 'https://cdn.4590football.com';
+import { leagueLogoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 /**
  * HTML로 저장된 빈 매치카드 div를 실제 콘텐츠로 채우기
@@ -117,10 +117,10 @@ function updateLeagueImage(img: HTMLImageElement, isDark: boolean): void {
 
     if (leagueIdMatch) {
       const leagueId = parseInt(leagueIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/leagues/md/${leagueId}.webp`;
+      lightSrc = leagueLogoUrl(leagueId);
 
       if (DARK_MODE_LEAGUE_IDS.includes(leagueId)) {
-        darkSrc = `${SUPABASE_URL}/leagues/md/${leagueId}-1.webp`;
+        darkSrc = leagueLogoUrl(leagueId, { dark: true });
       } else {
         darkSrc = lightSrc;
       }
@@ -146,7 +146,7 @@ function updateTeamImage(img: HTMLImageElement, isDark: boolean): void {
 
     if (teamIdMatch) {
       const teamId = parseInt(teamIdMatch[1]);
-      lightSrc = `${SUPABASE_URL}/teams/md/${teamId}.webp`;
+      lightSrc = teamLogoUrl(teamId);
       darkSrc = lightSrc; // 팀 로고는 다크모드 이미지 없음
 
       img.setAttribute('data-light-src', lightSrc);

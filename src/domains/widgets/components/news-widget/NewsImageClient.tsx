@@ -2,24 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import {
+  normalizeDisplayImageUrl,
+  shouldUnoptimizeImageUrl,
+} from '@/shared/images/urls';
 const MAX_RETRIES = 1;
 const FALLBACK_LIGHT = '/logo/4590_logo_02-01.jpg';
 const FALLBACK_DARK = '/logo/4590_logo_02-02.jpg';
 
 /** 외부 이미지 URL을 Cloudflare CDN 프록시 경유 URL로 변환 */
 function toProxyUrl(url: string): string {
-  if (url.startsWith('/') || url.includes('cdn.4590football.com')) return url;
-  if (url.includes('supabase.co')) return url;
-  return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
+  return normalizeDisplayImageUrl(url, {
+    fallback: FALLBACK_LIGHT,
+    proxyExternal: true,
+  });
 }
 
 /** 로컬/Supabase 이외 외부 URL 여부 */
-function isExternalUrl(url: string): boolean {
-  if (url.startsWith('/')) return false;
-  if (url.includes('supabase.co')) return false;
-  return true;
-}
-
 interface NewsImageClientProps {
   imageUrl?: string;
   alt: string;
@@ -54,7 +53,7 @@ export default function NewsImageClient({
 
   const shouldUnoptimize = useFallback
     ? false
-    : isExternalUrl(finalImageUrl) || finalImageUrl.includes('/proxy?url=');
+    : shouldUnoptimizeImageUrl(finalImageUrl);
 
   const handleError = () => {
     if (retryCount < MAX_RETRIES) {

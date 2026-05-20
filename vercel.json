@@ -3,6 +3,10 @@
     {
       "path": "/api/sync-fixtures",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/generate-sitemap",
+      "schedule": "10 3,9,15,21 * * *"
     }
   ],
   "routes": [

@@ -7,27 +7,15 @@
 
 import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/matchCard';
 import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
+import {
+  DARK_MODE_LEAGUE_IDS as SHARED_DARK_MODE_LEAGUE_IDS,
+  sportsAssetUrlPair,
+} from '@/shared/images/urls';
 
 /**
  * Leagues that have separate dark-mode logos.
  */
-export const DARK_MODE_LEAGUE_IDS: readonly number[] = [
-  39, // Premier League
-  2, // Champions League
-  3, // Europa League
-  848, // Conference League
-  179, // Scottish Premiership
-  88, // Eredivisie
-  119, // Superliga
-  98, // J1 League
-  292, // K League 1
-  66, // Primeira Liga
-  13, // Coupe de France
-  61, // Ligue 1
-] as const;
-
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_STORAGE_CDN_URL || 'https://cdn.4590football.com';
+export const DARK_MODE_LEAGUE_IDS = SHARED_DARK_MODE_LEAGUE_IDS;
 
 const STATIC_TEAM_IDS = new Set([
   33,34,35,36,39,40,42,44,45,47,48,49,50,51,52,55,63,65,66,77,79,80,81,82,83,84,85,91,93,94,95,96,97,
@@ -66,13 +54,7 @@ export function getImageUrls(
       return { light: lightUrl, dark: darkUrl };
     }
 
-    const lightUrl = `${SUPABASE_URL}/${type}/md/${numericId}.webp`;
-    const hasDarkImage = type === 'leagues' && DARK_MODE_LEAGUE_IDS.includes(numericId);
-    const darkUrl = hasDarkImage
-      ? `${SUPABASE_URL}/${type}/md/${numericId}-1.webp`
-      : lightUrl;
-
-    return { light: lightUrl, dark: darkUrl };
+    return sportsAssetUrlPair(type, numericId);
   }
 
   if (logoUrl) {

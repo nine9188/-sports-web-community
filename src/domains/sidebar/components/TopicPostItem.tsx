@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, ThumbsUp, MessageSquare } from 'lucide-react';
-import { siteConfig } from '@/shared/config';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 import type { TopicPost, TabType } from '../types';
 
 interface TopicPostItemProps {
@@ -92,10 +92,10 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
       return isDark && post.league_logo_dark ? post.league_logo_dark : post.league_logo;
     }
     // 기본 사이트 아이콘 (흰색 → 라이트모드에서만 반전)
-    return siteConfig.icon;
+    return SITE_ICON_URL;
   };
 
-  const logoUrl = getLogoUrl();
+  const logoUrl = normalizeDisplayImageUrl(getLogoUrl(), { fallback: SITE_ICON_URL });
   const isDefaultIcon = !post.team_logo && !post.league_logo;
 
   return (
@@ -113,6 +113,7 @@ export default function TopicPostItem({ post, tabType, isLast }: TopicPostItemPr
               width={20}
               height={20}
               className={`object-contain w-5 h-5 ${isDefaultIcon ? 'dark:invert' : ''}`}
+              unoptimized={shouldUnoptimizeImageUrl(logoUrl)}
               loading="lazy"
             />
           </div>

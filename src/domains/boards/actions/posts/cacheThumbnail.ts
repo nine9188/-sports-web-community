@@ -2,12 +2,12 @@
 
 import sharp from 'sharp';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { isStorageCdnUrl, storageCdnUrl } from '@/shared/images/urls';
 
-const CDN_BASE = 'https://cdn.4590football.com';
 const BUCKET = 'post-images';
 
 function isAlreadyCached(url: string): boolean {
-  return url.includes('cdn.4590football.com') || url.includes('supabase.co');
+  return isStorageCdnUrl(url) || url.includes('supabase.co');
 }
 
 /**
@@ -22,7 +22,7 @@ export async function cacheThumbnailToStorage(
   if (isAlreadyCached(externalUrl)) return;
 
   const storagePath = `thumbnails/${postId}.webp`;
-  const cdnUrl = `${CDN_BASE}/${BUCKET}/${storagePath}`;
+  const cdnUrl = storageCdnUrl(`${BUCKET}/${storagePath}`);
 
   try {
     const response = await fetch(externalUrl, {

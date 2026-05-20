@@ -4,10 +4,14 @@
  * 외부 이미지 URL을 프록시 URL로 변환
  */
 
-import { siteConfig } from '@/shared/config';
+import {
+  SITE_ICON_URL,
+  STORAGE_CDN_BASE_URL,
+  externalImageProxyUrl,
+} from '@/shared/images/urls';
 
 const SUPABASE_STORAGE_DOMAIN = 'vnjjfhsuzoxcljqqwwvx.supabase.co';
-const CDN_DOMAIN = 'cdn.4590football.com';
+const CDN_DOMAIN = new URL(STORAGE_CDN_BASE_URL).hostname;
 const API_SPORTS_DOMAIN = 'media.api-sports.io';
 
 /**
@@ -49,7 +53,7 @@ export function getProxiedImageUrl(url: string | null | undefined): string | nul
   }
 
   // Cloudflare CDN 프록시 URL로 변환
-  return `https://cdn.4590football.com/proxy?url=${encodeURIComponent(url)}`;
+  return externalImageProxyUrl(url);
 }
 
 /**
@@ -70,7 +74,7 @@ export function getImageProps(url: string | null | undefined) {
 
   if (!proxiedUrl) {
     return {
-      src: siteConfig.icon, // 기본 아이콘 fallback
+      src: SITE_ICON_URL, // 기본 아이콘 fallback
       unoptimized: false,
     };
   }

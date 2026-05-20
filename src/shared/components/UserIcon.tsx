@@ -10,6 +10,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getFallbackIconUrl } from '@/shared/utils/user-icons';
 import { getLevelIconUrl } from '@/shared/utils/level-icons';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 interface UserIconProps {
   iconUrl?: string | null;
@@ -53,7 +54,7 @@ const UserIcon = React.memo(function UserIcon({
   const src = useMemo(() => {
     if (error) return getFallbackIconUrl(level);
     if (!iconUrl) return getLevelIconUrl(level);
-    return iconUrl;
+    return normalizeDisplayImageUrl(iconUrl, { fallback: getLevelIconUrl(level) });
   }, [error, iconUrl, level]);
 
   // 스타일 객체 메모이제이션
@@ -89,6 +90,7 @@ const UserIcon = React.memo(function UserIcon({
         className="w-full h-full object-contain"
         onError={handleError}
         priority={priority}
+        unoptimized={shouldUnoptimizeImageUrl(src)}
         loading={priority ? undefined : "lazy"}
       />
     </div>

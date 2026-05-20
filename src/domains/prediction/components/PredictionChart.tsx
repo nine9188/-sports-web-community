@@ -12,6 +12,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { getMatchHrefByTeams, getTeamHref } from '@/domains/livescore/utils/entityLinks';
 
 // 시간대별 통계 타입
 interface MinuteStats {
@@ -350,18 +351,25 @@ function TeamCompareHeader({
   name: string;
   predictedGoals?: string;
 }) {
+  const teamHref = getTeamHref(team);
+
   return (
     <div className="flex min-w-0 items-center justify-center gap-2 px-3 py-3">
       {label === 'HOME' && team.logo && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <a href={teamHref} className="flex h-8 w-8 shrink-0 items-center justify-center" aria-label={`${name} 팀 페이지`}>
           <Image src={team.logo} alt={name} width={32} height={32} unoptimized className="h-full w-full object-contain" />
-        </div>
+        </a>
       )}
       <div className="min-w-0 text-center">
         <div className={`mx-auto mb-1 w-fit rounded px-1.5 py-0.5 text-[10px] font-semibold ${label === 'HOME' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'}`}>
           {label === 'HOME' ? '홈' : '원정'}
         </div>
-        <div className="truncate text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">{name}</div>
+        <a
+          href={teamHref}
+          className="block truncate text-[13px] font-semibold text-gray-900 no-underline hover:text-brand-primary hover:no-underline dark:text-[#F0F0F0] dark:hover:text-brand-primary-dark"
+        >
+          {name}
+        </a>
         {predictedGoals && (
           <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
             예상골: <strong className="text-gray-900 dark:text-[#F0F0F0]">{predictedGoals}</strong>
@@ -369,9 +377,9 @@ function TeamCompareHeader({
         )}
       </div>
       {label === 'AWAY' && team.logo && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <a href={teamHref} className="flex h-8 w-8 shrink-0 items-center justify-center" aria-label={`${name} 팀 페이지`}>
           <Image src={team.logo} alt={name} width={32} height={32} unoptimized className="h-full w-full object-contain" />
-        </div>
+        </a>
       )}
     </div>
   );
@@ -436,19 +444,6 @@ function PredictionTeamComparison({
     <div className="border-t border-black/5 bg-white pb-4 dark:border-white/10 dark:bg-[#1D1D1D] md:pb-0">
       <div>
         <div>
-          <div className="border-b border-black/5 dark:border-white/10">
-            <div className="border-b border-black/5 px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:border-white/10 dark:text-gray-400 md:hidden">
-              팀 비교
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)]">
-            <TeamCompareHeader team={home} label="HOME" name={homeName} predictedGoals={homeGoalLabel} />
-            <div className="hidden items-center justify-center border-x border-black/5 px-2 text-[11px] font-semibold text-gray-500 dark:border-white/10 dark:text-gray-400 md:flex">
-              팀 비교
-            </div>
-            <TeamCompareHeader team={away} label="AWAY" name={awayName} predictedGoals={awayGoalLabel} />
-            </div>
-          </div>
-
           <CompareSection title="최근 5경기">
             <CompareRow label="폼" home={home.last_5?.form || '-'} away={away.last_5?.form || '-'} homeClassName="font-bold text-blue-600 dark:text-blue-400" awayClassName="font-bold text-blue-600 dark:text-blue-400" />
             <CompareRow label="공격" home={home.last_5?.att || '-'} away={away.last_5?.att || '-'} homeClassName="font-bold text-green-600 dark:text-green-400" awayClassName="font-bold text-green-600 dark:text-green-400" />
@@ -550,6 +545,8 @@ export default function PredictionChart({
   // 팀 이름 한국어
   const homeNameKo = getTeamNameKo(teams.home.id, teams.home.name);
   const awayNameKo = getTeamNameKo(teams.away.id, teams.away.name);
+  const homeHref = getTeamHref(teams.home);
+  const awayHref = getTeamHref(teams.away);
   const getMatchTeamNameKo = (teamId: number | string | null | undefined, fallbackName: string) => {
     if (sameTeamId(teamId, teams.home.id)) return homeNameKo;
     if (sameTeamId(teamId, teams.away.id)) return awayNameKo;
@@ -600,6 +597,10 @@ export default function PredictionChart({
   ];
 
   const chartHeight = compact ? 240 : 280;
+  const homeGoalVal = predictions.goals ? parseFloat(predictions.goals.home) : NaN;
+  const awayGoalVal = predictions.goals ? parseFloat(predictions.goals.away) : NaN;
+  const homeGoalLabel = !isNaN(homeGoalVal) ? (homeGoalVal < 0 ? `U${Math.abs(homeGoalVal)}` : `O${homeGoalVal}`) : undefined;
+  const awayGoalLabel = !isNaN(awayGoalVal) ? (awayGoalVal < 0 ? `U${Math.abs(awayGoalVal)}` : `O${awayGoalVal}`) : undefined;
 
   return (
     <div className="prediction-chart bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 overflow-hidden my-4">
@@ -610,13 +611,15 @@ export default function PredictionChart({
             {/* 홈팀 */}
             <div className="flex items-center gap-1.5 md:gap-3">
               {teams.home.logo && (
-                <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
+                <a href={homeHref} className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center" aria-label={`${homeNameKo} 팀 페이지`}>
                   <Image src={teams.home.logo} alt={homeNameKo} width={48} height={48} unoptimized className="w-full h-full object-contain" />
-                </div>
+                </a>
               )}
               <div className="text-center">
                 <div className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">{predictions.percent.home}</div>
-                <div className="text-[13px] text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{homeNameKo}</div>
+                <a href={homeHref} className="block max-w-[90px] truncate text-[13px] text-gray-600 no-underline hover:text-brand-primary hover:no-underline dark:text-gray-400 dark:hover:text-brand-primary-dark">
+                  {homeNameKo}
+                </a>
               </div>
             </div>
             {/* 무승부 */}
@@ -628,21 +631,33 @@ export default function PredictionChart({
             <div className="flex items-center gap-1.5 md:gap-3">
               <div className="text-center">
                 <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
-                <div className="text-[13px] text-gray-600 dark:text-gray-400 truncate max-w-[90px]">{awayNameKo}</div>
+                <a href={awayHref} className="block max-w-[90px] truncate text-[13px] text-gray-600 no-underline hover:text-brand-primary hover:no-underline dark:text-gray-400 dark:hover:text-brand-primary-dark">
+                  {awayNameKo}
+                </a>
               </div>
               {teams.away.logo && (
-                <div className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center">
+                <a href={awayHref} className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center" aria-label={`${awayNameKo} 팀 페이지`}>
                   <Image src={teams.away.logo} alt={awayNameKo} width={48} height={48} unoptimized className="w-full h-full object-contain" />
-                </div>
+                </a>
               )}
             </div>
           </div>
           {/* 예측 상세 */}
           <div className="flex justify-center gap-4 text-[11px] text-gray-500 dark:text-gray-400">
             {predictions.winner?.name && (
-              <span>승자: <strong className="text-gray-900 dark:text-[#F0F0F0]">
-                {predictions.winner.id ? getTeamNameKo(predictions.winner.id, predictions.winner.name) : predictions.winner.name}
-              </strong></span>
+              <span>
+                승자:{' '}
+                {predictions.winner.id ? (
+                  <a
+                    href={getTeamHref({ id: predictions.winner.id, name: predictions.winner.name })}
+                    className="font-semibold text-gray-900 no-underline hover:text-brand-primary hover:no-underline dark:text-[#F0F0F0] dark:hover:text-brand-primary-dark"
+                  >
+                    {getTeamNameKo(predictions.winner.id, predictions.winner.name)}
+                  </a>
+                ) : (
+                  <strong className="text-gray-900 dark:text-[#F0F0F0]">{predictions.winner.name}</strong>
+                )}
+              </span>
             )}
             {predictions.under_over && (() => {
               const val = parseFloat(predictions.under_over);
@@ -662,7 +677,7 @@ export default function PredictionChart({
       {/* 레이더 & 비교 */}
       {showRadar && (
         <>
-          <SectionHeader>팀 비교 레이더</SectionHeader>
+          <SectionHeader>데이터 기반 팀 비교</SectionHeader>
           <div className="p-3">
             <div className="flex items-center justify-center gap-3 mb-1 text-[11px]">
               <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400"><span className="w-2 h-2 bg-blue-500 rounded-full"></span>{homeNameKo}</span>
@@ -695,7 +710,20 @@ export default function PredictionChart({
       {showComparison && (
         <>
           <SectionHeader>상대 비교 지표</SectionHeader>
-          <div className="p-3 space-y-1.5">
+          <div className="border-b border-black/5 dark:border-white/10">
+            <div className="border-b border-black/5 px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:border-white/10 dark:text-gray-400 md:hidden">
+              팀 비교
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)]">
+              <TeamCompareHeader team={teams.home} label="HOME" name={homeNameKo} predictedGoals={homeGoalLabel} />
+              <div className="hidden items-center justify-center border-x border-black/5 px-2 text-[11px] font-semibold text-gray-500 dark:border-white/10 dark:text-gray-400 md:flex">
+                팀 비교
+              </div>
+              <TeamCompareHeader team={teams.away} label="AWAY" name={awayNameKo} predictedGoals={awayGoalLabel} />
+            </div>
+          </div>
+          <div className="p-3">
+            <div className="space-y-1.5">
             {comparisonData.map((item, idx) => (
               <div key={idx} className={`flex items-center gap-2 text-[11px] ${item.highlight ? 'bg-[#F5F5F5] dark:bg-[#262626] py-0.5 px-1 rounded' : ''}`}>
                 <span className={`w-8 text-right text-blue-600 dark:text-blue-400 ${item.highlight ? 'font-bold' : ''}`}>{item.home}%</span>
@@ -707,18 +735,13 @@ export default function PredictionChart({
                 <span className={`w-12 text-gray-500 dark:text-gray-400 ${item.highlight ? 'font-medium text-gray-700 dark:text-gray-300' : ''}`}>{item.label}</span>
               </div>
             ))}
+            </div>
           </div>
         </>
       )}
 
       {/* 팀 상세 */}
       {showTeamDetails && (() => {
-        // 예상골 라벨 계산
-        const homeGoalVal = predictions.goals ? parseFloat(predictions.goals.home) : NaN;
-        const awayGoalVal = predictions.goals ? parseFloat(predictions.goals.away) : NaN;
-        const homeGoalLabel = !isNaN(homeGoalVal) ? (homeGoalVal < 0 ? `U${Math.abs(homeGoalVal)}` : `O${homeGoalVal}`) : undefined;
-        const awayGoalLabel = !isNaN(awayGoalVal) ? (awayGoalVal < 0 ? `U${Math.abs(awayGoalVal)}` : `O${awayGoalVal}`) : undefined;
-
         return (
           <PredictionTeamComparison
             home={teams.home}
@@ -739,8 +762,13 @@ export default function PredictionChart({
             {h2h.slice(0, 5).map((match, idx) => {
               const matchHomeNameKo = getMatchTeamNameKo(match.teams.home.id, match.teams.home.name);
               const matchAwayNameKo = getMatchTeamNameKo(match.teams.away.id, match.teams.away.name);
+              const matchHref = getMatchHrefByTeams(match.fixture.id, match.teams.home, match.teams.away);
               return (
-                <div key={idx} className="flex items-center py-2 px-3 text-xs">
+                <a
+                  key={idx}
+                  href={matchHref}
+                  className="flex items-center px-3 py-2 text-xs no-underline transition-colors hover:bg-[#F5F5F5] hover:no-underline dark:hover:bg-[#262626]"
+                >
                   <span className="text-gray-400 w-20">
                     {new Date(match.fixture.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' })}
                   </span>
@@ -755,7 +783,7 @@ export default function PredictionChart({
                       {matchAwayNameKo}
                     </span>
                   </div>
-                </div>
+                </a>
               );
             })}
           </div>

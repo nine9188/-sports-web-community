@@ -6,6 +6,12 @@ type TipTapLikeNode = {
   content?: unknown;
 };
 
+type EntityCardGroupItem = {
+  type?: unknown;
+  id?: unknown;
+  data?: Record<string, unknown>;
+};
+
 export type RelatedPostCta = {
   key: string;
   type: 'match' | 'team' | 'player';
@@ -154,6 +160,18 @@ function walkNode(node: unknown, ctas: RelatedPostCta[], seen: Set<string>) {
     const playerData = attrs.playerData as Record<string, unknown> | undefined;
     const playerCta = buildPlayerCta({ ...playerData, id: attrs.playerId ?? playerData?.id });
     if (playerCta) pushCta(ctas, seen, playerCta);
+  }
+
+  if (current.type === 'entityCardGroup' && attrs && Array.isArray(attrs.items)) {
+    for (const item of attrs.items as EntityCardGroupItem[]) {
+      if (item.type === 'team') {
+        const teamCta = buildTeamCta({ ...item.data, id: item.id ?? item.data?.id });
+        if (teamCta) pushCta(ctas, seen, teamCta);
+      } else if (item.type === 'player') {
+        const playerCta = buildPlayerCta({ ...item.data, id: item.id ?? item.data?.id });
+        if (playerCta) pushCta(ctas, seen, playerCta);
+      }
+    }
   }
 
   if (Array.isArray(current.content)) {

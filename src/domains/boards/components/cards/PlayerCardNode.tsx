@@ -10,17 +10,11 @@ const PlayerCardNode: React.FC<NodeViewProps> = ({ node }) => {
   const { playerId, playerData } = node.attrs as { playerId: string | number; playerData: PlayerCardData };
 
   if (!playerData) {
-    return (
-      <NodeViewWrapper className="player-card-error my-2">
-        <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border-red-200 dark:border-red-800">
-          선수 데이터를 불러올 수 없습니다.
-        </div>
-      </NodeViewWrapper>
-    );
+    return <NodeViewWrapper className="player-card-node player-card-empty" contentEditable={false} />;
   }
 
   return (
-    <NodeViewWrapper className="player-card-node">
+    <NodeViewWrapper className="player-card-node" contentEditable={false}>
       <PlayerCard playerId={playerId} playerData={playerData} isEditable={true} />
     </NodeViewWrapper>
   );

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BubbleMenu, useEditor, EditorContent, type Editor } from '@tiptap/react';
-import { Extension } from '@tiptap/core';
+import { Extension, type Content } from '@tiptap/core';
 import { NodeSelection, Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
@@ -92,6 +92,88 @@ function findPollBlock(editor: Editor): PollBlockMatch | null {
 function isPollBlockSelected(editor: Editor) {
   const { selection } = editor.state;
   return selection instanceof NodeSelection && selection.node.type.name === 'pollBlock';
+}
+
+function isEntityCardSelected(editor: Editor) {
+  const { selection } = editor.state;
+  if (!(selection instanceof NodeSelection)) return false;
+
+  return selection.node.type.name === 'teamCard' ||
+    selection.node.type.name === 'playerCard';
+}
+
+function getSelectedEntityPickerMode(editor: Editor): 'team' | 'player' {
+  const { selection } = editor.state;
+  if (!(selection instanceof NodeSelection)) return 'team';
+
+  if (selection.node.type.name === 'playerCard') return 'player';
+  if (selection.node.type.name === 'entityCardGroup') {
+    const items = selection.node.attrs.items;
+    const firstItem = Array.isArray(items) ? items[0] : null;
+    return firstItem?.type === 'player' ? 'player' : 'team';
+  }
+
+  return 'team';
+}
+
+function findEmptyEntityCardGroup(editor: Editor, nearPosition: number) {
+  let match: { from: number; to: number } | null = null;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'entityCardGroup') return true;
+
+    const isNearGroup = nearPosition >= pos && nearPosition <= pos + node.nodeSize;
+    if (isNearGroup && node.childCount === 0) {
+      match = { from: pos, to: pos + node.nodeSize };
+      return false;
+    }
+
+    return true;
+  });
+
+  return match;
+}
+
+function expandEntityCardGroupsInContent(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value;
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => {
+      const expanded = expandEntityCardGroupsInContent(item);
+      return Array.isArray(expanded) ? expanded : [expanded];
+    });
+  }
+
+  const node = value as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+
+  if (node.type === 'entityCardGroup' && Array.isArray(node.attrs?.items)) {
+    const items = node.attrs.items;
+
+    return {
+      type: 'entityCardGroup',
+      attrs: {
+        layout: 'grid',
+        columns: 4,
+      },
+      content: items.flatMap((item) => {
+        if (!item || typeof item !== 'object') return [];
+
+        const card = item as { type?: string; id?: string | number; data?: unknown };
+        return card.type === 'player'
+          ? { type: 'playerCard', attrs: { playerId: card.id, playerData: card.data } }
+          : { type: 'teamCard', attrs: { teamId: card.id, teamData: card.data } };
+      }),
+    };
+  }
+
+  if (Array.isArray(node.content)) {
+    return {
+      ...node,
+      content: expandEntityCardGroupsInContent(node.content),
+    };
+  }
+
+  return value;
 }
 
 function RelatedConnectionIcon({ type }: { type: RelatedPostCta['type'] }) {
@@ -228,6 +310,7 @@ function loadAdditionalEditorExtensions() {
   import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
   import('@/shared/components/editor/tiptap/MatchCardExtension').then(mod => mod.MatchCardExtension),
   import('@/shared/components/editor/tiptap/extensions/social-embeds'),
+  import('@/shared/components/editor/tiptap/EntityCardGroupExtension').then(mod => mod.EntityCardGroupExtension),
   import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
   import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension),
   import('@tiptap/extension-table').then(mod => mod.default),
@@ -291,8 +374,11 @@ export default function PostEditForm({
   const [isVideoUploading, setIsVideoUploading] = useState(false);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const imageInsertionPositionRef = useRef<number | null>(null);
+  const videoInsertionPositionRef = useRef<number | null>(null);
   const linkPopoverAnchorRef = useRef<SelectionPositionAnchor | null>(null);
   const tableInsertionRangeRef = useRef<{ from: number; to: number } | null>(null);
+  const entityReplacementRangeRef = useRef<{ from: number; to: number } | null>(null);
   const pollDraftRef = useRef<PostPollDraft | null>(null);
 
   // 理쒖떊 ?곹깭瑜?ref濡?愿由?(useCallback ?섏〈??理쒖냼??
@@ -305,7 +391,7 @@ export default function PostEditForm({
     try {
       // JSON string?대㈃ ?뚯떛
       const parsed = JSON.parse(initialContent);
-      return parsed;
+      return expandEntityCardGroupsInContent(parsed);
     } catch {
       // ?뚯떛 ?ㅽ뙣?섎㈃ HTML string?쇰줈 媛꾩＜
       return initialContent;
@@ -386,6 +472,7 @@ export default function PostEditForm({
           VideoExtension,
           MatchCardExt,
           SocialEmbedsModule,
+          EntityCardGroupExt,
           TeamCardExt,
           PlayerCardExt
         ] = result;
@@ -397,6 +484,7 @@ export default function PostEditForm({
           MatchCardExt,
           SocialEmbedsModule.SocialEmbedExtension,
           SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
+          EntityCardGroupExt,
           TeamCardExt,
           PlayerCardExt
         ]);
@@ -407,8 +495,7 @@ export default function PostEditForm({
       }
     };
 
-    // 怨좉툒 ?뺤옣? 珥덇린 吏꾩엯?먯꽌 ?밴꺼?ㅼ? ?딄퀬, 愿???꾧뎄瑜?泥섏쓬 ???뚮쭔 濡쒕뱶?쒕떎.
-    void loadAdditionalExtensions;
+    void loadAdditionalExtensions();
   }, [extensionsLoaded]);
 
   const ensureAdditionalExtensions = useCallback(async () => {
@@ -427,6 +514,7 @@ export default function PostEditForm({
           VideoExtension,
           MatchCardExt,
           SocialEmbedsModule,
+          EntityCardGroupExt,
           TeamCardExt,
           PlayerCardExt,
           TableExtension,
@@ -441,6 +529,7 @@ export default function PostEditForm({
           MatchCardExt,
           SocialEmbedsModule.SocialEmbedExtension,
           SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
+          EntityCardGroupExt,
           TeamCardExt,
           PlayerCardExt,
           TableExtension.configure({
@@ -508,7 +597,7 @@ export default function PostEditForm({
   // ?먮뵒??珥덇린??- 湲곕낯 ?뺤옣?쇰줈 癒쇱? ?앹꽦 ??異붽? ?뺤옣 濡쒕뱶 ???ъ깮??
   const editor = useEditor({
     extensions: loadedExtensions,
-    content: parsedInitialContent,
+    content: extensionsLoaded ? parsedInitialContent as Content : '',
     onUpdate: ({ editor }) => {
       const editorJson = editor.getJSON();
       const jsonContent = JSON.stringify(editorJson);
@@ -538,7 +627,7 @@ export default function PostEditForm({
       },
     },
     immediatelyRender: false
-  }, [loadedExtensions]); // loadedExtensions 蹂寃????먮뵒???ъ깮??
+  }, [extensionsLoaded, loadedExtensions, parsedInitialContent]);
 
   // ?먮뵒???몃뱾????
   const {
@@ -587,7 +676,23 @@ export default function PostEditForm({
     setRelatedConnections(extractRelatedCtasFromContent(editorJson));
   }, [editor]);
 
+  const moveCursorAfterSelectedNode = useCallback(() => {
+    if (!editor) return;
+
+    const { selection } = editor.state;
+    if (selection instanceof NodeSelection) {
+      editor.chain().focus().setTextSelection(selection.to).run();
+    }
+  }, [editor]);
+
+  const getCurrentInsertionPosition = useCallback(() => {
+    if (!editor) return null;
+    return editor.state.selection.to;
+  }, [editor]);
+
   const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player' | 'table' | 'poll') => {
+    moveCursorAfterSelectedNode();
+
     if (dropdown === 'poll') {
       setLinkPopoverSource(null);
       setShowPollModal((value) => !value);
@@ -617,7 +722,7 @@ export default function PostEditForm({
     }
     setLinkPopoverSource(null);
     handleToggleDropdown(dropdown);
-  }, [editor, ensureAdditionalExtensions, extensionsLoaded, handleToggleDropdown, setShowLinkModal]);
+  }, [editor, ensureAdditionalExtensions, extensionsLoaded, handleToggleDropdown, moveCursorAfterSelectedNode, setShowLinkModal]);
 
   const linkState = useMemo(() => {
     if (!editor) {
@@ -662,11 +767,13 @@ export default function PostEditForm({
   const closeTeamPopover = useCallback(() => {
     setToolbarTeamPopoverPosition(null);
     setShowTeamModal(false);
+    entityReplacementRangeRef.current = null;
   }, [setShowTeamModal]);
 
   const closePlayerPopover = useCallback(() => {
     setToolbarPlayerPopoverPosition(null);
     setShowPlayerModal(false);
+    entityReplacementRangeRef.current = null;
   }, [setShowPlayerModal]);
 
   const closeTablePopover = useCallback(() => {
@@ -758,9 +865,79 @@ export default function PostEditForm({
     setShowPollModal(true);
   }, [editor]);
 
+  const handleOpenSelectedEntityEditor = useCallback(() => {
+    if (!editor || !(editor.state.selection instanceof NodeSelection)) return;
+
+    const { from, to } = editor.state.selection;
+    const mode = getSelectedEntityPickerMode(editor);
+    const shell = editorShellRef.current;
+    const selectionRect = editor.view.coordsAtPos(from);
+    const boundary = shell?.getBoundingClientRect();
+    const padding = 8;
+    const maxWidth = mode === 'player' ? PLAYER_POPOVER_WIDTH : TEAM_POPOVER_WIDTH;
+    const width = Math.min(maxWidth, Math.max(120, (boundary?.width ?? maxWidth) - padding * 2));
+
+    entityReplacementRangeRef.current = { from, to };
+    setToolbarTeamPopoverPosition(null);
+    setToolbarPlayerPopoverPosition(null);
+
+    const position = {
+      top: boundary ? selectionRect.bottom - boundary.top + 6 : 0,
+      left: boundary
+        ? Math.max(padding, Math.min(selectionRect.left - boundary.left, boundary.width - width - padding))
+        : 12,
+      width,
+    };
+
+    if (mode === 'player') {
+      setToolbarPlayerPopoverPosition(position);
+      setShowTeamModal(false);
+      setShowPlayerModal(true);
+    } else {
+      setToolbarTeamPopoverPosition(position);
+      setShowPlayerModal(false);
+      setShowTeamModal(true);
+    }
+  }, [editor, setShowPlayerModal, setShowTeamModal]);
+
+  const handleRemoveSelectedEntityCard = useCallback(() => {
+    if (!editor || !isEntityCardSelected(editor)) return;
+
+    const deleteTo = editor.state.selection.to;
+    editor.chain().focus().deleteSelection().run();
+
+    const emptyGroup = findEmptyEntityCardGroup(editor, deleteTo);
+    if (emptyGroup) {
+      editor.chain().focus().deleteRange(emptyGroup).run();
+    }
+
+    entityReplacementRangeRef.current = null;
+    toast.success('카드가 삭제되었습니다.');
+  }, [editor]);
+
+  const replaceSelectedEntityIfNeeded = useCallback(() => {
+    if (!editor || !entityReplacementRangeRef.current) return;
+
+    const { from, to } = entityReplacementRangeRef.current;
+    editor.chain().focus().deleteRange({ from, to }).setTextSelection(from).run();
+    entityReplacementRangeRef.current = null;
+  }, [editor]);
+
+  const handleSelectTeam = useCallback(async (...args: Parameters<typeof handleAddTeam>) => {
+    replaceSelectedEntityIfNeeded();
+    await handleAddTeam(...args);
+  }, [handleAddTeam, replaceSelectedEntityIfNeeded]);
+
+  const handleSelectPlayer = useCallback(async (...args: Parameters<typeof handleAddPlayer>) => {
+    replaceSelectedEntityIfNeeded();
+    await handleAddPlayer(...args);
+  }, [handleAddPlayer, replaceSelectedEntityIfNeeded]);
+
   const handleImageToolbarClick = useCallback(() => {
     if (isImageUploading) return;
 
+    moveCursorAfterSelectedNode();
+    imageInsertionPositionRef.current = getCurrentInsertionPosition();
     closeLinkPopover();
     closeYoutubePopover();
     closeSocialPopover();
@@ -779,7 +956,9 @@ export default function PostEditForm({
     closeTablePopover,
     closeTeamPopover,
     closeYoutubePopover,
+    getCurrentInsertionPosition,
     isImageUploading,
+    moveCursorAfterSelectedNode,
   ]);
 
   const handleImageFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -796,11 +975,12 @@ export default function PostEditForm({
 
     try {
       const { publicUrl, altText } = await uploadPostImageFile(file);
-      handleAddImage(publicUrl, altText);
+      handleAddImage(publicUrl, altText, imageInsertionPositionRef.current);
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
       toast.error(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.');
     } finally {
+      imageInsertionPositionRef.current = null;
       setIsImageUploading(false);
     }
   }, [editor, handleAddImage]);
@@ -808,6 +988,8 @@ export default function PostEditForm({
   const handleVideoToolbarClick = useCallback(() => {
     if (isVideoUploading) return;
 
+    moveCursorAfterSelectedNode();
+    videoInsertionPositionRef.current = getCurrentInsertionPosition();
     closeLinkPopover();
     closeYoutubePopover();
     closeSocialPopover();
@@ -828,7 +1010,9 @@ export default function PostEditForm({
     closeTeamPopover,
     closeYoutubePopover,
     ensureAdditionalExtensions,
+    getCurrentInsertionPosition,
     isVideoUploading,
+    moveCursorAfterSelectedNode,
   ]);
 
   const handleVideoFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -848,11 +1032,12 @@ export default function PostEditForm({
         uploadPostVideoFile(file),
         ensureAdditionalExtensions(),
       ]);
-      await handleAddVideo(publicUrl, caption);
+      await handleAddVideo(publicUrl, caption, videoInsertionPositionRef.current);
     } catch (error) {
       console.error('동영상 업로드 오류:', error);
       toast.error(error instanceof Error ? error.message : '동영상 업로드에 실패했습니다.');
     } finally {
+      videoInsertionPositionRef.current = null;
       setIsVideoUploading(false);
     }
   }, [editor, ensureAdditionalExtensions, handleAddVideo]);
@@ -1177,6 +1362,11 @@ export default function PostEditForm({
       setTableMenuPosition(null);
 
       if (isPollBlockSelected(editor)) {
+        setSelectionMenuPosition(null);
+        return;
+      }
+
+      if (editor.state.selection instanceof NodeSelection) {
         setSelectionMenuPosition(null);
         return;
       }
@@ -1747,8 +1937,8 @@ export default function PostEditForm({
                   isOpen={showTeamModal}
                   mode="team"
                   onClose={closeTeamPopover}
-                  onSelectTeam={handleAddTeam}
-                  onSelectPlayer={handleAddPlayer}
+                  onSelectTeam={handleSelectTeam}
+                  onSelectPlayer={handleSelectPlayer}
                 />
               </div>
             )}
@@ -1765,8 +1955,8 @@ export default function PostEditForm({
                   isOpen={showPlayerModal}
                   mode="player"
                   onClose={closePlayerPopover}
-                  onSelectTeam={handleAddTeam}
-                  onSelectPlayer={handleAddPlayer}
+                  onSelectTeam={handleSelectTeam}
+                  onSelectPlayer={handleSelectPlayer}
                 />
               </div>
             )}
@@ -1826,6 +2016,62 @@ export default function PostEditForm({
                       className="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                       title="투표 삭제"
                       onClick={handleRemovePollDraft}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </BubbleMenu>
+              )}
+              {editor && (
+                <BubbleMenu
+                  editor={editor}
+                  pluginKey="entityCardBubbleMenu"
+                  updateDelay={0}
+                  shouldShow={({ editor }) => isEntityCardSelected(editor) && !showTeamModal && !showPlayerModal}
+                  tippyOptions={{
+                    appendTo: () => editorViewportElement ?? document.body,
+                    duration: 0,
+                    maxWidth: 'none',
+                    zIndex: 30,
+                    popperOptions: {
+                      modifiers: [
+                        {
+                          name: 'preventOverflow',
+                          options: {
+                            boundary: editorViewportElement ?? 'clippingParents',
+                            padding: 8,
+                          },
+                        },
+                        {
+                          name: 'flip',
+                          options: {
+                            boundary: editorViewportElement ?? 'clippingParents',
+                            padding: 8,
+                          },
+                        },
+                      ],
+                    },
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
+                      onClick={handleOpenSelectedEntityEditor}
+                    >
+                      변경
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      title="카드 삭제"
+                      onClick={handleRemoveSelectedEntityCard}
                     >
                       <Trash2 size={15} />
                     </button>
@@ -2026,10 +2272,23 @@ export default function PostEditForm({
                       </span>
                     ))}
                   </div>
-                  {autoTags.length > relatedConnections.length && (
-                    <p className="text-[12px] text-gray-500 dark:text-gray-400">
-                      분류 키워드 {autoTags.length}개가 함께 저장됩니다.
-                    </p>
+                  {autoTags.length > 0 && (
+                    <div className="space-y-1.5 border-t border-black/5 pt-2 dark:border-white/10">
+                      <div className="text-[12px] text-gray-500 dark:text-gray-400">
+                        자동 분류 키워드 {autoTags.length}개
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {autoTags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex h-6 max-w-full items-center rounded-full bg-[#F0F0F0] px-2 text-[11px] font-medium text-gray-600 dark:bg-[#333333] dark:text-gray-300"
+                            title={tag}
+                          >
+                            <span className="truncate">{tag}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : (

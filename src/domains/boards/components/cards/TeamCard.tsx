@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { TeamCardProps } from '@/shared/types/teamCard';
-import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
+import { DARK_MODE_LEAGUE_IDS, leagueLogoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const CDN_URL = 'https://cdn.4590football.com';
 
 export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps) {
   const [isDark, setIsDark] = useState(false);
@@ -32,12 +31,12 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return `${CDN_URL}/leagues/md/${leagueId}-1.webp`;
+      return leagueLogoUrl(leagueId, { dark: true });
     }
-    return `${CDN_URL}/leagues/md/${leagueId}.webp`;
+    return leagueLogoUrl(leagueId);
   };
 
-  const teamLogo = logo && numericTeamId ? `${CDN_URL}/teams/md/${numericTeamId}.webp` : TEAM_PLACEHOLDER;
+  const teamLogo = logo && numericTeamId ? teamLogoUrl(numericTeamId) : TEAM_PLACEHOLDER;
   const href = getTeamHref({ ...teamData, id: numericTeamId });
 
   const CardContent = () => (
@@ -50,6 +49,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
               alt={leagueDisplayName}
               width={24}
               height={24}
+              draggable={false}
               unoptimized
               style={{ width: '24px', height: '24px', objectFit: 'contain' }}
             />
@@ -65,6 +65,7 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
             alt={displayName}
             width={64}
             height={64}
+            draggable={false}
             unoptimized
             style={{ width: '64px', height: '64px', objectFit: 'contain' }}
           />

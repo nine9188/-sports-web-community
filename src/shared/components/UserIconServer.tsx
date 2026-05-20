@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-shared';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 interface UserIconServerProps {
   iconUrl?: string | null;
@@ -22,7 +23,7 @@ export default function UserIconServer({
   className = '',
 }: UserIconServerProps) {
   // 아이콘 URL 결정 (서버에서 즉시 계산)
-  const src = iconUrl || getLevelIconUrl(level);
+  const src = normalizeDisplayImageUrl(iconUrl, { fallback: getLevelIconUrl(level) });
 
   return (
     <div
@@ -36,6 +37,7 @@ export default function UserIconServer({
         height={size}
         sizes={`${size}px`}
         className="w-full h-full object-contain"
+        unoptimized={shouldUnoptimizeImageUrl(src)}
         loading="eager"
       />
     </div>

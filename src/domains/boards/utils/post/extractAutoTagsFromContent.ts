@@ -4,6 +4,11 @@ type TipTapLikeNode = {
   content?: unknown;
 };
 
+type EntityCardGroupItem = {
+  type?: unknown;
+  data?: Record<string, unknown>;
+};
+
 const MAX_TAGS = 12;
 const MAX_TAG_LENGTH = 40;
 
@@ -95,6 +100,14 @@ function walkNode(node: unknown, tags: string[]) {
     addPlayerTags(tags, attrs?.playerData as Record<string, unknown> | undefined);
   } else if (current.type === 'matchCard') {
     addMatchTags(tags, attrs?.matchData as Record<string, unknown> | undefined);
+  } else if (current.type === 'entityCardGroup' && Array.isArray(attrs?.items)) {
+    for (const item of attrs.items as EntityCardGroupItem[]) {
+      if (item.type === 'team') {
+        addTeamTags(tags, item.data);
+      } else if (item.type === 'player') {
+        addPlayerTags(tags, item.data);
+      }
+    }
   }
 
   if (Array.isArray(current.content)) {

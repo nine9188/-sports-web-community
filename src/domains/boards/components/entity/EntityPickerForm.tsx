@@ -6,6 +6,7 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { Button } from '@/shared/components/ui'
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard'
+import { leagueLogoUrl } from '@/shared/images/urls'
 import { type Player } from '@/domains/livescore/actions/teams/squad'
 import {
   type TeamMapping,
@@ -16,7 +17,6 @@ import {
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg'
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg'
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg'
-const SUPABASE_URL = 'https://cdn.4590football.com'
 
 const LEAGUES = [
   { id: 39, name: '프리미어리그', country: '잉글랜드' },
@@ -132,9 +132,9 @@ export function EntityPickerForm({
   const getLeagueLogo = (id: number) => {
     if (!id) return LEAGUE_PLACEHOLDER
     if (isDark && DARK_MODE_LEAGUE_IDS.includes(id)) {
-      return `${SUPABASE_URL}/leagues/md/${id}-1.webp`
+      return leagueLogoUrl(id, { dark: true })
     }
-    return `${SUPABASE_URL}/leagues/md/${id}.webp`
+    return leagueLogoUrl(id)
   }
 
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER

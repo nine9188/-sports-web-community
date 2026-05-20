@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { AboutFaqItem } from './faq';
+import { SITE_ICON_URL, leagueLogoUrl, playerPhotoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 /* ─────────────────────────────────────────────
    타입
@@ -704,7 +705,7 @@ function CommunityDemo() {
                   <div className="block px-3 py-2 hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0] overflow-hidden">
                     <div className="flex items-center text-xs gap-1">
                       <div className="relative w-5 h-5 shrink-0">
-                        <Image src={siteConfig.icon} alt="사이트 로고" width={20} height={20} className="object-contain w-5 h-5 dark:invert" />
+                        <Image src={SITE_ICON_URL} alt="사이트 로고" width={20} height={20} className="object-contain w-5 h-5 dark:invert" />
                       </div>
                       <span className="truncate flex-1 min-w-0">{p.title}</span>
                       <span className="text-gray-500 dark:text-gray-400 ml-auto shrink-0 flex items-center gap-2">
@@ -816,14 +817,14 @@ export default function AboutPageClient({
                     <div className="league-header">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div className="league-logo-box">
-                          <Image src="https://cdn.4590football.com/teams/md/40.webp" alt="리버풀" width={24} height={24} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                          <Image src={teamLogoUrl(40)} alt="리버풀" width={24} height={24} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                         </div>
                         <span className="league-name">리버풀</span>
                       </div>
                     </div>
                     <div className="player-main">
                       <div className="player-photo">
-                        <Image src="https://cdn.4590football.com/players/md/306.webp" alt="살라" width={48} height={48} />
+                        <Image src={playerPhotoUrl(306)} alt="살라" width={48} height={48} />
                       </div>
                       <span className="player-name">모하메드 살라</span>
                     </div>
@@ -839,8 +840,8 @@ export default function AboutPageClient({
                     <div className="league-header">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div className="league-logo-box">
-                          <Image src="https://cdn.4590football.com/leagues/md/39.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="dark:hidden" />
-                          <Image src="https://cdn.4590football.com/leagues/md/39-1.webp" alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="hidden dark:block" />
+                          <Image src={leagueLogoUrl(39)} alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="dark:hidden" />
+                          <Image src={leagueLogoUrl(39, { dark: true })} alt="프리미어리그" width={20} height={20} style={{ width: '20px', height: '20px', objectFit: 'contain' }} className="hidden dark:block" />
                         </div>
                         <span className="league-name">프리미어리그</span>
                       </div>
@@ -848,7 +849,7 @@ export default function AboutPageClient({
                     <div className="match-main">
                       <div className="team-info">
                         <div className="team-logo-box">
-                          <Image src="https://cdn.4590football.com/teams/md/47.webp" alt="토트넘" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+                          <Image src={teamLogoUrl(47)} alt="토트넘" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                         </div>
                         <span className="team-name">토트넘</span>
                       </div>
@@ -862,7 +863,7 @@ export default function AboutPageClient({
                       </div>
                       <div className="team-info">
                         <div className="team-logo-box">
-                          <Image src="https://cdn.4590football.com/teams/md/33.webp" alt="맨유" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+                          <Image src={teamLogoUrl(33)} alt="맨유" width={48} height={48} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                         </div>
                         <span className="team-name">맨유</span>
                       </div>

@@ -16,6 +16,12 @@ interface TiptapNode {
   content?: TiptapNode[];
 }
 
+type EntityCardGroupItem = {
+  type?: unknown;
+  id?: unknown;
+  data?: Record<string, unknown>;
+};
+
 /**
  * Tiptap JSON content에서 매치/팀/선수 카드 링크를 추출
  */
@@ -86,6 +92,29 @@ export function extractCardLinks(content: unknown): CardLink[] {
           team_id: teamId || undefined,
           player_id: playerId,
         });
+      }
+    }
+
+    if (node.type === 'entityCardGroup' && node.attrs && Array.isArray(node.attrs.items)) {
+      for (const item of node.attrs.items as EntityCardGroupItem[]) {
+        if (item.type === 'team') {
+          const teamId = Number(item.id ?? item.data?.id);
+          if (teamId) {
+            addLink({ card_type: 'team', team_id: teamId });
+          }
+        }
+
+        if (item.type === 'player') {
+          const playerId = Number(item.id ?? item.data?.id);
+          const team = item.data?.team as { id?: number } | undefined;
+          if (playerId) {
+            addLink({
+              card_type: 'player',
+              team_id: team?.id,
+              player_id: playerId,
+            });
+          }
+        }
       }
     }
 

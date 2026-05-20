@@ -692,6 +692,7 @@ iframe[src*="youtu.be/"] {
   padding: 1rem;
   min-height: 500px;
   color: #111827;
+  overflow-x: hidden;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -1366,4 +1367,325 @@ iframe[src*="youtu.be/"] {
 .team-card:hover .footer-link,
 .player-card:hover .footer-link {
   text-decoration: underline;
+}
+
+.entity-card-scroll {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0.75rem 0 1rem;
+  padding: 0.125rem 0.125rem 0.625rem;
+  overflow: visible;
+}
+
+.entity-card-group,
+.entity-card-group-node {
+  --entity-card-gap: 0.625rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0.75rem 0 1rem;
+}
+
+.entity-card-group-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: var(--entity-card-gap);
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.125rem 0.125rem 0.625rem;
+  overflow: visible;
+}
+
+.entity-card-group-cols-1 .entity-card-group-track {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 100%;
+}
+
+.entity-card-group-cols-2 .entity-card-group-track {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 100%;
+}
+
+.entity-card-group-cols-3 .entity-card-group-track {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 100%;
+}
+
+.entity-card-group-cols-4 .entity-card-group-track {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 100%;
+}
+
+.entity-card-group-item {
+  width: 100%;
+  min-width: 0;
+  cursor: grab;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.entity-card-group-item:active {
+  cursor: grabbing;
+}
+
+.entity-card-group-item.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+}
+
+.entity-card-group .team-card,
+.entity-card-group .player-card,
+.entity-card-group-node .team-card,
+.entity-card-group-node .player-card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.entity-card-group .team-card *,
+.entity-card-group .player-card *,
+.entity-card-group-node .team-card *,
+.entity-card-group-node .player-card * {
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.entity-card-group .team-card .league-header,
+.entity-card-group .player-card .league-header,
+.entity-card-group-node .team-card .league-header,
+.entity-card-group-node .player-card .league-header {
+  height: 2.125rem;
+  padding: 0.5rem 0.5rem;
+}
+
+.entity-card-group .team-card .league-logo-box,
+.entity-card-group .player-card .league-logo-box,
+.entity-card-group-node .team-card .league-logo-box,
+.entity-card-group-node .player-card .league-logo-box {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.375rem;
+}
+
+.entity-card-group .team-card .league-name,
+.entity-card-group .player-card .league-name,
+.entity-card-group-node .team-card .league-name,
+.entity-card-group-node .player-card .league-name {
+  font-size: 0.8125rem;
+}
+
+.entity-card-group .team-card .team-main,
+.entity-card-group .player-card .player-main,
+.entity-card-group-node .team-card .team-main,
+.entity-card-group-node .player-card .player-main {
+  min-height: 5rem;
+  padding: 0.625rem 0.5rem;
+}
+
+.entity-card-group .team-card .team-logo-box,
+.entity-card-group .player-card .player-photo,
+.entity-card-group-node .team-card .team-logo-box,
+.entity-card-group-node .player-card .player-photo {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.entity-card-group .team-card .team-name,
+.entity-card-group .player-card .player-name,
+.entity-card-group-node .team-card .team-name,
+.entity-card-group-node .player-card .player-name {
+  font-size: 0.8125rem;
+}
+
+.entity-card-group .team-card .match-footer,
+.entity-card-group .player-card .match-footer,
+.entity-card-group-node .team-card .match-footer,
+.entity-card-group-node .player-card .match-footer {
+  padding: 0.375rem 0.375rem;
+}
+
+.ProseMirror .entity-card-group-track > .team-card-node,
+.ProseMirror .entity-card-group-track > .player-card-node,
+.entity-card-group-track > .team-card-node,
+.entity-card-group-track > .player-card-node {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.entity-card-scroll .team-card,
+.entity-card-scroll .player-card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.entity-card-scroll .team-card .league-header,
+.entity-card-scroll .player-card .league-header {
+  height: 2.125rem;
+  padding: 0.5rem 0.625rem;
+}
+
+.entity-card-scroll .team-card .league-logo-box,
+.entity-card-scroll .player-card .league-logo-box {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.375rem;
+}
+
+.entity-card-scroll .team-card .league-name,
+.entity-card-scroll .player-card .league-name {
+  font-size: 0.8125rem;
+}
+
+.entity-card-scroll .team-card .team-main,
+.entity-card-scroll .player-card .player-main {
+  min-height: 5rem;
+  padding: 0.625rem;
+}
+
+.entity-card-scroll .team-card .team-logo-box,
+.entity-card-scroll .player-card .player-photo {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.entity-card-scroll .team-card .team-name,
+.entity-card-scroll .player-card .player-name {
+  font-size: 0.8125rem;
+}
+
+.entity-card-scroll .team-card .match-footer,
+.entity-card-scroll .player-card .match-footer {
+  padding: 0.375rem 0.5rem;
+}
+
+.ProseMirror .team-card-node,
+.ProseMirror .player-card-node {
+  display: inline-block !important;
+  margin: 0.25rem;
+  vertical-align: top;
+  white-space: normal;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ProseMirror .entity-card-group-node {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0.75rem 0 1rem;
+  white-space: normal;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ProseMirror .team-card-node,
+.ProseMirror .player-card-node {
+  width: 11rem !important;
+  max-width: 11rem !important;
+  min-width: 0;
+}
+
+.ProseMirror .team-card-node *,
+.ProseMirror .player-card-node *,
+.ProseMirror .entity-card-group-node * {
+  -webkit-user-drag: none;
+}
+
+.ProseMirror .team-card-node img,
+.ProseMirror .player-card-node img,
+.ProseMirror .entity-card-group-node img {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ProseMirror p,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6,
+.ProseMirror ul,
+.ProseMirror ol,
+.ProseMirror blockquote {
+  white-space: normal;
+}
+
+.ProseMirror .team-card-node .team-card,
+.ProseMirror .player-card-node .player-card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.ProseMirror .team-card-empty,
+.ProseMirror .player-card-empty {
+  display: none !important;
+}
+
+.ProseMirror p:empty:has(+ .team-card-node),
+.ProseMirror p:empty:has(+ .player-card-node),
+.ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .team-card-node),
+.ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .player-card-node) {
+  min-height: 0;
+  margin: 0;
+  line-height: 0;
+}
+
+.ProseMirror .team-card-node + p:empty:has(+ .team-card-node),
+.ProseMirror .team-card-node + p:empty:has(+ .player-card-node),
+.ProseMirror .player-card-node + p:empty:has(+ .team-card-node),
+.ProseMirror .player-card-node + p:empty:has(+ .player-card-node),
+.ProseMirror .team-card-node + p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .team-card-node),
+.ProseMirror .team-card-node + p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .player-card-node),
+.ProseMirror .player-card-node + p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .team-card-node),
+.ProseMirror .player-card-node + p:has(> br.ProseMirror-trailingBreak:only-child):has(+ .player-card-node) {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .entity-card-group,
+  .entity-card-group-node {
+    --entity-card-gap: 0.5rem;
+  }
+
+  .entity-card-scroll {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 0.5rem;
+    max-width: 100%;
+    margin: 0.625rem 0 0.875rem;
+  }
+
+  .entity-card-group-track,
+  .entity-card-group-cols-1 .entity-card-group-track,
+  .entity-card-group-cols-2 .entity-card-group-track,
+  .entity-card-group-cols-3 .entity-card-group-track,
+  .entity-card-group-cols-4 .entity-card-group-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .entity-card-scroll .team-card,
+  .entity-card-scroll .player-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ProseMirror .team-card-node,
+  .ProseMirror .player-card-node {
+    width: 9.5rem !important;
+    max-width: 9.5rem !important;
+  }
 }

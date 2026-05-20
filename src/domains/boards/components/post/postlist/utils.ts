@@ -137,6 +137,10 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
                     // 선수카드 감지
                     text += ' [선수카드] ';
                     foundPlayerCard = true;
+                  } else if (nodeObj.type === 'entityCardGroup') {
+                    text += ' [entity-card-group] ';
+                    foundTeamCard = true;
+                    foundPlayerCard = true;
                   } else if (Array.isArray(nodeObj.content)) {
                     text += extractTextFromTipTap(nodeObj.content);
                   }

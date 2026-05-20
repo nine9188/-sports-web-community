@@ -1,6 +1,5 @@
 import type { DemoImages } from './AboutPageClient';
-
-const CDN_BASE = 'https://cdn.4590football.com';
+import { leagueLogoUrl, playerPhotoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 const TEAM_IDS = [49, 42, 50, 40, 47, 34, 529, 541, 530, 533];
 const LEAGUE_IDS = [39, 140, 2];
@@ -15,13 +14,13 @@ function createAssetMap(ids: number[], getUrl: (id: number) => string): Record<n
 }
 
 export const ABOUT_DEMO_IMAGES: DemoImages = {
-  teamLogos: createAssetMap(TEAM_IDS, (id) => `${CDN_BASE}/teams/sm/${id}.webp`),
-  leagueLogos: createAssetMap(LEAGUE_IDS, (id) => `${CDN_BASE}/leagues/sm/${id}.webp`),
+  teamLogos: createAssetMap(TEAM_IDS, (id) => teamLogoUrl(id, 'sm')),
+  leagueLogos: createAssetMap(LEAGUE_IDS, (id) => leagueLogoUrl(id, { size: 'sm' })),
   leagueLogosDark: createAssetMap(LEAGUE_IDS, (id) =>
     DARK_LEAGUE_IDS.has(id)
-      ? `${CDN_BASE}/leagues/sm/${id}-1.webp`
-      : `${CDN_BASE}/leagues/sm/${id}.webp`
+      ? leagueLogoUrl(id, { size: 'sm', dark: true })
+      : leagueLogoUrl(id, { size: 'sm' })
   ),
-  playerPhoto: `${CDN_BASE}/players/md/306.webp`,
-  playerPhotos: createAssetMap(PLAYER_IDS, (id) => `${CDN_BASE}/players/sm/${id}.webp`),
+  playerPhoto: playerPhotoUrl(306),
+  playerPhotos: createAssetMap(PLAYER_IDS, (id) => playerPhotoUrl(id, 'sm')),
 };

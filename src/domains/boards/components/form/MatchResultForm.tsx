@@ -9,10 +9,10 @@ import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
+import { leagueLogoUrl } from '@/shared/images/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const SUPABASE_URL = 'https://cdn.4590football.com';
 
 interface League {
   id: number | string;
@@ -129,10 +129,10 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
     if (!numId) return LEAGUE_PLACEHOLDER;
 
     if (isDark && DARK_MODE_LEAGUE_IDS.includes(numId)) {
-      return `${SUPABASE_URL}/leagues/md/${numId}-1.webp`;
+      return leagueLogoUrl(numId, { dark: true });
     }
 
-    return `${SUPABASE_URL}/leagues/md/${numId}.webp`;
+    return leagueLogoUrl(numId);
   };
 
   const handleSelectMatch = (match: Match) => {

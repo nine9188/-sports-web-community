@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 export type QuickLinkItem = {
   key: string;
@@ -75,11 +76,12 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
           >
             {item.iconImage ? (
               <Image
-                src={item.iconImage}
+                src={normalizeDisplayImageUrl(item.iconImage)}
                 alt={`${item.label} 아이콘`}
                 width={28}
                 height={28}
                 className="w-7 h-7 md:w-5 md:h-5 object-contain dark:invert"
+                unoptimized={shouldUnoptimizeImageUrl(item.iconImage)}
                 loading="eager"
               />
             ) : (
@@ -95,4 +97,3 @@ export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className
     </nav>
   );
 }
-

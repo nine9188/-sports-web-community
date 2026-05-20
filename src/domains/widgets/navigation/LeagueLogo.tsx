@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 interface LeagueLogoProps {
   src: string;
@@ -20,7 +21,11 @@ export default function LeagueLogo({
   fallbackSrc = '/images/fallback-league.png',
   priority = false,
 }: LeagueLogoProps) {
-  const [imgSrc, setImgSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(normalizeDisplayImageUrl(src, { fallback: fallbackSrc }));
+
+  useEffect(() => {
+    setImgSrc(normalizeDisplayImageUrl(src, { fallback: fallbackSrc }));
+  }, [fallbackSrc, src]);
 
   return (
     <div
@@ -32,9 +37,9 @@ export default function LeagueLogo({
         alt={alt}
         fill
         sizes={`${size}px`}
-        onError={() => setImgSrc(fallbackSrc)}
+        onError={() => setImgSrc(normalizeDisplayImageUrl(fallbackSrc))}
         priority={priority}
-        unoptimized
+        unoptimized={shouldUnoptimizeImageUrl(imgSrc)}
         className="object-contain"
       />
     </div>

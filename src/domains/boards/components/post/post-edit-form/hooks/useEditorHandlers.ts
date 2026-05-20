@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { Editor } from '@tiptap/react';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { NodeSelection } from '@tiptap/pm/state';
 import { toast } from 'sonner';
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { generateMatchCardHTML } from '@/shared/utils/matchCardRenderer';
@@ -10,6 +12,7 @@ import { createTeamCardData } from '@/domains/boards/actions/createTeamCardData'
 import { createMatchCardData } from '@/domains/boards/actions/createMatchCardData';
 import type { TeamMapping } from '@/domains/boards/hooks/useEntityQueries';
 import type { Player } from '@/domains/livescore/actions/teams/squad';
+import type { EntityCardGroupItem } from '@/shared/types/entityCardGroup';
 
 interface LeagueInfo {
   id: number;
@@ -40,9 +43,9 @@ interface UseEditorHandlersReturn {
   setShowPlayerModal: (show: boolean) => void;
   setShowTableModal: (show: boolean) => void;
   handleToggleDropdown: (dropdown: ModalType) => void;
-  handleAddImage: (url: string, caption?: string) => void;
+  handleAddImage: (url: string, caption?: string, insertAt?: number | null) => void;
   handleAddYoutube: (url: string, caption?: string) => Promise<void>;
-  handleAddVideo: (videoUrl: string, caption: string) => Promise<void>;
+  handleAddVideo: (videoUrl: string, caption: string, insertAt?: number | null) => Promise<void>;
   handleAddMatch: (matchId: string, matchData: MatchData) => Promise<void>;
   handleAddLink: (url: string, text?: string) => void;
   handleAddSocialEmbed: (platform: string, url: string) => void;
@@ -51,8 +54,200 @@ interface UseEditorHandlersReturn {
   handleAddTable: (rows: number, cols: number, selectionRange?: { from: number; to: number }) => void;
 }
 
-function insertContent(editor: Editor, content: Parameters<Editor['commands']['insertContent']>[0]) {
+function getSelectionInsertPosition(editor: Editor): number | null {
+  return editor.state.selection.to;
+}
+
+function findAppendableEntityCardGroup(
+  editor: Editor,
+  insertAt: number | null
+): { pos: number; node: ProseMirrorNode } | null {
+  if (insertAt === null || !editor.schema.nodes.entityCardGroup) return null;
+
+  const matches: Array<{ pos: number; node: ProseMirrorNode; distance: number }> = [];
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'entityCardGroup') return true;
+
+    const end = pos + node.nodeSize;
+    const containsInsertPosition = insertAt >= pos && insertAt <= end;
+    const distanceFromEnd = insertAt - end;
+    const isImmediatelyAfter = distanceFromEnd >= 0 && distanceFromEnd <= 4;
+
+    if (containsInsertPosition || isImmediatelyAfter) {
+      const distance = Math.abs(distanceFromEnd);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        matches.unshift({ pos, node, distance });
+      }
+    }
+
+    return true;
+  });
+
+  const closest = matches.sort((left, right) => left.distance - right.distance)[0];
+  return closest ? { pos: closest.pos, node: closest.node } : null;
+}
+
+function getLegacyEntityCardItem(node: ProseMirrorNode): EntityCardGroupItem | null {
+  if (node.type.name === 'teamCard') {
+    return {
+      type: 'team',
+      id: node.attrs.teamId,
+      data: node.attrs.teamData,
+    };
+  }
+
+  if (node.type.name === 'playerCard') {
+    return {
+      type: 'player',
+      id: node.attrs.playerId,
+      data: node.attrs.playerData,
+    };
+  }
+
+  return null;
+}
+
+function createEntityCardContent(item: EntityCardGroupItem) {
+  if (item.type === 'player') {
+    return {
+      type: 'playerCard',
+      attrs: {
+        playerId: item.id,
+        playerData: item.data,
+      },
+    };
+  }
+
+  return {
+    type: 'teamCard',
+    attrs: {
+      teamId: item.id,
+      teamData: item.data,
+    },
+  };
+}
+
+function findAppendableLegacyEntityCard(
+  editor: Editor,
+  insertAt: number | null
+): { pos: number; node: ProseMirrorNode; item: EntityCardGroupItem } | null {
+  if (insertAt === null) return null;
+
+  const matches: Array<{ pos: number; node: ProseMirrorNode; item: EntityCardGroupItem; distance: number }> = [];
+
+  editor.state.doc.descendants((node, pos) => {
+    const item = getLegacyEntityCardItem(node);
+    if (!item) return true;
+
+    const end = pos + node.nodeSize;
+    const containsInsertPosition = insertAt >= pos && insertAt <= end;
+    const distanceFromEnd = insertAt - end;
+    const isImmediatelyAfter = distanceFromEnd >= 0 && distanceFromEnd <= 4;
+
+    if (containsInsertPosition || isImmediatelyAfter) {
+      matches.push({ pos, node, item, distance: Math.abs(distanceFromEnd) });
+    }
+
+    return true;
+  });
+
+  const closest = matches.sort((left, right) => left.distance - right.distance)[0];
+  return closest ? { pos: closest.pos, node: closest.node, item: closest.item } : null;
+}
+
+function insertEntityCardGroupItem(editor: Editor, item: EntityCardGroupItem, insertAt: number | null) {
+  if (!editor.schema.nodes.entityCardGroup) {
+    return false;
+  }
+
+  const cardContent = createEntityCardContent(item);
+  const targetGroup = findAppendableEntityCardGroup(editor, insertAt);
+
+  if (targetGroup) {
+    const groupContentEnd = targetGroup.pos + targetGroup.node.nodeSize - 1;
+    const insertionPosition =
+      typeof insertAt === 'number' && insertAt > targetGroup.pos && insertAt < groupContentEnd
+        ? insertAt
+        : groupContentEnd;
+
+    return editor.chain()
+      .insertContentAt(insertionPosition, cardContent)
+      .focus()
+      .run();
+  }
+
+  const legacyCard = findAppendableLegacyEntityCard(editor, insertAt);
+  if (legacyCard) {
+    const groupNode = editor.schema.nodes.entityCardGroup.create({
+      layout: 'grid',
+      columns: 4,
+    }, [
+      editor.schema.nodes[legacyCard.item.type === 'player' ? 'playerCard' : 'teamCard'].create(
+        legacyCard.item.type === 'player'
+          ? { playerId: legacyCard.item.id, playerData: legacyCard.item.data }
+          : { teamId: legacyCard.item.id, teamData: legacyCard.item.data }
+      ),
+      editor.schema.nodes[item.type === 'player' ? 'playerCard' : 'teamCard'].create(
+        item.type === 'player'
+          ? { playerId: item.id, playerData: item.data }
+          : { teamId: item.id, teamData: item.data }
+      ),
+    ]);
+    const transaction = editor.state.tr.replaceWith(
+      legacyCard.pos,
+      legacyCard.pos + legacyCard.node.nodeSize,
+      groupNode
+    );
+
+    editor.view.dispatch(transaction);
+    editor.chain().focus().setTextSelection(legacyCard.pos + groupNode.nodeSize).run();
+    return true;
+  }
+
+  return insertContent(editor, [
+    {
+      type: 'entityCardGroup',
+      attrs: {
+        layout: 'grid',
+        columns: 4,
+      },
+      content: [cardContent],
+    },
+    { type: 'paragraph' },
+  ], insertAt);
+}
+
+function insertContent(
+  editor: Editor,
+  content: Parameters<Editor['commands']['insertContent']>[0],
+  insertAt?: number | null
+) {
+  if (typeof insertAt === 'number') {
+    return editor.chain()
+      .insertContentAt(insertAt, content)
+      .focus()
+      .run();
+  }
+
   const { selection } = editor.state;
+
+  if (selection instanceof NodeSelection) {
+    return editor.chain()
+      .insertContentAt(selection.to, content)
+      .focus()
+      .run();
+  }
+
+  if (!selection.empty) {
+    return editor.chain()
+      .insertContentAt(selection.to, content)
+      .focus()
+      .run();
+  }
+
   const { $from } = selection;
   const shouldReplaceEmptyParagraph =
     selection.empty &&
@@ -112,7 +307,7 @@ export function useEditorHandlers({
     setActiveModal((prev) => (prev === dropdown ? null : dropdown));
   }, []);
 
-  const handleAddImage = useCallback((url: string, caption?: string) => {
+  const handleAddImage = useCallback((url: string, caption?: string, insertAt?: number | null) => {
     if (!editor) {
       toast.error('에디터가 준비되지 않았습니다.');
       return;
@@ -127,7 +322,7 @@ export function useEditorHandlers({
       const success = insertContent(editor, [
         { type: 'image', attrs: { src: url, alt: caption || '' } },
         { type: 'paragraph' },
-      ]);
+      ], insertAt);
 
       if (!success) {
         toast.error('이미지를 에디터에 삽입하지 못했습니다.');
@@ -176,7 +371,7 @@ export function useEditorHandlers({
     }
   }, [editor, extensionsLoaded, setShowYoutubeModal]);
 
-  const handleAddVideo = useCallback(async (videoUrl: string, caption = '') => {
+  const handleAddVideo = useCallback(async (videoUrl: string, caption = '', insertAt?: number | null) => {
     if (!videoUrl || !editor) return;
 
     try {
@@ -196,18 +391,24 @@ export function useEditorHandlers({
             },
           },
           { type: 'paragraph' },
-        ]);
+        ], insertAt);
       }
 
       if (!success) {
-        editor.commands.insertContent(`
+        const fallbackHtml = `
           <div class="video-wrapper" style="margin: 1rem 0;">
             <video src="${videoUrl}" controls preload="none" style="width: 100%; max-width: 640px; height: auto;" data-caption="${caption || ''}">
               釉뚮씪?곗?媛 鍮꾨뵒?ㅻ? 吏?먰븯吏 ?딆뒿?덈떎.
             </video>
           </div>
           <p></p>
-        `);
+        `;
+
+        if (typeof insertAt === 'number') {
+          editor.chain().insertContentAt(insertAt, fallbackHtml).focus().run();
+        } else {
+          editor.commands.insertContent(fallbackHtml);
+        }
       }
 
       toast.success('동영상이 추가되었습니다.');
@@ -223,6 +424,8 @@ export function useEditorHandlers({
       return;
     }
 
+    const insertAt = getSelectionInsertPosition(editor);
+
     try {
       const result = await createMatchCardData(matchData);
 
@@ -236,7 +439,7 @@ export function useEditorHandlers({
         success = insertContent(editor, [
           { type: 'matchCard', attrs: { matchId, matchData: result.data } },
           { type: 'paragraph' },
-        ]);
+        ], insertAt);
       }
 
       if (!success) {
@@ -323,6 +526,8 @@ export function useEditorHandlers({
       return;
     }
 
+    const insertAt = getSelectionInsertPosition(editor);
+
     try {
       const result = await createTeamCardData(
         { id: team.id, name_en: team.name_en, name_ko: team.name_ko, logo: team.logo },
@@ -334,15 +539,17 @@ export function useEditorHandlers({
         return;
       }
 
-      if (!('setTeamCard' in editor.commands)) {
-        toast.error('팀 카드 기능이 로드되지 않았습니다.');
-        return;
-      }
+      let success = insertEntityCardGroupItem(editor, {
+        type: 'team',
+        id: team.id,
+        data: result.data,
+      }, insertAt);
 
-      const success = insertContent(editor, [
-        { type: 'teamCard', attrs: { teamId: team.id, teamData: result.data } },
-        { type: 'paragraph' },
-      ]);
+      if (!success) {
+        success = insertContent(editor, [
+          { type: 'teamCard', attrs: { teamId: team.id, teamData: result.data } },
+        ], insertAt);
+      }
 
       if (!success) {
         toast.error('팀 카드를 추가하지 못했습니다.');
@@ -362,6 +569,8 @@ export function useEditorHandlers({
       toast.error('에디터가 준비되지 않았습니다.');
       return;
     }
+
+    const insertAt = getSelectionInsertPosition(editor);
 
     try {
       if (!('setPlayerCard' in editor.commands)) {
@@ -391,10 +600,17 @@ export function useEditorHandlers({
         return;
       }
 
-      const success = insertContent(editor, [
-        { type: 'playerCard', attrs: { playerId: player.id, playerData: result.data } },
-        { type: 'paragraph' },
-      ]);
+      let success = insertEntityCardGroupItem(editor, {
+        type: 'player',
+        id: player.id,
+        data: result.data,
+      }, insertAt);
+
+      if (!success) {
+        success = insertContent(editor, [
+          { type: 'playerCard', attrs: { playerId: player.id, playerData: result.data } },
+        ], insertAt);
+      }
 
       if (!success) {
         toast.error('선수 카드를 추가하지 못했습니다.');

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Editor } from '@tiptap/react';
+import { NodeSelection } from '@tiptap/pm/state';
 import {
   Bold,
   Heading2,
@@ -83,13 +84,28 @@ export default function EditorToolbar({
     return <div className="h-11 rounded-t-md border border-black/7 bg-[#F5F5F5] p-2 dark:border-white/10 dark:bg-[#262626]" />;
   }
 
+  const commandFromSafeSelection = () => {
+    const chain = editor.chain().focus();
+    const { selection } = editor.state;
+
+    return selection instanceof NodeSelection ? chain.setTextSelection(selection.to) : chain;
+  };
+
+  const moveCursorAfterSelectedNode = () => {
+    const { selection } = editor.state;
+
+    if (selection instanceof NodeSelection) {
+      editor.commands.setTextSelection(selection.to);
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-0.5 overflow-visible rounded-t-md border border-black/7 bg-[#F5F5F5] px-1.5 py-1.5 dark:border-white/10 dark:bg-[#262626]">
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleBold().run()}
+        onClick={() => commandFromSafeSelection().toggleBold().run()}
         className={`${toolButtonClass} ${editor.isActive('bold') ? activeClass : ''}`}
         title="굵게"
       >
@@ -100,7 +116,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleItalic().run()}
+        onClick={() => commandFromSafeSelection().toggleItalic().run()}
         className={`${toolButtonClass} ${editor.isActive('italic') ? activeClass : ''}`}
         title="기울임"
       >
@@ -113,7 +129,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        onClick={() => commandFromSafeSelection().toggleHeading({ level: 2 }).run()}
         className={`${toolButtonClass} ${editor.isActive('heading', { level: 2 }) ? activeClass : ''}`}
         title="제목 2"
       >
@@ -124,7 +140,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        onClick={() => commandFromSafeSelection().toggleHeading({ level: 3 }).run()}
         className={`${toolButtonClass} ${editor.isActive('heading', { level: 3 }) ? activeClass : ''}`}
         title="제목 3"
       >
@@ -135,7 +151,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        onClick={() => commandFromSafeSelection().setHorizontalRule().run()}
         className={toolButtonClass}
         title="구분선"
       >
@@ -146,7 +162,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        onClick={() => commandFromSafeSelection().toggleBulletList().run()}
         className={`${toolButtonClass} ${editor.isActive('bulletList') ? activeClass : ''}`}
         title="글머리 목록"
       >
@@ -157,7 +173,7 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        onClick={() => commandFromSafeSelection().toggleOrderedList().run()}
         className={`${toolButtonClass} ${editor.isActive('orderedList') ? activeClass : ''}`}
         title="번호 목록"
       >
@@ -173,6 +189,7 @@ export default function EditorToolbar({
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarLinkButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('link');
         }}
@@ -186,7 +203,12 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={onImageClick}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
+          onImageClick();
+        }}
         disabled={isImageUploading}
         className={`${toolButtonClass} ${isImageUploading ? `${activeClass} opacity-60` : ''}`}
         title="이미지 추가"
@@ -201,6 +223,7 @@ export default function EditorToolbar({
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarYoutubeButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('youtube');
         }}
@@ -214,7 +237,12 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={onVideoClick}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
+          onVideoClick();
+        }}
         disabled={isVideoUploading}
         className={`${toolButtonClass} ${isVideoUploading ? `${activeClass} opacity-60` : ''}`}
         title="동영상 파일 추가"
@@ -226,7 +254,10 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={(event) => {
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarSocialButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('social');
         }}
@@ -242,7 +273,10 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={(event) => {
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarMatchButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('match');
         }}
@@ -256,7 +290,10 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={(event) => {
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarTeamButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('team');
         }}
@@ -270,7 +307,10 @@ export default function EditorToolbar({
         type="button"
         variant="ghost"
         size="icon"
-        onClick={(event) => {
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarPlayerButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('player');
         }}
@@ -287,6 +327,7 @@ export default function EditorToolbar({
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarTableButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('table');
         }}
@@ -303,6 +344,7 @@ export default function EditorToolbar({
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          moveCursorAfterSelectedNode();
           onToolbarPollButtonRect?.(event.currentTarget.getBoundingClientRect());
           handleToggleDropdown('poll');
         }}

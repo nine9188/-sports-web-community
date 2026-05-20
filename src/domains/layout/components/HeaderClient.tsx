@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Search, ArrowLeft, User, Menu } from 'lucide-react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import BoardNavigationClient from './BoardNavigationClient';
@@ -11,7 +10,6 @@ import { HeaderUserData } from '@/shared/types/user';
 import { useIcon } from '@/shared/context/IconContext';
 import UserIcon from '@/shared/components/UserIcon';
 import { Board } from '../types/board';
-import { siteConfig } from '@/shared/config';
 import dynamic from 'next/dynamic';
 
 const LiveScoreModal = dynamic(() => import('./livescoremodal'), { ssr: false });
@@ -20,6 +18,7 @@ const MobileHamburgerModal = dynamic(() => import('./MobileHamburgerModal'), { s
 import RecentlyVisited from './RecentlyVisited';
 import { NotificationBell } from '@/domains/notifications/components';
 import { Button } from '@/shared/components/ui';
+import SiteLogo from '@/shared/components/SiteLogo';
 
 const MOBILE_HEADER_HIDE_AFTER = 80;
 const MOBILE_HEADER_SCROLL_DELTA = 6;
@@ -145,10 +144,6 @@ export default function HeaderClient({
   const router = useRouter();
   const pathname = usePathname();
   const isSearchPage = (pathname || '').startsWith('/search');
-
-  // 기본 로고 URL 사용
-  const logoUrl = siteConfig.logo;
-
 
   // 서버에서 검증해 내려준 사용자 데이터를 초기 렌더 기준으로 사용한다.
   const userData = initialUserData ?? null;
@@ -316,28 +311,7 @@ export default function HeaderClient({
           <div className="flex h-20 items-center px-4">
             <div className="flex items-center space-x-2">
               <Link href="/" prefetch={false} className="flex items-center space-x-2">
-                {/* 라이트모드: 원본 로고 */}
-                <Image
-                  src={logoUrl}
-                  alt="4590football logo"
-                  width={340}
-                  height={148}
-                  priority
-                  fetchPriority="high"
-                  unoptimized
-                  className="h-14 w-auto dark:hidden"
-                />
-                {/* 다크모드: 흰색 로고 */}
-                <Image
-                  src="/logo/4590football-logo-white.webp"
-                  alt="4590football logo"
-                  width={340}
-                  height={148}
-                  priority
-                  fetchPriority="high"
-                  unoptimized
-                  className="h-14 w-auto hidden dark:block"
-                />
+                <SiteLogo className="h-14 w-auto" priority fetchPriority="high" />
               </Link>
             </div>
             <div className="flex flex-1 items-center justify-end space-x-4">
@@ -380,28 +354,7 @@ export default function HeaderClient({
             <div className="flex h-16 items-center px-4">
               <div className="flex items-center space-x-2">
                 <Link href="/" prefetch={false} className="flex items-center space-x-2">
-                  {/* 라이트모드: 원본 로고 */}
-                  <Image
-                    src={logoUrl}
-                    alt="4590football logo"
-                    width={340}
-                    height={148}
-                    priority
-                    fetchPriority="high"
-                    unoptimized
-                    className="h-10 w-auto dark:hidden"
-                  />
-                  {/* 다크모드: 흰색 로고 */}
-                  <Image
-                    src="/logo/4590football-logo-white.webp"
-                    alt="4590football logo"
-                    width={340}
-                    height={148}
-                    priority
-                    fetchPriority="high"
-                    unoptimized
-                    className="h-10 w-auto hidden dark:block"
-                  />
+                  <SiteLogo className="h-10 w-auto" priority fetchPriority="high" />
                 </Link>
                 {/* 라이브스코어 버튼 */}
                 <Button

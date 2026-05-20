@@ -2,6 +2,7 @@
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData'
+import { teamLogoUrl } from '@/shared/images/urls'
 
 export interface PlayerSearchResult {
   id: string
@@ -113,7 +114,7 @@ export async function searchPlayers(options: PlayerSearchOptions): Promise<{
         // korean_name은 이미 DB에서 가져옴
         display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
-        team_logo_url: player.team_logo_url || `https://cdn.4590football.com/teams/md/${player.team_id}.webp`
+        team_logo_url: player.team_logo_url || teamLogoUrl(player.team_id)
       }
     })
 
@@ -209,7 +210,7 @@ export async function getPopularPlayers(limit: number = 12): Promise<PlayerSearc
         // korean_name은 이미 DB에서 가져옴
         display_name: player.korean_name || player.display_name,
         team_name_ko: teamMapping?.name_ko,
-        team_logo_url: `https://cdn.4590football.com/teams/md/${player.team_id}.webp`
+        team_logo_url: teamLogoUrl(player.team_id)
       }
     })
 

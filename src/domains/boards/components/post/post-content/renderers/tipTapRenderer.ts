@@ -3,11 +3,32 @@ import { renderMatchCard } from './matchCardRenderer';
 import { renderTeamCard } from './teamCardRenderer';
 import { renderPlayerCard } from './playerCardRenderer';
 import { renderPredictionChart } from './predictionChartRenderer';
+import { renderEntityCardGroup } from './entityCardGroupRenderer';
+
+function isEntityCardNode(node: TipTapNode | undefined): boolean {
+  return node?.type === 'teamCard' || node?.type === 'playerCard';
+}
+
+function isEmptyParagraphNode(node: TipTapNode | undefined): boolean {
+  if (node?.type !== 'paragraph') {
+    return false;
+  }
+
+  return !Array.isArray(node.content) || node.content.length === 0;
+}
 
 /**
  * Render a TipTap node to HTML.
  */
 export function renderTipTapNode(node: TipTapNode): string {
+  if (node.type === 'entityCardGroup' && node.attrs) {
+    return renderEntityCardGroup({
+      columns: node.attrs.columns,
+      items: node.attrs.items,
+      content: node.content,
+    });
+  }
+
   if (node.type === 'matchCard' && node.attrs) {
     const { matchId, matchData } = node.attrs;
     const matchDataRecord = matchData as Record<string, unknown> | undefined;
@@ -272,8 +293,42 @@ export function renderTipTapDoc(doc: TipTapDoc): string {
   }
 
   let html = '';
-  doc.content.forEach((node) => {
+  for (let i = 0; i < doc.content.length; i += 1) {
+    const node = doc.content[i];
+
+    if (isEntityCardNode(node)) {
+      const cards: TipTapNode[] = [];
+
+      while (i < doc.content.length) {
+        const current = doc.content[i];
+
+        if (isEntityCardNode(current)) {
+          cards.push(current);
+          i += 1;
+          continue;
+        }
+
+        if (isEmptyParagraphNode(current) && isEntityCardNode(doc.content[i + 1])) {
+          i += 1;
+          continue;
+        }
+
+        break;
+      }
+
+      i -= 1;
+
+      if (cards.length > 1) {
+        html += `<div class="entity-card-scroll" data-type="entity-card-group">${cards.map(renderTipTapNode).join('')}</div>`;
+        continue;
+      }
+
+      html += renderTipTapNode(cards[0]);
+      continue;
+    }
+
     html += renderTipTapNode(node);
-  });
+  }
+
   return html;
 }

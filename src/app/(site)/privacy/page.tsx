@@ -49,6 +49,7 @@ export default function PrivacyPage() {
               <li>접속 IP 주소, 접속 일시</li>
               <li>브라우저 종류 및 운영체제 정보</li>
               <li>서비스 이용 기록 (게시글, 댓글, 좋아요 등)</li>
+              <li>비회원 투표 중복 방지를 위한 임의 방문자 식별자, 접속 IP 해시값, 사용자 환경 정보 해시값</li>
             </ul>
 
             <h3 className="text-base font-medium text-gray-900 dark:text-[#F0F0F0] mt-4">3. 선택 수집 항목</h3>
@@ -65,6 +66,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-2">
               <li><strong>회원 관리:</strong> 회원 가입, 본인 확인, 회원 식별, 부정 이용 방지</li>
               <li><strong>서비스 제공:</strong> 게시판 서비스, 라이브스코어 제공, 포인트/레벨 시스템 운영</li>
+              <li><strong>비회원 기능 제공:</strong> 비회원 투표 중복 여부 확인 및 부정 이용 방지</li>
               <li><strong>서비스 개선:</strong> 서비스 이용 통계 분석, 신규 서비스 개발</li>
               <li><strong>고객 지원:</strong> 문의 응대, 공지사항 전달, 분쟁 조정</li>
               <li><strong>법적 의무 이행:</strong> 관련 법령에 따른 의무 준수</li>
@@ -85,6 +87,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>로그인 기록:</strong> 3개월 (통신비밀보호법)</li>
               <li><strong>서비스 이용 기록:</strong> 3개월 (통신비밀보호법)</li>
+              <li><strong>비회원 투표 식별 정보:</strong> 투표일로부터 90일</li>
               <li><strong>표시/광고에 관한 기록:</strong> 6개월 (전자상거래법)</li>
               <li><strong>계약 또는 청약철회 기록:</strong> 5년 (전자상거래법)</li>
               <li><strong>소비자 불만/분쟁 처리 기록:</strong> 3년 (전자상거래법)</li>
@@ -178,6 +181,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-1">
               <li>로그인 상태 유지</li>
               <li>이용자 설정 저장 (다크모드 등)</li>
+              <li>비회원 투표 중복 방지를 위한 방문자 식별자 저장</li>
               <li>서비스 이용 분석</li>
             </ul>
 
