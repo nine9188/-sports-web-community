@@ -1,9 +1,11 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { FileText, MessageSquare } from 'lucide-react';
 import { Pagination } from '@/shared/components/ui/pagination';
+import { TabList, type TabItem } from '@/shared/components/ui/tabs';
 import PostList from '@/domains/boards/components/post/postlist/PostListMain';
 import type { Post } from '@/domains/boards/components/post/postlist/types';
-import { cn } from '@/shared/utils/cn';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -28,52 +30,44 @@ export default function UserActivityTabs({
   initialPostCount = 0,
   initialCommentCount = 0,
 }: UserActivityTabsProps) {
+  const router = useRouter();
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-  const tabs = [
+  const tabs: TabItem[] = [
     {
-      id: 'posts' as const,
+      id: 'posts',
       label: '작성글',
-      icon: FileText,
+      icon: <FileText className="h-3 w-3" aria-hidden="true" />,
       count: initialPostCount,
       href: `/user/${publicId}`,
     },
     {
-      id: 'comments' as const,
+      id: 'comments',
       label: '댓글',
-      icon: MessageSquare,
+      icon: <MessageSquare className="h-3 w-3" aria-hidden="true" />,
       count: initialCommentCount,
       href: `/user/${publicId}?tab=comments`,
     },
   ];
+  const handleTabChange = (tabId: string) => {
+    if (tabId === activeTab) return;
+
+    const tab = tabs.find((item) => item.id === tabId);
+    if (tab?.href) {
+      router.push(tab.href);
+    }
+  };
 
   return (
     <>
       <div className="bg-white dark:bg-[#1D1D1D] md:rounded-b-lg md:border md:border-black/7 md:dark:border-0 md:border-t-0 overflow-hidden">
-        <div className="flex border-b border-black/5 dark:border-white/10 overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
-
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                prefetch={false}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'transition-colors py-2 px-2 h-auto flex items-center justify-center text-xs flex-1 whitespace-nowrap',
-                  isActive
-                    ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] font-medium border-b-2 border-brand-primary dark:border-brand-primary-dark'
-                    : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-                )}
-              >
-                <Icon className="w-4 h-4 mr-1" />
-                {tab.label}
-                <span className="ml-1">({tab.count.toLocaleString()})</span>
-              </Link>
-            );
-          })}
-        </div>
+        <TabList
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          variant="contained"
+          showCount
+          className="mb-0"
+        />
 
         <PostList
           posts={posts}

@@ -11,6 +11,7 @@ import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { revalidateTag } from 'next/cache';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 /**
  * 게시글 수정 서버 액션
@@ -168,7 +169,7 @@ export async function updatePost(
       };
     }
     
-    const boardSlug = (postData.boards as { slug: string } | null)?.slug;
+    const boardSlug = oneOrNull(postData.boards)?.slug;
 
     // 메타데이터 캐시 무효화 (generateMetadata용 per-post 캐시)
     if (postData.board_id && postData.post_number) {

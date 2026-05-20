@@ -1,4 +1,5 @@
 import type { RssPost } from '../types';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
 
 /**
  * RSS 게시글 헤더 (원문 링크, 이미지) 렌더링
@@ -7,7 +8,10 @@ export function renderRssHeader(rssPost: RssPost): string {
   const sourceUrl = rssPost.source_url;
   if (!sourceUrl) return '';
 
-  const imageUrl = rssPost.imageUrl || rssPost.image_url;
+  const rawImageUrl = rssPost.imageUrl || rssPost.image_url;
+  const imageUrl = rawImageUrl?.trim()
+    ? normalizeDisplayImageUrl(rawImageUrl, { proxyExternal: true })
+    : null;
 
   return `
     <div class="mb-6" data-nosnippet>

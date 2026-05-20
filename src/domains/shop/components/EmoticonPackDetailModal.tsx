@@ -15,6 +15,7 @@ import {
 import { useEmoticonInvalidation, useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries'
 import EmoticonPackDetailContent from '@/domains/boards/components/post/emoticon/EmoticonPackDetailContent'
 import type { EmoticonPackInfo } from '@/domains/boards/actions/emoticons'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 interface EmoticonPackDetailModalProps {
   packId: string
@@ -40,6 +41,12 @@ export default function EmoticonPackDetailModal({
 
   const userPoints = shopData?.userPoints ?? 0
   const canAfford = (purchasePack?.price ?? 0) <= userPoints
+  const purchaseThumbnail = purchasePack
+    ? normalizeDisplayImageUrl(purchasePack.pack_thumbnail, {
+        fallback: SITE_ICON_URL,
+        proxyExternal: true,
+      })
+    : SITE_ICON_URL
 
   const handlePurchaseConfirm = async () => {
     if (!purchasePack?.shop_item_id || !userId) return
@@ -101,7 +108,14 @@ export default function EmoticonPackDetailModal({
             <DialogBody className="px-4 py-4 overflow-y-auto min-h-0">
               <div className="flex items-center gap-3 p-3 rounded-lg border border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] mb-4">
                 <div className="w-12 h-12 rounded-lg bg-white dark:bg-[#1D1D1D] flex items-center justify-center flex-shrink-0">
-                  <Image src={purchasePack.pack_thumbnail} alt={purchasePack.pack_name} width={32} height={32} className="w-8 h-8 object-contain" />
+                  <Image
+                    src={purchaseThumbnail}
+                    alt={purchasePack.pack_name}
+                    width={32}
+                    height={32}
+                    unoptimized={shouldUnoptimizeImageUrl(purchaseThumbnail)}
+                    className="w-8 h-8 object-contain"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">{purchasePack.pack_name} 팩</p>

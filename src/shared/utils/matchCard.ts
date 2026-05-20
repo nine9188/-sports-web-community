@@ -9,7 +9,9 @@ import type { MatchStatus, MatchStatusInfo, ImageUrlPair } from '@/shared/types/
 import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
 import {
   DARK_MODE_LEAGUE_IDS as SHARED_DARK_MODE_LEAGUE_IDS,
+  normalizeDisplayImageUrl,
   sportsAssetUrlPair,
+  SPORTS_PLACEHOLDERS,
 } from '@/shared/images/urls';
 
 /**
@@ -17,22 +19,8 @@ import {
  */
 export const DARK_MODE_LEAGUE_IDS = SHARED_DARK_MODE_LEAGUE_IDS;
 
-const STATIC_TEAM_IDS = new Set([
-  33,34,35,36,39,40,42,44,45,47,48,49,50,51,52,55,63,65,66,77,79,80,81,82,83,84,85,91,93,94,95,96,97,
-  106,108,111,112,114,116,157,160,161,162,163,164,165,167,168,169,170,172,173,175,176,180,182,186,191,192,
-  487,488,489,490,492,494,495,496,497,499,500,502,503,504,505,511,517,520,523,529,530,531,532,533,534,
-  536,537,538,539,540,541,542,543,546,547,548,718,720,727,728,746,797,798,801,867,895,
-  1063,1579,2745,2746,2747,2748,2749,2750,2751,2752,2753,2756,2757,2758,2759,2760,2761,2762,2763,2764,
-  2765,2766,2767,2768,7060,7061,7076,7078,7087,7098,9171,
-]);
-
-const STATIC_LEAGUE_IDS = new Set([
-  2, 3, 39, 61, 78, 88, 94, 98, 135, 140, 179, 292, 293, 848,
-]);
-
-const STATIC_DARK_LEAGUE_IDS = new Set([
-  2, 3, 39, 61, 88, 98, 179, 292, 848,
-]);
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
+const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
 
 export function getImageUrls(
   logoUrl: string | undefined,
@@ -41,48 +29,24 @@ export function getImageUrls(
 ): ImageUrlPair {
   if (id) {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-
-    if (type === 'teams' && STATIC_TEAM_IDS.has(numericId)) {
-      const localUrl = `/teams/${numericId}.webp`;
-      return { light: localUrl, dark: localUrl };
-    }
-
-    if (type === 'leagues' && STATIC_LEAGUE_IDS.has(numericId)) {
-      const lightUrl = `/leagues/${numericId}.webp`;
-      const hasDarkLocal = STATIC_DARK_LEAGUE_IDS.has(numericId);
-      const darkUrl = hasDarkLocal ? `/leagues/${numericId}-1.webp` : lightUrl;
-      return { light: lightUrl, dark: darkUrl };
-    }
-
     return sportsAssetUrlPair(type, numericId);
   }
 
   if (logoUrl) {
-    if (logoUrl.startsWith('/teams/') || logoUrl.startsWith('/leagues/')) {
-      return { light: logoUrl, dark: logoUrl };
+    const idMatch = logoUrl.match(/\/(teams|leagues)\/(?:sm\/|md\/)?(\d+)(?:-1)?\.(?:webp|png)$/);
+    if (idMatch) {
+      const imageType = idMatch[1] as 'teams' | 'leagues';
+      const imageId = parseInt(idMatch[2], 10);
+      return getImageUrls(undefined, imageId, imageType);
     }
 
-    if (logoUrl.includes('supabase.co') || logoUrl.includes('cdn.4590football.com')) {
-      const idMatch = logoUrl.match(/\/(teams|leagues)\/(?:md\/)?(\d+)(?:-1)?\.(?:webp|png)$/);
-      if (idMatch) {
-        const imageType = idMatch[1] as 'teams' | 'leagues';
-        const imageId = parseInt(idMatch[2], 10);
-        return getImageUrls(undefined, imageId, imageType);
-      }
-    }
-
-    if (logoUrl.includes('media.api-sports.io')) {
-      const idMatch = logoUrl.match(/\/(teams|leagues)\/(\d+)\.(?:webp|png)$/);
-      if (idMatch) {
-        const imageId = parseInt(idMatch[2], 10);
-        return getImageUrls(undefined, imageId, type);
-      }
-    }
-
-    return { light: logoUrl, dark: logoUrl };
+    const fallback = type === 'leagues' ? LEAGUE_PLACEHOLDER : TEAM_PLACEHOLDER;
+    const normalizedLogoUrl = normalizeDisplayImageUrl(logoUrl, { fallback });
+    return { light: normalizedLogoUrl, dark: normalizedLogoUrl };
   }
 
-  return { light: '/images/placeholder-team.svg', dark: '/images/placeholder-team.svg' };
+  const fallback = type === 'leagues' ? LEAGUE_PLACEHOLDER : TEAM_PLACEHOLDER;
+  return { light: fallback, dark: fallback };
 }
 
 export function getStatusInfo(status: MatchStatus | undefined | null): MatchStatusInfo {
@@ -222,8 +186,8 @@ export function generateMatchCardHtml(
   const homeScore = goals.home !== null ? goals.home : '-';
   const awayScore = goals.away !== null ? goals.away : '-';
 
-  const homeTeamName = homeTeam.name;
-  const awayTeamName = awayTeam.name;
+  const homeTeamName = homeTeam.name_ko || homeTeam.name;
+  const awayTeamName = awayTeam.name_ko || awayTeam.name;
   const leagueName = league.name;
   const href = getMatchHrefByTeams(matchId, homeTeam, awayTeam);
 
@@ -268,7 +232,7 @@ export function generateMatchCardHtml(
                 data-light-src="${leagueImages.light}"
                 data-dark-src="${leagueImages.dark}"
                 alt="${leagueName}"
-                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+                onerror="this.onerror=null;this.src='${LEAGUE_PLACEHOLDER}';"
               />
             </div>
             <span class="league-name">${leagueName}</span>
@@ -283,7 +247,7 @@ export function generateMatchCardHtml(
                 data-light-src="${homeTeamImages.light}"
                 data-dark-src="${homeTeamImages.dark}"
                 alt="${homeTeam.name}"
-                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+                onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
               />
             </div>
             <span class="team-name${homeTeam.winner ? ' winner' : ''}">${homeTeamName}</span>
@@ -305,7 +269,7 @@ export function generateMatchCardHtml(
                 data-light-src="${awayTeamImages.light}"
                 data-dark-src="${awayTeamImages.dark}"
                 alt="${awayTeam.name}"
-                onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+                onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
               />
             </div>
             <span class="team-name${awayTeam.winner ? ' winner' : ''}">${awayTeamName}</span>
@@ -367,7 +331,7 @@ function generateInlineStyleHtml(
               data-dark-src="${leagueImages.dark}"
               alt="${leagueName}"
               style="width: 24px; height: 24px; object-fit: contain; margin-right: 8px;"
-              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+              onerror="this.onerror=null;this.src='${LEAGUE_PLACEHOLDER}';"
             />
             <span style="font-size: 14px; font-weight: 500; color: #4b5563;">${leagueName}</span>
           </div>
@@ -381,7 +345,7 @@ function generateInlineStyleHtml(
               data-dark-src="${homeTeamImages.dark}"
               alt="${homeTeam.name}"
               style="width: 48px; height: 48px; object-fit: contain; margin-bottom: 8px;"
-              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+              onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${homeTeam.winner ? '#2563eb' : '#000'};">
               ${homeTeamName}
@@ -404,7 +368,7 @@ function generateInlineStyleHtml(
               data-dark-src="${awayTeamImages.dark}"
               alt="${awayTeam.name}"
               style="width: 48px; height: 48px; object-fit: contain; margin-bottom: 8px;"
-              onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+              onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
             />
             <span style="font-size: 14px; font-weight: 500; text-align: center; color: ${awayTeam.winner ? '#2563eb' : '#000'};">
               ${awayTeamName}

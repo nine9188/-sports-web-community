@@ -25,6 +25,7 @@ import PostPollCard from "../post/PostPollCard";
 import type { PostPoll } from "../../types/poll";
 import { extractRelatedCtasFromContent } from "../../utils/post/extractRelatedCtasFromContent";
 import type { RelatedPostCta } from "../../utils/post/extractRelatedCtasFromContent";
+import { getRelatedEntityCardsFromContent } from "../../actions/getRelatedEntityCardsFromContent";
 
 interface PostAuthor {
   nickname: string | null;
@@ -154,7 +155,7 @@ function RelatedPostCtas({ ctas }: { ctas: RelatedPostCta[] }) {
   );
 }
 
-export default function PostDetailLayout({
+export default async function PostDetailLayout({
   post,
   board,
   breadcrumbs,
@@ -179,6 +180,7 @@ export default function PostDetailLayout({
   detailQueryString,
 }: PostDetailLayoutProps) {
   const relatedCtas = extractRelatedCtasFromContent(post.content);
+  const relatedEntityCards = await getRelatedEntityCardsFromContent(post.content);
 
   // 게시글 상세 정보 구성
   const author: PostAuthor = {
@@ -353,6 +355,7 @@ export default function PostDetailLayout({
           meta={post.meta || null}
           poll={poll}
           isLoggedIn={isLoggedIn}
+          relatedEntityCards={relatedEntityCards}
         />
 
         {poll && !processedHtml.includes('data-type="post-poll-placeholder"') && (

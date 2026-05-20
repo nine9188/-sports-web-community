@@ -8,6 +8,7 @@ import { Button } from '@/shared/components/ui'
 import Spinner from '@/shared/components/Spinner'
 import { useAdminSubmissionDetail } from '@/domains/admin/hooks/useAdminEmoticonSubmissions'
 import { STATUS_CONFIG, PRICE_OPTIONS } from '@/domains/shop/types/emoticon-submission'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 interface Props {
   id: number
@@ -34,6 +35,10 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
   }
 
   const statusConfig = STATUS_CONFIG[detail.status]
+  const thumbnail = normalizeDisplayImageUrl(detail.thumbnail_path, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true
+  })
   const price = finalPrice ?? detail.requested_price
 
   return (
@@ -52,7 +57,14 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
           {/* 팩 정보 */}
           <div className="flex items-start gap-3">
             <div className="w-14 h-14 rounded-md overflow-hidden flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
-              <Image src={detail.thumbnail_path} alt={detail.pack_name} width={56} height={56} className="w-12 h-12 object-contain" />
+              <Image
+                src={thumbnail}
+                alt={detail.pack_name}
+                width={56}
+                height={56}
+                unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
+                className="w-12 h-12 object-contain"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -90,11 +102,25 @@ export default function SubmissionDetailModal({ id, onClose, onApprove, onReject
           <div>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">이모티콘 ({detail.emoticon_count}개)</p>
             <div className="grid grid-cols-6 gap-2">
-              {(detail.emoticon_paths as string[]).map((url, i) => (
-                <div key={i} className="aspect-square rounded-md overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
-                  <Image src={url} alt={`emoticon ${i + 1}`} width={48} height={48} className="w-10 h-10 object-contain" />
-                </div>
-              ))}
+              {(detail.emoticon_paths as string[]).map((url, i) => {
+                const emoticonUrl = normalizeDisplayImageUrl(url, {
+                  fallback: SITE_ICON_URL,
+                  proxyExternal: true,
+                })
+
+                return (
+                  <div key={i} className="aspect-square rounded-md overflow-hidden bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
+                    <Image
+                      src={emoticonUrl}
+                      alt={`emoticon ${i + 1}`}
+                      width={48}
+                      height={48}
+                      unoptimized={shouldUnoptimizeImageUrl(emoticonUrl)}
+                      className="w-10 h-10 object-contain"
+                    />
+                  </div>
+                )
+              })}
             </div>
           </div>
 

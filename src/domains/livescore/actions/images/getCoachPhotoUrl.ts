@@ -1,7 +1,7 @@
 'use server';
 
-import { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
-import { PLACEHOLDER_URLS, type ImageSize } from './constants';
+import { coachPhotoUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
+import type { ImageSize } from './constants';
 
 /**
  * 감독 사진 Storage URL 조회 (단일)
@@ -15,10 +15,10 @@ import { PLACEHOLDER_URLS, type ImageSize } from './constants';
  */
 export async function getCoachPhotoUrl(coachId: number, size: ImageSize = 'md'): Promise<string> {
   if (!coachId || coachId <= 0) {
-    return PLACEHOLDER_URLS.coach_photo;
+    return SPORTS_PLACEHOLDERS.coachs;
   }
 
-  return ensureAssetCached('coach_photo', coachId, size);
+  return coachPhotoUrl(coachId, size);
 }
 
 /**
@@ -36,5 +36,9 @@ export async function getCoachPhotoUrls(
     return {};
   }
 
-  return ensureAssetsCached('coach_photo', coachIds, size);
+  return Object.fromEntries(
+    coachIds
+      .filter((id) => id && id > 0)
+      .map((id) => [id, coachPhotoUrl(id, size)])
+  );
 }

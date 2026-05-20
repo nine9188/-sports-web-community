@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { TeamCardProps } from '@/shared/types/teamCard';
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
-import { DARK_MODE_LEAGUE_IDS, leagueLogoUrl, teamLogoUrl } from '@/shared/images/urls';
+import { DARK_MODE_LEAGUE_IDS, leagueLogoUrl, normalizeDisplayImageUrl, teamLogoUrl } from '@/shared/images/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -31,32 +31,39 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
     if (!leagueId) return LEAGUE_PLACEHOLDER;
     const hasDarkMode = DARK_MODE_LEAGUE_IDS.includes(leagueId);
     if (isDark && hasDarkMode) {
-      return leagueLogoUrl(leagueId, { dark: true });
+      return normalizeDisplayImageUrl(leagueLogoUrl(leagueId, { dark: true }), { fallback: LEAGUE_PLACEHOLDER });
     }
-    return leagueLogoUrl(leagueId);
+    return normalizeDisplayImageUrl(leagueLogoUrl(leagueId), { fallback: LEAGUE_PLACEHOLDER });
   };
 
-  const teamLogo = logo && numericTeamId ? teamLogoUrl(numericTeamId) : TEAM_PLACEHOLDER;
+  const teamLogo = normalizeDisplayImageUrl(
+    logo || (numericTeamId ? teamLogoUrl(numericTeamId) : undefined),
+    { fallback: TEAM_PLACEHOLDER }
+  );
   const href = getTeamHref({ ...teamData, id: numericTeamId });
 
   const CardContent = () => (
     <>
-      <div className="league-header">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="league-logo-box">
-            <Image
-              src={getLeagueLogo()}
-              alt={leagueDisplayName}
-              width={24}
-              height={24}
-              draggable={false}
-              unoptimized
-              style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-            />
+      {leagueDisplayName && (
+        <div className="league-header">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {leagueId ? (
+              <div className="league-logo-box">
+                <Image
+                  src={getLeagueLogo()}
+                  alt={leagueDisplayName}
+                  width={24}
+                  height={24}
+                  draggable={false}
+                  unoptimized
+                  style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                />
+              </div>
+            ) : null}
+            <span className="league-name">{leagueDisplayName}</span>
           </div>
-          <span className="league-name">{leagueDisplayName}</span>
         </div>
-      </div>
+      )}
 
       <div className="team-main">
         <div className="team-logo-box">

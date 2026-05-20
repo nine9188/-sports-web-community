@@ -4,6 +4,7 @@ import { getTeamLogoUrl, getLeagueLogoUrl } from '@/domains/livescore/actions/im
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import type { TeamData } from '@/domains/livescore/actions/teamLeagueData';
 import type { MatchCardData } from '@/shared/types/matchCard';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 export interface MatchCardDataResult {
   success: boolean;
@@ -40,9 +41,9 @@ export async function createMatchCardData(
     const teamIds = [homeTeamId, awayTeamId].filter((id): id is number => Boolean(id));
 
     const [homeTeamLogo, awayTeamLogo, leagueLogo, teamMap] = await Promise.all([
-      homeTeamId ? getTeamLogoUrl(homeTeamId) : Promise.resolve('/images/placeholder-team.svg'),
-      awayTeamId ? getTeamLogoUrl(awayTeamId) : Promise.resolve('/images/placeholder-team.svg'),
-      leagueId ? getLeagueLogoUrl(leagueId) : Promise.resolve('/images/placeholder-league.svg'),
+      homeTeamId ? getTeamLogoUrl(homeTeamId) : Promise.resolve(SPORTS_PLACEHOLDERS.teams),
+      awayTeamId ? getTeamLogoUrl(awayTeamId) : Promise.resolve(SPORTS_PLACEHOLDERS.teams),
+      leagueId ? getLeagueLogoUrl(leagueId) : Promise.resolve(SPORTS_PLACEHOLDERS.leagues),
       teamIds.length ? getTeamsByIds(teamIds) : Promise.resolve({} as Record<number, TeamData>),
     ]);
 

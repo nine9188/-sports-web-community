@@ -9,7 +9,7 @@ import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { getLeagueById, getTeamById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchTransfersFullData } from '@/domains/livescore/actions/transfers';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
-import { ensureAssetsCached, getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
+import { getPlayerPhotoUrls, getTeamLogoUrls } from '@/domains/livescore/actions/images';
 import TransfersPageContent from '@/domains/livescore/components/football/transfers/TransfersPageContent';
 import { getTeamLinkSlug, getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
@@ -127,7 +127,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
   const [playerKoreanNames, playerPhotoUrls, teamLogoUrls] = await Promise.all([
     playerIds.length > 0 ? getPlayersKoreanNames(playerIds) : {},
     playerIds.length > 0 ? getPlayerPhotoUrls(playerIds) : {},
-    teamIds.length > 0 ? ensureAssetsCached('team_logo', [...new Set(teamIds)]) : {},
+    teamIds.length > 0 ? getTeamLogoUrls([...new Set(teamIds)]) : {},
   ]);
 
   const teamName = context.team.name_ko || context.team.name_en;

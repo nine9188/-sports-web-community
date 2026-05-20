@@ -1,7 +1,7 @@
 'use server';
 
-import { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
-import { PLACEHOLDER_URLS, type ImageSize } from './constants';
+import { SPORTS_PLACEHOLDERS, venuePhotoUrl } from '@/shared/images/urls';
+import type { ImageSize } from './constants';
 
 /**
  * 경기장(venue) 이미지 Storage URL 조회 (단일)
@@ -17,10 +17,10 @@ import { PLACEHOLDER_URLS, type ImageSize } from './constants';
  */
 export async function getVenueImageUrl(venueId: number, size: ImageSize = 'md'): Promise<string> {
   if (!venueId || venueId <= 0) {
-    return PLACEHOLDER_URLS.venue_photo;
+    return SPORTS_PLACEHOLDERS.venues;
   }
 
-  return ensureAssetCached('venue_photo', venueId, size);
+  return venuePhotoUrl(venueId, size);
 }
 
 /**
@@ -38,5 +38,9 @@ export async function getVenueImageUrls(
     return {};
   }
 
-  return ensureAssetsCached('venue_photo', venueIds, size);
+  return Object.fromEntries(
+    venueIds
+      .filter((id) => id && id > 0)
+      .map((id) => [id, venuePhotoUrl(id, size)])
+  );
 }

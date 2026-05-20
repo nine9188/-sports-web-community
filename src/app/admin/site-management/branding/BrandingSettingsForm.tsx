@@ -9,6 +9,7 @@ import { Palette } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { inputBaseStyles, focusStyles } from '@/shared/styles';
 import { cn } from '@/shared/utils/cn';
+import { normalizeDisplayImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface BrandingSettingsFormProps {
   initialSettings: SiteSetting[];
@@ -19,14 +20,14 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState(() => {
-    const data: Record<string, any> = {};
+    const data: Record<string, string> = {};
     initialSettings.forEach(setting => {
-      data[setting.key] = setting.value;
+      data[setting.key] = String(setting.value ?? '');
     });
     return data;
   });
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [key]: value,
@@ -143,7 +144,12 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
             />
             {formData.logo_url && (
               <div className="mt-2 p-2 bg-[#F5F5F5] dark:bg-[#262626] rounded border border-black/7 dark:border-white/10">
-                <img src={formData.logo_url} alt="로고 미리보기" className="h-16 object-contain" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={normalizeDisplayImageUrl(formData.logo_url, { fallback: SITE_ICON_URL, proxyExternal: true })}
+                  alt="로고 미리보기"
+                  className="h-16 object-contain"
+                />
               </div>
             )}
           </div>
@@ -177,7 +183,7 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
               <li>• <strong>icon-192.png, icon-512.png</strong>: PWA 아이콘</li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              파비콘 상태는 아래 "파비콘 상태" 섹션에서 확인할 수 있습니다.
+              파비콘 상태는 아래 &quot;파비콘 상태&quot; 섹션에서 확인할 수 있습니다.
             </p>
           </div>
         </div>

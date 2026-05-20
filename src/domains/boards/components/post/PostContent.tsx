@@ -11,6 +11,8 @@ import {
 } from './post-content/utils';
 import PostPollCard from './PostPollCard';
 import type { PostPoll } from '../../types/poll';
+import { TeamCard, PlayerCard } from '../cards';
+import type { RelatedEntityCard } from '../../actions/getRelatedEntityCardsFromContent';
 
 // 전역 호버 핸들러 등록
 registerMatchCardHoverHandler();
@@ -21,6 +23,7 @@ interface PostContentProps {
   meta?: Record<string, unknown> | null;
   poll?: PostPoll | null;
   isLoggedIn?: boolean;
+  relatedEntityCards?: RelatedEntityCard[];
 }
 
 const POLL_PLACEHOLDER_HTML = '<div data-type="post-poll-placeholder"></div>';
@@ -45,13 +48,53 @@ function getInlinePollHtmlParts(processedHtml: string): string[] {
     .map((part) => (part.trim() ? `${RSS_CONTENT_OPEN_TAG}${part}</div>` : part));
 }
 
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
+function InlineRelatedEntityCards({ cards }: { cards: RelatedEntityCard[] }) {
+  if (cards.length === 0) return null;
+
+  return (
+    <div className="not-prose entity-card-group entity-card-group-cols-4" data-type="entity-card-group" data-columns="4">
+      <div className="entity-card-group-track">
+        {chunkItems(cards, 4).map((row) => (
+          <div className="entity-card-group-row" key={row.map((card) => card.key).join('-')}>
+            {row.map((card) => (
+              <div className="entity-card-group-item" key={card.key}>
+                {card.type === 'team' ? (
+                  <TeamCard teamId={card.data.id} teamData={card.data} />
+                ) : (
+                  <PlayerCard playerId={card.data.id} playerData={card.data} />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * 게시글 본문 컴포넌트
  *
  * - 서버에서 처리된 HTML을 바로 렌더링 (깜빡임 없음)
  * - 클라이언트에서 DOM 후처리만 수행 (소셜 임베드, 차트 등)
  */
-export default function PostContent({ processedHtml, meta, poll, isLoggedIn = false }: PostContentProps) {
+export default function PostContent({
+  processedHtml,
+  meta,
+  poll,
+  isLoggedIn = false,
+  relatedEntityCards = [],
+}: PostContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const pollParts = poll ? getInlinePollHtmlParts(processedHtml) : [processedHtml];
   const hasInlinePoll = Boolean(poll && pollParts.length > 1);
@@ -278,16 +321,22 @@ export default function PostContent({ processedHtml, meta, poll, isLoggedIn = fa
         className="post-content prose prose-sm sm:prose-sm lg:prose-base max-w-none prose-headings:font-bold prose-img:rounded-lg prose-img:mx-auto dark:prose-invert p-4 sm:p-6"
       >
         {hasInlinePoll ? (
-          pollParts.map((part, index) => (
-            <React.Fragment key={index}>
-              {part && <div dangerouslySetInnerHTML={{ __html: part }} />}
-              {index < pollParts.length - 1 && poll && (
-                <PostPollCard poll={poll} isLoggedIn={isLoggedIn} className="not-prose my-5 p-0" />
-              )}
-            </React.Fragment>
-          ))
+          <>
+            {pollParts.map((part, index) => (
+              <React.Fragment key={index}>
+                {part && <div dangerouslySetInnerHTML={{ __html: part }} />}
+                {index < pollParts.length - 1 && poll && (
+                  <PostPollCard poll={poll} isLoggedIn={isLoggedIn} className="not-prose my-5 p-0" />
+                )}
+              </React.Fragment>
+            ))}
+            <InlineRelatedEntityCards cards={relatedEntityCards} />
+          </>
         ) : (
-          <div dangerouslySetInnerHTML={{ __html: processedHtml }} />
+          <>
+            <div dangerouslySetInnerHTML={{ __html: processedHtml }} />
+            <InlineRelatedEntityCards cards={relatedEntityCards} />
+          </>
         )}
       </div>
     </>

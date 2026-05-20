@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Container, ContainerContent, Button } from '@/shared/components/ui'
 import { useMySubmissions, useCancelSubmission } from '@/domains/shop/hooks/useEmoticonStudio'
 import { STATUS_CONFIG } from '@/domains/shop/types/emoticon-submission'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 export default function MyEmoticonList() {
   const { data: submissions, isLoading } = useMySubmissions()
@@ -43,13 +44,24 @@ export default function MyEmoticonList() {
     <div className="space-y-2">
       {submissions.map(sub => {
         const statusConfig = STATUS_CONFIG[sub.status]
+        const thumbnail = normalizeDisplayImageUrl(sub.thumbnail_path, {
+          fallback: SITE_ICON_URL,
+          proxyExternal: true
+        })
         return (
           <Container key={sub.id} className="bg-white dark:bg-[#1D1D1D]">
             <ContainerContent className="px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* 썸네일 */}
                 <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 bg-[#F5F5F5] dark:bg-[#262626] flex items-center justify-center">
-                  <Image src={sub.thumbnail_path} alt={sub.pack_name} width={48} height={48} className="w-10 h-10 object-contain" />
+                  <Image
+                    src={thumbnail}
+                    alt={sub.pack_name}
+                    width={48}
+                    height={48}
+                    unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
+                    className="w-10 h-10 object-contain"
+                  />
                 </div>
 
                 {/* 정보 */}

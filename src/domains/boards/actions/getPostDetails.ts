@@ -13,6 +13,7 @@ import { getCachedAllBoards, getCachedBoardBySlug } from './getCachedBoards';
 import { getCachedTeamsByIds, getCachedLeaguesByIds } from './getCachedTeamsLeagues';
 import { getCachedShopItemIconUrl } from './getCachedShopItems';
 import type { PostPoll } from '../types/poll';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 const POST_DETAIL_LIST_PAGE_SIZE = 20;
 const POLL_VISITOR_COOKIE = 'post_poll_visitor_id';
@@ -227,7 +228,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       .map(bd => bd.league_id)
       .filter((id): id is number => id !== null);
 
-    const iconId = post.profiles?.icon_id;
+    const iconId = oneOrNull(post.profiles)?.icon_id;
 
     // 9. 병렬로 모든 추가 데이터 가져오기 (Waterfall 제거)
     const [
@@ -376,9 +377,9 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
         is_hidden: p.is_hidden ?? undefined,
         is_deleted: p.is_deleted ?? undefined,
         is_notice: p.is_notice ?? undefined,
-        profiles: p.profiles ? {
-          ...p.profiles,
-          level: p.profiles.level || undefined
+        profiles: oneOrNull(p.profiles) ? {
+          ...oneOrNull(p.profiles),
+          level: oneOrNull(p.profiles)?.level || undefined
         } : undefined
       })) as unknown as import('../types/post').Post[],
       commentCounts,
@@ -602,13 +603,13 @@ export async function getPostDetailListPageData(
         ...p,
         is_hidden: p.is_hidden ?? undefined,
         is_deleted: p.is_deleted ?? undefined,
-        profiles: p.profiles ? {
-          ...p.profiles,
-          nickname: p.profiles.nickname ?? null,
-          public_id: p.profiles.public_id ?? null,
-          icon_id: p.profiles.icon_id ?? null,
-          level: p.profiles.level ?? undefined,
-          exp: p.profiles.exp ?? undefined,
+        profiles: oneOrNull(p.profiles) ? {
+          ...oneOrNull(p.profiles),
+          nickname: oneOrNull(p.profiles)?.nickname ?? null,
+          public_id: oneOrNull(p.profiles)?.public_id ?? null,
+          icon_id: oneOrNull(p.profiles)?.icon_id ?? null,
+          level: oneOrNull(p.profiles)?.level ?? undefined,
+          exp: oneOrNull(p.profiles)?.exp ?? undefined,
         } : undefined,
       })) as unknown as import('../types/post').Post[],
       commentCounts,

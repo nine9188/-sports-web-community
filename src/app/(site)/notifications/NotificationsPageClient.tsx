@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, CheckCheck, Trash2, ChevronDown } from 'lucide-react';
@@ -9,7 +9,7 @@ import {
 import { deleteNotifications } from '@/domains/notifications/actions/delete';
 import { NotificationType, Notification } from '@/domains/notifications/types/notification';
 import NotificationItem from '@/domains/notifications/components/NotificationItem';
-import { Button, Pagination } from '@/shared/components/ui';
+import { Button, Pagination, TabList, type TabItem } from '@/shared/components/ui';
 import { useNotificationCache } from '@/domains/notifications/hooks/useNotificationQueries';
 
 const ITEMS_PER_PAGE = 15;
@@ -164,6 +164,10 @@ export default function NotificationsPageClient({
   const isAllSelected =
     paginatedNotifications.length > 0 &&
     paginatedNotifications.every((notification) => selectedIds.has(notification.id));
+  const filterTabs: TabItem[] = [
+    { id: 'all', label: '전체', count: notifications.length },
+    { id: 'unread', label: '읽지 않음', count: unreadCount },
+  ];
 
   if (initialError) {
     return (
@@ -176,18 +180,18 @@ export default function NotificationsPageClient({
   return (
     <>
       <div className="bg-white dark:bg-[#1D1D1D] md:border md:border-black/7 md:dark:border-0 md:rounded-lg">
-        <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Bell className="w-4 h-4 text-gray-900 dark:text-[#F0F0F0]" />
-            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">알림</h1>
+        <div className="h-12 px-4 bg-[#F5F5F5] dark:bg-[#262626] md:rounded-t-lg border-b border-black/5 dark:border-white/10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Bell className="w-4 h-4 flex-shrink-0 text-gray-900 dark:text-[#F0F0F0]" />
+            <h1 className="text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0] flex-shrink-0">알림</h1>
             {unreadCount > 0 && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="truncate text-xs text-gray-500 dark:text-gray-400">
                 {unreadCount}개의 읽지 않은 알림
               </span>
             )}
           </div>
 
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <Button
               variant="ghost"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -227,38 +231,14 @@ export default function NotificationsPageClient({
           </div>
         </div>
 
-        <div className="flex border-b border-black/5 dark:border-white/10">
-          <Button
-            variant="ghost"
-            onClick={() => setFilter('all')}
-            className={`flex-1 h-12 px-4 text-[13px] font-medium rounded-none ${
-              filter === 'all'
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            전체
-            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-              ({notifications.length})
-            </span>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setFilter('unread')}
-            className={`flex-1 h-12 px-4 text-[13px] font-medium rounded-none ${
-              filter === 'unread'
-                ? 'bg-white dark:bg-[#1D1D1D] text-gray-900 dark:text-[#F0F0F0] border-b-2 border-[#262626] dark:border-[#F0F0F0]'
-                : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300 hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-            }`}
-          >
-            읽지 않음
-            {unreadCount > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 text-xs font-semibold bg-[#262626] dark:bg-[#F0F0F0] text-white dark:text-black rounded-full">
-                {unreadCount}
-              </span>
-            )}
-          </Button>
-        </div>
+        <TabList
+          tabs={filterTabs}
+          activeTab={filter}
+          onTabChange={(tabId) => setFilter(tabId as FilterType)}
+          variant="contained"
+          showCount
+          className="mb-0 [&_button]:h-12"
+        />
 
         {filteredNotifications.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-2 border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">

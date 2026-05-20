@@ -9,10 +9,11 @@ import { Container, ContainerHeader, ContainerTitle, Pagination } from '@/shared
 import { TransferFilters as TransferFiltersComponent } from '@/domains/livescore/components/football/transfers';
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerHref, getTeamHref } from '@/domains/livescore/utils/entityLinks';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 // 4590 표준: Placeholder URL
-const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const PLAYER_PLACEHOLDER = SPORTS_PLACEHOLDERS.players;
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
 
 // 모바일용 간단한 이적 타입 포맷터
 const formatTransferTypeMobile = (type: string): string => {
@@ -53,7 +54,10 @@ const formatTransferTypeMobile = (type: string): string => {
 // 4590 표준: 팀 로고 컴포넌트 (서버에서 전달받은 Storage URL 사용)
 function TeamLogo({ teamName, logoUrl, size = 20 }: { teamName: string; logoUrl?: string; size?: number }) {
   const sizeClass = size === 20 ? 'w-5 h-5' : size === 24 ? 'w-6 h-6' : `w-${Math.floor(size / 4)} h-${Math.floor(size / 4)}`;
-  const src = logoUrl || TEAM_PLACEHOLDER;
+  const src = normalizeDisplayImageUrl(logoUrl, {
+    fallback: TEAM_PLACEHOLDER,
+    proxyExternal: true,
+  });
 
   return (
     <div className={`${sizeClass} flex-shrink-0 relative transform-gpu`}>
@@ -62,6 +66,7 @@ function TeamLogo({ teamName, logoUrl, size = 20 }: { teamName: string; logoUrl?
         alt={teamName || '팀'}
         width={size}
         height={size}
+        unoptimized={shouldUnoptimizeImageUrl(src)}
         className={`object-contain ${sizeClass} rounded`}
       />
     </div>
@@ -172,6 +177,10 @@ export default async function TransfersPageContent({
                 const displayName = getTeamDisplayName(latestTransfer.teams.in.id);
                 return displayName.startsWith('팀 ') ? latestTransfer.teams.in.name : displayName;
               })();
+              const playerPhoto = normalizeDisplayImageUrl(playerPhotoUrls[transfer.player.id], {
+                fallback: PLAYER_PLACEHOLDER,
+                proxyExternal: true,
+              });
 
               return (
                 <div
@@ -181,10 +190,11 @@ export default async function TransfersPageContent({
                   <div className="flex min-w-0 items-center space-x-2">
                     <div className="relative h-8 w-8 flex-shrink-0 md:h-9 md:w-9">
                       <Image
-                        src={playerPhotoUrls[transfer.player.id] || PLAYER_PLACEHOLDER}
+                        src={playerPhoto}
                         alt={`${transfer.player.name} 사진`}
                         width={36}
                         height={36}
+                        unoptimized={shouldUnoptimizeImageUrl(playerPhoto)}
                         className="h-8 w-8 rounded-full border border-gray-200 bg-gray-50 object-cover md:h-9 md:w-9 md:border-2"
                       />
                     </div>

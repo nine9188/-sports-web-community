@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
 import { getPlayerPhotoUrls, getCoachPhotoUrls } from '../images';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 interface Player {
   id: number;
@@ -82,7 +83,9 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     // 주장 찾기 (라인업 데이터에서) - truthy 체크로 변경
     // 참고: lineup API는 captain 데이터를 제공하지 않는 경우가 많음
     // 대신 player stats API (/fixtures/players)에서 games.captain 정보 사용
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const findCaptainId = (teamData: any): number | null => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const captainInStartXI = teamData.startXI?.find((item: any) => item.player.captain);
       return captainInStartXI?.player.id || null;
     };
@@ -97,6 +100,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
       ...awayTeamData.startXI,
       ...awayTeamData.substitutes,
     ];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playerIds = allPlayers.map((item: any) => item.player.id).filter(Boolean);
     const coachIds = [homeTeamData.coach?.id, awayTeamData.coach?.id].filter(Boolean);
 
@@ -108,9 +112,11 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
     ]);
 
     // 3. 팀 라인업 변환 (Storage URL 사용)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const enhanceTeamLineup = (teamData: any, captainId: number | null): TeamLineup => {
       const teamMapping = teamMap[teamData.team.id];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const enhancePlayer = (item: any) => ({
         player: {
           id: item.player.id,
@@ -120,7 +126,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
           grid: item.player.grid || null,
           // truthy 체크로 변경 (true, 1, "true" 등 모두 처리)
           captain: Boolean(item.player.captain) || item.player.id === captainId,
-          photo: playerPhotos[item.player.id] || '/images/placeholder-player.svg'
+          photo: playerPhotos[item.player.id] || SPORTS_PLACEHOLDERS.players
         }
       });
 
@@ -150,7 +156,7 @@ export async function fetchMatchLineups(matchId: string): Promise<LineupsRespons
         coach: {
           id: teamData.coach.id,
           name: teamData.coach.name,
-          photo: coachPhotos[teamData.coach.id] || '/images/placeholder-coach.svg'
+          photo: coachPhotos[teamData.coach.id] || SPORTS_PLACEHOLDERS.coachs
         }
       };
     };

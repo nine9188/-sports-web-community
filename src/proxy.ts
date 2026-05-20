@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import type { CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/shared/types/supabase'
 
@@ -214,15 +215,15 @@ export async function proxy(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient<Database, 'public', any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
+        get(name: string) {
           return request.cookies.get(name)?.value
         },
-        set(name, value, options) {
+        set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value,
@@ -239,7 +240,7 @@ export async function proxy(request: NextRequest) {
             ...options,
           })
         },
-        remove(name, options) {
+        remove(name: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value: '',

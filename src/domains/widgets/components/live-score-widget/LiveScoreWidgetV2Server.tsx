@@ -6,8 +6,10 @@ import LiveScoreWidgetAutoRefresh from './LiveScoreWidgetAutoRefresh';
 import MatchCardServer from './MatchCardServer';
 import WidgetHeader from './WidgetHeader';
 import type { WidgetLeague, WidgetMatch } from './types';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
 
 function getKickoffTime(dateString?: string): string | undefined {
   if (!dateString) return undefined;
@@ -42,13 +44,13 @@ function groupMatchesByLeague(
         id: homeId,
         name: match.teams?.home?.name || '홈팀',
         slug: match.teams?.home?.slug,
-        logo: match.teams?.home?.logo || TEAM_PLACEHOLDER,
+        logo: normalizeDisplayImageUrl(match.teams?.home?.logo, { fallback: TEAM_PLACEHOLDER }),
       },
       awayTeam: {
         id: awayId,
         name: match.teams?.away?.name || '원정팀',
         slug: match.teams?.away?.slug,
-        logo: match.teams?.away?.logo || TEAM_PLACEHOLDER,
+        logo: normalizeDisplayImageUrl(match.teams?.away?.logo, { fallback: TEAM_PLACEHOLDER }),
       },
       score: {
         home: match.goals?.home ?? 0,
@@ -71,8 +73,8 @@ function groupMatchesByLeague(
     id: String(leagueId),
     name: firstMatch.league?.name || '리그',
     icon: '',
-    logo: firstMatch.league?.logo,
-    logoDark: firstMatch.league?.logoDark,
+    logo: normalizeDisplayImageUrl(firstMatch.league?.logo, { fallback: LEAGUE_PLACEHOLDER }),
+    logoDark: normalizeDisplayImageUrl(firstMatch.league?.logoDark, { fallback: LEAGUE_PLACEHOLDER }),
     leagueIdNumber: leagueId,
     matches: leagueMatches,
   }));

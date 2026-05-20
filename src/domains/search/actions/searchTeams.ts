@@ -228,7 +228,8 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
     const popularTeamIds = (teams || []).map((t: any) => t.team_id).filter(Boolean) as number[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const popularLeagueIds = Array.from(new Set((teams || []).map((t: any) => t.league_id).filter(Boolean))) as number[]
-    const [popularTeamMap, popularLeagueNames] = await Promise.all([
+    const [popularTeamLogoStorageUrls, popularTeamMap, popularLeagueNames] = await Promise.all([
+      popularTeamIds.length > 0 ? getTeamLogoUrls(popularTeamIds) : Promise.resolve({} as Record<number, string>),
       popularTeamIds.length > 0 ? getTeamsByIds(popularTeamIds) : Promise.resolve({} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>),
       Promise.all(popularLeagueIds.map(async (id) => [id, await getLeagueName(id)] as const)).then(entries => Object.fromEntries(entries) as Record<number, string>),
     ])
@@ -239,6 +240,7 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
 
       return {
         ...team,
+        logo_url: popularTeamLogoStorageUrls[team.team_id] || null,
         league_name_ko: popularLeagueNames[team.league_id] || '',
         display_name: mappedTeam?.name_ko || team.display_name,
         name_ko: mappedTeam?.name_ko,
@@ -297,8 +299,11 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fbTeamIds = (teams || []).map((t: any) => t.team_id).filter(Boolean) as number[]
-    const fbTeamMap = fbTeamIds.length > 0 ? await getTeamsByIds(fbTeamIds) : {} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>
-    const fbLeagueName = await getLeagueName(39)
+    const [fbTeamLogoStorageUrls, fbTeamMap, fbLeagueName] = await Promise.all([
+      fbTeamIds.length > 0 ? getTeamLogoUrls(fbTeamIds) : Promise.resolve({} as Record<number, string>),
+      fbTeamIds.length > 0 ? getTeamsByIds(fbTeamIds) : Promise.resolve({} as Record<number, import('@/domains/livescore/actions/teamLeagueData').TeamData>),
+      getLeagueName(39),
+    ])
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (teams || []).map((team: any) => {
@@ -306,6 +311,7 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
 
       return {
         ...team,
+        logo_url: fbTeamLogoStorageUrls[team.team_id] || null,
         league_name_ko: fbLeagueName,
         display_name: mappedTeam?.name_ko || team.display_name,
         name_ko: mappedTeam?.name_ko,

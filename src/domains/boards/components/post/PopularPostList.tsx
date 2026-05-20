@@ -6,11 +6,14 @@ import Image from 'next/image';
 import { ThumbsUp } from 'lucide-react';
 import { AuthorLink } from '@/domains/user/components';
 import { extractFirstImageUrl } from './postlist/utils';
-import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 import { renderContentTypeIcons } from './postlist/components/shared/PostRenderers';
 import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
 import { Container } from '@/shared/components/ui';
+
+const FALLBACK_LIGHT = '/logo/4590_logo_02-01.jpg';
+const FALLBACK_DARK = '/logo/4590_logo_02-02.jpg';
 
 interface Post {
   id: string;
@@ -69,7 +72,9 @@ export default function PopularPostList({
     <Container className="bg-white dark:bg-[#1D1D1D]">
       {posts.map((post, index) => {
         const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-        const thumbnailUrl = getProxiedImageUrl(originalUrl); // 프록시 URL로 변환
+        const thumbnailUrl = originalUrl?.trim()
+          ? normalizeDisplayImageUrl(originalUrl, { proxyExternal: true })
+          : null;
         const postUrl = `/boards/${post.board_slug}/${post.post_number}`;
         const isLast = index === posts.length - 1;
 
@@ -102,19 +107,19 @@ export default function PopularPostList({
                     fill
                     sizes="(max-width: 640px) 80px, 96px"
                     className="object-cover"
-                    unoptimized={thumbnailUrl.includes('/proxy?url=')}
+                    unoptimized={shouldUnoptimizeImageUrl(thumbnailUrl)}
                   />
                 ) : (
                   <>
                     <Image
-                      src="/logo/4590_logo_02-01.jpg"
+                      src={FALLBACK_LIGHT}
                       alt="4590 Football"
                       fill
                       sizes="(max-width: 640px) 80px, 96px"
                       className="object-cover dark:hidden"
                     />
                     <Image
-                      src="/logo/4590_logo_02-02.jpg"
+                      src={FALLBACK_DARK}
                       alt="4590 Football"
                       fill
                       sizes="(max-width: 640px) 80px, 96px"

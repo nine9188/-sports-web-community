@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useDarkMode } from '@/shared/hooks/useDarkMode';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
@@ -61,12 +62,26 @@ export default function UnifiedSportsImageClient({
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const isDark = useDarkMode();
+  const normalizedFallbackSrc = normalizeDisplayImageUrl(fallbackSrc, {
+    fallback: DEFAULT_FALLBACK_SRC,
+    proxyExternal: true,
+  });
+  const normalizedSrc = normalizeDisplayImageUrl(src, {
+    fallback: normalizedFallbackSrc,
+    proxyExternal: true,
+  });
+  const normalizedSrcDark = srcDark
+    ? normalizeDisplayImageUrl(srcDark, {
+      fallback: normalizedSrc,
+      proxyExternal: true,
+    })
+    : undefined;
 
   // src가 변경되면 에러/재시도 상태 리셋
   useEffect(() => {
     setHasError(false);
     setRetryCount(0);
-  }, [src, srcDark]);
+  }, [normalizedSrc, normalizedSrcDark]);
 
   // 에러 핸들러: 재시도 1회 후 최종 실패
   const handleError = useCallback(() => {
@@ -78,7 +93,7 @@ export default function UnifiedSportsImageClient({
   }, [retryCount]);
 
   // 다크모드일 때 srcDark가 있으면 사용, 없으면 src 사용
-  const effectiveSrc = isDark && srcDark ? srcDark : src;
+  const effectiveSrc = isDark && normalizedSrcDark ? normalizedSrcDark : normalizedSrc;
 
   // 재시도 시 캐시 무효화를 위한 URL (retryCount가 변경되면 새 요청)
   const srcWithRetry = retryCount > 0
@@ -140,7 +155,7 @@ export default function UnifiedSportsImageClient({
         {showFallback && fallbackContent ? fallbackContent : null}
         {showFallback && !fallbackContent ? (
           <Image
-            src={fallbackSrc}
+            src={normalizedFallbackSrc}
             alt={alt}
             width={finalWidth}
             height={finalHeight}
@@ -162,7 +177,7 @@ export default function UnifiedSportsImageClient({
         height={finalHeight}
         priority={priority}
         loading={priority ? undefined : loading}
-        unoptimized={unoptimized}
+        unoptimized={unoptimized || shouldUnoptimizeImageUrl(srcWithRetry)}
         onError={handleError}
         className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
         sizes={`${finalWidth}px`}

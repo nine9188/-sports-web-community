@@ -27,7 +27,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { AuthorLink } from '@/domains/user/components';
 import { Post } from '../../types';
 import { checkContentType } from '../../utils';
-import { siteConfig } from '@/shared/config';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 // 4590 표준: placeholder 상수
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -198,7 +198,10 @@ function LeagueLogoImage({
     return () => observer.disconnect();
   }, []);
 
-  const effectiveLogoUrl = isDark && leagueLogoDark ? leagueLogoDark : leagueLogo;
+  const effectiveLogoUrl = normalizeDisplayImageUrl(
+    isDark && leagueLogoDark ? leagueLogoDark : leagueLogo,
+    { fallback: LEAGUE_PLACEHOLDER }
+  );
 
   return (
     <UnifiedSportsImageClient
@@ -206,6 +209,7 @@ function LeagueLogoImage({
       alt={alt}
       width={20}
       height={20}
+      fallbackSrc={LEAGUE_PLACEHOLDER}
       className="object-contain w-5 h-5"
     />
   );
@@ -227,7 +231,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
 
   if (post.team_id) {
     // 팀 게시판: 팀 로고 사용
-    const logoUrl = post.team_logo || TEAM_PLACEHOLDER;
+    const logoUrl = normalizeDisplayImageUrl(post.team_logo, { fallback: TEAM_PLACEHOLDER });
     return (
       <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
@@ -236,6 +240,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
             alt={displayBoardName}
             width={20}
             height={20}
+            fallbackSrc={TEAM_PLACEHOLDER}
             className="object-contain w-5 h-5"
           />
         </div>
@@ -250,7 +255,7 @@ export function renderBoardLogo(post: Post): React.ReactNode {
     );
   } else if (post.league_id) {
     // 리그 게시판: 다크모드 지원
-    const leagueLogo = post.league_logo || LEAGUE_PLACEHOLDER;
+    const leagueLogo = normalizeDisplayImageUrl(post.league_logo, { fallback: LEAGUE_PLACEHOLDER });
     return (
       <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
@@ -275,12 +280,13 @@ export function renderBoardLogo(post: Post): React.ReactNode {
       <Link href={boardLink} prefetch={false} className="flex items-center hover:underline">
         <div className="relative w-5 h-5 mr-1">
           <Image
-            src={siteConfig.icon}
+            src={SITE_ICON_URL}
             alt={displayBoardName}
             width={20}
             height={20}
             className="object-contain w-5 h-5 dark:invert"
             loading="lazy"
+            unoptimized={shouldUnoptimizeImageUrl(SITE_ICON_URL)}
           />
         </div>
         <span

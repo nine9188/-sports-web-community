@@ -55,21 +55,21 @@ export function storageCdnUrl(path: string): string {
 
 export function isStorageCdnUrl(url: string): boolean {
   try {
-    return new URL(url).hostname === new URL(STORAGE_CDN_BASE_URL).hostname;
+    return new URL(url.trim()).hostname === new URL(STORAGE_CDN_BASE_URL).hostname;
   } catch {
     return false;
   }
 }
 
 export function isLocalImageUrl(url: string | null | undefined): boolean {
-  return typeof url === 'string' && url.startsWith('/');
+  return typeof url === 'string' && url.trim().startsWith('/');
 }
 
 export function isSupabaseStorageUrl(url: string | null | undefined): boolean {
   if (!url) return false;
 
   try {
-    return new URL(url).hostname.endsWith('.supabase.co');
+    return new URL(url.trim()).hostname.endsWith('.supabase.co');
   } catch {
     return false;
   }
@@ -79,7 +79,12 @@ export function isExternalImageUrl(url: string | null | undefined): boolean {
   if (!url || isLocalImageUrl(url)) return false;
 
   try {
-    const hostname = new URL(url).hostname;
+    const parsedUrl = new URL(url.trim());
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return false;
+    }
+
+    const hostname = parsedUrl.hostname;
     return hostname !== new URL(STORAGE_CDN_BASE_URL).hostname && !hostname.endsWith('.supabase.co');
   } catch {
     return false;
@@ -94,18 +99,20 @@ export function normalizeDisplayImageUrl(
   } = {}
 ): string {
   const fallback = options.fallback ?? SITE_ICON_URL;
-  if (!url || !url.trim()) return fallback;
+  const trimmedUrl = url?.trim();
+  if (!trimmedUrl) return fallback;
 
-  if (options.proxyExternal && isExternalImageUrl(url)) {
-    return externalImageProxyUrl(url) || fallback;
+  if (options.proxyExternal && isExternalImageUrl(trimmedUrl)) {
+    return externalImageProxyUrl(trimmedUrl) || fallback;
   }
 
-  return url;
+  return trimmedUrl;
 }
 
 export function shouldUnoptimizeImageUrl(url: string | null | undefined): boolean {
   if (!url) return false;
-  return isExternalImageUrl(url) || url.includes('/proxy?url=');
+  const trimmedUrl = url.trim();
+  return isExternalImageUrl(trimmedUrl) || trimmedUrl.includes('/proxy?url=');
 }
 
 export function sportsAssetUrl(
@@ -162,8 +169,26 @@ export function venuePhotoUrl(id: string | number | null | undefined, size: Spor
 }
 
 export function externalImageProxyUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  return storageCdnUrl(`proxy?url=${encodeURIComponent(url)}`);
+  const trimmedUrl = url?.trim();
+  if (!trimmedUrl) return null;
+  return storageCdnUrl(`proxy?url=${encodeURIComponent(trimmedUrl)}`);
+}
+
+export function localExternalImageProxyUrl(url: string | null | undefined): string {
+  const trimmedUrl = url?.trim();
+  if (!trimmedUrl) return '';
+  if (isLocalImageUrl(trimmedUrl)) return trimmedUrl;
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+      return `/api/proxy-image?url=${encodeURIComponent(trimmedUrl)}`;
+    }
+  } catch {
+    return trimmedUrl;
+  }
+
+  return trimmedUrl;
 }
 
 export function profileIconUrl(path: string): string {

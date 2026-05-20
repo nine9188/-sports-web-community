@@ -199,7 +199,6 @@ async function createPostInternal(params: {
     // 게시글 생성
     const { data, error } = await supabase
       .from('posts')
-      // @ts-expect-error - insertData는 동적으로 구성되어 타입 추론이 어려움
       .insert(insertData)
       .select('*, board:boards(id, name, slug)')
       .single();

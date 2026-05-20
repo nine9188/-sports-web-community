@@ -5,6 +5,19 @@ import { siteConfig } from '@/shared/config';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+type RssPost = {
+  id: string;
+  post_number: number;
+  title: string;
+  summary: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  board: {
+    slug: string;
+    name: string;
+  } | null;
+};
+
 function escapeXml(unsafe: string): string {
   return unsafe
     .replace(/&/g, '&amp;')
@@ -50,7 +63,9 @@ export async function GET() {
     }
 
     // RSS XML 생성
-    const rssItems = posts
+    const rssPosts = (posts ?? []) as unknown as RssPost[];
+
+    const rssItems = rssPosts
       ?.filter((post) => post.board && typeof post.board === 'object' && 'slug' in post.board)
       .map((post) => {
         const board = post.board as { slug: string; name: string };

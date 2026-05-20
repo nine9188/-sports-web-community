@@ -4,6 +4,7 @@ import { renderTeamCard } from './teamCardRenderer';
 import { renderPlayerCard } from './playerCardRenderer';
 import { renderPredictionChart } from './predictionChartRenderer';
 import { renderEntityCardGroup } from './entityCardGroupRenderer';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
 
 function isEntityCardNode(node: TipTapNode | undefined): boolean {
   return node?.type === 'teamCard' || node?.type === 'playerCard';
@@ -98,10 +99,12 @@ export function renderTipTapNode(node: TipTapNode): string {
   }
 
   if (node.type === 'image' && node.attrs?.src) {
+    const imageSrc = normalizeDisplayImageUrl(node.attrs.src as string, { proxyExternal: true });
+
     return `
       <div class="my-6 text-center">
         <img
-          src="${node.attrs.src}"
+          src="${imageSrc}"
           alt="${node.attrs.alt || '기사 이미지'}"
           title="${node.attrs.title || ''}"
           class="max-w-full h-auto mx-auto rounded-lg shadow-md post-image"
@@ -319,7 +322,12 @@ export function renderTipTapDoc(doc: TipTapDoc): string {
       i -= 1;
 
       if (cards.length > 1) {
-        html += `<div class="entity-card-scroll" data-type="entity-card-group">${cards.map(renderTipTapNode).join('')}</div>`;
+        const rows: string[] = [];
+        for (let rowStart = 0; rowStart < cards.length; rowStart += 4) {
+          rows.push(`<div class="entity-card-group-row">${cards.slice(rowStart, rowStart + 4).map(renderTipTapNode).join('')}</div>`);
+        }
+
+        html += `<div class="entity-card-scroll" data-type="entity-card-group">${rows.join('')}</div>`;
         continue;
       }
 

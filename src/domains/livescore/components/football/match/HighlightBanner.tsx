@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
+import { normalizeDisplayImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface HighlightBannerProps {
   highlight: MatchHighlight | null;
@@ -44,9 +46,10 @@ export default function HighlightBanner({ highlight, mode = 'modal' }: Highlight
     );
   }
 
-  const thumbnailUrl =
-    highlight.thumbnail_url ||
-    `https://i.ytimg.com/vi/${highlight.video_id}/hqdefault.jpg`;
+  const thumbnailUrl = normalizeDisplayImageUrl(
+    highlight.thumbnail_url || `https://i.ytimg.com/vi/${highlight.video_id}/hqdefault.jpg`,
+    { fallback: SITE_ICON_URL, proxyExternal: true }
+  );
 
   const handlePlay = () => {
     if (mode === 'inline') {
@@ -87,9 +90,11 @@ export default function HighlightBanner({ highlight, mode = 'modal' }: Highlight
               onClick={handlePlay}
               className="absolute inset-0 w-full h-full cursor-pointer group"
             >
-              <img
+              <Image
                 src={thumbnailUrl}
                 alt={highlight.video_title || '하이라이트'}
+                fill
+                unoptimized
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">

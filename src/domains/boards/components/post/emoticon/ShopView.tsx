@@ -9,6 +9,7 @@ import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries';
 import { Button } from '@/shared/components/ui';
 import { DESKTOP_CONTENT_HEIGHT } from './constants';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 const SHOP_COLS_DESKTOP = 5;
 const SHOP_ROWS_DESKTOP = 3;
@@ -43,6 +44,11 @@ function PackCard({
   onClick: () => void;
 }) {
   const isFree = !pack.shop_item_id || pack.price === 0;
+  const thumbnail = normalizeDisplayImageUrl(pack.pack_thumbnail, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true,
+  });
+
   return (
     <button
       type="button"
@@ -51,10 +57,11 @@ function PackCard({
     >
       <div className={`${isMobile ? 'w-12 h-12' : 'w-[60px] h-[60px]'} flex items-center justify-center`}>
         <Image
-          src={pack.pack_thumbnail}
+          src={thumbnail}
           alt={pack.pack_name}
           width={60}
           height={60}
+          unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
           className="w-[60px] h-[60px] object-contain group-hover:scale-105 transition-transform"
         />
       </div>

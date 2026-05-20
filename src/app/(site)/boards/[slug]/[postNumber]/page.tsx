@@ -305,12 +305,12 @@ async function PostDetailContent({
     // 공통 author 객체
     const authorSchema = {
       '@type': 'Person' as const,
-      name: result.post.profiles?.nickname || '익명',
-      ...(result.post.profiles?.public_id && {
-        url: `${siteUrl}/user/${result.post.profiles.public_id}`,
+      name: postProfiles?.nickname || '익명',
+      ...(postProfiles?.public_id && {
+        url: `${siteUrl}/user/${postProfiles.public_id}`,
       }),
-      ...(result.post.profiles?.level && {
-        description: `4590 Football 레벨 ${result.post.profiles.level} 회원`,
+      ...(postProfiles?.level && {
+        description: `4590 Football 레벨 ${postProfiles.level} 회원`,
       }),
       memberOf: {
         '@type': 'Organization',

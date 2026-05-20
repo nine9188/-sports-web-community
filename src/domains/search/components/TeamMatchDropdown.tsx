@@ -5,8 +5,9 @@ import type { Match } from '@/domains/livescore/actions/teams/matches'
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { Button } from '@/shared/components/ui'
+import { normalizeDisplayImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg'
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams
 
 interface TeamMatchDropdownButtonProps {
   team: TeamSearchResult
@@ -111,7 +112,10 @@ function MatchItem({ match, teamId, teamLogoUrls = {} }: { match: Match; teamId:
   const localizedLeagueName = getLeagueName(match.league.id) || match.league.name
   const mappedOpponent = getTeamById(opponent.id)
   const opponentDisplayName = mappedOpponent?.name_ko || opponent.name
-  const opponentLogoUrl = teamLogoUrls[opponent.id] || TEAM_PLACEHOLDER
+  const opponentLogoUrl = normalizeDisplayImageUrl(teamLogoUrls[opponent.id], {
+    fallback: TEAM_PLACEHOLDER,
+    proxyExternal: true
+  })
 
   const getMatchStatus = () => {
     const status = match.fixture.status.short
@@ -149,6 +153,7 @@ function MatchItem({ match, teamId, teamLogoUrls = {} }: { match: Match; teamId:
               width={18}
               height={18}
               className="w-4.5 h-4.5 object-contain flex-shrink-0"
+              fallbackSrc={TEAM_PLACEHOLDER}
             />
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-[13px] truncate">
@@ -184,6 +189,7 @@ function MatchItem({ match, teamId, teamLogoUrls = {} }: { match: Match; teamId:
             width={20}
             height={20}
             className="w-5 h-5 object-contain flex-shrink-0"
+            fallbackSrc={TEAM_PLACEHOLDER}
           />
           <div className="min-w-0">
             <div className="font-medium text-gray-900 dark:text-[#F0F0F0] truncate">

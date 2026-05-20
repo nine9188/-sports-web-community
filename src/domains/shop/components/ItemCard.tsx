@@ -12,9 +12,10 @@ import { ShopItem } from '../types'
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { Button } from '@/shared/components/ui'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
 // 4590 표준: placeholder 상수
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
 
 interface ItemCardProps {
   item: ShopItem
@@ -29,7 +30,10 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
   const [isPending, startTransition] = useTransition()
 
   // 4590 표준: teamLogoUrl이 있으면 사용, 없으면 item.image_url 또는 placeholder 사용
-  const displayImageUrl = teamLogoUrl || item.image_url || TEAM_PLACEHOLDER;
+  const displayImageUrl = normalizeDisplayImageUrl(teamLogoUrl || item.image_url, {
+    fallback: TEAM_PLACEHOLDER,
+    proxyExternal: true
+  });
 
   // 팀 ID 추출 (이름 매핑용)
   const getTeamId = (imageUrl: string): string => {
@@ -110,6 +114,7 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
               width={20}
               height={20}
               className="w-full h-full object-contain"
+              fallbackSrc={TEAM_PLACEHOLDER}
             />
           ) : (
             <Image
@@ -117,6 +122,7 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
               alt={displayName}
               width={20}
               height={20}
+              unoptimized={shouldUnoptimizeImageUrl(displayImageUrl)}
               className="w-full h-full object-contain dark:invert"
             />
           )}

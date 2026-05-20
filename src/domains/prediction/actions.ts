@@ -12,6 +12,7 @@ import { extractCardLinks } from '@/domains/boards/utils/post/extractCardLinks'
 import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstImageUrl'
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary'
 import { submitIndexNowUrl } from '@/shared/seo/indexnow'
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
 type PredictionPostPollDraft = {
   question: string
@@ -301,6 +302,7 @@ export async function fetchPredictionPreview(fixtureId: number): Promise<{
 }
 
 // Predictions 데이터를 게시글 형식으로 변환 (상세 버전)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function formatPredictionContent(
   prediction: PredictionApiData
 ): Promise<string> {
@@ -655,8 +657,8 @@ async function generateMatchPredictionPost(
   try {
     predictionData = await fetchPredictions(match.id)
     if (predictionData) {
-      predictionData.teams.home.logo = teamLogoMap[predictionData.teams.home.id] || '/images/placeholder-team.svg'
-      predictionData.teams.away.logo = teamLogoMap[predictionData.teams.away.id] || '/images/placeholder-team.svg'
+      predictionData.teams.home.logo = teamLogoMap[predictionData.teams.home.id] || SPORTS_PLACEHOLDERS.teams
+      predictionData.teams.away.logo = teamLogoMap[predictionData.teams.away.id] || SPORTS_PLACEHOLDERS.teams
     }
   } catch {
     // predictionChart용 데이터 실패 시 무시
@@ -664,15 +666,11 @@ async function generateMatchPredictionPost(
 
   // 2. AI 분석글 생성 (predictionData를 전달하여 차트와 동일한 데이터로 분석)
   let aiAnalysis = ''
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let chartData: any = null
-
   try {
     const predictMatch = await loadPredictMatch()
     const result = await predictMatch(match.id, true, predictionData) // predictionData 전달
     if (typeof result === 'object' && 'textAnalysis' in result) {
       aiAnalysis = result.textAnalysis
-      chartData = result.chartData
     } else if (typeof result === 'string') {
       aiAnalysis = result
     }
@@ -682,8 +680,8 @@ async function generateMatchPredictionPost(
   }
 
   // 매치 데이터의 로고 URL을 Storage URL로 교체
-  match.teams.home.logo = teamLogoMap[match.teams.home.id] || '/images/placeholder-team.svg'
-  match.teams.away.logo = teamLogoMap[match.teams.away.id] || '/images/placeholder-team.svg'
+  match.teams.home.logo = teamLogoMap[match.teams.home.id] || SPORTS_PLACEHOLDERS.teams
+  match.teams.away.logo = teamLogoMap[match.teams.away.id] || SPORTS_PLACEHOLDERS.teams
   match.league.logo = leagueLogoUrl
 
   // 게시판 찾기: 분석 전용 게시판 우선, 없으면 리그 게시판, 최후에 해외축구 게시판
@@ -938,8 +936,10 @@ async function generateLeaguePredictionPost(
 
     // 4590 표준: 팀/리그 로고를 Supabase Storage URL로 변환
     const allTeamIds = Array.from(new Set(matches.flatMap(m => [m.teams.home.id, m.teams.away.id])))
-    const teamLogoMap = await getTeamLogoUrls(allTeamIds)
-    const leagueLogoUrl = await getLeagueLogoUrl(league.id)
+    const [teamLogoMap, leagueLogoUrl] = await Promise.all([
+      getTeamLogoUrls(allTeamIds),
+      getLeagueLogoUrl(league.id),
+    ])
 
     // 현재 로그인한 관리자 ID 사용 (없으면 fallback)
     const userId = await getCurrentUserId()
@@ -1130,8 +1130,9 @@ export async function getPredictionAutomationLogs(limit: number = 20) {
 }
 
 // 예측 자동화 토글 (GitHub Actions 설정)
-export async function togglePredictionAutomation(enabled: boolean, time: string) {
+export async function togglePredictionAutomation(enabled: boolean, _time: string) {
   try {
+    void _time
     // 실제로는 GitHub Actions workflow 파일을 수정하거나
     // 데이터베이스에 설정을 저장해야 합니다
     // 임시 구현 - 실제로는 더 복잡한 로직 필요

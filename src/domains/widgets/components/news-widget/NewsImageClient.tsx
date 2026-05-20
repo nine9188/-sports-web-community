@@ -18,7 +18,6 @@ function toProxyUrl(url: string): string {
   });
 }
 
-/** 로컬/Supabase 이외 외부 URL 여부 */
 interface NewsImageClientProps {
   imageUrl?: string;
   alt: string;

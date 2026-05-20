@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { PlayerCardProps } from '@/shared/types/playerCard';
 import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
-import { playerPhotoUrl, teamLogoUrl } from '@/shared/images/urls';
+import { normalizeDisplayImageUrl, playerPhotoUrl, teamLogoUrl } from '@/shared/images/urls';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -16,8 +16,11 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
   const numericPlayerId = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
   const teamId = typeof team?.id === 'string' ? parseInt(team.id, 10) : team?.id;
 
-  const teamLogo = teamId ? teamLogoUrl(teamId) : TEAM_PLACEHOLDER;
-  const playerPhoto = photo && numericPlayerId ? playerPhotoUrl(numericPlayerId) : PLAYER_PLACEHOLDER;
+  const teamLogo = normalizeDisplayImageUrl(teamId ? teamLogoUrl(teamId) : undefined, { fallback: TEAM_PLACEHOLDER });
+  const playerPhoto = normalizeDisplayImageUrl(
+    photo && numericPlayerId ? playerPhotoUrl(numericPlayerId) : undefined,
+    { fallback: PLAYER_PLACEHOLDER }
+  );
   const href = getPlayerHref({ ...playerData, id: numericPlayerId });
 
   const CardContent = () => (

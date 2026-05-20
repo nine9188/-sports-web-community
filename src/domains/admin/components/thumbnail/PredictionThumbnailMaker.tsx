@@ -6,6 +6,7 @@ import { Download, Image as ImageIcon, Loader2, Search, Square, RectangleVertica
 import { toast } from 'sonner';
 import { loadPredictionThumbnailSource, type PredictionThumbnailSource } from '@/domains/admin/actions/thumbnail';
 import type { PredictionChartData } from '@/domains/prediction/components/PredictionChart';
+import { localExternalImageProxyUrl } from '@/shared/images/urls';
 
 type ThumbnailSizeId = 'vertical' | 'square' | 'smallSquare';
 type ThumbnailTemplate =
@@ -232,10 +233,7 @@ function safeText(value: unknown, fallback = '-'): string {
 }
 
 function proxyImage(src?: string | null): string {
-  if (!src) return '';
-  if (src.startsWith('/')) return src;
-  if (!/^https?:\/\//i.test(src)) return src;
-  return `/api/proxy-image?url=${encodeURIComponent(src)}`;
+  return localExternalImageProxyUrl(src);
 }
 
 function makeFileName(source: PredictionThumbnailSource | null, size: ThumbnailSize): string {

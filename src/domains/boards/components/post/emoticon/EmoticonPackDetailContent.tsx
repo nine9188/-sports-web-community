@@ -5,6 +5,7 @@ import { Check } from 'lucide-react';
 import Image from 'next/image';
 import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { usePackDetail } from '@/domains/boards/hooks/useEmoticonQueries';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface EmoticonPackDetailContentProps {
   packId: string;
@@ -20,6 +21,9 @@ export default function EmoticonPackDetailContent({
   className,
 }: EmoticonPackDetailContentProps) {
   const { data: detail } = usePackDetail(packId);
+  const thumbnail = detail
+    ? normalizeDisplayImageUrl(detail.pack_thumbnail, { fallback: SITE_ICON_URL, proxyExternal: true })
+    : SITE_ICON_URL;
 
   const handlePurchaseClick = () => {
     if (!detail) return;
@@ -46,7 +50,7 @@ export default function EmoticonPackDetailContent({
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div className="w-[48px] h-[48px] rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Image src={detail.pack_thumbnail} alt={detail.pack_name} width={48} height={48} className="w-[48px] h-[48px] object-contain" />
+                  <Image src={thumbnail} alt={detail.pack_name} width={48} height={48} unoptimized={shouldUnoptimizeImageUrl(thumbnail)} className="w-[48px] h-[48px] object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate">{detail.pack_name}</p>
@@ -68,7 +72,7 @@ export default function EmoticonPackDetailContent({
           ) : (
             <div className="flex items-stretch gap-3">
               <div className="w-[60px] h-[60px] rounded-lg flex items-center justify-center flex-shrink-0">
-                <Image src={detail.pack_thumbnail} alt={detail.pack_name} width={60} height={60} className="w-[60px] h-[60px] object-contain" />
+                <Image src={thumbnail} alt={detail.pack_name} width={60} height={60} unoptimized={shouldUnoptimizeImageUrl(thumbnail)} className="w-[60px] h-[60px] object-contain" />
               </div>
               <div className="flex flex-col min-w-0 w-[20%] flex-shrink-0">
                 <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">{detail.pack_name}</p>

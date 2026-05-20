@@ -11,6 +11,7 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import TeamMatchDropdownButton, { TeamMatchExpandedRow } from './TeamMatchDropdown'
 import { Button } from '@/shared/components/ui'
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks'
+import { normalizeDisplayImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
 const CACHE_DURATION = 5 * 60 * 1000
 
@@ -319,6 +320,10 @@ function TeamRowWithMatches({
 }) {
   const router = useRouter()
   const teamHref = getTeamHref(team)
+  const teamLogo = normalizeDisplayImageUrl(team.logo_url, {
+    fallback: SPORTS_PLACEHOLDERS.teams,
+    proxyExternal: true
+  })
 
   const handleTeamPageClick = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -348,11 +353,12 @@ function TeamRowWithMatches({
         <td className="px-2 sm:px-4 py-4">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <UnifiedSportsImageClient
-              src={team.logo_url || '/images/placeholder-team.svg'}
+              src={teamLogo}
               alt={`${team.display_name} 로고`}
               width={28}
               height={28}
               className="w-6 h-6 sm:w-7 sm:h-7 object-contain flex-shrink-0"
+              fallbackSrc={SPORTS_PLACEHOLDERS.teams}
             />
             <div className="min-w-0 flex-1">
               <div className="font-medium text-gray-900 dark:text-[#F0F0F0] text-xs sm:text-[13px]">

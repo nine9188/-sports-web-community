@@ -2,6 +2,7 @@
 
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { useDarkMode } from '@/shared/hooks/useDarkMode';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
 import type { WidgetLeague } from './types';
 
 // 4590 표준: placeholder 상수
@@ -21,7 +22,10 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
   const isDark = useDarkMode();
 
   // 다크모드에 따른 리그 로고 URL 선택
-  const effectiveLogoUrl = isDark && league.logoDark ? league.logoDark : league.logo;
+  const effectiveLogoUrl = normalizeDisplayImageUrl(
+    isDark && league.logoDark ? league.logoDark : league.logo,
+    { fallback: LEAGUE_PLACEHOLDER }
+  );
 
   return (
     <div className="flex items-center gap-3">
@@ -31,6 +35,7 @@ export default function LeagueHeader({ league }: LeagueHeaderProps) {
           alt={league.name}
           width={20}
           height={20}
+          fallbackSrc={LEAGUE_PLACEHOLDER}
           className="w-5 h-5 object-contain"
         />
       ) : league.icon ? (

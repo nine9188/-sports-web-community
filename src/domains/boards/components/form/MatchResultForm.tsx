@@ -9,7 +9,7 @@ import type { MatchData } from '@/domains/livescore/actions/footballApi';
 import { useMatchesByDate } from '@/domains/boards/hooks/useMatchFormQueries';
 import { DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
-import { leagueLogoUrl } from '@/shared/images/urls';
+import { leagueLogoUrl, normalizeDisplayImageUrl } from '@/shared/images/urls';
 
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
@@ -121,7 +121,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
 
   const getTeamLogo = (id: number | string) => {
     const numId = typeof id === 'string' ? parseInt(id, 10) : id;
-    return teamLogoUrls[numId] || TEAM_PLACEHOLDER;
+    return normalizeDisplayImageUrl(teamLogoUrls[numId], { fallback: TEAM_PLACEHOLDER });
   };
 
   const getLeagueLogo = (id: number | string) => {
@@ -129,10 +129,10 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
     if (!numId) return LEAGUE_PLACEHOLDER;
 
     if (isDark && DARK_MODE_LEAGUE_IDS.includes(numId)) {
-      return leagueLogoUrl(numId, { dark: true });
+      return normalizeDisplayImageUrl(leagueLogoUrl(numId, { dark: true }), { fallback: LEAGUE_PLACEHOLDER });
     }
 
-    return leagueLogoUrl(numId);
+    return normalizeDisplayImageUrl(leagueLogoUrl(numId), { fallback: LEAGUE_PLACEHOLDER });
   };
 
   const handleSelectMatch = (match: Match) => {
@@ -161,20 +161,20 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
         id: leagueId,
         name: leagueName === '알 수 없는 리그' ? match.league.name : leagueName,
         country: '',
-        logo: match.league.logo,
+        logo: getLeagueLogo(leagueId),
         flag: '',
       },
       teams: {
         home: {
           id: homeId,
           name: homeName,
-          logo: match.teams.home.logo,
+          logo: getTeamLogo(homeId),
           winner: match.teams.home.winner ?? null,
         },
         away: {
           id: awayId,
           name: awayName,
-          logo: match.teams.away.logo,
+          logo: getTeamLogo(awayId),
           winner: match.teams.away.winner ?? null,
         },
       },
@@ -258,6 +258,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                       alt={group.league.name}
                       width={18}
                       height={18}
+                      fallbackSrc={LEAGUE_PLACEHOLDER}
                       className="h-[18px] w-[18px] object-contain"
                     />
                     <span className="truncate text-[12px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
@@ -286,6 +287,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                               alt={homeName}
                               width={22}
                               height={22}
+                              fallbackSrc={TEAM_PLACEHOLDER}
                               className="h-[22px] w-[22px] shrink-0 object-contain"
                             />
                             <span className="truncate text-[12px] text-gray-900 dark:text-[#F0F0F0]">{homeName}</span>
@@ -305,6 +307,7 @@ export default function MatchResultForm({ onCancel, onMatchAdd, isOpen }: MatchR
                               alt={awayName}
                               width={22}
                               height={22}
+                              fallbackSrc={TEAM_PLACEHOLDER}
                               className="h-[22px] w-[22px] shrink-0 object-contain"
                             />
                           </span>

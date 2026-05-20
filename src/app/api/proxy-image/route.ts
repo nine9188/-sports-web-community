@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge'; // Edge Runtime 사용 (더 빠름)
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

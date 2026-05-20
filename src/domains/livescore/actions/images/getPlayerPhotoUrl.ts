@@ -1,7 +1,7 @@
 'use server';
 
-import { ensureAssetCached, ensureAssetsCached } from './ensureAssetCached';
-import { PLACEHOLDER_URLS, type ImageSize } from './constants';
+import { playerPhotoUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
+import type { ImageSize } from './constants';
 
 /**
  * 선수 사진 Storage URL 조회 (단일)
@@ -15,10 +15,10 @@ import { PLACEHOLDER_URLS, type ImageSize } from './constants';
  */
 export async function getPlayerPhotoUrl(playerId: number, size: ImageSize = 'md'): Promise<string> {
   if (!playerId || playerId <= 0) {
-    return PLACEHOLDER_URLS.player_photo;
+    return SPORTS_PLACEHOLDERS.players;
   }
 
-  return ensureAssetCached('player_photo', playerId, size);
+  return playerPhotoUrl(playerId, size);
 }
 
 /**
@@ -36,5 +36,9 @@ export async function getPlayerPhotoUrls(
     return {};
   }
 
-  return ensureAssetsCached('player_photo', playerIds, size);
+  return Object.fromEntries(
+    playerIds
+      .filter((id) => id && id > 0)
+      .map((id) => [id, playerPhotoUrl(id, size)])
+  );
 }

@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, TabList, type TabItem } from '@/shared/components/ui';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import { StandingsData, League } from '../../types';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
-const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
 
 const LEAGUES: League[] = [
   { id: 'premier', name: 'EPL', fullName: '프리미어리그', apiId: 39 },
@@ -63,6 +64,11 @@ export default function LeagueStandings({
     (id ? leagueLogoUrlsDark[id] || leagueLogoUrls[id] : undefined) || LEAGUE_PLACEHOLDER;
   const getTeamLogo = (id: number) => currentTeamLogoUrls[id] || TEAM_PLACEHOLDER;
   const getTeamHref = (team: { team_id: number; name: string }) => buildTeamHref(team);
+  const leagueTabs: TabItem[] = LEAGUES.map((league) => ({
+    id: league.id,
+    label: league.name,
+  }));
+
   const loadLeagueStandings = async (leagueId: string) => {
     if (Object.prototype.hasOwnProperty.call(standingsByLeague, leagueId)) {
       return;
@@ -104,26 +110,13 @@ export default function LeagueStandings({
         <ContainerTitle>축구 팀순위</ContainerTitle>
       </ContainerHeader>
 
-      <div className="flex border-b border-black/5 dark:border-white/10 bg-[#FAFAFA] dark:bg-[#232323]">
-        {LEAGUES.map(league => {
-          const isActive = league.id === currentLeague.id;
-          return (
-            <button
-              key={league.id}
-              type="button"
-              onClick={() => handleLeagueChange(league.id)}
-              className={`flex-1 px-1.5 py-2 text-center text-[11px] transition-colors ${
-                isActive
-                  ? 'bg-white text-gray-900 font-semibold dark:bg-[#1D1D1D] dark:text-[#F0F0F0]'
-                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-[#F0F0F0]'
-              } ${loadingLeagueId === league.id ? 'cursor-wait opacity-80' : ''}`}
-              aria-pressed={isActive}
-            >
-              {league.name}
-            </button>
-          );
-        })}
-      </div>
+      <TabList
+        tabs={leagueTabs}
+        activeTab={currentLeague.id}
+        onTabChange={handleLeagueChange}
+        variant="contained"
+        className="mb-0"
+      />
 
       <div className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFA] dark:bg-[#232323]">
         <UnifiedSportsImageClient

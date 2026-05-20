@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { CardPreview, PostSearchResult } from '../types'
 import { trackSearchResultClick } from '../actions/searchLogs'
 import { formatDate } from '@/shared/utils/dateUtils'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
 interface PostSearchResultsProps {
   posts: PostSearchResult[]
@@ -200,10 +201,22 @@ function CardPreviewBadge({ card }: { card: CardPreview }) {
   }
 
   if (card.type === 'team') {
+    const teamLogo = normalizeDisplayImageUrl(card.teamLogo, {
+      fallback: SPORTS_PLACEHOLDERS.teams,
+      proxyExternal: true
+    })
+
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-md text-xs text-gray-700 dark:text-gray-300">
         {card.teamLogo && (
-          <Image src={card.teamLogo} alt={`${card.teamName} 로고`} width={16} height={16} unoptimized className="w-4 h-4 object-contain" />
+          <Image
+            src={teamLogo}
+            alt={`${card.teamName} 로고`}
+            width={16}
+            height={16}
+            unoptimized={shouldUnoptimizeImageUrl(teamLogo)}
+            className="w-4 h-4 object-contain"
+          />
         )}
         <span className="font-medium">{card.teamName}</span>
       </span>
@@ -211,10 +224,22 @@ function CardPreviewBadge({ card }: { card: CardPreview }) {
   }
 
   if (card.type === 'player') {
+    const playerPhoto = normalizeDisplayImageUrl(card.playerPhoto, {
+      fallback: SPORTS_PLACEHOLDERS.players,
+      proxyExternal: true
+    })
+
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] dark:bg-[#262626] border border-black/5 dark:border-white/10 rounded-md text-xs text-gray-700 dark:text-gray-300">
         {card.playerPhoto && (
-          <Image src={card.playerPhoto} alt={`${card.playerName} 사진`} width={16} height={16} unoptimized className="w-4 h-4 rounded-full object-cover" />
+          <Image
+            src={playerPhoto}
+            alt={`${card.playerName} 사진`}
+            width={16}
+            height={16}
+            unoptimized={shouldUnoptimizeImageUrl(playerPhoto)}
+            className="w-4 h-4 rounded-full object-cover"
+          />
         )}
         <span className="font-medium">{card.playerName}</span>
       </span>

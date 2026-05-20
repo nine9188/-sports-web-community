@@ -11,13 +11,14 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
-import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
+import { AllPlayerStatsResponse } from '@/domains/livescore/types/lineup';
 import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
+import { normalizeDisplayImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 // 4590 표준: Placeholder 상수
-const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
-const COACH_PLACEHOLDER = '/images/placeholder-coach.svg';
+const PLAYER_PLACEHOLDER = SPORTS_PLACEHOLDERS.players;
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
+const COACH_PLACEHOLDER = SPORTS_PLACEHOLDERS.coachs;
 
 const LineupInlineEmpty = ({ message }: { message: string }) => (
   <div className="px-3 py-4 text-center text-[13px] text-gray-500 dark:text-gray-400">
@@ -70,7 +71,7 @@ interface LineupsProps {
   isLoading?: boolean;
 }
 
-export default function Lineups({ matchId, matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, playerPhotoUrls = {}, isLoading = false }: LineupsProps) {
+export default function Lineups({ matchData, allPlayerStats, playerKoreanNames = {}, teamLogoUrls = {}, playerPhotoUrls = {}, isLoading = false }: LineupsProps) {
   const { getTeamById } = useTeamLeague();
   // 4590 표준: 헬퍼 함수
   const getTeamLogo = (id: number, fallbackLogo?: string) => teamLogoUrls[id] || fallbackLogo || TEAM_PLACEHOLDER;
@@ -111,25 +112,14 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
 
   const rawLineups = resolvedLineups;
   const events = resolvedEvents;
-  const lineupPlayerIds = useMemo(() => {
-    if (!rawLineups) return [];
-
-    const ids = new Set<number>();
-    rawLineups.home?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
-    rawLineups.home?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
-    rawLineups.away?.startXI?.forEach(item => item.player?.id && ids.add(item.player.id));
-    rawLineups.away?.substitutes?.forEach(item => item.player?.id && ids.add(item.player.id));
-    return Array.from(ids);
-  }, [rawLineups]);
 
   const lineups = useMemo(() => {
     if (!rawLineups) return null;
 
     const photoMap = playerPhotoUrls;
-    const normalizePhoto = (player: Player) => (
-      photoMap[player.id]
-      || (player.photo?.includes('media.api-sports.io') ? PLAYER_PLACEHOLDER : player.photo)
-      || PLAYER_PLACEHOLDER
+    const normalizePhoto = (player: Player) => normalizeDisplayImageUrl(
+      photoMap[player.id] || player.photo,
+      { fallback: PLAYER_PLACEHOLDER, proxyExternal: true }
     );
     const mergePlayers = (items: TeamLineup['startXI']) => items.map(item => ({
       ...item,
@@ -269,8 +259,8 @@ export default function Lineups({ matchId, matchData, allPlayerStats, playerKore
     }
   }, [currentPlayerIndex, teamPlayers, selectedPlayer]);
 
-  const homeTeam = matchData?.homeTeam || { id: 0, name: '홈팀', logo: '/placeholder-team.svg' };
-  const awayTeam = matchData?.awayTeam || { id: 0, name: '원정팀', logo: '/placeholder-team.svg' };
+  const homeTeam = matchData?.homeTeam || { id: 0, name: '홈팀', logo: TEAM_PLACEHOLDER };
+  const awayTeam = matchData?.awayTeam || { id: 0, name: '원정팀', logo: TEAM_PLACEHOLDER };
   const createEmptyLineup = (team: typeof homeTeam): TeamLineup => ({
     team: {
       id: team.id,

@@ -3,6 +3,12 @@ import { getMatchHref, getPlayerHref, getTeamHref } from '@/domains/livescore/ut
 type TipTapLikeNode = {
   type?: unknown;
   attrs?: Record<string, unknown>;
+  text?: unknown;
+  description?: unknown;
+  marks?: Array<{
+    type?: unknown;
+    attrs?: Record<string, unknown>;
+  }>;
   content?: unknown;
 };
 
@@ -21,7 +27,7 @@ export type RelatedPostCta = {
   actionLabel: string;
 };
 
-const MAX_CTA_COUNT = 8;
+const MAX_CTA_COUNT = 24;
 
 function firstText(...values: unknown[]): string {
   return values
@@ -43,6 +49,60 @@ function pushCta(ctas: RelatedPostCta[], seen: Set<string>, cta: RelatedPostCta)
   if (!cta.href || seen.has(cta.href) || ctas.length >= MAX_CTA_COUNT) return;
   seen.add(cta.href);
   ctas.push(cta);
+}
+
+function buildInternalLinkCta(href: unknown, label: unknown): RelatedPostCta | null {
+  if (typeof href !== 'string' || !href.trim()) return null;
+
+  let pathname = href.trim();
+
+  try {
+    pathname = new URL(pathname, 'https://4590football.com').pathname;
+  } catch {
+    return null;
+  }
+
+  const match = pathname.match(/^\/livescore\/football\/(team|player|match)\/(\d+)(?:\/[^/?#]+)?\/?$/);
+  if (!match) return null;
+
+  const type = match[1] as 'team' | 'player' | 'match';
+  const id = match[2];
+  const displayLabel = firstText(label) || (type === 'player' ? '선수 정보' : type === 'team' ? '팀 정보' : '경기 정보');
+
+  return {
+    key: `${type}-${id}`,
+    type,
+    label: displayLabel,
+    description: type === 'player' ? '선수 정보' : type === 'team' ? '팀 정보' : '경기 정보',
+    href: pathname,
+    actionLabel: type === 'player' ? '선수 페이지' : type === 'team' ? '팀 페이지' : '경기 페이지',
+  };
+}
+
+function stripHtml(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function decodeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function collectHtmlAnchorCtas(html: string, ctas: RelatedPostCta[], seen: Set<string>) {
+  const anchorRegex = /<a\b[^>]*\bhref=(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = anchorRegex.exec(html)) && ctas.length < MAX_CTA_COUNT) {
+    const cta = buildInternalLinkCta(decodeHtmlAttribute(match[2]), stripHtml(match[3]));
+    if (cta) pushCta(ctas, seen, cta);
+  }
 }
 
 function buildTeamCta(team: Record<string, unknown> | null | undefined): RelatedPostCta | null {
@@ -137,6 +197,23 @@ function walkNode(node: unknown, ctas: RelatedPostCta[], seen: Set<string>) {
 
   const current = node as TipTapLikeNode;
   const attrs = current.attrs;
+
+  if (typeof current.description === 'string') {
+    collectHtmlAnchorCtas(current.description, ctas, seen);
+  }
+
+  if (typeof current.content === 'string') {
+    collectHtmlAnchorCtas(current.content, ctas, seen);
+  }
+
+  if (current.type === 'text' && Array.isArray(current.marks)) {
+    for (const mark of current.marks) {
+      if (mark.type !== 'link') continue;
+
+      const linkCta = buildInternalLinkCta(mark.attrs?.href, current.text);
+      if (linkCta) pushCta(ctas, seen, linkCta);
+    }
+  }
 
   if (current.type === 'matchCard' && attrs) {
     const matchData = attrs.matchData as Record<string, unknown> | undefined;

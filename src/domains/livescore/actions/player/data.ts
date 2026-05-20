@@ -16,6 +16,7 @@ import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/serve
 import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
 import { resolvePlayerSeasonContext } from './seasonContext';
 import { fetchCachedPlayerShell, type PlayerShell } from './playerShell';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 const PLAYER_STATS_CACHE_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -182,8 +183,8 @@ function buildPlayerFullDataFromShell(shell: PlayerShell): PlayerFullDataRespons
       statistics: statistic ? [statistic] : [],
     },
     statistics: statistic ? [statistic] : [],
-    playerPhotoUrl: shell.photo || '/images/placeholder-player.svg',
-    teamLogoUrl: shell.team?.logo || '/images/placeholder-team.svg',
+    playerPhotoUrl: shell.photo || SPORTS_PLACEHOLDERS.players,
+    teamLogoUrl: shell.team?.logo || SPORTS_PLACEHOLDERS.teams,
     currentTeamLeague: shell.league?.id ? {
       id: shell.league.id,
       name: shell.league.name,
@@ -192,21 +193,6 @@ function buildPlayerFullDataFromShell(shell: PlayerShell): PlayerFullDataRespons
     } : undefined,
     cachedAt: Date.now(),
   };
-}
-
-/**
- * 현재 시즌 계산 함수
- */
-function getCurrentSeason(): number {
-  return getDefaultPlayerSeason();
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  
-  // 현재 시즌이 API에서 아직 데이터를 제공하지 않을 수 있으므로
-  // 항상 이전 시즌을 기본으로 사용
-  // 7월 이후면 해당 연도, 아니면 이전 연도를 시즌으로 사용
-  return month >= 6 ? year : year - 1;
 }
 
 async function fetchResolvedPlayerStatistics(playerId: number): Promise<PlayerStatistic[]> {
@@ -608,10 +594,10 @@ export const fetchPlayerFullData = async (
     const [playerPhotoUrl, teamLogoUrl] = await Promise.all([
       existingPlayerPhotoUrl
         ? Promise.resolve(existingPlayerPhotoUrl)
-        : playerNumId ? getPlayerPhotoUrl(playerNumId) : Promise.resolve('/images/placeholder-player.svg'),
+        : playerNumId ? getPlayerPhotoUrl(playerNumId) : Promise.resolve(SPORTS_PLACEHOLDERS.players),
       existingTeamLogoUrl
         ? Promise.resolve(existingTeamLogoUrl)
-        : teamId ? getTeamLogoUrl(teamId) : Promise.resolve('/images/placeholder-team.svg')
+        : teamId ? getTeamLogoUrl(teamId) : Promise.resolve(SPORTS_PLACEHOLDERS.teams)
     ]);
 
     response.playerPhotoUrl = playerPhotoUrl;

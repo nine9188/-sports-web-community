@@ -6,6 +6,7 @@ import {
   getCoachPhotoUrl,
 } from '@/domains/livescore/actions/images';
 import UnifiedSportsImageClient from './UnifiedSportsImageClient';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 type SizeVariant = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type ShapeVariant = 'square' | 'circle';
@@ -75,7 +76,7 @@ export default async function UnifiedSportsImage({
       src = await getCoachPhotoUrl(numericId);
       break;
     default:
-      src = '/images/placeholder-team.svg';
+      src = SPORTS_PLACEHOLDERS.teams;
   }
 
   return (

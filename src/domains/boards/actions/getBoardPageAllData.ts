@@ -197,15 +197,11 @@ async function _getBoardPageAllDataImpl(
   let leagueLogoUrl: string | undefined;
   let leagueLogoUrlDark: string | undefined;
 
-  if (boardData.team_id) {
-    teamLogoUrl = await getTeamLogoUrl(boardData.team_id);
-  }
-  if (boardData.league_id) {
-    [leagueLogoUrl, leagueLogoUrlDark] = await Promise.all([
-      getLeagueLogoUrl(boardData.league_id, false),
-      getLeagueLogoUrl(boardData.league_id, true),
-    ]);
-  }
+  [teamLogoUrl, leagueLogoUrl, leagueLogoUrlDark] = await Promise.all([
+    boardData.team_id ? getTeamLogoUrl(boardData.team_id) : Promise.resolve(undefined),
+    boardData.league_id ? getLeagueLogoUrl(boardData.league_id, false) : Promise.resolve(undefined),
+    boardData.league_id ? getLeagueLogoUrl(boardData.league_id, true) : Promise.resolve(undefined),
+  ]);
 
   // 6. 통합 데이터 반환
   return {

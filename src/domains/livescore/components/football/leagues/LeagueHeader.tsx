@@ -2,9 +2,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { ContainerHeader, ContainerContent } from '@/shared/components/ui';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 // 4590 표준: placeholder 상수
-const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
 
 interface LeagueHeaderProps {
   league: LeagueDetails;
@@ -24,6 +25,21 @@ export default function LeagueHeader({
   leagueLogoUrlDark,
   boardSlug,
 }: LeagueHeaderProps) {
+  const logoUrl = normalizeDisplayImageUrl(leagueLogoUrl, {
+    fallback: LEAGUE_PLACEHOLDER,
+    proxyExternal: true,
+  });
+  const darkLogoUrl = leagueLogoUrlDark
+    ? normalizeDisplayImageUrl(leagueLogoUrlDark, {
+      fallback: logoUrl,
+      proxyExternal: true,
+    })
+    : undefined;
+  const flagUrl = normalizeDisplayImageUrl(league.flag, {
+    fallback: '',
+    proxyExternal: true,
+  });
+
   return (
     <>
       <ContainerHeader className="justify-between">
@@ -53,32 +69,32 @@ export default function LeagueHeader({
         <div className="flex items-center space-x-2">
           {/* 리그 로고 */}
           <div className="relative w-6 h-6 flex-shrink-0">
-            {leagueLogoUrlDark && leagueLogoUrl ? (
+            {darkLogoUrl && logoUrl ? (
               <>
                 <Image
-                  src={leagueLogoUrl}
+                  src={logoUrl}
                   alt={`${displayName} 로고`}
                   width={24}
                   height={24}
-                  unoptimized
+                  unoptimized={shouldUnoptimizeImageUrl(logoUrl)}
                   className="object-contain w-6 h-6 dark:hidden"
                 />
                 <Image
-                  src={leagueLogoUrlDark}
+                  src={darkLogoUrl}
                   alt={`${displayName} 로고`}
                   width={24}
                   height={24}
-                  unoptimized
+                  unoptimized={shouldUnoptimizeImageUrl(darkLogoUrl)}
                   className="hidden object-contain w-6 h-6 dark:block"
                 />
               </>
             ) : (
               <Image
-                src={leagueLogoUrlDark || leagueLogoUrl || LEAGUE_PLACEHOLDER}
+                src={darkLogoUrl || logoUrl}
                 alt={`${displayName} 로고`}
                 width={24}
                 height={24}
-                unoptimized
+                unoptimized={shouldUnoptimizeImageUrl(darkLogoUrl || logoUrl)}
                 className="object-contain w-6 h-6"
               />
             )}
@@ -92,12 +108,13 @@ export default function LeagueHeader({
                   {displayName}
                 </h1>
                 {/* 국가 플래그 */}
-                {league.flag && (
+                {flagUrl && (
                   <div className="relative w-5 h-3 flex-shrink-0">
                     <Image
-                      src={league.flag}
+                      src={flagUrl}
                       alt={`${league.country} 국기`}
                       fill
+                      unoptimized={shouldUnoptimizeImageUrl(flagUrl)}
                       className="object-cover rounded-sm"
                       sizes="20px"
                     />

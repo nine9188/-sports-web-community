@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { Check } from 'lucide-react'
 import type { EmoticonPackInfo } from '@/domains/boards/actions/emoticons'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 interface EmoticonPackCardProps {
   pack: EmoticonPackInfo
@@ -12,6 +13,10 @@ interface EmoticonPackCardProps {
 
 export default function EmoticonPackCard({ pack, isOwned, onClick }: EmoticonPackCardProps) {
   const isFree = !pack.shop_item_id || pack.price === 0
+  const thumbnail = normalizeDisplayImageUrl(pack.pack_thumbnail, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true
+  })
 
   return (
     <button
@@ -22,10 +27,11 @@ export default function EmoticonPackCard({ pack, isOwned, onClick }: EmoticonPac
       {/* 썸네일 */}
       <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center mb-2">
         <Image
-          src={pack.pack_thumbnail}
+          src={thumbnail}
           alt={pack.pack_name}
           width={60}
           height={60}
+          unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
           className="w-[60px] h-[60px] object-contain group-hover:scale-105 transition-transform"
         />
       </div>

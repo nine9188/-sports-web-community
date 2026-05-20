@@ -1,6 +1,7 @@
 import type { PlayerCardData } from '@/shared/types/playerCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
 import { getPlayerHref } from '@/domains/livescore/utils/entityLinks';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
 
 const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -15,7 +16,7 @@ function normalizePlayerCardData(data: Record<string, unknown>): PlayerCardData 
     name_ko: data.name_ko as string | null | undefined,
     slug: data.slug as string | null | undefined,
     koreanName: data.koreanName as string | undefined,
-    photo: (data.photo as string) || PLAYER_PLACEHOLDER,
+    photo: normalizeDisplayImageUrl(data.photo as string | undefined, { fallback: PLAYER_PLACEHOLDER }),
     team: {
       id: (team?.id as number) || 0,
       name: (team?.name as string) || '',
@@ -23,7 +24,7 @@ function normalizePlayerCardData(data: Record<string, unknown>): PlayerCardData 
       name_ko: team?.name_ko as string | null | undefined,
       slug: team?.slug as string | null | undefined,
       koreanName: team?.koreanName as string | undefined,
-      logo: (team?.logo as string) || TEAM_PLACEHOLDER,
+      logo: normalizeDisplayImageUrl(team?.logo as string | undefined, { fallback: TEAM_PLACEHOLDER }),
     },
     position: data.position as string | null | undefined,
     number: data.number as number | null | undefined,
@@ -54,7 +55,7 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
                   data-light-src="${teamImages.light}"
                   data-dark-src="${teamImages.dark}"
                   alt="${teamDisplayName}"
-                  onerror="this.onerror=null;this.src='/images/placeholder-team.svg';"
+                  onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
                 />
               </div>
             ` : ''}
@@ -67,7 +68,7 @@ export function renderPlayerCard(data: { playerId: string | number; playerData: 
             <img
               src="${playerData.photo}"
               alt="${displayName}"
-              onerror="this.onerror=null;this.src='/images/placeholder-player.svg';"
+              onerror="this.onerror=null;this.src='${PLAYER_PLACEHOLDER}';"
             />
           </div>
           <span class="player-name">${displayName}</span>

@@ -10,6 +10,7 @@ import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
 import { createCommentNotification, createReplyNotification } from '@/domains/notifications/actions';
 import { checkHotPostEntry } from '@/domains/notifications/actions/checkHotPostEntry';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 /**
  * 댓글 작성 (대댓글 지원)
@@ -152,7 +153,7 @@ export async function createComment({
         .single();
 
       if (postData) {
-        const boardSlug = (postData.board as { slug: string } | null)?.slug || '';
+        const boardSlug = oneOrNull(postData.board)?.slug || '';
         const actorNickname = newComment.profiles?.nickname || '알 수 없음';
 
         if (parentId && parentCommentOwnerId) {

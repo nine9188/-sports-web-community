@@ -2,6 +2,9 @@ import Link from 'next/link';
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient';
 import type { WidgetMatch } from './types';
 import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
+import { normalizeDisplayImageUrl } from '@/shared/images/urls';
+
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 // 경기 상태 한글 매핑
 const STATUS_MAP: Record<string, { label: string; isLive: boolean }> = {
@@ -97,6 +100,8 @@ interface MatchCardServerProps {
  */
 export default function MatchCardServer({ match, isLast, eager }: MatchCardServerProps) {
   const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
+  const homeLogo = normalizeDisplayImageUrl(match.homeTeam.logo, { fallback: TEAM_PLACEHOLDER });
+  const awayLogo = normalizeDisplayImageUrl(match.awayTeam.logo, { fallback: TEAM_PLACEHOLDER });
 
   // SEO: 구글봇이 링크 내용을 파악할 수 있도록 aria-label 추가
   const ariaLabel = `${match.homeTeam.name} ${match.score.home} - ${match.score.away} ${match.awayTeam.name}, ${statusInfo.label}${statusInfo.subLabel ? ` (${statusInfo.subLabel})` : ''}`;
@@ -137,15 +142,16 @@ export default function MatchCardServer({ match, isLast, eager }: MatchCardServe
         <span className="text-xs sm:text-[13px] text-gray-900 dark:text-[#F0F0F0] truncate text-right">
           {match.homeTeam.name}
         </span>
-        {match.homeTeam.logo && (
+        {homeLogo && (
           <div className="w-6 h-6 flex-shrink-0 relative">
             <UnifiedSportsImageClient
-              src={match.homeTeam.logo}
+              src={homeLogo}
               alt={match.homeTeam.name}
               width={24}
               height={24}
               loading={eager ? "eager" : "lazy"}
               priority={eager}
+              fallbackSrc={TEAM_PLACEHOLDER}
               className="w-6 h-6 object-contain"
             />
           </div>
@@ -161,15 +167,16 @@ export default function MatchCardServer({ match, isLast, eager }: MatchCardServe
 
       {/* 원정팀 정보 */}
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        {match.awayTeam.logo && (
+        {awayLogo && (
           <div className="w-6 h-6 flex-shrink-0 relative">
             <UnifiedSportsImageClient
-              src={match.awayTeam.logo}
+              src={awayLogo}
               alt={match.awayTeam.name}
               width={24}
               height={24}
               loading={eager ? "eager" : "lazy"}
               priority={eager}
+              fallbackSrc={TEAM_PLACEHOLDER}
               className="w-6 h-6 object-contain"
             />
           </div>

@@ -11,9 +11,12 @@ import Image from 'next/image';
 import { PostItemProps } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons } from '../shared/PostRenderers';
-import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
+
+const FALLBACK_LIGHT = '/logo/4590_logo_02-01.jpg';
+const FALLBACK_DARK = '/logo/4590_logo_02-02.jpg';
 
 export const MobilePostItem = React.memo(function MobilePostItem({
   post,
@@ -41,7 +44,9 @@ export const MobilePostItem = React.memo(function MobilePostItem({
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table') return null;
     const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-    return getProxiedImageUrl(originalUrl);
+    return originalUrl?.trim()
+      ? normalizeDisplayImageUrl(originalUrl, { proxyExternal: true })
+      : null;
   }, [variant, post.thumbnail_url, post.content]);
 
   // 핫딜 정보 계산
@@ -78,19 +83,19 @@ export const MobilePostItem = React.memo(function MobilePostItem({
                 sizes="80px"
                 className="object-cover"
                 loading="lazy"
-                unoptimized={thumbnailUrl.includes('/proxy?url=')}
+                unoptimized={shouldUnoptimizeImageUrl(thumbnailUrl)}
               />
             ) : (
               <>
                 <Image
-                  src="/logo/4590_logo_02-01.jpg"
+                  src={FALLBACK_LIGHT}
                   alt="4590 Football"
                   fill
                   sizes="80px"
                   className="object-cover dark:hidden"
                 />
                 <Image
-                  src="/logo/4590_logo_02-02.jpg"
+                  src={FALLBACK_DARK}
                   alt="4590 Football"
                   fill
                   sizes="80px"

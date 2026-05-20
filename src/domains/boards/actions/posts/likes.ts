@@ -7,6 +7,7 @@ import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { LikeActionResponse } from './utils';
 import { createPostLikeNotification } from '@/domains/notifications/actions';
 import { checkHotPostEntry } from '@/domains/notifications/actions/checkHotPostEntry';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 type LikeType = 'like' | 'dislike';
 
@@ -202,7 +203,7 @@ async function handleLikeNotification(
       .single();
 
     if (postData && profile) {
-      const boardSlug = (postData.board as { slug: string } | null)?.slug || '';
+      const boardSlug = oneOrNull(postData.board)?.slug || '';
 
       await createPostLikeNotification({
         postOwnerId,

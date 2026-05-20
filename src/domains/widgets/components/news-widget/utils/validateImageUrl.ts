@@ -16,11 +16,13 @@
  */
 export function validateImageUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return false;
 
   // 로컬 이미지는 항상 유효
-  if (url.startsWith('/')) return true;
+  if (trimmedUrl.startsWith('/')) return true;
 
   // 외부 URL: http(s)://로 시작하면 유효로 간주
   // 실제 로드 실패/에러는 NewsImageClient의 onError + 5초 타임아웃이 처리
-  return /^https?:\/\/.+/i.test(url);
+  return /^https?:\/\/.+/i.test(trimmedUrl);
 }

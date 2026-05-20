@@ -25,6 +25,7 @@ import {
   type PredictionApiData,
   PreviewModal,
 } from '@/domains/admin/components/prediction';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 // Window 타입 확장
 declare global {
@@ -486,12 +487,12 @@ export default function PredictionAdminPage() {
                           className="w-5 h-5 mr-3 rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-[#F0F0F0] focus:ring-gray-500 cursor-pointer"
                         />
                         <UnifiedSportsImageClient
-                          src={group.league.logo || '/images/placeholder-league.svg'}
+                          src={group.league.logo || SPORTS_PLACEHOLDERS.leagues}
                           alt={group.league.name}
                           width={32}
                           height={32}
                           className="mr-3"
-                          fallbackSrc="/images/placeholder-league.svg"
+                          fallbackSrc={SPORTS_PLACEHOLDERS.leagues}
                         />
                         <label htmlFor={`league-${group.league.id}`} className="text-lg font-semibold text-gray-900 dark:text-[#F0F0F0] cursor-pointer">
                           {group.league.name}

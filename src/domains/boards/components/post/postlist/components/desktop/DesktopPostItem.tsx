@@ -14,10 +14,9 @@ import { ThumbsUp } from 'lucide-react';
 import { PostItemProps } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
-import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
-import { siteConfig } from '@/shared/config';
 
 /**
  * 데스크톱 게시글 아이템 (비가상화)
@@ -51,7 +50,9 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table') return null;
     const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-    return getProxiedImageUrl(originalUrl);
+    return originalUrl?.trim()
+      ? normalizeDisplayImageUrl(originalUrl, { proxyExternal: true })
+      : null;
   }, [variant, post.thumbnail_url, post.content]);
 
   // 핫딜 정보 계산
@@ -96,11 +97,11 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
                 sizes="96px"
                 className="object-cover"
                 loading="lazy"
-                unoptimized={thumbnailUrl.includes('/proxy?url=')}
+                unoptimized={shouldUnoptimizeImageUrl(thumbnailUrl)}
               />
             ) : (
               <Image
-                src={siteConfig.icon}
+                src={SITE_ICON_URL}
                 alt="사이트 로고"
                 fill
                 sizes="96px"

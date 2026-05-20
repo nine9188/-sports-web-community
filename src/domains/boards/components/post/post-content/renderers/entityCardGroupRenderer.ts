@@ -35,23 +35,37 @@ function renderEntityCardNode(node: TipTapNode): string {
   return '';
 }
 
+function chunkHtml(items: string[], size: number): string[][] {
+  const chunks: string[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
 export function renderEntityCardGroup(data: {
   columns?: unknown;
   items?: unknown;
   content?: TipTapNode[];
 }): string {
   const content = Array.isArray(data.content) ? data.content : [];
-  const contentHtml = content.map(renderEntityCardNode).join('');
+  const contentItems = content.map(renderEntityCardNode).filter(Boolean);
   const items = Array.isArray(data.items) ? data.items as EntityCardGroupItem[] : [];
-  const itemsHtml = items.map(renderEntityCardItem).join('');
-  const cardsHtml = contentHtml || itemsHtml;
+  const legacyItems = items.map(renderEntityCardItem).filter(Boolean);
+  const cardItems = contentItems.length > 0 ? contentItems : legacyItems;
 
-  if (!cardsHtml) return '';
+  if (cardItems.length === 0) return '';
+
+  const rowsHtml = chunkHtml(cardItems, 4)
+    .map((row) => `<div class="entity-card-group-row">${row.join('')}</div>`)
+    .join('');
 
   return `
     <div class="entity-card-group entity-card-group-cols-4" data-type="entity-card-group" data-columns="4">
       <div class="entity-card-group-track">
-        ${cardsHtml}
+        ${rowsHtml}
       </div>
     </div>
   `;

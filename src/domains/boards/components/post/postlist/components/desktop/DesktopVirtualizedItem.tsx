@@ -11,7 +11,7 @@ import { Calendar as CalendarIcon, Eye as EyeIcon } from 'lucide-react';
 import { Post, PostVariant } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
-import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -48,7 +48,9 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
   const thumbnailUrl = useMemo(() => {
     if (variant !== 'image-table' || !post) return null;
     const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-    return getProxiedImageUrl(originalUrl);
+    return originalUrl?.trim()
+      ? normalizeDisplayImageUrl(originalUrl, { proxyExternal: true })
+      : null;
   }, [variant, post]);
 
   // from 정보를 sessionStorage에 저장 (클릭 시)
@@ -156,7 +158,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
               sizes="64px"
               className="object-cover"
               loading="lazy"
-              unoptimized={thumbnailUrl.includes('/proxy?url=')}
+              unoptimized={shouldUnoptimizeImageUrl(thumbnailUrl)}
             />
           </div>
         </div>

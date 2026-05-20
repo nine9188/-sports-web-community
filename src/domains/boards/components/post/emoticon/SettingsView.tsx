@@ -25,6 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { saveEmoticonPackOrder, type PickerPackage } from '@/domains/boards/actions/emoticons';
 import { usePickerData, useEmoticonInvalidation } from '@/domains/boards/hooks/useEmoticonQueries';
 import { DESKTOP_CONTENT_HEIGHT } from './constants';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface SettingsViewProps {
   isMobile: boolean;
@@ -136,6 +137,10 @@ export default function SettingsView({ isMobile, onBack, onSave }: SettingsViewP
 function SortablePackItem({ pack }: { pack: PickerPackage }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pack.pack_id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const thumbnail = normalizeDisplayImageUrl(pack.pack_thumbnail, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true,
+  });
 
   return (
     <div ref={setNodeRef} style={style}
@@ -149,7 +154,7 @@ function SortablePackItem({ pack }: { pack: PickerPackage }) {
         <GripVertical className="w-4 h-4" />
       </button>
       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-        <Image src={pack.pack_thumbnail} alt={pack.pack_name} width={24} height={24} className="w-6 h-6 object-contain" />
+        <Image src={thumbnail} alt={pack.pack_name} width={24} height={24} unoptimized={shouldUnoptimizeImageUrl(thumbnail)} className="w-6 h-6 object-contain" />
       </div>
       <span className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] flex-1 min-w-0 truncate">{pack.pack_name}</span>
       <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 tabular-nums">{pack.emoticons.length}개</span>

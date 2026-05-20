@@ -1,7 +1,10 @@
 import type { TeamCardData } from '@/shared/types/teamCard';
 import { getImageUrls } from '@/shared/utils/matchCard';
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
-import { teamLogoUrl } from '@/shared/images/urls';
+import { normalizeDisplayImageUrl, teamLogoUrl } from '@/shared/images/urls';
+
+const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 function normalizeTeamCardData(data: Record<string, unknown>): TeamCardData {
   const league = data.league as Record<string, unknown> | undefined;
@@ -13,12 +16,15 @@ function normalizeTeamCardData(data: Record<string, unknown>): TeamCardData {
     name_ko: data.name_ko as string | null | undefined,
     slug: data.slug as string | null | undefined,
     koreanName: data.koreanName as string | undefined,
-    logo: (data.logo as string) || teamLogoUrl(data.id as number | string | undefined),
+    logo: normalizeDisplayImageUrl(
+      data.logo as string | undefined,
+      { fallback: teamLogoUrl(data.id as number | string | undefined) }
+    ),
     league: {
       id: (league?.id as number) || 0,
       name: (league?.name as string) || '',
       koreanName: league?.koreanName as string | undefined,
-      logo: league?.logo as string | undefined,
+      logo: normalizeDisplayImageUrl(league?.logo as string | undefined, { fallback: LEAGUE_PLACEHOLDER }),
     },
     country: data.country as string | undefined,
     venue: data.venue as string | undefined,
@@ -49,7 +55,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
                   data-light-src="${leagueImages.light}"
                   data-dark-src="${leagueImages.dark}"
                   alt="${leagueDisplayName}"
-                  onerror="this.onerror=null;this.src='/placeholder.webp';"
+                  onerror="this.onerror=null;this.src='${LEAGUE_PLACEHOLDER}';"
                 />
               </div>
             ` : ''}
@@ -64,7 +70,7 @@ export function renderTeamCard(data: { teamId: string | number; teamData: Record
               data-light-src="${teamImages.light}"
               data-dark-src="${teamImages.dark}"
               alt="${displayName}"
-              onerror="this.onerror=null;this.src='${teamLogoUrl(teamId)}';"
+              onerror="this.onerror=null;this.src='${TEAM_PLACEHOLDER}';"
             />
           </div>
           <span class="team-name">${displayName}</span>

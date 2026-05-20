@@ -14,10 +14,11 @@ import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClie
 import { MatchData } from '@/domains/livescore/actions/footballApi';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getMatchHref } from '@/domains/livescore/utils/entityLinks';
+import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 
 // 4590 표준: placeholder 상수
-const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
-const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
+const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
+const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
 
 interface MatchItemProps {
   match: MatchData;

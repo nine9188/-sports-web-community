@@ -11,6 +11,7 @@
 import 'server-only'
 import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
+import type { SetAllCookies } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
 
@@ -39,7 +40,7 @@ import type { Database } from './types'
 export const getSupabaseServer = cache(async () => {
   const cookieStore = await cookies()
 
-  return createServerClient<Database>(
+  return createServerClient<Database, 'public', any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -91,7 +92,7 @@ export const getSupabaseServer = cache(async () => {
 export async function getSupabaseAction() {
   const cookieStore = await cookies()
 
-  return createServerClient<Database>(
+  return createServerClient<Database, 'public', any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -99,7 +100,7 @@ export async function getSupabaseAction() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Parameters<SetAllCookies>[0]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options)
@@ -151,7 +152,7 @@ export async function getSupabaseAction() {
 export async function getSupabaseRouteHandler(request: Request) {
   const cookieStore = await cookies()
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient<Database, 'public', any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -159,7 +160,7 @@ export async function getSupabaseRouteHandler(request: Request) {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Parameters<SetAllCookies>[0]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options)

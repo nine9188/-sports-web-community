@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Circle } from 'lucide-react';
-import { Button } from '@/shared/components/ui';
+import { Button, TabList, type TabItem } from '@/shared/components/ui';
 import { useVisibilityActivityRefresh } from '@/shared/hooks/useVisibilityActivityRefresh';
 import Link from 'next/link';
 import {
@@ -14,6 +14,13 @@ import LiveScoreContent from './LiveScoreContent';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
+type DateTab = 'yesterday' | 'today' | 'tomorrow';
+
+const DATE_TABS: TabItem[] = [
+  { id: 'yesterday', label: '어제' },
+  { id: 'today', label: '오늘' },
+  { id: 'tomorrow', label: '내일' },
+];
 
 interface LiveScoreModalProps {
   isOpen: boolean;
@@ -23,9 +30,9 @@ interface LiveScoreModalProps {
 export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModalProps) {
   // SSR 보호: 포털은 클라이언트 마운트 후에만 사용
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
-  const [matchesByDate, setMatchesByDate] = useState<Partial<Record<'yesterday' | 'today' | 'tomorrow', MatchData[]>>>({});
-  const [loadingDate, setLoadingDate] = useState<'yesterday' | 'today' | 'tomorrow' | null>(null);
+  const [selectedDate, setSelectedDate] = useState<DateTab>('today');
+  const [matchesByDate, setMatchesByDate] = useState<Partial<Record<DateTab, MatchData[]>>>({});
+  const [loadingDate, setLoadingDate] = useState<DateTab | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -81,7 +88,7 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
   });
 
   // 탭 변경 핸들러
-  const handleTabChange = (newDate: 'yesterday' | 'today' | 'tomorrow') => {
+  const handleTabChange = (newDate: DateTab) => {
     setSelectedDate(newDate);
   };
 
@@ -133,26 +140,13 @@ export default function LiveScoreModalClient({ isOpen, onClose }: LiveScoreModal
         </div>
 
         {/* 날짜 선택 탭 */}
-        <div className="flex border-b border-black/7 dark:border-white/10">
-          {[
-            { key: 'yesterday', label: '어제' },
-            { key: 'today', label: '오늘' },
-            { key: 'tomorrow', label: '내일' }
-          ].map(({ key, label }) => (
-            <Button
-              key={key}
-              variant="ghost"
-              onClick={() => handleTabChange(key as 'yesterday' | 'today' | 'tomorrow')}
-              className={`flex-1 py-3 text-[13px] font-medium rounded-none h-auto ${
-                selectedDate === key
-                  ? 'bg-white dark:bg-[#1D1D1D] border-b-2 border-[#262626] dark:border-[#F0F0F0] text-gray-900 dark:text-[#F0F0F0]'
-                  : 'bg-[#F5F5F5] dark:bg-[#262626] text-gray-700 dark:text-gray-300'
-              }`}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
+        <TabList
+          tabs={DATE_TABS}
+          activeTab={selectedDate}
+          onTabChange={(tabId) => handleTabChange(tabId as DateTab)}
+          variant="contained"
+          className="mb-0"
+        />
 
         {/* 광고 + 경기 목록 (함께 스크롤) */}
         <div className="flex-1 overflow-y-auto">

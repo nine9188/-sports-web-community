@@ -7,7 +7,7 @@ import type { MatchCardProps } from '@/shared/types/matchCard';
 import { getStatusInfo, DARK_MODE_LEAGUE_IDS } from '@/shared/utils/matchCard';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getMatchHrefByTeams } from '@/domains/livescore/utils/entityLinks';
-import { leagueLogoUrl, teamLogoUrl } from '@/shared/images/urls';
+import { leagueLogoUrl, normalizeDisplayImageUrl, teamLogoUrl } from '@/shared/images/urls';
 
 // 4590 표준: placeholder 및 Storage URL
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
@@ -72,9 +72,9 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
     return teamLogoUrl(teamId);
   };
 
-  const leagueLogo = getLeagueLogo();
-  const homeTeamLogo = getTeamLogo(homeTeamId);
-  const awayTeamLogo = getTeamLogo(awayTeamId);
+  const leagueLogo = normalizeDisplayImageUrl(getLeagueLogo(), { fallback: LEAGUE_PLACEHOLDER });
+  const homeTeamLogo = normalizeDisplayImageUrl(getTeamLogo(homeTeamId), { fallback: TEAM_PLACEHOLDER });
+  const awayTeamLogo = normalizeDisplayImageUrl(getTeamLogo(awayTeamId), { fallback: TEAM_PLACEHOLDER });
   const href = getMatchHrefByTeams(actualMatchId, homeTeam, awayTeam);
 
   const CardContent = () => (
@@ -87,6 +87,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={leagueName}
               width={20}
               height={20}
+              draggable={false}
               unoptimized
               style={{ width: '20px', height: '20px', objectFit: 'contain' }}
             />
@@ -103,6 +104,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={homeTeamName}
               width={48}
               height={48}
+              draggable={false}
               unoptimized
               style={{ width: '48px', height: '48px', objectFit: 'contain' }}
             />
@@ -128,6 +130,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ matchId, matchData, isEditable = 
               alt={awayTeamName}
               width={48}
               height={48}
+              draggable={false}
               unoptimized
               style={{ width: '48px', height: '48px', objectFit: 'contain' }}
             />

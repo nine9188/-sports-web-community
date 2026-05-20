@@ -4,6 +4,7 @@ import { logUserAction } from '@/shared/actions/log-actions';
 import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { revalidateTag } from 'next/cache';
 import { PostActionResponse } from './utils';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 /**
  * 게시글 삭제 서버 액션
@@ -37,7 +38,7 @@ export async function deletePost(
       return { success: false, error: '본인이 작성한 게시글만 삭제할 수 있습니다.' };
     }
 
-    const boardSlug = (existingPost.boards as { slug: string } | null)?.slug || undefined;
+    const boardSlug = oneOrNull(existingPost.boards)?.slug || undefined;
 
     // 관련 데이터 병렬 삭제 (댓글 + 좋아요 + posts_content + card_links)
     const supabaseAny = supabase as unknown as {

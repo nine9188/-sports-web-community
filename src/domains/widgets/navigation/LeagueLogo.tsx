@@ -18,7 +18,7 @@ export default function LeagueLogo({
   alt,
   size = 56, // 기본값 고정
   className = '',
-  fallbackSrc = '/images/fallback-league.png',
+  fallbackSrc = '/images/placeholder-league.svg',
   priority = false,
 }: LeagueLogoProps) {
   const [imgSrc, setImgSrc] = useState(normalizeDisplayImageUrl(src, { fallback: fallbackSrc }));

@@ -20,9 +20,10 @@ import {
   DialogBody,
   DialogFooter,
 } from '@/shared/components/ui'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SPORTS_PLACEHOLDERS } from '@/shared/images/urls'
 
 // 4590 표준: placeholder 상수
-const ITEM_PLACEHOLDER = '/images/placeholder-team.svg';
+const ITEM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
 
 interface PurchaseModalProps {
   item: ShopItem
@@ -47,7 +48,10 @@ export default function PurchaseModal({
   itemImageUrl,
 }: PurchaseModalProps) {
   // 4590 표준: itemImageUrl이 있으면 사용, 없으면 item.image_url 사용
-  const displayImageUrl = itemImageUrl || item.image_url || ITEM_PLACEHOLDER;
+  const displayImageUrl = normalizeDisplayImageUrl(itemImageUrl || item.image_url, {
+    fallback: ITEM_PLACEHOLDER,
+    proxyExternal: true
+  });
   // Storage URL이거나 로컬 경로면 팀 이미지로 간주
   const isStorageOrTeamImage = displayImageUrl.includes('supabase') || displayImageUrl.includes('/teams/');
   const remainingPoints = Math.max(userPoints - item.price, 0)
@@ -72,6 +76,7 @@ export default function PurchaseModal({
                   height={20}
                   className="w-full h-full object-contain"
                   loading="eager"
+                  fallbackSrc={ITEM_PLACEHOLDER}
                 />
               ) : (
                 <Image
@@ -79,6 +84,7 @@ export default function PurchaseModal({
                   alt={item.name}
                   width={20}
                   height={20}
+                  unoptimized={shouldUnoptimizeImageUrl(displayImageUrl)}
                   className="w-full h-full object-contain dark:invert"
                 />
               )}

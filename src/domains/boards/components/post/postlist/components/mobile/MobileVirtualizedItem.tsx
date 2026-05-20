@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { Post, PostVariant } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
-import { getProxiedImageUrl } from '@/shared/utils/imageProxy';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -49,7 +49,9 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
   const thumbnailUrl = useMemo(() => {
     if (!post || variant !== 'image-table') return null;
     const originalUrl = post.thumbnail_url ?? extractFirstImageUrl(post.content);
-    return getProxiedImageUrl(originalUrl);
+    return originalUrl?.trim()
+      ? normalizeDisplayImageUrl(originalUrl, { proxyExternal: true })
+      : null;
   }, [variant, post]);
 
   if (!post) return null;
@@ -112,7 +114,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
               sizes="112px"
               className="object-cover"
               loading="lazy"
-              unoptimized={thumbnailUrl.includes('/proxy?url=')}
+              unoptimized={shouldUnoptimizeImageUrl(thumbnailUrl)}
             />
           </div>
         </div>

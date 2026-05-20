@@ -4,6 +4,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, ShoppingBag, Settings } from 'lucide-react';
 import Image from 'next/image';
 import type { PickerPackage } from '@/domains/boards/actions/emoticons';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface PackageTabsProps {
   packages: PickerPackage[];
@@ -35,27 +36,35 @@ export default function PackageTabs({
       </button>
 
       <div ref={tabContainerRef as React.RefObject<HTMLDivElement>} className="flex-1 flex overflow-x-auto scrollbar-hide h-full">
-        {packages.map((pkg) => (
-          <button
-            key={pkg.pack_id}
-            type="button"
-            onClick={() => onPackageChange(pkg.pack_id)}
-            className={`flex-shrink-0 flex items-center justify-center w-12 h-full border-r border-[#EAEAEA] dark:border-[#333333] transition-colors ${
-              activePackageId === pkg.pack_id
-                ? 'bg-white dark:bg-[#1D1D1D] border-t-2 border-t-[#262626] dark:border-t-[#F0F0F0]'
-                : 'bg-transparent hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-t-2 border-t-transparent'
-            }`}
-            title={pkg.pack_name}
-          >
-            <Image
-              src={pkg.pack_thumbnail}
-              alt={pkg.pack_name}
-              width={24}
-              height={24}
-              className={`w-6 h-6 object-contain ${activePackageId !== pkg.pack_id && 'opacity-60'} transition-opacity`}
-            />
-          </button>
-        ))}
+        {packages.map((pkg) => {
+          const thumbnail = normalizeDisplayImageUrl(pkg.pack_thumbnail, {
+            fallback: SITE_ICON_URL,
+            proxyExternal: true,
+          });
+
+          return (
+            <button
+              key={pkg.pack_id}
+              type="button"
+              onClick={() => onPackageChange(pkg.pack_id)}
+              className={`flex-shrink-0 flex items-center justify-center w-12 h-full border-r border-[#EAEAEA] dark:border-[#333333] transition-colors ${
+                activePackageId === pkg.pack_id
+                  ? 'bg-white dark:bg-[#1D1D1D] border-t-2 border-t-[#262626] dark:border-t-[#F0F0F0]'
+                  : 'bg-transparent hover:bg-[#EAEAEA] dark:hover:bg-[#333333] border-t-2 border-t-transparent'
+              }`}
+              title={pkg.pack_name}
+            >
+              <Image
+                src={thumbnail}
+                alt={pkg.pack_name}
+                width={24}
+                height={24}
+                unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
+                className={`w-6 h-6 object-contain ${activePackageId !== pkg.pack_id && 'opacity-60'} transition-opacity`}
+              />
+            </button>
+          );
+        })}
       </div>
 
       <button

@@ -6,6 +6,7 @@ import PurchaseModal from './PurchaseModal'
 import { ShopItem } from '../types'
 import { useShopItems } from '../hooks/useShopItems'
 import { Button } from '@/shared/components/ui'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 interface ItemGridProps {
   items: ShopItem[]
@@ -63,27 +64,41 @@ export default function ItemGrid({
           </tr>
         </thead>
         <tbody>
-          {items.map(item => (
-            <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
-              <td className="px-3 py-2 align-middle">
-                <div className="w-5 h-5 relative">
-                  {/* LCP 고려: Next Image 사용 */}
-                  <Image src={item.image_url} alt={item.name} width={20} height={20} className="w-5 h-5 object-contain" />
-                </div>
-              </td>
-              <td className="px-3 py-2 align-middle">
-                <span className="truncate inline-block max-w-[320px] align-middle text-gray-900 dark:text-[#F0F0F0]" title={item.name}>{item.name}</span>
-              </td>
-              <td className="px-3 py-2 text-right align-middle tabular-nums text-gray-700 dark:text-gray-300">{item.is_default ? '기본' : `${item.price} P`}</td>
-              <td className="px-3 py-2 text-right align-middle">
-                {userItems.includes(item.id) ? (
-                  <span className="inline-flex items-center justify-center h-7 px-2 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-0">보유 중</span>
-                ) : (
-                  <Button onClick={() => handleSelectItem(item)} variant="secondary" className="h-7 px-3 text-xs">구매</Button>
-                )}
-              </td>
-            </tr>
-          ))}
+          {items.map(item => {
+            const itemImage = normalizeDisplayImageUrl(item.image_url, {
+              fallback: SITE_ICON_URL,
+              proxyExternal: true
+            })
+
+            return (
+              <tr key={item.id} className="border-t border-black/5 dark:border-white/10">
+                <td className="px-3 py-2 align-middle">
+                  <div className="w-5 h-5 relative">
+                    {/* LCP 고려: Next Image 사용 */}
+                    <Image
+                      src={itemImage}
+                      alt={item.name}
+                      width={20}
+                      height={20}
+                      unoptimized={shouldUnoptimizeImageUrl(itemImage)}
+                      className="w-5 h-5 object-contain"
+                    />
+                  </div>
+                </td>
+                <td className="px-3 py-2 align-middle">
+                  <span className="truncate inline-block max-w-[320px] align-middle text-gray-900 dark:text-[#F0F0F0]" title={item.name}>{item.name}</span>
+                </td>
+                <td className="px-3 py-2 text-right align-middle tabular-nums text-gray-700 dark:text-gray-300">{item.is_default ? '기본' : `${item.price} P`}</td>
+                <td className="px-3 py-2 text-right align-middle">
+                  {userItems.includes(item.id) ? (
+                    <span className="inline-flex items-center justify-center h-7 px-2 text-xs rounded bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] border border-black/7 dark:border-0">보유 중</span>
+                  ) : (
+                    <Button onClick={() => handleSelectItem(item)} variant="secondary" className="h-7 px-3 text-xs">구매</Button>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

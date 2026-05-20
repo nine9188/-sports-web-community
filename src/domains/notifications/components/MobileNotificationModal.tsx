@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { X } from 'lucide-react';
 import { Notification } from '../types/notification';
@@ -63,7 +64,7 @@ export default function MobileNotificationModal({
 
   if (!isMounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Overlay */}
       {isOpen && (
@@ -74,7 +75,7 @@ export default function MobileNotificationModal({
       )}
 
       {/* 알림 모달 */}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000] md:hidden ${
+      <div className={`fixed inset-0 h-[100dvh] w-screen bg-white dark:bg-[#1D1D1D] transform transition-transform duration-300 ease-in-out z-[1000] md:hidden ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       } flex flex-col`}>
         {/* 헤더 - 고정 */}
@@ -144,9 +145,9 @@ export default function MobileNotificationModal({
           </Link>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
-
 
 

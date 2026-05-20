@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/shared/components/ui/button';
 import type { StorageImage } from './types';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface ImageSelectorProps {
   storageImages: StorageImage[];
@@ -55,6 +56,13 @@ export function ImageSelector({
         </h3>
         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 max-h-[200px] overflow-y-auto">
           {storageImages.map((image) => (
+            (() => {
+              const imageUrl = normalizeDisplayImageUrl(image.url, {
+                fallback: SITE_ICON_URL,
+                proxyExternal: true,
+              });
+
+              return (
             <div
               key={image.name}
               className={`relative cursor-pointer border rounded p-1.5 hover:border-gray-400 dark:hover:border-gray-500 transition-colors
@@ -64,14 +72,17 @@ export function ImageSelector({
             >
               <div className="w-8 h-8 relative mx-auto">
                 <Image
-                  src={image.url}
+                  src={imageUrl}
                   alt={image.name}
                   fill
+                  unoptimized={shouldUnoptimizeImageUrl(imageUrl)}
                   className="object-contain"
                   sizes="32px"
                 />
               </div>
             </div>
+              );
+            })()
           ))}
         </div>
       </div>

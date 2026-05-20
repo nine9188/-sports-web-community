@@ -4,6 +4,7 @@ import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getCachedChildBoardIds } from './getCachedBoards';
 import type { PopularPost } from '../types/post';
 import type { DealInfo } from '../types/hotdeal/deal-info';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 
 /**
  * HOT 점수 계산 (사이드바와 동일한 공식)
@@ -97,7 +98,7 @@ export async function getBoardPopularPosts(boardId: string) {
   // 사용자 아이콘 URL 가져오기
   const userIconMap: Record<number, string> = {};
   const iconIds = [...new Set(
-    allPosts.map(post => post.profiles?.icon_id).filter(Boolean)
+    allPosts.map(post => oneOrNull(post.profiles)?.icon_id).filter(Boolean)
   )] as number[];
 
   if (iconIds.length > 0) {
@@ -119,30 +120,32 @@ export async function getBoardPopularPosts(boardId: string) {
   const formatPost = (post: typeof allPosts[0]): PopularPost => {
     const createdAt = new Date(post.created_at || '');
     const formattedDate = `${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
+    const profile = oneOrNull(post.profiles);
+    const board = oneOrNull(post.boards);
 
-    const iconId = post.profiles?.icon_id;
+    const iconId = profile?.icon_id;
     const iconUrl = iconId ? userIconMap[iconId] || null : null;
 
     return {
       id: post.id,
       title: post.title,
-      board_slug: post.boards?.slug || '',
-      board_name: post.boards?.name || '알 수 없음',
+      board_slug: board?.slug || '',
+      board_name: board?.name || '알 수 없음',
       post_number: post.post_number,
       likes: post.likes || 0,
       views: post.views || 0,
       comment_count: commentCounts[post.id] || 0,
-      author_nickname: post.profiles?.nickname || '익명',
-      author_id: post.profiles?.id,
-      author_level: post.profiles?.level ?? undefined,
-      author_exp: post.profiles?.exp || 0,
+      author_nickname: profile?.nickname || '익명',
+      author_id: profile?.id,
+      author_level: profile?.level ?? undefined,
+      author_exp: profile?.exp || 0,
       author_icon_id: iconId,
       author_icon_url: iconUrl,
-      author_public_id: post.profiles?.public_id || null,
+      author_public_id: profile?.public_id || null,
       created_at: post.created_at || '',
       formattedDate,
-      team_id: post.boards?.team_id,
-      league_id: post.boards?.league_id,
+      team_id: board?.team_id,
+      league_id: board?.league_id,
       deal_info: (post.deal_info as unknown as DealInfo) || null,
       thumbnail_url: post.thumbnail_url ?? null,
     };

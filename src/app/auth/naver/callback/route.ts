@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
+import type { SetAllCookies } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
+import type { Database } from '@/shared/lib/supabase/server'
 
 /**
  * 네이버 OAuth 콜백 처리
@@ -170,12 +172,12 @@ export async function GET(request: NextRequest) {
     // 6. Supabase SSR 클라이언트를 통해 세션 쿠키 설정
     const response = NextResponse.redirect(redirectUrl)
 
-    const supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const supabaseClient = createServerClient<Database, 'public', any>(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Parameters<SetAllCookies>[0]) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
           })

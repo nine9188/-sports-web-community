@@ -3,12 +3,18 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ShopCategory } from '../types'
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
 
 interface ShopCategoryCardProps {
   category: ShopCategory
 }
 
 export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
+  const categoryImage = normalizeDisplayImageUrl(category.image_url, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true
+  })
+
   return (
     <Link 
       href={`/shop/${category.slug}`}
@@ -19,9 +25,10 @@ export default function ShopCategoryCard({ category }: ShopCategoryCardProps) {
         <div className="h-48 bg-[#F5F5F5] dark:bg-[#262626] relative">
           {category.image_url ? (
             <Image 
-              src={category.image_url} 
+              src={categoryImage} 
               alt={category.name}
               fill
+              unoptimized={shouldUnoptimizeImageUrl(categoryImage)}
               className="object-cover group-hover:brightness-75 transition-all"
             />
           ) : (

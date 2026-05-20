@@ -8,6 +8,7 @@ import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { purchaseItem } from '@/domains/shop/actions/actions';
 import { useEmoticonShopData, useEmoticonInvalidation } from '@/domains/boards/hooks/useEmoticonQueries';
 import { DESKTOP_CONTENT_HEIGHT } from './constants';
+import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 
 interface PurchaseViewProps {
   pack: EmoticonPackInfo;
@@ -20,6 +21,10 @@ export default function PurchaseView({ pack, isMobile, onBack, onComplete }: Pur
   const { data: shopData } = useEmoticonShopData();
   const { invalidateAfterPurchase } = useEmoticonInvalidation();
   const [isPending, startTransition] = useTransition();
+  const thumbnail = normalizeDisplayImageUrl(pack.pack_thumbnail, {
+    fallback: SITE_ICON_URL,
+    proxyExternal: true,
+  });
 
   const userPoints = shopData?.userPoints ?? 0;
   const remaining = userPoints - (pack.price || 0);
@@ -59,7 +64,7 @@ export default function PurchaseView({ pack, isMobile, onBack, onComplete }: Pur
           <>
             <div className="flex items-center gap-3 p-3 rounded-lg border border-black/5 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] mb-4">
               <div className="w-12 h-12 rounded-lg bg-white dark:bg-[#1D1D1D] flex items-center justify-center flex-shrink-0">
-                <Image src={pack.pack_thumbnail} alt={pack.pack_name} width={32} height={32} className="w-8 h-8 object-contain" />
+                <Image src={thumbnail} alt={pack.pack_name} width={32} height={32} unoptimized={shouldUnoptimizeImageUrl(thumbnail)} className="w-8 h-8 object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-[13px] text-gray-900 dark:text-[#F0F0F0]">{pack.pack_name} 팩</p>

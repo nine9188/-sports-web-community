@@ -7,6 +7,7 @@ import PlayerStats from '@/domains/livescore/components/football/player/tabs/Pla
 import PlayerTransfers from '@/domains/livescore/components/football/player/tabs/PlayerTransfers';
 import PlayerTrophies from '@/domains/livescore/components/football/player/tabs/PlayerTrophies';
 import { Container, ContainerContent, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+import { leagueLogoUrl, teamLogoUrl } from '@/shared/images/urls';
 import type {
   FixtureData,
   InjuryData,
@@ -22,15 +23,15 @@ export const metadata: Metadata = {
 };
 
 const teamLogoUrls: Record<number, string> = {
-  42: 'https://media.api-sports.io/football/teams/42.png',
-  50: 'https://media.api-sports.io/football/teams/50.png',
-  65: 'https://media.api-sports.io/football/teams/65.png',
-  173: 'https://media.api-sports.io/football/teams/173.png',
+  42: teamLogoUrl(42),
+  50: teamLogoUrl(50),
+  65: teamLogoUrl(65),
+  173: teamLogoUrl(173),
 };
 
 const leagueLogoUrls: Record<number, string> = {
-  2: 'https://media.api-sports.io/football/leagues/2.png',
-  39: 'https://media.api-sports.io/football/leagues/39.png',
+  2: leagueLogoUrl(2),
+  39: leagueLogoUrl(39),
 };
 
 const stat: PlayerStatistic = {
