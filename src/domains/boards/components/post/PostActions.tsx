@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
 
 interface PostActionsProps {
@@ -10,6 +11,24 @@ interface PostActionsProps {
   initialLikes: number;
   initialDislikes: number;
   initialUserAction: 'like' | 'dislike' | null;
+}
+
+type ReactionType = 'like' | 'dislike';
+
+function getReactionSuccessMessage(
+  type: ReactionType,
+  previousAction: ReactionType | null,
+  nextAction: ReactionType | null,
+) {
+  if (nextAction === 'like') {
+    return previousAction === 'dislike' ? '추천으로 변경했습니다.' : '게시글을 추천했습니다.';
+  }
+
+  if (nextAction === 'dislike') {
+    return previousAction === 'like' ? '비추천으로 변경했습니다.' : '게시글을 비추천했습니다.';
+  }
+
+  return type === 'like' ? '추천을 취소했습니다.' : '비추천을 취소했습니다.';
 }
 
 export default function PostActions({ 
@@ -30,8 +49,10 @@ export default function PostActions({
     setUserAction(initialUserAction);
   }, [initialLikes, initialDislikes, initialUserAction]);
   
-  const handleReaction = async (type: 'like' | 'dislike') => {
+  const handleReaction = async (type: ReactionType) => {
     if (isLiking || isDisliking) return;
+
+    const previousAction = userAction;
 
     if (type === 'like') {
       setIsLiking(true);
@@ -54,15 +75,18 @@ export default function PostActions({
       } | null;
 
       if (!response.ok || !result?.success) {
-        alert(result?.error || `${type === 'like' ? '좋아요' : '싫어요'} 처리 중 오류가 발생했습니다.`);
+        toast.error(result?.error || `${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);
         return;
       }
 
+      const nextAction = result.userAction || null;
+
       if (result.likes !== undefined) setLikes(result.likes);
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
-      setUserAction(result.userAction || null);
+      setUserAction(nextAction);
+      toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
     } catch {
-      alert(`${type === 'like' ? '좋아요' : '싫어요'} 처리 중 오류가 발생했습니다.`);
+      toast.error(`${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);
     } finally {
       if (type === 'like') {
         setIsLiking(false);

@@ -27,7 +27,7 @@ const FIXTURE_SELECT = 'fixture_id,home_team_id,away_team_id,league_id,season,ma
 const LEAGUE_SELECT = 'id,name,name_ko,logo,country';
 const MAX_ENTITY_LINKS_PER_POST = 24;
 const MAX_MATCH_CARDS_PER_POST = 3;
-const MIN_SENTENCES_BETWEEN_MATCH_CARDS = 3;
+const MIN_SENTENCES_BETWEEN_MATCH_CARDS = 1;
 const MATCH_LOOKAROUND_DAYS = 10;
 const POST_BATCH_SIZE = 200;
 // RSS enrichment policy:
@@ -772,33 +772,13 @@ function normalizePreviouslyEnrichedContent(content) {
   if (!hasMatchCard(content.content)) return content;
 
   const nextContent = [];
-  let paragraphBuffer = [];
-
-  function flushParagraphBuffer() {
-    if (paragraphBuffer.length === 0) return;
-    nextContent.push({ type: 'paragraph', content: trimInlineContent(paragraphBuffer) });
-    paragraphBuffer = [];
-  }
 
   for (const node of content.content) {
     if (node?.type === 'matchCard') continue;
 
-    if (isSourceParagraph(node)) {
-      flushParagraphBuffer();
-      nextContent.push(node);
-      continue;
-    }
-
-    if (node?.type === 'paragraph' && Array.isArray(node.content)) {
-      appendSentenceContent(paragraphBuffer, node.content);
-      continue;
-    }
-
-    flushParagraphBuffer();
     nextContent.push(node);
   }
 
-  flushParagraphBuffer();
   return { ...content, content: nextContent };
 }
 
@@ -936,6 +916,7 @@ function enrichContent(content, context) {
   const insertedMatchTeamIds = new Set();
   const insertedFixtureIds = new Set();
   const nextTopLevelNodes = [];
+  const deferredMatchCards = [];
   let sentencesSinceLastMatchCard = MIN_SENTENCES_BETWEEN_MATCH_CARDS;
 
   for (const node of content.content) {
@@ -990,7 +971,9 @@ function enrichContent(content, context) {
         sentencesSinceLastMatchCard >= MIN_SENTENCES_BETWEEN_MATCH_CARDS
       );
 
-      if (canInsertMatchCard) {
+      if (canInsertMatchCard && deferredMatchCards.length > 0) {
+        sentenceMatchCards.push(deferredMatchCards.shift());
+      } else if (canInsertMatchCard) {
         const sentenceEntityKeys = getInlineEntityKeys(sentenceContent);
         const teamIds = getEligibleMatchTeamIds(sentenceEntityKeys, context);
 
@@ -1009,13 +992,16 @@ function enrichContent(content, context) {
           const matchCardNode = buildMatchCardNode(fixture, context.teamMap, context.leagueMap);
           if (!matchCardNode) continue;
 
-          sentenceMatchCards.push(matchCardNode);
+          if (sentenceMatchCards.length === 0) {
+            sentenceMatchCards.push(matchCardNode);
+          } else {
+            deferredMatchCards.push(matchCardNode);
+          }
           matchCards.push(fixtureId);
           insertedFixtureIds.add(fixtureId);
           insertedMatchTeamIds.add(teamId);
           insertedMatchTeamIds.add(Number(fixture.home_team_id));
           insertedMatchTeamIds.add(Number(fixture.away_team_id));
-          break;
         }
       }
 
