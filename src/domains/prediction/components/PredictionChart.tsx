@@ -173,10 +173,13 @@ function FormBadge({ result }: { result: string }) {
 // 폼 문자열을 배지로 렌더링 (왼쪽=최신, 오른쪽=과거)
 function FormDisplay({ form }: { form: string }) {
   if (!form) return null;
-  const reversed = form.split('').reverse();
+  const recentResults = form.split('').reverse();
   return (
-    <div className="flex flex-wrap gap-0.5">
-      {reversed.map((char, idx) => (
+    <div className="grid w-full max-w-[154px] grid-cols-[repeat(auto-fill,24px)] gap-0.5">
+      <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F5F5F5] text-[11px] font-semibold text-gray-400 dark:bg-[#333333] dark:text-gray-500">
+        &gt;
+      </span>
+      {recentResults.map((char, idx) => (
         <FormBadge key={idx} result={char} />
       ))}
     </div>
@@ -296,7 +299,7 @@ function CompareRow({
   mobileAway?: React.ReactNode;
   homeClassName?: string;
   awayClassName?: string;
-  mobileLayout?: 'two-column' | 'stack';
+  mobileLayout?: 'two-column' | 'stack' | 'center-label';
 }) {
   const mobileHomeContent = mobileHome ?? home;
   const mobileAwayContent = mobileAway ?? away;
@@ -304,8 +307,16 @@ function CompareRow({
   return (
     <>
       <div className="px-3 py-2.5 text-[11px] md:hidden">
-        <div className="mb-2 text-[12px] font-semibold leading-none text-gray-500 dark:text-gray-400">{label}</div>
-        {mobileLayout === 'stack' ? (
+        {label && mobileLayout !== 'center-label' && (
+          <div className="mb-2 text-[12px] font-semibold leading-none text-gray-500 dark:text-gray-400">{label}</div>
+        )}
+        {mobileLayout === 'center-label' ? (
+          <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-2">
+            <div className={`min-w-0 break-words text-right leading-5 text-gray-900 dark:text-[#F0F0F0] ${homeClassName}`}>{mobileHomeContent}</div>
+            <div className="text-center text-[11px] font-semibold leading-5 text-gray-500 dark:text-gray-400">{label}</div>
+            <div className={`min-w-0 break-words text-left leading-5 text-gray-900 dark:text-[#F0F0F0] ${awayClassName}`}>{mobileAwayContent}</div>
+          </div>
+        ) : mobileLayout === 'stack' ? (
           <div className="space-y-1.5">
             <div className="min-w-0">
               <div className="mb-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">홈</div>
@@ -393,14 +404,14 @@ function MinuteValue({ scored, conceded, maxValue }: { scored: number; conceded:
     <div className="space-y-1.5">
       <div className="grid grid-cols-[22px_minmax(0,1fr)_22px] items-center gap-1">
         <span className="text-[10px] font-medium text-green-600 dark:text-green-400">득</span>
-        <div className="h-2.5 rounded bg-green-100 dark:bg-green-900/25">
+        <div className="h-2 rounded bg-green-100 dark:bg-green-900/25">
           <div className="h-full rounded bg-green-300 dark:bg-green-700/70" style={{ width: `${scoredPct}%` }} />
         </div>
         <span className="text-right text-[11px] text-gray-700 dark:text-gray-300">{scored || '-'}</span>
       </div>
       <div className="grid grid-cols-[22px_minmax(0,1fr)_22px] items-center gap-1">
         <span className="text-[10px] font-medium text-red-600 dark:text-red-400">실</span>
-        <div className="h-2.5 rounded bg-red-100 dark:bg-red-900/25">
+        <div className="h-2 rounded bg-red-100 dark:bg-red-900/25">
           <div className="h-full rounded bg-red-300 dark:bg-red-700/70" style={{ width: `${concededPct}%` }} />
         </div>
         <span className="text-right text-[11px] text-gray-700 dark:text-gray-300">{conceded || '-'}</span>
@@ -444,35 +455,42 @@ function PredictionTeamComparison({
     <div className="border-t border-black/5 bg-white pb-4 dark:border-white/10 dark:bg-[#1D1D1D] md:pb-0">
       <div>
         <div>
-          <CompareSection title="최근 5경기">
-            <CompareRow label="폼" home={home.last_5?.form || '-'} away={away.last_5?.form || '-'} homeClassName="font-bold text-blue-600 dark:text-blue-400" awayClassName="font-bold text-blue-600 dark:text-blue-400" />
-            <CompareRow label="공격" home={home.last_5?.att || '-'} away={away.last_5?.att || '-'} homeClassName="font-bold text-green-600 dark:text-green-400" awayClassName="font-bold text-green-600 dark:text-green-400" />
-            <CompareRow label="수비" home={home.last_5?.def || '-'} away={away.last_5?.def || '-'} homeClassName="font-bold text-yellow-600 dark:text-yellow-400" awayClassName="font-bold text-yellow-600 dark:text-yellow-400" />
+          <CompareSection title="최근 5경기 지표">
+            <CompareRow label="경기력" home={home.last_5?.form || '-'} away={away.last_5?.form || '-'} homeClassName="font-bold text-blue-600 dark:text-blue-400" awayClassName="font-bold text-blue-600 dark:text-blue-400" mobileLayout="center-label" />
+            <CompareRow label="공격" home={home.last_5?.att || '-'} away={away.last_5?.att || '-'} homeClassName="font-bold text-green-600 dark:text-green-400" awayClassName="font-bold text-green-600 dark:text-green-400" mobileLayout="center-label" />
+            <CompareRow label="수비" home={home.last_5?.def || '-'} away={away.last_5?.def || '-'} homeClassName="font-bold text-yellow-600 dark:text-yellow-400" awayClassName="font-bold text-yellow-600 dark:text-yellow-400" mobileLayout="center-label" />
             <CompareRow
               label="득/실"
               home={<>{home.last_5?.goals?.for?.total || 0}득 ({home.last_5?.goals?.for?.average || 0}) · {home.last_5?.goals?.against?.total || 0}실 ({home.last_5?.goals?.against?.average || 0})</>}
               away={<>{away.last_5?.goals?.for?.total || 0}득 ({away.last_5?.goals?.for?.average || 0}) · {away.last_5?.goals?.against?.total || 0}실 ({away.last_5?.goals?.against?.average || 0})</>}
+              mobileLayout="center-label"
             />
           </CompareSection>
 
           {(home.league?.form || away.league?.form) && (
             <CompareSection title="시즌 폼">
-              <CompareRow label="최근순" home={<FormDisplay form={home.league?.form || ''} />} away={<FormDisplay form={away.league?.form || ''} />} />
+              <CompareRow
+                label=""
+                home={<FormDisplay form={home.league?.form || ''} />}
+                away={<FormDisplay form={away.league?.form || ''} />}
+                homeClassName="[&>div]:justify-center"
+                awayClassName="[&>div]:justify-center"
+              />
             </CompareSection>
           )}
 
           {(home.league?.fixtures || away.league?.fixtures) && (
             <CompareSection title="시즌 통계">
-              <CompareRow label="합계" home={formatRecord(home, 'total')} away={formatRecord(away, 'total')} />
-              <CompareRow label="홈" home={formatRecord(home, 'home')} away={formatRecord(away, 'home')} />
-              <CompareRow label="원정" home={formatRecord(home, 'away')} away={formatRecord(away, 'away')} />
+              <CompareRow label="합계" home={formatRecord(home, 'total')} away={formatRecord(away, 'total')} mobileLayout="center-label" />
+              <CompareRow label="홈" home={formatRecord(home, 'home')} away={formatRecord(away, 'home')} mobileLayout="center-label" />
+              <CompareRow label="원정" home={formatRecord(home, 'away')} away={formatRecord(away, 'away')} mobileLayout="center-label" />
             </CompareSection>
           )}
 
           {(home.league?.goals || away.league?.goals) && (
             <CompareSection title="득실점">
-              <CompareRow label="득점" home={goalLine(home, 'for')} away={goalLine(away, 'for')} mobileHome={mobileGoalLine(home, 'for')} mobileAway={mobileGoalLine(away, 'for')} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" />
-              <CompareRow label="실점" home={goalLine(home, 'against')} away={goalLine(away, 'against')} mobileHome={mobileGoalLine(home, 'against')} mobileAway={mobileGoalLine(away, 'against')} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" />
+              <CompareRow label="득점" home={goalLine(home, 'for')} away={goalLine(away, 'for')} mobileHome={mobileGoalLine(home, 'for')} mobileAway={mobileGoalLine(away, 'for')} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" mobileLayout="center-label" />
+              <CompareRow label="실점" home={goalLine(home, 'against')} away={goalLine(away, 'against')} mobileHome={mobileGoalLine(home, 'against')} mobileAway={mobileGoalLine(away, 'against')} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" mobileLayout="center-label" />
             </CompareSection>
           )}
 
@@ -484,6 +502,7 @@ function PredictionTeamComparison({
                   label={slot}
                   home={<MinuteValue scored={home.league?.goals?.for?.minute?.[slot]?.total ?? 0} conceded={home.league?.goals?.against?.minute?.[slot]?.total ?? 0} maxValue={minuteMax} />}
                   away={<MinuteValue scored={away.league?.goals?.for?.minute?.[slot]?.total ?? 0} conceded={away.league?.goals?.against?.minute?.[slot]?.total ?? 0} maxValue={minuteMax} />}
+                  mobileLayout="center-label"
                 />
               ))}
             </CompareSection>
@@ -727,7 +746,7 @@ export default function PredictionChart({
             {comparisonData.map((item, idx) => (
               <div key={idx} className={`flex items-center gap-2 text-[11px] ${item.highlight ? 'bg-[#F5F5F5] dark:bg-[#262626] py-0.5 px-1 rounded' : ''}`}>
                 <span className={`w-8 text-right text-blue-600 dark:text-blue-400 ${item.highlight ? 'font-bold' : ''}`}>{item.home}%</span>
-                <div className="flex-1 flex h-3 bg-[#EAEAEA] dark:bg-[#333333] rounded overflow-hidden">
+                <div className="flex-1 flex h-2 bg-[#EAEAEA] dark:bg-[#333333] rounded overflow-hidden">
                   <div className="bg-blue-500" style={{ width: `${item.home}%` }} />
                   <div className="bg-green-500" style={{ width: `${item.away}%` }} />
                 </div>
