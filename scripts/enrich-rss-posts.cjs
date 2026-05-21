@@ -27,12 +27,15 @@ const FIXTURE_SELECT = 'fixture_id,home_team_id,away_team_id,league_id,season,ma
 const LEAGUE_SELECT = 'id,name,name_ko,logo,country';
 const MAX_ENTITY_LINKS_PER_POST = 24;
 const MAX_MATCH_CARDS_PER_POST = 3;
+const MIN_SENTENCES_BETWEEN_MATCH_CARDS = 3;
 const MATCH_LOOKAROUND_DAYS = 10;
+const POST_BATCH_SIZE = 200;
 // RSS enrichment policy:
 // - Link each team/player only once in the body.
 // - Exclude national teams, non-club teams, cup-only teams, and leagues we do not use.
 // - Link players only when their current club team is also mentioned in the article.
 // - Insert match cards directly after the sentence that contains the internal team link.
+// - Keep at least a few body sentences between auto-inserted match cards.
 // - Insert match cards only for regular major leagues and UEFA Champions League.
 // - Remove previously auto-inserted match cards before recalculating.
 const BLOCKED_STANDALONE_TEAM_ALIASES = new Set([
@@ -844,6 +847,32 @@ async function loadPosts(supabase, args, boardId) {
   return data || [];
 }
 
+async function loadAllPosts(supabase, args, boardId) {
+  if (args.postId || args.post || args.sinceHours || args.from || args.to || args.limit <= POST_BATCH_SIZE) {
+    return loadPosts(supabase, args, boardId);
+  }
+
+  const posts = [];
+  let lastPostNumber = null;
+
+  while (posts.length < args.limit) {
+    const batchLimit = Math.min(POST_BATCH_SIZE, args.limit - posts.length);
+    const batchArgs = {
+      ...args,
+      to: lastPostNumber === null ? args.to : lastPostNumber - 1,
+      limit: batchLimit,
+    };
+    const batch = await loadPosts(supabase, batchArgs, boardId);
+
+    if (batch.length === 0) break;
+    posts.push(...batch);
+    lastPostNumber = batch[batch.length - 1].post_number;
+    if (batch.length < batchLimit) break;
+  }
+
+  return posts;
+}
+
 async function loadContentRows(supabase, postIds) {
   if (postIds.length === 0) return new Map();
 
@@ -907,6 +936,7 @@ function enrichContent(content, context) {
   const insertedMatchTeamIds = new Set();
   const insertedFixtureIds = new Set();
   const nextTopLevelNodes = [];
+  let sentencesSinceLastMatchCard = MIN_SENTENCES_BETWEEN_MATCH_CARDS;
 
   for (const node of content.content) {
     if (node?.type === 'matchCard') {
@@ -954,33 +984,39 @@ function enrichContent(content, context) {
     for (const sentenceContent of sentenceChunks) {
       appendSentenceContent(bufferedSentenceContent, sentenceContent);
 
-      if (matchCards.length >= MAX_MATCH_CARDS_PER_POST) continue;
-
-      const sentenceEntityKeys = getInlineEntityKeys(sentenceContent);
-      const teamIds = getEligibleMatchTeamIds(sentenceEntityKeys, context);
       const sentenceMatchCards = [];
+      const canInsertMatchCard = (
+        matchCards.length < MAX_MATCH_CARDS_PER_POST &&
+        sentencesSinceLastMatchCard >= MIN_SENTENCES_BETWEEN_MATCH_CARDS
+      );
 
-      for (const teamId of teamIds) {
-        if (insertedMatchTeamIds.has(teamId)) continue;
+      if (canInsertMatchCard) {
+        const sentenceEntityKeys = getInlineEntityKeys(sentenceContent);
+        const teamIds = getEligibleMatchTeamIds(sentenceEntityKeys, context);
 
-        const fixture = chooseLatestFixtureForTeam(context.fixtures, teamId, context.post.created_at);
-        if (!fixture) continue;
+        for (const teamId of teamIds) {
+          if (insertedMatchTeamIds.has(teamId)) continue;
 
-        const fixtureId = Number(fixture.fixture_id);
-        if (insertedFixtureIds.has(fixtureId)) {
+          const fixture = chooseLatestFixtureForTeam(context.fixtures, teamId, context.post.created_at);
+          if (!fixture) continue;
+
+          const fixtureId = Number(fixture.fixture_id);
+          if (insertedFixtureIds.has(fixtureId)) {
+            insertedMatchTeamIds.add(teamId);
+            continue;
+          }
+
+          const matchCardNode = buildMatchCardNode(fixture, context.teamMap, context.leagueMap);
+          if (!matchCardNode) continue;
+
+          sentenceMatchCards.push(matchCardNode);
+          matchCards.push(fixtureId);
+          insertedFixtureIds.add(fixtureId);
           insertedMatchTeamIds.add(teamId);
-          continue;
+          insertedMatchTeamIds.add(Number(fixture.home_team_id));
+          insertedMatchTeamIds.add(Number(fixture.away_team_id));
+          break;
         }
-
-        const matchCardNode = buildMatchCardNode(fixture, context.teamMap, context.leagueMap);
-        if (!matchCardNode) continue;
-
-        sentenceMatchCards.push(matchCardNode);
-        matchCards.push(fixtureId);
-        insertedFixtureIds.add(fixtureId);
-        insertedMatchTeamIds.add(teamId);
-
-        if (matchCards.length >= MAX_MATCH_CARDS_PER_POST) break;
       }
 
       if (sentenceMatchCards.length > 0) {
@@ -988,6 +1024,9 @@ function enrichContent(content, context) {
         pendingNodes.push(...sentenceMatchCards);
         bufferedSentenceContent = [];
         insertedInParagraph = true;
+        sentencesSinceLastMatchCard = 0;
+      } else {
+        sentencesSinceLastMatchCard += 1;
       }
     }
 
@@ -1017,76 +1056,79 @@ async function enrichRssPosts(supabase, args) {
 
   const [entities, posts] = await Promise.all([
     loadEntities(supabase),
-    loadPosts(supabase, args, board.id),
+    loadAllPosts(supabase, args, board.id),
   ]);
 
   const teamMap = new Map(entities.teams.map((team) => [Number(team.team_id), team]));
   const clubTeamIds = new Set(entities.teams.filter(isInternalLinkTeam).map((team) => Number(team.team_id)));
   const playerMap = new Map(entities.players.map((player) => [Number(player.player_id), player]));
   const teamAliases = buildTeamAliases(entities.teams);
-  const contentRows = await loadContentRows(supabase, posts.map((post) => post.id));
-
   console.log(`Loaded teams=${teamMap.size}, players=${playerMap.size}, teamAliases=${teamAliases.length}, posts=${posts.length}`);
 
   let changedCount = 0;
 
-  for (const post of posts) {
-    const originalContent = contentRows.get(post.id);
-    if (!originalContent) {
-      if (args.verbose) console.log(`#${post.post_number} skip: no content`);
-      continue;
-    }
+  for (let batchIndex = 0; batchIndex < posts.length; batchIndex += POST_BATCH_SIZE) {
+    const batchPosts = posts.slice(batchIndex, batchIndex + POST_BATCH_SIZE);
+    const contentRows = await loadContentRows(supabase, batchPosts.map((post) => post.id));
 
-    const dryLinkedKeys = new Set();
-    const dryParagraphTeamIds = new Set();
-    const text = contentText(originalContent);
-    for (const alias of teamAliases) {
-      if (dryLinkedKeys.size >= MAX_ENTITY_LINKS_PER_POST) break;
-      if (!text.toLowerCase().includes(alias.alias.toLowerCase())) continue;
-      dryLinkedKeys.add(`${alias.type}-${alias.id}`);
-      if (alias.type === 'team') dryParagraphTeamIds.add(alias.id);
-    }
+    for (const post of batchPosts) {
+      const originalContent = contentRows.get(post.id);
+      if (!originalContent) {
+        if (args.verbose) console.log(`#${post.post_number} skip: no content`);
+        continue;
+      }
 
-    const mentionedTeamIds = [...dryParagraphTeamIds];
-    const aliases = buildEntityAliases(entities.teams, entities.players, new Set(mentionedTeamIds));
-    const fixtures = await loadFixturesForTeams(supabase, mentionedTeamIds);
-    const leagueMap = await loadLeagues(supabase, fixtures.map((fixture) => Number(fixture.league_id)));
+      const dryLinkedKeys = new Set();
+      const dryParagraphTeamIds = new Set();
+      const text = contentText(originalContent);
+      for (const alias of teamAliases) {
+        if (dryLinkedKeys.size >= MAX_ENTITY_LINKS_PER_POST) break;
+        if (!text.toLowerCase().includes(alias.alias.toLowerCase())) continue;
+        dryLinkedKeys.add(`${alias.type}-${alias.id}`);
+        if (alias.type === 'team') dryParagraphTeamIds.add(alias.id);
+      }
 
-    const result = enrichContent(originalContent, {
-      aliases,
-      teamMap,
-      playerMap,
-      fixtures,
-      leagueMap,
-      clubTeamIds,
-      post,
-    });
+      const mentionedTeamIds = [...dryParagraphTeamIds];
+      const aliases = buildEntityAliases(entities.teams, entities.players, new Set(mentionedTeamIds));
+      const fixtures = await loadFixturesForTeams(supabase, mentionedTeamIds);
+      const leagueMap = await loadLeagues(supabase, fixtures.map((fixture) => Number(fixture.league_id)));
 
-    if (!result.changed) {
-      if (args.verbose) console.log(`#${post.post_number} unchanged: ${post.title}`);
-      continue;
-    }
+      const result = enrichContent(originalContent, {
+        aliases,
+        teamMap,
+        playerMap,
+        fixtures,
+        leagueMap,
+        clubTeamIds,
+        post,
+      });
 
-    changedCount += 1;
-    console.log(`#${post.post_number} changed: links=${result.linked.length}, matchCards=${result.matchCards.length} ${post.title}`);
-    if (args.verbose && result.linked.length > 0) {
-      console.log(`  links: ${result.linked.join(', ')}`);
-    }
-    if (result.matchCards.length > 0) {
-      console.log(`  matchCards: ${result.matchCards.join(', ')}`);
-    }
+      if (!result.changed) {
+        if (args.verbose) console.log(`#${post.post_number} unchanged: ${post.title}`);
+        continue;
+      }
 
-    if (args.apply) {
-      const { error } = await supabase
-        .from('posts_content')
-        .update({
-          content: result.content,
-          content_text: contentText(result.content),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('post_id', post.id);
+      changedCount += 1;
+      console.log(`#${post.post_number} changed: links=${result.linked.length}, matchCards=${result.matchCards.length} ${post.title}`);
+      if (args.verbose && result.linked.length > 0) {
+        console.log(`  links: ${result.linked.join(', ')}`);
+      }
+      if (result.matchCards.length > 0) {
+        console.log(`  matchCards: ${result.matchCards.join(', ')}`);
+      }
 
-      if (error) throw error;
+      if (args.apply) {
+        const { error } = await supabase
+          .from('posts_content')
+          .update({
+            content: result.content,
+            content_text: contentText(result.content),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('post_id', post.id);
+
+        if (error) throw error;
+      }
     }
   }
 
@@ -1129,7 +1171,7 @@ module.exports = {
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(error);
+    console.error(JSON.stringify(error, null, 2) || error);
     process.exit(1);
   });
 }

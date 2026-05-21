@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import type { CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { Database } from '@/shared/types/supabase'
+import type { Database } from '@/shared/types/supabase'
 
 const CANONICAL_HOST = '4590football.com'
 

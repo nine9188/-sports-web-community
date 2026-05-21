@@ -62,7 +62,7 @@ function InlineRelatedEntityCards({ cards }: { cards: RelatedEntityCard[] }) {
   if (cards.length === 0) return null;
 
   return (
-    <div className="not-prose entity-card-group entity-card-group-cols-4" data-type="entity-card-group" data-columns="4">
+    <div className="not-prose entity-card-group related-entity-card-group entity-card-group-cols-4" data-type="entity-card-group" data-columns="4">
       <div className="entity-card-group-track">
         {chunkItems(cards, 4).map((row) => (
           <div className="entity-card-group-row" key={row.map((card) => card.key).join('-')}>
