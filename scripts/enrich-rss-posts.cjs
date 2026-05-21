@@ -9,6 +9,9 @@
  * Apply:
  *   node scripts/enrich-rss-posts.cjs --board foreign-news --post 4653 --apply
  *
+ * Repair already inserted consecutive match cards without recalculating cards:
+ *   node scripts/enrich-rss-posts.cjs --board foreign-news --post 4653 --fix-card-spacing --apply
+ *
  * Range:
  *   node scripts/enrich-rss-posts.cjs --board foreign-news --from 4600 --to 4660 --apply
  *
@@ -85,6 +88,7 @@ function parseArgs(argv) {
     sinceHours: null,
     apply: false,
     verbose: false,
+    fixCardSpacing: false,
   };
 
   for (let index = 2; index < argv.length; index += 1) {
@@ -93,6 +97,8 @@ function parseArgs(argv) {
       args.apply = true;
     } else if (value === '--verbose') {
       args.verbose = true;
+    } else if (value === '--fix-card-spacing') {
+      args.fixCardSpacing = true;
     } else if (value.startsWith('--')) {
       const key = value.slice(2);
       const next = argv[index + 1];
@@ -508,6 +514,10 @@ function hasMatchCard(content) {
   return Array.isArray(content) && content.some((node) => node?.type === 'matchCard');
 }
 
+function isMatchCardNode(node) {
+  return node?.type === 'matchCard';
+}
+
 function buildTeamCardData(team) {
   return {
     id: Number(team.team_id),
@@ -703,6 +713,149 @@ function splitInlineContentBySentence(content) {
 
   flush();
   return chunks.length > 0 ? chunks : [content];
+}
+
+function paragraphFromInlineContent(baseParagraph, inlineContent) {
+  const content = trimInlineContent(inlineContent);
+  return content.length > 0 ? { ...baseParagraph, content } : null;
+}
+
+function spacerParagraph() {
+  return { type: 'paragraph', content: [{ type: 'text', text: ' ' }] };
+}
+
+function splitParagraphFirstSentence(paragraph) {
+  if (paragraph?.type !== 'paragraph' || !Array.isArray(paragraph.content)) {
+    return { first: null, rest: paragraph || null };
+  }
+
+  const sentenceChunks = splitInlineContentBySentence(paragraph.content);
+  if (sentenceChunks.length === 0) {
+    return { first: null, rest: paragraph };
+  }
+
+  const first = paragraphFromInlineContent(paragraph, sentenceChunks[0]);
+  const restContent = [];
+  for (const sentenceContent of sentenceChunks.slice(1)) {
+    appendSentenceContent(restContent, sentenceContent);
+  }
+
+  return {
+    first,
+    rest: paragraphFromInlineContent(paragraph, restContent),
+  };
+}
+
+function splitParagraphLastSentence(paragraph) {
+  if (paragraph?.type !== 'paragraph' || !Array.isArray(paragraph.content)) {
+    return { before: paragraph || null, last: null };
+  }
+
+  const sentenceChunks = splitInlineContentBySentence(paragraph.content);
+  if (sentenceChunks.length < 2) {
+    return { before: paragraph, last: null };
+  }
+
+  const beforeContent = [];
+  for (const sentenceContent of sentenceChunks.slice(0, -1)) {
+    appendSentenceContent(beforeContent, sentenceContent);
+  }
+
+  return {
+    before: paragraphFromInlineContent(paragraph, beforeContent),
+    last: paragraphFromInlineContent(paragraph, sentenceChunks[sentenceChunks.length - 1]),
+  };
+}
+
+function repairConsecutiveMatchCards(content) {
+  if (!content || content.type !== 'doc' || !Array.isArray(content.content)) {
+    return { content, changed: false, repairedRuns: 0 };
+  }
+
+  const nextContent = [];
+  let repairedRuns = 0;
+
+  for (let index = 0; index < content.content.length; index += 1) {
+    const node = content.content[index];
+
+    if (!isMatchCardNode(node)) {
+      nextContent.push(node);
+      continue;
+    }
+
+    const cardRun = [node];
+    let cursor = index + 1;
+    while (cursor < content.content.length && isMatchCardNode(content.content[cursor])) {
+      cardRun.push(content.content[cursor]);
+      cursor += 1;
+    }
+
+    if (cardRun.length === 1) {
+      nextContent.push(node);
+      continue;
+    }
+
+    let followingParagraph = null;
+    let followingCursor = cursor;
+    const previousParagraphIndex = nextContent.length - 1;
+
+    function takePreviousSpacingSentence() {
+      const previousParagraph = nextContent[previousParagraphIndex];
+      if (previousParagraph?.type !== 'paragraph' || !Array.isArray(previousParagraph.content)) return null;
+
+      const split = splitParagraphLastSentence(previousParagraph);
+      if (!split.last) return null;
+
+      if (split.before) {
+        nextContent[previousParagraphIndex] = split.before;
+      } else {
+        nextContent.splice(previousParagraphIndex, 1);
+      }
+
+      return split.last;
+    }
+
+    function takeNextFollowingSentence() {
+      while (followingCursor < content.content.length || followingParagraph) {
+        if (!followingParagraph) {
+          const candidate = content.content[followingCursor];
+          if (candidate?.type !== 'paragraph' || !Array.isArray(candidate.content)) return null;
+          followingParagraph = candidate;
+        }
+
+        const split = splitParagraphFirstSentence(followingParagraph);
+        followingParagraph = split.rest;
+        if (!followingParagraph) followingCursor += 1;
+        if (split.first) return split.first;
+      }
+
+      return null;
+    }
+
+    nextContent.push(cardRun[0]);
+
+    for (const card of cardRun.slice(1)) {
+      const spacingSentence = takeNextFollowingSentence() || takePreviousSpacingSentence() || spacerParagraph();
+      nextContent.push(spacingSentence);
+      nextContent.push(card);
+    }
+
+    if (followingParagraph) {
+      nextContent.push(followingParagraph);
+      index = followingCursor;
+    } else {
+      index = Math.max(cursor - 1, followingCursor - 1);
+    }
+
+    repairedRuns += 1;
+  }
+
+  const next = { ...content, content: nextContent };
+  return {
+    content: next,
+    changed: JSON.stringify(next) !== JSON.stringify(content),
+    repairedRuns,
+  };
 }
 
 function getInlineEntityKeys(content) {
@@ -1039,6 +1192,49 @@ async function enrichRssPosts(supabase, args) {
     .single();
 
   if (boardError) throw boardError;
+
+  if (args.fixCardSpacing) {
+    const posts = await loadAllPosts(supabase, args, board.id);
+    console.log(`Loaded posts=${posts.length}`);
+
+    let changedCount = 0;
+    for (let batchIndex = 0; batchIndex < posts.length; batchIndex += POST_BATCH_SIZE) {
+      const batchPosts = posts.slice(batchIndex, batchIndex + POST_BATCH_SIZE);
+      const contentRows = await loadContentRows(supabase, batchPosts.map((post) => post.id));
+
+      for (const post of batchPosts) {
+        const originalContent = contentRows.get(post.id);
+        if (!originalContent) {
+          if (args.verbose) console.log(`#${post.post_number} skip: no content`);
+          continue;
+        }
+
+        const result = repairConsecutiveMatchCards(originalContent);
+        if (!result.changed) {
+          if (args.verbose) console.log(`#${post.post_number} unchanged: ${post.title}`);
+          continue;
+        }
+
+        changedCount += 1;
+        console.log(`#${post.post_number} repaired: runs=${result.repairedRuns} ${post.title}`);
+
+        if (args.apply) {
+          const { error } = await supabase
+            .from('posts_content')
+            .update({
+              content: result.content,
+              content_text: contentText(result.content),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('post_id', post.id);
+
+          if (error) throw error;
+        }
+      }
+    }
+
+    return changedCount;
+  }
 
   const [entities, posts] = await Promise.all([
     loadEntities(supabase),
