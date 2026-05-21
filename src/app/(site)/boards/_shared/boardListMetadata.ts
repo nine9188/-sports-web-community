@@ -23,9 +23,10 @@ export function getBoardListMetadataState(
     searchParams?.searchType ||
     searchParams?.period
   );
+  const shouldNoindex = currentPage > 1 || hasFilterParams;
 
   return {
     path: currentPage > 1 && !hasFilterParams ? `${basePath}?page=${currentPage}` : basePath,
-    ...(hasFilterParams && { robots: { index: false, follow: true } }),
+    ...(shouldNoindex && { robots: { index: false, follow: true } }),
   };
 }

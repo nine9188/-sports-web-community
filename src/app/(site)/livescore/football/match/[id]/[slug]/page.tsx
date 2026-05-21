@@ -22,6 +22,7 @@ import { getPlayerPhotoUrls } from '@/domains/livescore/actions/images';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 import type { HeaderGoalEvent } from '@/domains/livescore/components/football/match/MatchHeader';
 import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
+import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 
 function addHoursToIsoDate(isoDate: string, hours: number): string {
   const date = new Date(isoDate);
@@ -119,15 +120,30 @@ export async function generateMetadata({
     : '';
 
   const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
-  const description = dateStr
-    ? `${dateStr} ${leagueName} ${homeTeam} ${score} ${awayTeam} 경기 결과, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`
-    : `${leagueName} ${homeTeam} ${score} ${awayTeam} 경기 결과, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`;
+  const venueText = [match.venue?.name, match.venue?.city].filter(Boolean).join(', ');
+  const roundText = match.league.round || '';
+  const statusText = match.status.name || '';
+  const matchContext = [dateStr, leagueName, roundText].filter(Boolean).join(' ');
+  const locationText = venueText ? ` 경기 장소: ${venueText}.` : '';
+  const description = isNotStarted || !hasScore
+    ? `${matchContext} ${homeTeam} vs ${awayTeam} 경기 일정입니다.${locationText} 상대 전적, 예상 라인업, 순위와 경기 정보를 4590 Football에서 확인하세요.`
+    : `${matchContext} ${homeTeam} ${score} ${awayTeam} 경기 ${statusText ? `${statusText} ` : ''}정보입니다.${locationText} 득점, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`;
+  const ogImage = buildFootballOgImageUrl({
+    title: `${homeTeam} ${score} ${awayTeam}`,
+    subtitle: [leagueName, roundText, dateStr].filter(Boolean).join(' · '),
+    label: '경기 정보',
+    leftImage: match.teams.home.logo,
+    rightImage: match.teams.away.logo,
+  });
 
   const canonicalSlug = await resolveCanonicalMatchSlug(id);
 
   return buildMetadata({
     title,
     description,
+    image: ogImage,
+    imageWidth: 1200,
+    imageHeight: 630,
     path: canonicalSlug
       ? `/livescore/football/match/${id}/${canonicalSlug}`
       : getMatchHrefByTeams(id, match.teams.home, match.teams.away) || `/livescore/football/match/${id}/${slug}`,
@@ -141,7 +157,11 @@ export async function generateMetadata({
       ...(dateStr ? [`${dateStr} 축구`, `${dateStr} ${leagueName}`] : []),
       '축구 경기 결과',
       '실시간 스코어',
+      '4590',
+      '4590football',
     ],
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     ...(hasTabState ? { noindex: true } : {}),
   });
 }

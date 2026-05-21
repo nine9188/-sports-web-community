@@ -32,6 +32,7 @@ import {
   isNextRedirectError,
   normalizeRouteSlug,
 } from '@/shared/utils/nextNavigationErrors';
+import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 
 interface TeamPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -63,20 +64,35 @@ export async function generateMetadata({
 
   const team = teamData.team;
   const teamName = team.name;
+  const mappedTeam = await getTeamById(Number(id));
+  const league = mappedTeam?.league_id ? await getLeagueById(mappedTeam.league_id) : null;
+  const leagueName = league?.name_ko || league?.name || '';
+  const countryName = mappedTeam?.country_ko || mappedTeam?.country_en || team.country || '';
   const canonicalSlug = await resolveTeamCanonicalSlug(id);
   const teamSlug = canonicalSlug || (isUsableTeamSlug(id, slug) ? slug : '') || slugify(teamName);
   const teamLogoUrl = team.logo || await getTeamLogoUrl(Number(id), 'md');
-  const ogImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
-  const description = `${teamName} 순위, 선수단, 경기 일정, 통계 정보를 확인하세요.${team.country ? ` ${team.country}` : ''}${team.founded ? ` (창단: ${team.founded}년)` : ''} 축구 커뮤니티 4590 Football.`;
+  const teamLogoImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
+  const contextParts = [leagueName, countryName, team.founded ? `${team.founded}년 창단` : '']
+    .filter(Boolean)
+    .join(', ');
+  const description = `${teamName}${contextParts ? ` (${contextParts})` : ''} 팀 페이지입니다. 현재 순위, 선수단, 최근 경기 결과, 다음 경기 일정과 시즌 통계를 4590 Football에서 확인하세요.`;
+  const ogImage = buildFootballOgImageUrl({
+    title: teamName,
+    subtitle: [leagueName, countryName, team.founded ? `${team.founded}년 창단` : ''].filter(Boolean).join(' · '),
+    label: '팀 정보',
+    leftImage: teamLogoImage,
+  });
 
   return buildMetadata({
     title: `${teamName} - 순위·선수단·일정`,
     description,
     path: `/livescore/football/team/${id}/${teamSlug}`,
     image: ogImage,
-    imageWidth: ogImage ? 128 : undefined,
-    imageHeight: ogImage ? 128 : undefined,
-    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
+    imageWidth: 1200,
+    imageHeight: 630,
+    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, ...(leagueName ? [`${leagueName} ${teamName}`] : []), '4590', '4590football'],
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     ...(hasTabState ? { noindex: true } : {}),
   });
 }

@@ -39,6 +39,26 @@ function createMatchPredictionPoll(homeName: string, awayName: string): Predicti
   }
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function replaceTeamNameVariants(text: string, names: Array<string | null | undefined>, displayName: string) {
+  let nextText = text
+  const variants = [...new Set(
+    names
+      .map((name) => name?.trim())
+      .filter((name): name is string => Boolean(name) && name !== displayName)
+      .sort((left, right) => right.length - left.length)
+  )]
+
+  for (const name of variants) {
+    nextText = nextText.replace(new RegExp(escapeRegExp(name), 'g'), displayName)
+  }
+
+  return nextText
+}
+
 async function insertPredictionPostPoll(params: {
   supabase: ReturnType<typeof getSupabaseAdmin>
   postId: string
@@ -678,6 +698,24 @@ async function generateMatchPredictionPost(
     console.error(`AI 분석 생성 실패 (${match.id}):`, error)
     aiAnalysis = `${homeNameKo} vs ${awayNameKo} 경기의 예측 분석을 생성할 수 없습니다.`
   }
+
+  aiAnalysis = replaceTeamNameVariants(
+    replaceTeamNameVariants(
+      aiAnalysis,
+      [
+        match.teams.home.name,
+        homeTeamMapping?.name_en,
+        predictionData?.teams.home.name,
+      ],
+      homeNameKo
+    ),
+    [
+      match.teams.away.name,
+      awayTeamMapping?.name_en,
+      predictionData?.teams.away.name,
+    ],
+    awayNameKo
+  )
 
   // 매치 데이터의 로고 URL을 Storage URL로 교체
   match.teams.home.logo = teamLogoMap[match.teams.home.id] || SPORTS_PLACEHOLDERS.teams

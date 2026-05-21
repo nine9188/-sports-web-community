@@ -1,5 +1,8 @@
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
 import PostActions from '@/domains/boards/components/post/PostActions';
+import { cookies } from 'next/headers';
+
+const POST_REACTION_VISITOR_COOKIE = 'post_reaction_visitor_id';
 
 interface ServerPostActionsProps {
   postId: string;
@@ -15,6 +18,19 @@ export default async function ServerPostActions({
   
   // 현재 사용자 확인
   const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const visitorId = cookieStore.get(POST_REACTION_VISITOR_COOKIE)?.value;
+  const visitorActionQuery = () => {
+    if (!visitorId) return Promise.resolve({ data: null });
+
+    const supabaseAdmin = getSupabaseAdmin();
+    return supabaseAdmin
+      .from('post_likes')
+      .select('type')
+      .eq('post_id', postId)
+      .eq('visitor_id', visitorId)
+      .maybeSingle();
+  };
   
   const [postResult, userActionResult] = await Promise.all([
     // 게시글 좋아요/싫어요 수 조회
@@ -30,7 +46,7 @@ export default async function ServerPostActions({
       .select('type')
       .eq('post_id', postId)
       .eq('user_id', user.id)
-      .maybeSingle() : Promise.resolve({ data: null })
+      .maybeSingle() : visitorActionQuery()
   ]);
   
   const { data: postData, error: postError } = postResult;

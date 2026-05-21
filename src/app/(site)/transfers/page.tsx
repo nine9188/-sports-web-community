@@ -11,6 +11,7 @@ import { getTransferTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { TransferFilters, TransferLeagueGroups } from '@/domains/livescore/components/football/transfers';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
+import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 
 type TransfersSearchParams = {
   team?: string;
@@ -25,12 +26,29 @@ interface TransfersPageProps {
 export async function generateMetadata({ searchParams }: TransfersPageProps): Promise<Metadata> {
   const params = await searchParams;
   const hasQueryState = Boolean(params.team || params.type || params.page);
+  const groupedTeams = await getTransferLeagueTeamGroups();
+  const leagueNames = groupedTeams
+    .map((group) => group.league.name_ko || group.league.name)
+    .filter(Boolean)
+    .slice(0, 6);
+  const teamCount = groupedTeams.reduce((sum, group) => sum + group.teams.length, 0);
+  const description = `${leagueNames.join(', ')} 등 ${groupedTeams.length}개 리그 ${teamCount}개 팀의 축구 이적시장 정보입니다. 최신 영입, 방출, 임대 이적과 팀별 이적 현황을 4590 Football에서 확인하세요.`;
+  const ogImage = buildFootballOgImageUrl({
+    title: '축구 이적시장',
+    subtitle: `${groupedTeams.length}개 리그 · ${teamCount}개 팀 이적 현황`,
+    label: '이적시장',
+  });
 
   return buildMetadata({
     title: '이적시장 - 해외/국내 이적 정보',
-    description: '프리미어리그, 라리가, 분데스리가, 세리에A, 리그앙, K리그 등 주요 리그의 이적시장 정보를 확인하세요.',
+    description,
     path: '/transfers',
-    keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', '4590football'],
+    image: ogImage,
+    imageWidth: 1200,
+    imageHeight: 630,
+    keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', ...leagueNames, '4590', '4590football'],
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     noindex: hasQueryState,
   });
 }

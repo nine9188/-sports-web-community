@@ -27,7 +27,8 @@ export const siteConfig = {
   logo: logoOptions[logoVariant],         // 풀로고용 (헤더, 정책 페이지 등)
   icon: '/logo/icon-04.png',              // 아이콘용 — 흰색 베이스 (기본은 invert 필요, 다크모드는 그대로)
   logoOptions,
-  defaultOgImage: `${siteUrl}/og-image-square.png`,
+  defaultOgImage: `${siteUrl}/og-image-v3.png`,
+  defaultOgImageSquare: `${siteUrl}/og-image-square.png`,
 
   // URL 빌더
   getUrl: (path: string) => {
@@ -51,9 +52,9 @@ export const siteConfig = {
 
   // 기본 OG 이미지 설정 객체
   getDefaultOgImageObject: (alt?: string) => ({
-    url: `${siteUrl}/og-image-square.png`,
+    url: `${siteUrl}/og-image-v3.png`,
     width: 1200,
-    height: 1200,
+    height: 630,
     alt: alt || '4590 Football',
   }),
 } as const;

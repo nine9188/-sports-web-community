@@ -23,6 +23,7 @@ import { slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
 import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
+import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 
 /**
  * ============================================
@@ -59,22 +60,48 @@ export async function generateMetadata({
   // 한글 매핑 (서버 액션으로 DB 조회)
   const playerName = player.name_ko || player.name;
   const currentTeam = player.team?.name_ko || player.team?.name || '';
-  const position = player.position || '';
+  const position = getKoreanPosition(player.position);
+  const leagueName = player.league?.name || '';
   const playerPhotoUrl = player.photo || '';
-  const ogImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
-
-  const description = `${playerName}${player.nationality ? ` (${player.nationality})` : ''}${currentTeam ? ` - ${currentTeam}` : ''}${position ? ` ${position}` : ''}. 시즌 통계, 경기 기록, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`;
+  const playerImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
+  const profileParts = [
+    player.nationality,
+    currentTeam,
+    leagueName,
+    position,
+    player.age ? `${player.age}세` : '',
+    player.number ? `등번호 ${player.number}` : '',
+  ].filter(Boolean);
+  const description = `${playerName}${profileParts.length ? ` (${profileParts.join(', ')})` : ''} 선수 프로필입니다. 시즌 출전 기록, 득점, 도움, 평점, 경기 일정과 이적 정보를 4590 Football에서 확인하세요.`;
+  const ogImage = buildFootballOgImageUrl({
+    title: playerName,
+    subtitle: profileParts.slice(0, 4).join(' · '),
+    label: '선수 정보',
+    leftImage: playerImage,
+  });
 
   return buildMetadata({
     title: `${playerName} - 통계·기록·프로필`,
     description,
     path: `/livescore/football/player/${id}/${slug || slugify(player.name) || 'player'}`,
     image: ogImage,
-    imageWidth: ogImage ? 128 : undefined,
-    imageHeight: ogImage ? 128 : undefined,
-    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} 선수`] : []), '축구 커뮤니티', '4590', '4590football'],
+    imageWidth: 1200,
+    imageHeight: 630,
+    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} ${playerName}`] : []), '4590', '4590football'],
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     ...(hasQueryState ? { noindex: true } : {}),
   });
+}
+
+function getKoreanPosition(position?: string | null): string {
+  if (!position) return '';
+  const normalized = position.toLowerCase();
+  if (normalized.includes('goalkeeper')) return '골키퍼';
+  if (normalized.includes('defender')) return '수비수';
+  if (normalized.includes('midfielder')) return '미드필더';
+  if (normalized.includes('attacker')) return '공격수';
+  return position;
 }
 
 // 유효한 탭 목록

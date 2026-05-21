@@ -3,6 +3,7 @@
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
+import { extractPostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
 
 /**
  * 게시글 메타데이터 fetch (캐시 미스 시 실행)
@@ -12,7 +13,7 @@ async function fetchPostMeta(boardId: string, postNumber: number) {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
     .from('posts')
-    .select('id, title, summary, thumbnail_url, created_at, updated_at')
+    .select('id, title, summary, thumbnail_url, source_url, meta, deal_info, created_at, updated_at')
     .eq('board_id', boardId)
     .eq('post_number', postNumber)
     .single();
@@ -26,10 +27,12 @@ async function fetchPostMeta(boardId: string, postNumber: number) {
     .maybeSingle();
 
   const contentSummary = extractSummary(contentRow?.content, 200) || contentRow?.content_text || '';
+  const seoEntities = extractPostSeoEntities(contentRow?.content);
 
   return {
     ...data,
     content_summary: contentSummary,
+    seo_entities: seoEntities,
   };
 }
 
@@ -46,7 +49,7 @@ async function fetchPostMeta(boardId: string, postNumber: number) {
 export async function getCachedPostMeta(boardId: string, postNumber: number) {
   return unstable_cache(
     () => fetchPostMeta(boardId, postNumber),
-    ['post-meta', boardId, String(postNumber)],
+    ['post-meta-v2', boardId, String(postNumber)],
     {
       revalidate: 3600,
       tags: [`post-${boardId}-${postNumber}`, 'posts-meta'],

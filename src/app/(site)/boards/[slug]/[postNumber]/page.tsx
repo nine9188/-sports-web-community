@@ -12,6 +12,8 @@ import { buildMetadata } from '@/shared/utils/metadataNew';
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
+import { buildPostSeoDescription, buildPostSeoKeywords } from '@/domains/boards/utils/post/buildPostSeoDescription';
+import { extractPostSeoEntities, type PostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -47,36 +49,117 @@ function extractFirstImage(content: unknown): string | null {
   return traverse(doc.content);
 }
 
-function compactSeoText(value?: string | null): string {
-  return String(value ?? '')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+function buildPostImageCandidates(primaryImage?: string | null, contentImage?: string | null): string[] {
+  return Array.from(new Set([
+    primaryImage || undefined,
+    contentImage || undefined,
+    siteConfig.defaultOgImage,
+    siteConfig.defaultOgImageSquare,
+  ].filter((url): url is string => Boolean(url))));
 }
 
-function looksLikeNoisyPredictionSummary(value: string): boolean {
-  const percentCount = value.match(/\d+(?:\.\d+)?%/g)?.length ?? 0;
-  return (
-    percentCount >= 4 ||
-    /Double chance|Team To Win|승부 예측|예상 승자|상대전적|언더\/오버|총 골|공격 .*%|수비 .*%/i.test(value)
-  );
+function getSourceOrganization(sourceUrl?: string | null): Record<string, unknown> | null {
+  if (!sourceUrl) return null;
+
+  try {
+    const url = new URL(sourceUrl);
+    return {
+      '@type': 'Organization',
+      name: url.hostname.replace(/^www\./, ''),
+      url: url.origin,
+    };
+  } catch {
+    return null;
+  }
 }
 
-function buildPostSeoDescription({
-  summary,
-  title,
-  boardName,
+function buildEntityJsonLd({
+  entities,
+  leagueName,
 }: {
-  summary?: string | null;
-  title: string;
-  boardName: string;
-}): string {
-  const cleanSummary = compactSeoText(summary);
-  if (cleanSummary && !looksLikeNoisyPredictionSummary(cleanSummary)) {
-    return cleanSummary.slice(0, 180);
+  entities?: PostSeoEntities | null;
+  leagueName?: string | null;
+}) {
+  const about: Record<string, unknown>[] = [];
+  const mentions: Record<string, unknown>[] = [];
+
+  if (leagueName) {
+    about.push({
+      '@type': 'SportsOrganization',
+      name: leagueName,
+    });
   }
 
-  return `${title} 게시글입니다. ${boardName}에서 축구 경기 분석, 예측, 팀 소식과 팬 의견을 확인하세요.`;
+  for (const team of entities?.teams ?? []) {
+    const teamSchema = {
+      '@type': 'SportsTeam',
+      name: team,
+      sport: 'Soccer',
+    };
+    about.push(teamSchema);
+    mentions.push(teamSchema);
+  }
+
+  for (const player of entities?.players ?? []) {
+    mentions.push({
+      '@type': 'Person',
+      name: player,
+    });
+  }
+
+  for (const match of entities?.matches ?? []) {
+    const eventSchema = {
+      '@type': 'SportsEvent',
+      name: match,
+      sport: 'Soccer',
+    };
+    about.push(eventSchema);
+    mentions.push(eventSchema);
+  }
+
+  return {
+    about: about.length > 0 ? about : undefined,
+    mentions: mentions.length > 0 ? mentions : undefined,
+  };
+}
+
+function getArticleSection(contentType: string, boardName: string, postMeta?: Record<string, unknown> | null) {
+  if (contentType === 'article' && postMeta?.prediction_type === 'league_analysis') {
+    return '축구 경기 분석';
+  }
+  if (contentType === 'news') return boardName;
+  return boardName;
+}
+
+function getLeagueNameForJsonLd(boardName: string, postMeta?: Record<string, unknown> | null) {
+  return typeof postMeta?.league_name === 'string' && postMeta.league_name.trim()
+    ? boardName
+    : boardName;
+}
+
+function buildDealOffer(dealInfo: unknown, postUrl: string, postTitle: string) {
+  const deal = dealInfo as {
+    price?: unknown;
+    store?: unknown;
+    deal_url?: unknown;
+    is_ended?: unknown;
+  } | null;
+
+  const price = typeof deal?.price === 'number' && Number.isFinite(deal.price) && deal.price > 0
+    ? deal.price
+    : undefined;
+  const store = typeof deal?.store === 'string' && deal.store.trim() ? deal.store.trim() : undefined;
+  const dealUrl = typeof deal?.deal_url === 'string' && deal.deal_url.trim() ? deal.deal_url.trim() : postUrl;
+
+  return {
+    '@type': 'Offer',
+    name: postTitle,
+    url: dealUrl,
+    availability: deal?.is_ended ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    priceCurrency: 'KRW',
+    ...(price ? { price } : {}),
+    ...(store ? { seller: { '@type': 'Organization', name: store } } : {}),
+  };
 }
 
 // 게시글 메타데이터 생성
@@ -107,11 +190,23 @@ export async function generateMetadata({
     notFound();
   }
 
+  const contentType = (board as { content_type?: string | null }).content_type || 'community';
   const metadataSummary = (post as { content_summary?: string | null }).content_summary || post.summary;
+  const seoEntities = (post as { seo_entities?: PostSeoEntities }).seo_entities ?? null;
   const description = buildPostSeoDescription({
     summary: metadataSummary,
     title: post.title,
     boardName: board.name,
+    contentType,
+    dealInfo: post.deal_info ?? null,
+    seoEntities,
+    postMeta: (post.meta as Record<string, unknown> | null) ?? null,
+  });
+  const keywords = buildPostSeoKeywords({
+    title: post.title,
+    boardName: board.name,
+    contentType,
+    seoEntities,
   });
 
   return buildMetadata({
@@ -120,9 +215,12 @@ export async function generateMetadata({
     description,
     path: `/boards/${slug}/${postNumber}`,
     type: 'article',
+    image: post.thumbnail_url ?? undefined,
     publishedTime: post.created_at ?? undefined,
     modifiedTime: post.updated_at ?? undefined,
-    keywords: [board.name, '축구 커뮤니티', '4590', '4590football', '축구 게시판'],
+    keywords,
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     ...(hasListState && { robots: { index: false, follow: true } }),
   });
 }
@@ -290,17 +388,41 @@ async function PostDetailContent({
     // 본문에서 설명 추출. TipTap 카드/예측 차트/RSS 보조 UI는 제외하고 실제 본문 텍스트를 우선한다.
     const articleDescription = extractSummary(result.post.content, 200);
 
-    // 게시글 본문에서 첫 번째 이미지 추출 (없으면 OG 이미지 사용)
+    // 게시글 이미지 후보: 썸네일 > 본문 첫 이미지 > 기본 가로형 > 기본 정사각형
     const firstImage = extractFirstImage(result.post.content);
-    const postImage = firstImage || `${siteUrl}/og-image.png`;
+    const postImages = buildPostImageCandidates(
+      (result.post as { thumbnail_url?: string | null }).thumbnail_url,
+      firstImage,
+    );
     const contentType = (result.board as { content_type?: string }).content_type || 'community';
     const postTitle = result.post.title?.trim() || `${result.board.name} 게시글`;
     const boardName = result.board.name?.trim() || '게시판';
+    const postMeta = (result.post.meta as Record<string, unknown> | null) ?? null;
+    const seoEntities = extractPostSeoEntities(result.post.content);
     const seoDescription = buildPostSeoDescription({
       summary: articleDescription,
       title: postTitle,
       boardName,
+      contentType,
+      dealInfo: result.post.deal_info ?? null,
+      seoEntities,
+      postMeta,
     });
+    const seoKeywords = buildPostSeoKeywords({
+      title: postTitle,
+      boardName,
+      contentType,
+      seoEntities,
+    });
+    const jsonLdEntities = buildEntityJsonLd({
+      entities: seoEntities,
+      leagueName: getLeagueNameForJsonLd(boardName, postMeta),
+    });
+    const sourceUrl = typeof result.post.source_url === 'string' && result.post.source_url.trim()
+      ? result.post.source_url.trim()
+      : null;
+    const sourceOrganization = getSourceOrganization(sourceUrl);
+    const articleSection = getArticleSection(contentType, boardName, postMeta);
 
     // 공통 author 객체
     const authorSchema = {
@@ -330,8 +452,13 @@ async function PostDetailContent({
         name: postTitle,
         headline: postTitle,
         description: seoDescription,
-        image: postImage,
-        author: authorSchema,
+        image: postImages,
+        author: sourceOrganization || authorSchema,
+        articleSection,
+        keywords: seoKeywords,
+        isAccessibleForFree: true,
+        ...(sourceUrl ? { isBasedOn: sourceUrl, citation: sourceUrl } : {}),
+        ...jsonLdEntities,
         datePublished: result.post.created_at,
         dateModified: result.post.updated_at || result.post.created_at,
         publisher: { '@id': `${siteUrl}#organization` },
@@ -351,8 +478,11 @@ async function PostDetailContent({
         name: postTitle,
         headline: postTitle,
         description: seoDescription,
-        image: postImage,
+        image: postImages,
         author: authorSchema,
+        articleSection,
+        keywords: seoKeywords,
+        ...jsonLdEntities,
         datePublished: result.post.created_at,
         dateModified: result.post.updated_at || result.post.created_at,
         publisher: { '@id': `${siteUrl}#organization` },
@@ -365,16 +495,21 @@ async function PostDetailContent({
         },
       };
     } else if (contentType === 'review') {
-      // 인증/후기: Review
+      // 인증/후기: 리뷰 대상이 없으면 Article이 구조화 데이터상 더 안전하다.
       postSchema = {
         '@context': 'https://schema.org',
-        '@type': 'Review',
+        '@type': 'Article',
         name: postTitle,
-        reviewBody: seoDescription,
-        image: postImage,
+        headline: postTitle,
+        description: seoDescription,
+        image: postImages,
         author: authorSchema,
+        articleSection,
+        keywords: seoKeywords,
         datePublished: result.post.created_at,
+        dateModified: result.post.updated_at || result.post.created_at,
         publisher: { '@id': `${siteUrl}#organization` },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
         commentCount: processedComments.length,
         interactionStatistic: {
           '@type': 'InteractionCounter',
@@ -389,21 +524,10 @@ async function PostDetailContent({
         '@type': 'Product',
         name: postTitle,
         description: seoDescription,
-        image: postImage,
-        offers: {
-          '@type': 'Offer',
-          name: postTitle,
-          url: postUrl,
-          availability: 'https://schema.org/InStock',
-          priceCurrency: 'KRW',
-        },
-        review: {
-          '@type': 'Review',
-          name: `${postTitle} 리뷰`,
-          author: authorSchema,
-          datePublished: result.post.created_at,
-          reviewBody: seoDescription,
-        },
+        image: postImages,
+        category: boardName,
+        keywords: seoKeywords,
+        offers: buildDealOffer(result.post.deal_info, postUrl, postTitle),
       };
     } else {
       // community (기본값): DiscussionForumPosting
@@ -429,8 +553,10 @@ async function PostDetailContent({
         name: postTitle,
         headline: postTitle,
         text: seoDescription,
-        image: postImage,
+        image: postImages,
         author: authorSchema,
+        articleSection,
+        keywords: seoKeywords,
         datePublished: result.post.created_at,
         dateModified: result.post.updated_at || result.post.created_at,
         url: postUrl,

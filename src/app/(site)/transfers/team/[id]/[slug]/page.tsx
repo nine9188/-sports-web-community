@@ -15,6 +15,7 @@ import { getTeamLinkSlug, getTransferTeamHref } from '@/domains/livescore/utils/
 import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
+import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 
 interface TeamTransfersPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -46,14 +47,20 @@ async function getTeamContext(id: string, slug?: string) {
 function buildTeamTransfersDescription({
   countryName,
   leagueName,
+  playerNames = [],
   teamName,
+  totalCount,
 }: {
   countryName?: string | null;
   leagueName: string;
+  playerNames?: string[];
   teamName: string;
+  totalCount?: number;
 }) {
   const leagueContext = countryName ? `${countryName} ${leagueName}` : leagueName;
-  return `${leagueContext} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보를 확인하세요.`;
+  const playerContext = playerNames.length ? ` 최근 이적 선수: ${playerNames.join(', ')}.` : '';
+  const countContext = typeof totalCount === 'number' && totalCount > 0 ? ` 총 ${totalCount}건의 이적 기록을 제공합니다.` : '';
+  return `${leagueContext} ${teamName}의 최신 영입, 방출, 임대 이적과 이적료 정보입니다.${playerContext}${countContext} 4590 Football에서 팀별 이적 현황을 확인하세요.`;
 }
 
 export async function generateMetadata({ params, searchParams }: TeamTransfersPageProps): Promise<Metadata> {
@@ -72,14 +79,43 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
   const teamName = context.team.name_ko || context.team.name_en;
   const leagueName = context.league?.name_ko || context.league?.name || '축구 리그';
   const countryName = context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en;
-  const description = buildTeamTransfersDescription({ countryName, leagueName, teamName });
   const hasQueryState = Boolean(query.type || query.page);
+  const transfersData = await fetchTransfersFullData({
+    league: context.team.league_id || undefined,
+    team: context.teamId,
+    type: query.type !== 'all' ? query.type : undefined,
+  }, 1, 5);
+  const playerIds = transfersData.transfers.map((transfer) => transfer.player.id).filter(Boolean);
+  const koreanNames = playerIds.length > 0 ? await getPlayersKoreanNames(playerIds) : {};
+  const playerNames = transfersData.transfers
+    .map((transfer) => koreanNames[transfer.player.id] || transfer.player.name)
+    .filter(Boolean)
+    .slice(0, 4);
+  const description = buildTeamTransfersDescription({
+    countryName,
+    leagueName,
+    playerNames,
+    teamName,
+    totalCount: transfersData.totalCount,
+  });
+  const ogImage = buildFootballOgImageUrl({
+    title: `${teamName} 이적시장`,
+    subtitle: playerNames.length
+      ? `최근 이적 선수: ${playerNames.join(', ')}`
+      : `${leagueName} · 팀별 이적 현황`,
+    label: '팀 이적시장',
+  });
 
   return buildMetadata({
     title: `${teamName} 이적시장`,
     description,
     path: getTransferTeamHref(context.team),
-    keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, '축구 이적시장', '4590football'],
+    image: ogImage,
+    imageWidth: 1200,
+    imageHeight: 630,
+    keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, ...playerNames, '축구 이적시장', '4590', '4590football'],
+    includeSiteKeywords: false,
+    includeDefaultOgFallbacks: false,
     noindex: hasQueryState,
   });
 }
@@ -134,7 +170,7 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
   const leagueName = context.league?.name_ko || context.league?.name || '축구 리그';
   const countryName = context.league?.country_ko || context.league?.country || context.team.country_ko || context.team.country_en;
   const teamUrl = getTransferTeamHref(context.team);
-  const description = buildTeamTransfersDescription({ countryName, leagueName, teamName });
+  const description = buildTeamTransfersDescription({ countryName, leagueName, teamName, totalCount: transfersData.totalCount });
   const breadcrumbSchema = buildBreadcrumbJsonLd({
     items: [
       { name: '홈', url: '/' },

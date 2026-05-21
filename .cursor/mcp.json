@@ -9,10 +9,7 @@
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--project-ref=vnjjfhsuzoxcljqqwwvx"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_5830b6f1bafaa738c3a01765618068fdd73f96e9"
-      }
+      ]
     },
     "solapi": {
       "type": "stdio",
@@ -23,6 +20,9 @@
         "-y",
         "@solapi/mcp-server"
       ]
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com"
     }
   }
 } 

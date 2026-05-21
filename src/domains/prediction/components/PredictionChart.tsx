@@ -175,13 +175,24 @@ function FormDisplay({ form }: { form: string }) {
   if (!form) return null;
   const recentResults = form.split('').reverse();
   return (
-    <div className="grid w-full max-w-[154px] grid-cols-[repeat(auto-fill,24px)] gap-0.5">
+    <div className="grid w-[154px] max-w-full grid-cols-[repeat(6,24px)] gap-0.5 md:w-[258px] md:grid-cols-[repeat(10,24px)]">
       <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F5F5F5] text-[11px] font-semibold text-gray-400 dark:bg-[#333333] dark:text-gray-500">
         &gt;
       </span>
       {recentResults.map((char, idx) => (
         <FormBadge key={idx} result={char} />
       ))}
+    </div>
+  );
+}
+
+function SeasonFormCell({ label, form, align }: { label: '홈' | '원정'; form: string; align: 'right' | 'left' }) {
+  return (
+    <div className={`mx-auto w-fit max-w-full text-left ${align === 'right' ? 'md:ml-auto md:mr-0' : 'md:ml-0 md:mr-auto'}`}>
+      <div className={`mb-1 text-[10px] font-semibold ${label === '홈' ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+        {label}
+      </div>
+      <FormDisplay form={form} />
     </div>
   );
 }
@@ -243,15 +254,18 @@ function underOverLine(team: TeamData, line: string) {
   const againstLine = team.league?.goals?.against?.under_over?.[line];
 
   return (
-    <span className="leading-5 md:whitespace-normal">
-      득O <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
-      <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-      득U <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
-      <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">·</span>
-      실O <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
-      <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-      실U <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
-    </span>
+    <div className="inline-block space-y-0.5 text-left leading-5">
+      <div>
+        득점 Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
+        <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
+        득점 Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
+      </div>
+      <div>
+        실점 Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
+        <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
+        실점 Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
+      </div>
+    </div>
   );
 }
 
@@ -260,17 +274,26 @@ function mobileUnderOverLine(team: TeamData, line: string) {
   const againstLine = team.league?.goals?.against?.under_over?.[line];
 
   return (
-    <div className="space-y-1 leading-5">
-      <div className="grid grid-cols-2 gap-x-2">
-        <span>득O <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong></span>
-        <span>득U <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong></span>
+    <div className="inline-block space-y-0.5 text-left leading-4">
+      <div>
+        득점 Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
+        <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
+        득점 Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
       </div>
-      <div className="grid grid-cols-2 gap-x-2">
-        <span>실O <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong></span>
-        <span>실U <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong></span>
+      <div>
+        실점 Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
+        <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
+        실점 Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
       </div>
     </div>
   );
+}
+
+function formatLineups(team: TeamData, limit: number) {
+  return (team.league?.lineups || [])
+    .slice(0, limit)
+    .map((lineup) => `${lineup.formation} (${lineup.played})`)
+    .join(' · ') || '-';
 }
 
 function CompareSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -291,6 +314,10 @@ function CompareRow({
   homeClassName = '',
   awayClassName = '',
   mobileLayout = 'two-column',
+  showMobileLabel = true,
+  showMobileSideLabels = true,
+  mobileCenterLabelWidth = 'normal',
+  mobileDensity = 'normal',
 }: {
   label: string;
   home: React.ReactNode;
@@ -300,18 +327,26 @@ function CompareRow({
   homeClassName?: string;
   awayClassName?: string;
   mobileLayout?: 'two-column' | 'stack' | 'center-label';
+  showMobileLabel?: boolean;
+  showMobileSideLabels?: boolean;
+  mobileCenterLabelWidth?: 'normal' | 'wide';
+  mobileDensity?: 'normal' | 'compact';
 }) {
   const mobileHomeContent = mobileHome ?? home;
   const mobileAwayContent = mobileAway ?? away;
+  const centerLabelGridClass = mobileCenterLabelWidth === 'wide'
+    ? 'grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)]'
+    : 'grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)]';
+  const mobileRowPaddingClass = mobileDensity === 'compact' ? 'px-3 py-1.5' : 'px-3 py-2.5';
 
   return (
     <>
-      <div className="px-3 py-2.5 text-[11px] md:hidden">
-        {label && mobileLayout !== 'center-label' && (
+      <div className={`${mobileRowPaddingClass} text-[11px] md:hidden`}>
+        {showMobileLabel && label && mobileLayout !== 'center-label' && (
           <div className="mb-2 text-[12px] font-semibold leading-none text-gray-500 dark:text-gray-400">{label}</div>
         )}
         {mobileLayout === 'center-label' ? (
-          <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-2">
+          <div className={`grid ${centerLabelGridClass} items-center gap-2`}>
             <div className={`min-w-0 break-words text-right leading-5 text-gray-900 dark:text-[#F0F0F0] ${homeClassName}`}>{mobileHomeContent}</div>
             <div className="text-center text-[11px] font-semibold leading-5 text-gray-500 dark:text-gray-400">{label}</div>
             <div className={`min-w-0 break-words text-left leading-5 text-gray-900 dark:text-[#F0F0F0] ${awayClassName}`}>{mobileAwayContent}</div>
@@ -319,22 +354,30 @@ function CompareRow({
         ) : mobileLayout === 'stack' ? (
           <div className="space-y-1.5">
             <div className="min-w-0">
-              <div className="mb-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">홈</div>
+              {showMobileSideLabels && (
+                <div className="mb-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400">홈</div>
+              )}
               <div className={`min-w-0 break-words text-gray-900 dark:text-[#F0F0F0] ${homeClassName}`}>{mobileHomeContent}</div>
             </div>
             <div className="min-w-0 border-t border-black/5 pt-1.5 dark:border-white/10">
-              <div className="mb-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">원정</div>
+              {showMobileSideLabels && (
+                <div className="mb-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">원정</div>
+              )}
               <div className={`min-w-0 break-words text-gray-900 dark:text-[#F0F0F0] ${awayClassName}`}>{mobileAwayContent}</div>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <div className="min-w-0 border-r border-black/5 pr-2 dark:border-white/10">
-              <div className="mb-1 text-[11px] font-semibold leading-none text-blue-600 dark:text-blue-400">홈</div>
+              {showMobileSideLabels && (
+                <div className="mb-1 text-[11px] font-semibold leading-none text-blue-600 dark:text-blue-400">홈</div>
+              )}
               <div className={`min-w-0 break-words leading-5 text-gray-900 dark:text-[#F0F0F0] ${homeClassName}`}>{mobileHomeContent}</div>
             </div>
             <div className="min-w-0 pl-1">
-              <div className="mb-1 text-[11px] font-semibold leading-none text-red-600 dark:text-red-400">원정</div>
+              {showMobileSideLabels && (
+                <div className="mb-1 text-[11px] font-semibold leading-none text-red-600 dark:text-red-400">원정</div>
+              )}
               <div className={`min-w-0 break-words leading-5 text-gray-900 dark:text-[#F0F0F0] ${awayClassName}`}>{mobileAwayContent}</div>
             </div>
           </div>
@@ -452,7 +495,7 @@ function PredictionTeamComparison({
   const minuteMax = getMinuteMax(home, away);
 
   return (
-    <div className="border-t border-black/5 bg-white pb-4 dark:border-white/10 dark:bg-[#1D1D1D] md:pb-0">
+    <div className="border-t border-black/5 bg-white dark:border-white/10 dark:bg-[#1D1D1D]">
       <div>
         <div>
           <CompareSection title="최근 5경기 지표">
@@ -470,11 +513,11 @@ function PredictionTeamComparison({
           {(home.league?.form || away.league?.form) && (
             <CompareSection title="시즌 폼">
               <CompareRow
-                label=""
-                home={<FormDisplay form={home.league?.form || ''} />}
-                away={<FormDisplay form={away.league?.form || ''} />}
-                homeClassName="[&>div]:justify-center"
-                awayClassName="[&>div]:justify-center"
+                label="최근순"
+                home={<SeasonFormCell label="홈" form={home.league?.form || ''} align="right" />}
+                away={<SeasonFormCell label="원정" form={away.league?.form || ''} align="left" />}
+                showMobileLabel={false}
+                showMobileSideLabels={false}
               />
             </CompareSection>
           )}
@@ -511,36 +554,39 @@ function PredictionTeamComparison({
           {(home.league?.goals?.for?.under_over || home.league?.goals?.against?.under_over || away.league?.goals?.for?.under_over || away.league?.goals?.against?.under_over) && (
             <CompareSection title="언더/오버">
               {underOverLines.map((line) => (
-                <CompareRow key={line} label={line} home={underOverLine(home, line)} away={underOverLine(away, line)} mobileHome={mobileUnderOverLine(home, line)} mobileAway={mobileUnderOverLine(away, line)} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" />
+                <CompareRow key={line} label={line} home={underOverLine(home, line)} away={underOverLine(away, line)} mobileHome={mobileUnderOverLine(home, line)} mobileAway={mobileUnderOverLine(away, line)} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" mobileLayout="center-label" />
               ))}
             </CompareSection>
           )}
 
           {(home.league?.biggest || away.league?.biggest) && (
             <CompareSection title="최대 기록">
-              <CompareRow label="연승" home={home.league?.biggest?.streak?.wins ?? 0} away={away.league?.biggest?.streak?.wins ?? 0} homeClassName="font-bold text-green-600 dark:text-green-400" awayClassName="font-bold text-green-600 dark:text-green-400" />
-              <CompareRow label="연속무" home={home.league?.biggest?.streak?.draws ?? 0} away={away.league?.biggest?.streak?.draws ?? 0} homeClassName="font-bold text-yellow-600 dark:text-yellow-400" awayClassName="font-bold text-yellow-600 dark:text-yellow-400" />
-              <CompareRow label="연패" home={home.league?.biggest?.streak?.loses ?? 0} away={away.league?.biggest?.streak?.loses ?? 0} homeClassName="font-bold text-red-600 dark:text-red-400" awayClassName="font-bold text-red-600 dark:text-red-400" />
-              <CompareRow label="홈 최다골 승" home={home.league?.biggest?.wins?.home || '-'} away={away.league?.biggest?.wins?.home || '-'} />
-              <CompareRow label="원정 최다골 승" home={home.league?.biggest?.wins?.away || '-'} away={away.league?.biggest?.wins?.away || '-'} />
-              <CompareRow label="홈 최다골 패" home={home.league?.biggest?.loses?.home || '-'} away={away.league?.biggest?.loses?.home || '-'} />
-              <CompareRow label="원정 최다골 패" home={home.league?.biggest?.loses?.away || '-'} away={away.league?.biggest?.loses?.away || '-'} />
+              <CompareRow label="연승" home={home.league?.biggest?.streak?.wins ?? 0} away={away.league?.biggest?.streak?.wins ?? 0} homeClassName="font-bold text-green-600 dark:text-green-400" awayClassName="font-bold text-green-600 dark:text-green-400" mobileLayout="center-label" />
+              <CompareRow label="연속무" home={home.league?.biggest?.streak?.draws ?? 0} away={away.league?.biggest?.streak?.draws ?? 0} homeClassName="font-bold text-yellow-600 dark:text-yellow-400" awayClassName="font-bold text-yellow-600 dark:text-yellow-400" mobileLayout="center-label" />
+              <CompareRow label="연패" home={home.league?.biggest?.streak?.loses ?? 0} away={away.league?.biggest?.streak?.loses ?? 0} homeClassName="font-bold text-red-600 dark:text-red-400" awayClassName="font-bold text-red-600 dark:text-red-400" mobileLayout="center-label" />
+              <CompareRow label="홈 최다골 승" home={home.league?.biggest?.wins?.home || '-'} away={away.league?.biggest?.wins?.home || '-'} mobileLayout="center-label" mobileCenterLabelWidth="wide" />
+              <CompareRow label="원정 최다골 승" home={home.league?.biggest?.wins?.away || '-'} away={away.league?.biggest?.wins?.away || '-'} mobileLayout="center-label" mobileCenterLabelWidth="wide" />
+              <CompareRow label="홈 최다골 패" home={home.league?.biggest?.loses?.home || '-'} away={away.league?.biggest?.loses?.home || '-'} mobileLayout="center-label" mobileCenterLabelWidth="wide" />
+              <CompareRow label="원정 최다골 패" home={home.league?.biggest?.loses?.away || '-'} away={away.league?.biggest?.loses?.away || '-'} mobileLayout="center-label" mobileCenterLabelWidth="wide" />
             </CompareSection>
           )}
 
           {(home.league?.clean_sheet || home.league?.failed_to_score || home.league?.penalty || away.league?.clean_sheet || away.league?.failed_to_score || away.league?.penalty) && (
             <CompareSection title="기타 통계">
-              <CompareRow label="무실점" home={`합계 ${home.league?.clean_sheet?.total ?? 0} · 홈${home.league?.clean_sheet?.home ?? 0} 원정${home.league?.clean_sheet?.away ?? 0}`} away={`합계 ${away.league?.clean_sheet?.total ?? 0} · 홈${away.league?.clean_sheet?.home ?? 0} 원정${away.league?.clean_sheet?.away ?? 0}`} />
-              <CompareRow label="무득점" home={`합계 ${home.league?.failed_to_score?.total ?? 0} · 홈${home.league?.failed_to_score?.home ?? 0} 원정${home.league?.failed_to_score?.away ?? 0}`} away={`합계 ${away.league?.failed_to_score?.total ?? 0} · 홈${away.league?.failed_to_score?.home ?? 0} 원정${away.league?.failed_to_score?.away ?? 0}`} />
-              <CompareRow label="페널티" home={`${home.league?.penalty?.scored?.total ?? 0}/${home.league?.penalty?.total ?? 0} · ${home.league?.penalty?.scored?.percentage ?? '-'}`} away={`${away.league?.penalty?.scored?.total ?? 0}/${away.league?.penalty?.total ?? 0} · ${away.league?.penalty?.scored?.percentage ?? '-'}`} />
+              <CompareRow label="무실점" home={`합계 ${home.league?.clean_sheet?.total ?? 0} · 홈${home.league?.clean_sheet?.home ?? 0} 원정${home.league?.clean_sheet?.away ?? 0}`} away={`합계 ${away.league?.clean_sheet?.total ?? 0} · 홈${away.league?.clean_sheet?.home ?? 0} 원정${away.league?.clean_sheet?.away ?? 0}`} mobileLayout="center-label" />
+              <CompareRow label="무득점" home={`합계 ${home.league?.failed_to_score?.total ?? 0} · 홈${home.league?.failed_to_score?.home ?? 0} 원정${home.league?.failed_to_score?.away ?? 0}`} away={`합계 ${away.league?.failed_to_score?.total ?? 0} · 홈${away.league?.failed_to_score?.home ?? 0} 원정${away.league?.failed_to_score?.away ?? 0}`} mobileLayout="center-label" />
+              <CompareRow label="페널티" home={`${home.league?.penalty?.scored?.total ?? 0}/${home.league?.penalty?.total ?? 0} · ${home.league?.penalty?.scored?.percentage ?? '-'}`} away={`${away.league?.penalty?.scored?.total ?? 0}/${away.league?.penalty?.total ?? 0} · ${away.league?.penalty?.scored?.percentage ?? '-'}`} mobileLayout="center-label" />
             </CompareSection>
           )}
 
           <CompareSection title="포메이션">
             <CompareRow
               label="주요"
-              home={(home.league?.lineups || []).slice(0, 4).map((lineup) => `${lineup.formation} (${lineup.played})`).join(' · ') || '-'}
-              away={(away.league?.lineups || []).slice(0, 4).map((lineup) => `${lineup.formation} (${lineup.played})`).join(' · ') || '-'}
+              home={formatLineups(home, 4)}
+              away={formatLineups(away, 4)}
+              mobileHome={formatLineups(home, 4)}
+              mobileAway={formatLineups(away, 4)}
+              mobileLayout="center-label"
             />
           </CompareSection>
         </div>
@@ -786,22 +832,21 @@ export default function PredictionChart({
                 <a
                   key={idx}
                   href={matchHref}
-                  className="flex items-center px-3 py-2 text-xs no-underline transition-colors hover:bg-[#F5F5F5] hover:no-underline dark:hover:bg-[#262626]"
+                  className="grid grid-cols-[64px_minmax(0,1fr)_52px_minmax(0,1fr)_64px] items-center gap-2 px-3 py-2 text-xs no-underline transition-colors hover:bg-[#F5F5F5] hover:no-underline dark:hover:bg-[#262626]"
                 >
-                  <span className="text-gray-400 w-20">
+                  <span className="text-gray-400">
                     {new Date(match.fixture.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' })}
                   </span>
-                  <div className="flex-1 flex items-center justify-center gap-2">
-                    <span className={`text-right flex-1 truncate ${match.teams.home.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.home.winner === false ? 'text-red-500' : ''}`}>
-                      {matchHomeNameKo}
-                    </span>
-                    <span className="px-2 py-0.5 bg-[#F5F5F5] dark:bg-[#262626] rounded font-bold text-gray-900 dark:text-[#F0F0F0] min-w-[44px] text-center">
-                      {match.goals.home}-{match.goals.away}
-                    </span>
-                    <span className={`text-left flex-1 truncate ${match.teams.away.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.away.winner === false ? 'text-red-500' : ''}`}>
-                      {matchAwayNameKo}
-                    </span>
-                  </div>
+                  <span className={`min-w-0 truncate text-right ${match.teams.home.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.home.winner === false ? 'text-red-500' : ''}`}>
+                    {matchHomeNameKo}
+                  </span>
+                  <span className="rounded bg-[#F5F5F5] px-2 py-0.5 text-center font-bold text-gray-900 dark:bg-[#262626] dark:text-[#F0F0F0]">
+                    {match.goals.home}-{match.goals.away}
+                  </span>
+                  <span className={`min-w-0 truncate text-left ${match.teams.away.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.away.winner === false ? 'text-red-500' : ''}`}>
+                    {matchAwayNameKo}
+                  </span>
+                  <span aria-hidden="true" />
                 </a>
               );
             })}

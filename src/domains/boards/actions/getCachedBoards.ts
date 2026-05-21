@@ -3,7 +3,21 @@
 import { unstable_cache } from 'next/cache';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
-type BoardRow = { id: string; name: string; slug: string | null; parent_id: string | null; display_order: number | null; team_id: number | null; league_id: number | null; view_type: string | null; description?: string | null; access_level?: string | null; logo?: string | null; views?: number | null };
+type BoardRow = {
+  id: string;
+  name: string;
+  slug: string | null;
+  parent_id: string | null;
+  display_order: number | null;
+  team_id: number | null;
+  league_id: number | null;
+  view_type: string | null;
+  content_type: string | null;
+  description?: string | null;
+  access_level?: string | null;
+  logo?: string | null;
+  views?: number | null;
+};
 
 /**
  * 캐시된 모든 게시판 데이터 조회
@@ -22,7 +36,7 @@ const _getCachedAllBoardsImpl = unstable_cache(
 
     const { data, error } = await supabase
       .from('boards')
-      .select('id, name, slug, parent_id, display_order, team_id, league_id, description, access_level, logo, views, view_type')
+      .select('id, name, slug, parent_id, display_order, team_id, league_id, description, access_level, logo, views, view_type, content_type')
       .order('display_order', { ascending: true })
       .order('name');
 
@@ -33,7 +47,7 @@ const _getCachedAllBoardsImpl = unstable_cache(
 
     return (data || []) as BoardRow[];
   },
-  ['all-boards'],
+  ['all-boards-v2'],
   { revalidate: 604800, tags: ['boards'] } // 7일
 );
 

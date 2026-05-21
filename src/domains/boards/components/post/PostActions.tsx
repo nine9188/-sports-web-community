@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
 import { Button } from '@/shared/components/ui';
 
 interface PostActionsProps {
@@ -25,9 +23,6 @@ export default function PostActions({
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(initialUserAction);
-  
-  const router = useRouter();
-
   // 서버 데이터가 변경되면(router.refresh 등) 로컬 상태 동기화
   useEffect(() => {
     setLikes(initialLikes);
@@ -35,87 +30,50 @@ export default function PostActions({
     setUserAction(initialUserAction);
   }, [initialLikes, initialDislikes, initialUserAction]);
   
-  // 좋아요 처리 함수
-  const handleLike = async () => {
-    
-    
-    if (isLiking || isDisliking) {
-      return;
+  const handleReaction = async (type: 'like' | 'dislike') => {
+    if (isLiking || isDisliking) return;
+
+    if (type === 'like') {
+      setIsLiking(true);
+    } else {
+      setIsDisliking(true);
     }
-    
-    setIsLiking(true);
-    
+
     try {
-      // 서버 액션으로 좋아요 처리
-      const result = await likePost(postId);
-      
-      if (!result.success) {
-        // 로그인 필요 시 리다이렉트
-        if (result.error === '로그인이 필요합니다.') {
-          alert('로그인이 필요합니다.');
-          router.push('/signin');
-          return;
-        }
-        
-        alert(result.error || '좋아요 처리 중 오류가 발생했습니다.');
+      const response = await fetch(`/api/posts/${postId}/reaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      const result = await response.json().catch(() => null) as {
+        success?: boolean;
+        likes?: number;
+        dislikes?: number;
+        userAction?: 'like' | 'dislike' | null;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !result?.success) {
+        alert(result?.error || `${type === 'like' ? '좋아요' : '싫어요'} 처리 중 오류가 발생했습니다.`);
         return;
       }
-      
-      // 상태 업데이트
+
       if (result.likes !== undefined) setLikes(result.likes);
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
       setUserAction(result.userAction || null);
-      
-      // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
-      router.refresh();
-      
     } catch {
-      alert('좋아요 처리 중 오류가 발생했습니다.');
+      alert(`${type === 'like' ? '좋아요' : '싫어요'} 처리 중 오류가 발생했습니다.`);
     } finally {
-      setIsLiking(false);
-    }
-  };
-  
-  // 싫어요 처리 함수
-  const handleDislike = async () => {
-    
-    
-    if (isLiking || isDisliking) {
-      return;
-    }
-    
-    setIsDisliking(true);
-    
-    try {
-      // 서버 액션으로 싫어요 처리
-      const result = await dislikePost(postId);
-      
-      if (!result.success) {
-        // 로그인 필요 시 리다이렉트
-        if (result.error === '로그인이 필요합니다.') {
-          alert('로그인이 필요합니다.');
-          router.push('/signin');
-          return;
-        }
-        
-        alert(result.error || '싫어요 처리 중 오류가 발생했습니다.');
-        return;
+      if (type === 'like') {
+        setIsLiking(false);
+      } else {
+        setIsDisliking(false);
       }
-      
-      // 상태 업데이트
-      if (result.likes !== undefined) setLikes(result.likes);
-      if (result.dislikes !== undefined) setDislikes(result.dislikes);
-      setUserAction(result.userAction || null);
-      
-      // 페이지 새로고침으로 서버 컴포넌트 데이터 갱신
-      router.refresh();
-      
-    } catch {
-      alert('싫어요 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsDisliking(false);
     }
   };
+
+  const handleLike = () => handleReaction('like');
+  const handleDislike = () => handleReaction('dislike');
 
   return (
     <div className="flex justify-center items-center gap-4 mt-4">

@@ -16,8 +16,18 @@ export interface SeoConfig {
   siteKeywords: string[] | readonly string[];
   twitterHandle: string;
   defaultOgImage: string;
+  defaultOgImageSquare: string;
   siteUrl: string;
 }
+
+type MetadataImage = {
+  url: string;
+  secureUrl: string;
+  width: number;
+  height: number;
+  alt: string;
+  type: string;
+};
 
 /**
  * buildMetadata 입력 파라미터
@@ -47,6 +57,10 @@ export interface BuildMetadataParams {
   modifiedTime?: string;
   /** 페이지별 키워드 (선택) */
   keywords?: string[];
+  /** 전역 사이트 키워드 포함 여부 (기본 true) */
+  includeSiteKeywords?: boolean;
+  /** 기본 OG fallback 이미지 포함 여부 (기본 true) */
+  includeDefaultOgFallbacks?: boolean;
   /** 제목에 사이트 이름 붙이지 않기 (선택) */
   titleOnly?: boolean;
 }
@@ -63,6 +77,7 @@ export function getSeoConfigStatic(): SeoConfig {
     siteKeywords: siteConfig.keywords,
     twitterHandle: siteConfig.twitterHandle,
     defaultOgImage: siteConfig.defaultOgImage,
+    defaultOgImageSquare: siteConfig.defaultOgImageSquare,
     siteUrl: siteConfig.url,
   };
 }
@@ -83,6 +98,7 @@ export const getSeoConfig = cache(async (): Promise<SeoConfig> => {
       siteKeywords: dbSettings?.default_keywords || siteConfig.keywords,
       twitterHandle: dbSettings?.twitter_handle || siteConfig.twitterHandle,
       defaultOgImage: siteConfig.getOgImage(dbSettings?.og_image),
+      defaultOgImageSquare: siteConfig.defaultOgImageSquare,
       siteUrl: dbSettings?.site_url || siteConfig.url,
     };
   } catch (error) {
@@ -137,25 +153,30 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     : params.title;
 
   // 설명 (페이지 고유값 > 전역값)
-  const description = params.description || config.siteDescription;
+  const description = truncateMetaDescription(params.description || config.siteDescription);
 
   // URL
   const canonicalUrl = `${config.siteUrl}${params.path}`;
 
-  // 이미지
-  const ogImage = params.image
+  // 이미지: 대표 썸네일 > 기본 가로형 > 기본 정사각형 순서
+  const primaryOgImage = params.image
     ? (params.image.startsWith('http') ? params.image : `${config.siteUrl}${params.image}`)
     : config.defaultOgImage;
+  const ogImages = buildOgImages({
+    primaryImage: primaryOgImage,
+    fallbackImages: params.includeDefaultOgFallbacks === false
+      ? []
+      : [config.defaultOgImage, config.defaultOgImageSquare],
+    title: params.title,
+    imageWidth: params.imageWidth,
+    imageHeight: params.imageHeight,
+  });
 
   // 페이지별 키워드가 있어도 공통 브랜드 키워드는 유지
   const keywords = Array.from(new Set([
     ...(params.keywords || []),
-    ...config.siteKeywords,
+    ...(params.includeSiteKeywords === false ? [] : config.siteKeywords),
   ]));
-
-  // 이미지 타입
-  const imageType = getImageType(ogImage);
-  const imageSize = getDefaultImageSize(ogImage);
 
   const metadata: Metadata = {
     title: titleMeta,
@@ -168,14 +189,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
       siteName: config.siteName,
       locale: siteConfig.locale,
       type: params.type || 'website',
-      images: [{
-        url: ogImage,
-        secureUrl: ogImage,  // Safari 최적화: property="og:image:secure_url" 생성
-        width: params.imageWidth || imageSize.width,
-        height: params.imageHeight || imageSize.height,
-        alt: params.title,
-        type: imageType,
-      }],
+      images: ogImages,
       ...(params.publishedTime && { publishedTime: params.publishedTime }),
       ...(params.modifiedTime && { modifiedTime: params.modifiedTime }),
     },
@@ -183,7 +197,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
       card: 'summary_large_image',
       title: fullTitle,
       description,
-      images: [ogImage],
+      images: [primaryOgImage],
       creator: config.twitterHandle,
     },
     alternates: {
@@ -228,6 +242,50 @@ function getDefaultImageSize(path: string): { width: number; height: number } {
     return { width: 1200, height: 1200 };
   }
   return { width: 1200, height: 630 };
+}
+
+function normalizeImageUrl(url: string, siteUrl: string): string {
+  return url.startsWith('http') ? url : `${siteUrl}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
+function buildOgImages({
+  primaryImage,
+  fallbackImages,
+  title,
+  imageWidth,
+  imageHeight,
+}: {
+  primaryImage: string;
+  fallbackImages: string[];
+  title: string;
+  imageWidth?: number;
+  imageHeight?: number;
+}): MetadataImage[] {
+  const imageUrls = Array.from(new Set([
+    primaryImage,
+    ...fallbackImages,
+  ].map((url) => normalizeImageUrl(url, siteConfig.url))));
+
+  return imageUrls.map((url, index) => {
+    const imageSize = index === 0 && imageWidth && imageHeight
+      ? { width: imageWidth, height: imageHeight }
+      : getDefaultImageSize(url);
+
+    return {
+      url,
+      secureUrl: url,
+      width: imageSize.width,
+      height: imageSize.height,
+      alt: title,
+      type: getImageType(url),
+    };
+  });
+}
+
+function truncateMetaDescription(value: string, maxLength = 180): string {
+  const clean = value.replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLength) return clean;
+  return clean.slice(0, maxLength).replace(/\s+\S*$/, '').trim();
 }
 
 /**
