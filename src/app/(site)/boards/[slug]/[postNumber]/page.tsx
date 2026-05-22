@@ -109,9 +109,8 @@ function buildEntityJsonLd({
 
   for (const match of entities?.matches ?? []) {
     const eventSchema = {
-      '@type': 'SportsEvent',
+      '@type': 'Thing',
       name: match,
-      sport: 'Soccer',
     };
     about.push(eventSchema);
     mentions.push(eventSchema);
