@@ -269,6 +269,8 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
   const displayLeagueName = mappedLeagueName && mappedLeagueName !== '알 수 없는 리그'
     ? mappedLeagueName
     : (league?.name_ko || league?.name || mappedLeagueName);
+  const homeTeamName = homeTeam?.name_ko || homeTeam?.name || '홈팀';
+  const awayTeamName = awayTeam?.name_ko || awayTeam?.name || '원정팀';
 
   return (
     <div className="w-full">
@@ -283,7 +285,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
               {league?.id && (
                 <UnifiedSportsImageClient
                   src={getLeagueLogo()}
-                  alt={league?.name || ''}
+                  alt={`${displayLeagueName || '리그'} 로고`}
                   width={24}
                   height={24}
                   loading="eager"
@@ -332,7 +334,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
               >
                 <UnifiedSportsImageClient
                   src={getTeamLogo(homeTeam.id)}
-                  alt=""
+                  alt={`${homeTeamName} 로고 배경`}
                   width={448}
                   height={448}
                   loading="eager"
@@ -348,7 +350,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
               >
                 <UnifiedSportsImageClient
                   src={getTeamLogo(awayTeam.id)}
-                  alt=""
+                  alt={`${awayTeamName} 로고 배경`}
                   width={448}
                   height={448}
                   loading="eager"
@@ -361,7 +363,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-24 h-24 md:left-6 md:w-32 md:h-32 opacity-[0.06] dark:opacity-[0.08]">
                 <UnifiedSportsImageClient
                   src={getTeamLogo(homeTeam.id)}
-                  alt=""
+                  alt={`${homeTeamName} 로고 장식`}
                   width={128}
                   height={128}
                   loading="eager"
@@ -373,7 +375,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
               <div className="absolute right-2 top-1/2 -translate-y-1/2 w-24 h-24 md:right-6 md:w-32 md:h-32 opacity-[0.06] dark:opacity-[0.08]">
                 <UnifiedSportsImageClient
                   src={getTeamLogo(awayTeam.id)}
-                  alt=""
+                  alt={`${awayTeamName} 로고 장식`}
                   width={128}
                   height={128}
                   loading="eager"
@@ -392,7 +394,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(homeTeam.id)}
-                      alt={homeTeam.name || ''}
+                      alt={`${homeTeamName} 로고`}
                       width={48}
                       height={48}
                       loading="eager"
@@ -411,7 +413,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                     {homeTeam?.id && (
                       <UnifiedSportsImageClient
                         src={getTeamLogo(homeTeam.id)}
-                        alt={homeTeam.name || ''}
+                        alt={`${homeTeamName} 로고`}
                         width={48}
                         height={48}
                         loading="eager"
@@ -450,7 +452,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                   <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-1 md:mb-2 flex items-center justify-center">
                     <UnifiedSportsImageClient
                       src={getTeamLogo(awayTeam.id)}
-                      alt={awayTeam.name || ''}
+                      alt={`${awayTeamName} 로고`}
                       width={48}
                       height={48}
                       loading="eager"
@@ -469,7 +471,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                     {awayTeam?.id && (
                       <UnifiedSportsImageClient
                         src={getTeamLogo(awayTeam.id)}
-                        alt={awayTeam.name || ''}
+                        alt={`${awayTeamName} 로고`}
                         width={48}
                         height={48}
                         loading="eager"
@@ -499,7 +501,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                     {homeTeam?.id && (
                       <UnifiedSportsImageClient
                         src={getTeamLogo(homeTeam.id)}
-                        alt={homeTeam.name || ''}
+                        alt={`${homeTeamName} 로고`}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
@@ -547,7 +549,7 @@ const MatchHeader = memo(({ initialData, playerKoreanNames = {}, goalEvents, chi
                     {awayTeam?.id && (
                       <UnifiedSportsImageClient
                         src={getTeamLogo(awayTeam.id)}
-                        alt={awayTeam.name || ''}
+                        alt={`${awayTeamName} 로고`}
                         width={16}
                         height={16}
                         className="object-contain w-full h-full"
@@ -600,6 +602,8 @@ export function MatchHeaderGoalEvents({
   const homeTeam = matchData?.teams?.home;
   const awayTeam = matchData?.teams?.away;
   const getTeamLogo = (id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER;
+  const homeTeamName = homeTeam?.name_ko || homeTeam?.name || '홈팀';
+  const awayTeamName = awayTeam?.name_ko || awayTeam?.name || '원정팀';
 
   if (!goalEvents?.length || !homeTeam || !awayTeam) return null;
 
@@ -653,7 +657,7 @@ export function MatchHeaderGoalEvents({
             {homeTeam?.id && (
               <UnifiedSportsImageClient
                 src={getTeamLogo(homeTeam.id)}
-                alt={homeTeam.name || ''}
+                alt={`${homeTeamName} 로고`}
                 width={16}
                 height={16}
                 className="object-contain w-full h-full"
@@ -675,7 +679,7 @@ export function MatchHeaderGoalEvents({
             {awayTeam?.id && (
               <UnifiedSportsImageClient
                 src={getTeamLogo(awayTeam.id)}
-                alt={awayTeam.name || ''}
+                alt={`${awayTeamName} 로고`}
                 width={16}
                 height={16}
                 className="object-contain w-full h-full"

@@ -11,6 +11,41 @@ interface PostPollCardProps {
   className?: string;
 }
 
+function hashString(value: string): number {
+  let hash = 0;
+
+  for (let i = 0; i < value.length; i += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+
+  return Math.abs(hash);
+}
+
+function isPredictionPoll(poll: PostPoll): boolean {
+  return (
+    poll.options.length === 3 &&
+    poll.question.includes('결과를 어떻게 예상') &&
+    poll.options.some((option) => option.text.includes('무승부'))
+  );
+}
+
+function getReferenceVoteCounts(poll: PostPoll): number[] {
+  if (!isPredictionPoll(poll)) return [];
+
+  const seed = hashString(poll.id);
+  const total = 10 + (seed % 8);
+  const draw = 1 + ((seed >> 3) % 3);
+  const underdog = 1 + ((seed >> 5) % 4);
+  const favorite = Math.max(1, total - draw - underdog);
+  const counts = [favorite, draw, underdog];
+
+  if (seed % 5 === 0) {
+    return [underdog, draw, favorite];
+  }
+
+  return counts;
+}
+
 export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px-6 pb-5' }: PostPollCardProps) {
   const [localPoll, setLocalPoll] = useState(poll);
   const [votingOptionId, setVotingOptionId] = useState<string | null>(null);
@@ -24,6 +59,14 @@ export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px
   const options = useMemo(() => {
     return [...localPoll.options].sort((a, b) => a.displayOrder - b.displayOrder);
   }, [localPoll.options]);
+
+  const referenceVoteCounts = useMemo(() => {
+    if (totalVotes >= 20) return [];
+    return getReferenceVoteCounts(localPoll);
+  }, [localPoll, totalVotes]);
+  const referenceVoteTotal = referenceVoteCounts.reduce((sum, count) => sum + count, 0);
+  const revealResults = hasVoted;
+  const visibleTotalVotes = revealResults ? totalVotes + referenceVoteTotal : totalVotes;
 
   const handleVote = async (optionId: string) => {
     if (hasVoted || votingOptionId) return;
@@ -81,14 +124,16 @@ export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px
             {poll.question}
           </h3>
           <span className="shrink-0 text-[12px] text-gray-500 dark:text-gray-400">
-            {totalVotes}표
+            {visibleTotalVotes}표
           </span>
         </div>
 
         <div className="space-y-2">
-          {options.map((option) => {
+          {options.map((option, index) => {
             const selected = localPoll.viewerVoteOptionId === option.id;
-            const percent = totalVotes > 0 ? Math.round((option.voteCount / totalVotes) * 100) : 0;
+            const visibleVoteCount = option.voteCount + (revealResults ? referenceVoteCounts[index] || 0 : 0);
+            const percent = visibleTotalVotes > 0 ? Math.round((visibleVoteCount / visibleTotalVotes) * 100) : 0;
+            const showResult = revealResults;
 
             return (
               <button
@@ -102,7 +147,7 @@ export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px
                     : 'border-black/7 bg-white hover:bg-[#F5F5F5] dark:border-white/10 dark:bg-[#1D1D1D] dark:hover:bg-[#333333]'
                 }`}
               >
-                {hasVoted && (
+                {showResult && (
                   <span
                     className="absolute inset-y-0 left-0 bg-brand-primary/10 dark:bg-brand-primary-dark/15"
                     style={{ width: `${percent}%` }}
@@ -112,9 +157,9 @@ export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px
                   <span className="min-w-0 truncate text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
                     {option.text}
                   </span>
-                  {hasVoted && (
+                  {showResult && (
                     <span className="shrink-0 text-[12px] text-gray-600 dark:text-gray-300">
-                      {percent}% · {option.voteCount}
+                      {percent}% · {visibleVoteCount}
                     </span>
                   )}
                 </span>

@@ -238,7 +238,7 @@ export default function Power({ data: initialData, homeTeam, awayTeam, playerKor
             <div className={`flex min-w-0 flex-1 items-center gap-2 ${align === 'right' ? 'md:justify-end' : ''}`}>
               <UnifiedSportsImageClient
                 src={data.playerPhotoUrls?.[player.playerId] || PLAYER_PLACEHOLDER}
-                alt="player"
+                alt={`${displayName} 선수 사진`}
                 width={32}
                 height={32}
                 fit="cover"

@@ -127,6 +127,7 @@ export default function UnifiedSportsImageClient({
   const useCustomSize = width !== undefined || height !== undefined;
   const finalWidth = width ?? sizeValues[size].width;
   const finalHeight = height ?? sizeValues[size].height;
+  const safeAlt = alt.trim() || '축구 이미지';
 
   // 테두리 클래스
   const borderClasses = showBorder ? 'border border-black/7 dark:border-white/10' : '';
@@ -156,7 +157,7 @@ export default function UnifiedSportsImageClient({
         {showFallback && !fallbackContent ? (
           <Image
             src={normalizedFallbackSrc}
-            alt={alt}
+            alt={safeAlt}
             width={finalWidth}
             height={finalHeight}
             unoptimized
@@ -172,7 +173,7 @@ export default function UnifiedSportsImageClient({
     <div className={containerClasses} style={containerStyle}>
       <Image
         src={srcWithRetry}
-        alt={alt}
+        alt={safeAlt}
         width={finalWidth}
         height={finalHeight}
         priority={priority}

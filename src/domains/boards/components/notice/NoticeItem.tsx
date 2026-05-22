@@ -82,7 +82,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
           <div className="relative w-5 h-5 mr-1">
             <UnifiedSportsImageClient
               src={logoUrl}
-              alt={notice.board?.name || notice.board_name || ''}
+              alt={`${notice.board?.name || notice.board_name || '게시판'} 로고`}
               width={20}
               height={20}
               className="object-contain w-5 h-5"
@@ -101,7 +101,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
           <div className="relative w-5 h-5 mr-1">
             <Image
               src={siteConfig.icon}
-              alt={notice.board?.name || notice.board_name || ''}
+              alt={`${notice.board?.name || notice.board_name || '게시판'} 로고`}
               width={20}
               height={20}
               className="object-contain w-5 h-5 dark:invert"

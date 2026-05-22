@@ -114,7 +114,7 @@ export default function StatsCards({ stats, onTabChange, leagueLogoUrl, leagueLo
           <div className={`w-6 h-6 flex-shrink-0 ${hasLeagueInfo ? '' : 'hidden'}`}>
             <UnifiedSportsImageClient
               src={finalLeagueLogo}
-              alt={safeLeague.name || ''}
+              alt={`${safeLeague.name || '리그'} 로고`}
               width={24}
               height={24}
               className="object-contain w-full h-full"
