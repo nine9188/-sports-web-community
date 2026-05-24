@@ -77,6 +77,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href={`${siteConfig.url}/icon.png`} type="image/png" sizes="192x192" />
         <link rel="apple-touch-icon" href={`${siteConfig.url}/apple-icon.png`} type="image/png" sizes="180x180" />
         <link rel="manifest" href={`${siteConfig.url}/site.webmanifest`} />
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+          crossOrigin="anonymous"
+        />
       </head>
 
       <body className="w-full h-full overflow-x-hidden">
@@ -147,12 +152,6 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-MESEGFZZPF');`}
         </Script>
-        {/* Google AdSense */}
-        <Script
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   );
