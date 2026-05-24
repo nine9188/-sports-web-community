@@ -66,7 +66,7 @@ export default function PostPollCard({ poll, isLoggedIn, className = 'px-4 sm:px
   }, [localPoll, totalVotes]);
   const referenceVoteTotal = referenceVoteCounts.reduce((sum, count) => sum + count, 0);
   const revealResults = hasVoted;
-  const visibleTotalVotes = revealResults ? totalVotes + referenceVoteTotal : totalVotes;
+  const visibleTotalVotes = totalVotes + referenceVoteTotal;
 
   const handleVote = async (optionId: string) => {
     if (hasVoted || votingOptionId) return;
