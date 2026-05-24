@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ShopItem } from '../types'
@@ -23,9 +23,9 @@ export function useShopItems({
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null)
   const [isPurchasing, setIsPurchasing] = useState(false)
 
-  const handleSelectItem = (item: ShopItem) => {
+  const handleSelectItem = useCallback((item: ShopItem) => {
     setSelectedItem(item)
-  }
+  }, [])
 
   const handleCancelPurchase = () => {
     setSelectedItem(null)
@@ -40,14 +40,10 @@ export function useShopItems({
     try {
       setIsPurchasing(true)
       
-      // 서버 액션을 통한 구매 처리
-      await purchaseItem(selectedItem.id)
-      
-      // 구매 성공 시 보유 아이템 목록 업데이트
-      setUserItems(prev => [...prev, selectedItem.id])
-
-      // 포인트 차감
-      setPoints(prev => prev - selectedItem.price)
+      // 서버 액션을 통한 구매 처리 후 서버 기준 상태로 동기화
+      const result = await purchaseItem(selectedItem.id)
+      setUserItems(result.userItems)
+      setPoints(result.userPoints)
 
       // 닉네임 변경권 구매 시 프로필 페이지로 이동
       if (selectedItem.consumable_type === 'nickname_change') {
@@ -87,4 +83,4 @@ export function useShopItems({
     handleCancelPurchase,
     handlePurchase
   }
-} 
+}

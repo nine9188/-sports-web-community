@@ -77,6 +77,15 @@ const BIG_MATCH_LEAGUE_IDS = new Set([
   292, // K League 1
   293, // K League 2
 ]);
+const LEAGUE_CONTEXT_PATTERNS = [
+  { id: 39, patterns: [/\bPremier\s*League\b/i, /프리미어\s*리그|프리미어리그|EPL/i] },
+  { id: 140, patterns: [/\bLa\s*Liga\b/i, /라리가/i] },
+  { id: 78, patterns: [/\bBundesliga\b/i, /분데스리가/i] },
+  { id: 135, patterns: [/\bSerie\s*A\b/i, /세리에\s*A|세리에A/i] },
+  { id: 61, patterns: [/\bLigue\s*1\b/i, /리그앙/i] },
+  { id: 292, patterns: [/\bK\s*League\s*1\b/i, /K리그\s*1|K리그1/i, /(^|[^A-Za-z0-9])K1([^A-Za-z0-9]|$)/i] },
+  { id: 293, patterns: [/\bK\s*League\s*2\b/i, /K리그\s*2|K리그2/i, /(^|[^A-Za-z0-9])K2([^A-Za-z0-9]|$)/i] },
+];
 
 function parseArgs(argv) {
   const args = {
@@ -185,6 +194,34 @@ function collectAliases(values, type) {
   return aliases;
 }
 
+function collectTeamAliases(team) {
+  const values = [
+    team.name_ko,
+    team.display_name,
+    team.short_name,
+    team.name,
+  ];
+
+  for (const value of [team.name_ko, team.display_name, team.name]) {
+    const normalized = normalizeText(value);
+    if (!normalized) continue;
+
+    if (isHangulText(normalized)) {
+      const withoutFootballClubSuffix = normalized.replace(/\s*(FC|축구단)$/i, '').trim();
+      if (withoutFootballClubSuffix && withoutFootballClubSuffix !== normalized) {
+        values.push(withoutFootballClubSuffix);
+      }
+
+      const compact = normalized.replace(/\s+/g, '');
+      if (compact && compact !== normalized) {
+        values.push(compact);
+      }
+    }
+  }
+
+  return collectAliases(values, 'team');
+}
+
 function collectContextualPlayerAliases(player) {
   return collectAliases([
     player.korean_name,
@@ -221,11 +258,47 @@ function isInternalLinkTeam(team) {
   return isClubTeam(team) && INTERNAL_LINK_LEAGUE_IDS.has(Number(team.league_id));
 }
 
-function buildEntityAliases(teams, players, contextTeamIds = new Set()) {
+function detectLeagueContext(text) {
+  const normalized = normalizeText(text);
+  const leagueIds = new Set();
+
+  for (const league of LEAGUE_CONTEXT_PATTERNS) {
+    if (league.patterns.some((pattern) => pattern.test(normalized))) {
+      leagueIds.add(league.id);
+    }
+  }
+
+  return leagueIds;
+}
+
+function buildEntityAliases(teams, players, contextTeamIds = new Set(), leagueContextIds = new Set()) {
   const aliasMap = new Map();
   const ambiguousKeys = new Set();
+  const inContextTeamAliases = teams
+    .filter((team) => isInternalLinkTeam(team) && leagueContextIds.has(Number(team.league_id)))
+    .flatMap((team) => collectTeamAliases(team))
+    .map((alias) => alias.toLowerCase());
+
+  function isShadowedOutOfContextTeamAlias(aliasRecord) {
+    if (aliasRecord.type !== 'team') return false;
+    if (!leagueContextIds || leagueContextIds.size === 0) return false;
+    if (leagueContextIds.has(Number(aliasRecord.entity?.league_id))) return false;
+    if (!isHangulText(aliasRecord.alias)) return false;
+
+    const alias = aliasRecord.alias.toLowerCase();
+    const compactAlias = alias.replace(/\s+/g, '');
+    return inContextTeamAliases.some((contextAlias) => {
+      const compactContextAlias = contextAlias.replace(/\s+/g, '');
+      return (
+        contextAlias.startsWith(`${alias} `) ||
+        compactContextAlias.startsWith(compactAlias) && compactContextAlias.length > compactAlias.length
+      );
+    });
+  }
 
   function addAlias(aliasRecord) {
+    if (isShadowedOutOfContextTeamAlias(aliasRecord)) return;
+
     const key = `${aliasRecord.type}:${aliasRecord.alias.toLowerCase()}`;
     if (ambiguousKeys.has(key)) return;
 
@@ -248,8 +321,30 @@ function buildEntityAliases(teams, players, contextTeamIds = new Set()) {
       return;
     }
 
+    if (!previous) {
+      aliasMap.set(key, aliasRecord);
+      return;
+    }
+
+    if (aliasRecord.type === 'team' && previous.type === 'team') {
+      const previousLeagueId = Number(previous.entity?.league_id);
+      const nextLeagueId = Number(aliasRecord.entity?.league_id);
+      const previousInLeagueContext = leagueContextIds.has(previousLeagueId);
+      const nextInLeagueContext = leagueContextIds.has(nextLeagueId);
+
+      if (previousInLeagueContext !== nextInLeagueContext) {
+        if (nextInLeagueContext) aliasMap.set(key, aliasRecord);
+        return;
+      }
+
+      if (previousLeagueId !== nextLeagueId && previousScore === nextScore) {
+        aliasMap.delete(key);
+        ambiguousKeys.add(key);
+        return;
+      }
+    }
+
     if (
-      !previous ||
       (nextInContext && !previousInContext) ||
       (nextInContext === previousInContext && nextScore > previousScore)
     ) {
@@ -258,12 +353,7 @@ function buildEntityAliases(teams, players, contextTeamIds = new Set()) {
   }
 
   for (const team of teams.filter(isInternalLinkTeam)) {
-    for (const alias of collectAliases([
-      team.name_ko,
-      team.display_name,
-      team.short_name,
-      team.name,
-    ], 'team')) {
+    for (const alias of collectTeamAliases(team)) {
       if (BLOCKED_STANDALONE_TEAM_ALIASES.has(alias.toLowerCase())) continue;
 
       addAlias({
@@ -299,8 +389,8 @@ function buildEntityAliases(teams, players, contextTeamIds = new Set()) {
   });
 }
 
-function buildTeamAliases(teams) {
-  return buildEntityAliases(teams.filter(isInternalLinkTeam), [], new Set());
+function buildTeamAliases(teams, leagueContextIds = new Set()) {
+  return buildEntityAliases(teams.filter(isInternalLinkTeam), [], new Set(), leagueContextIds);
 }
 
 function textNode(value, marks) {
@@ -615,15 +705,20 @@ function daysBetween(left, right) {
   return Math.abs(leftTime - rightTime) / 86400000;
 }
 
-function chooseLatestFixtureForTeam(fixtures, teamId, postDate) {
+function chooseLatestFixtureForTeam(fixtures, teamId, postDate, leagueContextIds = new Set()) {
   const postTime = new Date(postDate).getTime();
+  const contextLeagueIds = leagueContextIds instanceof Set ? leagueContextIds : new Set();
 
   return fixtures
     .filter((fixture) => {
       const home = Number(fixture.home_team_id);
       const away = Number(fixture.away_team_id);
       const leagueId = Number(fixture.league_id);
-      return (home === teamId || away === teamId) && BIG_MATCH_LEAGUE_IDS.has(leagueId);
+      const allowedLeague = contextLeagueIds.size > 0
+        ? contextLeagueIds.has(leagueId)
+        : BIG_MATCH_LEAGUE_IDS.has(leagueId);
+
+      return (home === teamId || away === teamId) && allowedLeague;
     })
     .filter((fixture) => daysBetween(fixture.match_date, postDate) <= MATCH_LOOKAROUND_DAYS)
     .sort((left, right) => {
@@ -1131,9 +1226,15 @@ function enrichContent(content, context) {
         const teamIds = getEligibleMatchTeamIds(sentenceEntityKeys, context);
 
         for (const teamId of teamIds) {
+          if (matchCards.length >= MAX_MATCH_CARDS_PER_POST) break;
           if (insertedMatchTeamIds.has(teamId)) continue;
 
-          const fixture = chooseLatestFixtureForTeam(context.fixtures, teamId, context.post.created_at);
+          const fixture = chooseLatestFixtureForTeam(
+            context.fixtures,
+            teamId,
+            context.post.created_at,
+            context.leagueContextIds
+          );
           if (!fixture) continue;
 
           const fixtureId = Number(fixture.fixture_id);
@@ -1244,8 +1345,7 @@ async function enrichRssPosts(supabase, args) {
   const teamMap = new Map(entities.teams.map((team) => [Number(team.team_id), team]));
   const clubTeamIds = new Set(entities.teams.filter(isInternalLinkTeam).map((team) => Number(team.team_id)));
   const playerMap = new Map(entities.players.map((player) => [Number(player.player_id), player]));
-  const teamAliases = buildTeamAliases(entities.teams);
-  console.log(`Loaded teams=${teamMap.size}, players=${playerMap.size}, teamAliases=${teamAliases.length}, posts=${posts.length}`);
+  console.log(`Loaded teams=${teamMap.size}, players=${playerMap.size}, posts=${posts.length}`);
 
   let changedCount = 0;
 
@@ -1263,6 +1363,8 @@ async function enrichRssPosts(supabase, args) {
       const dryLinkedKeys = new Set();
       const dryParagraphTeamIds = new Set();
       const text = contentText(originalContent);
+      const leagueContextIds = detectLeagueContext(`${post.title || ''} ${text}`);
+      const teamAliases = buildTeamAliases(entities.teams, leagueContextIds);
       for (const alias of teamAliases) {
         if (dryLinkedKeys.size >= MAX_ENTITY_LINKS_PER_POST) break;
         if (!text.toLowerCase().includes(alias.alias.toLowerCase())) continue;
@@ -1271,7 +1373,7 @@ async function enrichRssPosts(supabase, args) {
       }
 
       const mentionedTeamIds = [...dryParagraphTeamIds];
-      const aliases = buildEntityAliases(entities.teams, entities.players, new Set(mentionedTeamIds));
+      const aliases = buildEntityAliases(entities.teams, entities.players, new Set(mentionedTeamIds), leagueContextIds);
       const fixtures = await loadFixturesForTeams(supabase, mentionedTeamIds);
       const leagueMap = await loadLeagues(supabase, fixtures.map((fixture) => Number(fixture.league_id)));
 
@@ -1282,6 +1384,7 @@ async function enrichRssPosts(supabase, args) {
         fixtures,
         leagueMap,
         clubTeamIds,
+        leagueContextIds,
         post,
       });
 
@@ -1292,6 +1395,9 @@ async function enrichRssPosts(supabase, args) {
 
       changedCount += 1;
       console.log(`#${post.post_number} changed: links=${result.linked.length}, matchCards=${result.matchCards.length} ${post.title}`);
+      if (args.verbose && leagueContextIds.size > 0) {
+        console.log(`  leagueContext: ${[...leagueContextIds].join(', ')}`);
+      }
       if (args.verbose && result.linked.length > 0) {
         console.log(`  links: ${result.linked.join(', ')}`);
       }

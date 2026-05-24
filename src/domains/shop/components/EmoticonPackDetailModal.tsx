@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import {
@@ -12,35 +13,56 @@ import {
   DialogBody,
   DialogFooter,
 } from '@/shared/components/ui'
-import { useEmoticonInvalidation, useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries'
+import { useEmoticonInvalidation } from '@/domains/boards/hooks/useEmoticonQueries'
 import EmoticonPackDetailContent from '@/domains/boards/components/post/emoticon/EmoticonPackDetailContent'
 import type { EmoticonPackInfo } from '@/domains/boards/actions/emoticons'
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls'
+
+export interface EmoticonPurchaseCompletePayload {
+  shopItemId: number
+  packId: string
+  userPoints: number
+  userItems: number[]
+}
 
 interface EmoticonPackDetailModalProps {
   packId: string
   isOpen: boolean
   onClose: () => void
   userPoints: number
+  ownedItemIds: number[]
   userId?: string
-  onPurchaseComplete: (shopItemId: number) => void
+  onPurchaseComplete: (payload: EmoticonPurchaseCompletePayload) => void
 }
 
 export default function EmoticonPackDetailModal({
   packId,
   isOpen,
   onClose,
+  userPoints,
+  ownedItemIds,
   userId,
   onPurchaseComplete,
 }: EmoticonPackDetailModalProps) {
   const isDesktop = useMediaQuery('(min-width: 768px)')
-  const { data: shopData } = useEmoticonShopData()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { invalidateAfterPurchase } = useEmoticonInvalidation()
   const [purchasePack, setPurchasePack] = useState<EmoticonPackInfo | null>(null)
   const [isPurchasing, setIsPurchasing] = useState(false)
+  const [completedItemIds, setCompletedItemIds] = useState<number[]>([])
 
-  const userPoints = shopData?.userPoints ?? 0
-  const canAfford = (purchasePack?.price ?? 0) <= userPoints
+  const currentUserPoints = Math.max(userPoints, 0)
+  const effectiveOwnedItemIds = [...ownedItemIds, ...completedItemIds]
+  const canAfford = (purchasePack?.price ?? 0) <= currentUserPoints
+  const detailLoginHref = (() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('purchasePackId', packId)
+    const query = params.toString()
+    const returnPath = query ? `${pathname}?${query}` : pathname
+
+    return `/signin?redirect=${encodeURIComponent(returnPath)}&message=${encodeURIComponent('로그인이 필요한 기능입니다.')}`
+  })()
   const purchaseThumbnail = purchasePack
     ? normalizeDisplayImageUrl(purchasePack.pack_thumbnail, {
         fallback: SITE_ICON_URL,
@@ -53,10 +75,20 @@ export default function EmoticonPackDetailModal({
     try {
       setIsPurchasing(true)
       const { purchaseItem } = await import('@/domains/shop/actions/actions')
-      await purchaseItem(purchasePack.shop_item_id)
+      const result = await purchaseItem(purchasePack.shop_item_id)
       toast.success(`${purchasePack.pack_name} 팩을 구매했습니다!`)
+      setCompletedItemIds(prev => (
+        prev.includes(purchasePack.shop_item_id!)
+          ? prev
+          : [...prev, purchasePack.shop_item_id!]
+      ))
+      onPurchaseComplete({
+        shopItemId: purchasePack.shop_item_id,
+        packId: purchasePack.pack_id,
+        userPoints: result.userPoints,
+        userItems: result.userItems,
+      })
       invalidateAfterPurchase(purchasePack.pack_id)
-      onPurchaseComplete(purchasePack.shop_item_id)
       setPurchasePack(null)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '구매에 실패했습니다.')
@@ -66,7 +98,7 @@ export default function EmoticonPackDetailModal({
   }
 
   const handlePurchaseClick = (pack: EmoticonPackInfo) => {
-    if (!userId) { toast.error('로그인이 필요합니다.'); return; }
+    if (!userId) return
     setPurchasePack(pack)
   }
 
@@ -91,6 +123,8 @@ export default function EmoticonPackDetailModal({
             packId={isOpen ? packId : ''}
             isMobile={!isDesktop}
             onPurchaseClick={handlePurchaseClick}
+            ownedItemIds={effectiveOwnedItemIds}
+            guestPurchaseHref={userId ? undefined : detailLoginHref}
             className="flex-1 min-h-0"
           />
         </DialogContent>
@@ -129,7 +163,7 @@ export default function EmoticonPackDetailModal({
               <div className="bg-[#F5F5F5] dark:bg-[#262626] p-4 rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[13px] text-gray-700 dark:text-gray-300">보유 포인트</span>
-                  <span className="text-[13px] font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{userPoints.toLocaleString()} P</span>
+                  <span className="text-[13px] font-semibold tabular-nums text-gray-900 dark:text-[#F0F0F0]">{currentUserPoints.toLocaleString()} P</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[13px] text-gray-700 dark:text-gray-300">가격</span>
@@ -141,7 +175,7 @@ export default function EmoticonPackDetailModal({
                       {canAfford ? '남는 포인트' : '부족한 포인트'}
                     </span>
                     <span className={`text-base font-bold tabular-nums ${canAfford ? 'text-gray-900 dark:text-[#F0F0F0]' : 'text-red-600 dark:text-red-400'}`}>
-                      {Math.abs(userPoints - (purchasePack.price || 0)).toLocaleString()} P
+                      {Math.abs(currentUserPoints - (purchasePack.price || 0)).toLocaleString()} P
                     </span>
                   </div>
                 </div>
@@ -163,7 +197,7 @@ export default function EmoticonPackDetailModal({
                 type="button"
                 onClick={handlePurchaseConfirm}
                 disabled={!canAfford || isPurchasing}
-                className="flex-1 h-10 rounded-lg text-[13px] font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 h-10 rounded-lg text-[13px] font-medium bg-brand-primary dark:bg-brand-primary-dark text-white hover:bg-brand-hover dark:hover:bg-brand-hover-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPurchasing ? '처리 중...' : '구매하기'}
               </button>

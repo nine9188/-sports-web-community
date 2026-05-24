@@ -4,10 +4,12 @@ export { default as AllPostsWidget } from './AllPostsWidget';
 export { LiveScoreWidgetV2 } from './live-score-widget';
 export { BoardCollectionWidget } from './board-collection-widget';
 export { BoardQuickLinksWidget } from './board-quick-links-widget';
+export { HomeActionWidget, HomeLinkWidget } from './home-action-widget';
 
 // board-quick-links 관련 exports
 export * from './board-quick-links-widget';
 
 // 타입 exports
 export type { NewsItem, NewsWidgetProps } from './news-widget';
-export type { BoardCollectionData, BoardPost, BoardInfo } from './board-collection-widget'; 
+export type { BoardCollectionData, BoardPost, BoardInfo } from './board-collection-widget';
+export type { HomeLinkItem } from './home-action-widget';

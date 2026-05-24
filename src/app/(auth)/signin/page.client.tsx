@@ -10,11 +10,19 @@ import { signIn, resendConfirmationByUsername, signInWithKakao, signInWithGoogle
 import { Button } from '@/shared/components/ui';
 import BrandingPanel from '../components/BrandingPanel';
 
+function normalizeRedirect(value: string | null | undefined): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return '/';
+  }
+
+  return value;
+}
+
 // SearchParams를 사용하는 로그인 컴포넌트
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('redirect_url') || '/';
+  const redirectUrl = normalizeRedirect(searchParams?.get('redirect') || searchParams?.get('redirect_url'));
   const message = searchParams?.get('message');
   
   const [username, setUsername] = useState('');
@@ -63,10 +71,9 @@ function LoginContent() {
   // 로그인 상태 감지 및 리디렉션
   useEffect(() => {
     if (user && !loading) {
-      const redirectUrl = searchParams?.get('redirect') || '/';
       router.replace(redirectUrl);
     }
-  }, [user, loading, router, searchParams]);
+  }, [user, loading, redirectUrl, router]);
   
   // 아이디 유효성 검사
   const validateUsername = (value: string) => {
@@ -113,7 +120,8 @@ function LoginContent() {
     const nameMap = { kakao: '카카오', google: '구글', discord: '디스코드' };
     try {
       setLoading(true);
-      const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
       const result = await providerMap[provider](redirectTo);
       if (result.error) {
         toast.error(result.error);
@@ -135,7 +143,7 @@ function LoginContent() {
     if (loading) return;
     try {
       setLoading(true);
-      const result = await signInWithNaver();
+      const result = await signInWithNaver(redirectUrl);
       if (result.error) {
         toast.error(result.error);
         return;
@@ -484,4 +492,4 @@ export default function SignInPage() {
       </div>
     </div>
   );
-} 
+}

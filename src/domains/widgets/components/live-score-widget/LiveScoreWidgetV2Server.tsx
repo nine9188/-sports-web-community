@@ -82,6 +82,7 @@ function groupMatchesByLeague(
 
 const BIG_MATCH_LEAGUES = [
   39,
+  1,
   140,
   78,
   135,
@@ -93,23 +94,22 @@ const BIG_MATCH_LEAGUES = [
   45,
   292,
   293,
-  10,
 ];
 
 const LEAGUE_PRIORITY: Record<number, number> = {
   39: 1,
-  2: 2,
-  3: 3,
-  140: 4,
-  78: 4,
-  135: 4,
-  61: 4,
-  45: 5,
-  848: 6,
-  531: 7,
-  292: 8,
-  293: 8.5,
-  10: 9,
+  1: 2,
+  2: 3,
+  3: 4,
+  140: 5,
+  78: 5,
+  135: 5,
+  61: 5,
+  45: 6,
+  848: 7,
+  531: 8,
+  292: 9,
+  293: 9.5,
 };
 
 const FINAL_STATUS_CODES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'ABD']);
@@ -147,10 +147,10 @@ export default async function LiveScoreWidgetV2Server({ leagues }: LiveScoreWidg
         <WidgetHeader />
         <div className="py-4 px-4 text-center">
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-2">
-            최근 빅매치가 없습니다
+            오늘의 빅매치가 없습니다
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            프리미어리그 · 라리가 · 분데스리가 · 세리에A · 리그앙 · UEFA 대항전 · FA컵 · K리그1/2 · 국가대표 경기
+            프리미어리그 · 월드컵 · 라리가 · 분데스리가 · 세리에A · 리그앙 · UEFA 대항전 · FA컵 · K리그1/2
           </p>
         </div>
       </Container>

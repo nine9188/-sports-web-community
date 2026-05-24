@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Image from 'next/image'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import ItemCard from './ItemCard'
 import PurchaseModal from './PurchaseModal'
 import { ShopItem } from '../types'
@@ -25,6 +27,9 @@ export default function ItemGrid({
   viewMode = 'grid',
   isLoading = false
 }: ItemGridProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const {
     userItems,
     points,
@@ -39,8 +44,30 @@ export default function ItemGrid({
     userId
   })
 
+  useEffect(() => {
+    if (!userId) return
+
+    const purchaseItemId = searchParams.get('purchaseItemId')
+    if (!purchaseItemId) return
+
+    const itemId = Number(purchaseItemId)
+    const item = Number.isFinite(itemId)
+      ? items.find(candidate => candidate.id === itemId)
+      : undefined
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('purchaseItemId')
+    const query = params.toString()
+    const href = query ? `${pathname}?${query}` : pathname
+
+    if (item && !userItems.includes(item.id) && !item.is_default) {
+      handleSelectItem(item)
+    }
+
+    router.replace(href, { scroll: false })
+  }, [handleSelectItem, items, pathname, router, searchParams, userId, userItems])
+
   const renderGrid = () => (
-    <div className={viewMode === 'compact' ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4'}>
+    <div className={viewMode === 'compact' ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4'}>
       {items.map(item => (
         <ItemCard
           key={item.id}

@@ -201,7 +201,14 @@ export async function getUserItems(userId: string | undefined): Promise<number[]
 /**
  * 아이템 구매
  */
-export async function purchaseItem(itemId: number) {
+export interface PurchaseItemResult {
+  success: true
+  itemId: number
+  userPoints: number
+  userItems: number[]
+}
+
+export async function purchaseItem(itemId: number): Promise<PurchaseItemResult> {
   try {
     const supabase = await getSupabaseServer()
     
@@ -223,6 +230,27 @@ export async function purchaseItem(itemId: number) {
     })
     
     if (error) throw new Error(error.message || '아이템 구매에 실패했습니다')
+    if (data !== true) throw new Error('아이템 구매에 실패했습니다')
+
+    const [profileResult, userItemsResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('points')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('user_items')
+        .select('item_id')
+        .eq('user_id', user.id),
+    ])
+
+    if (profileResult.error) {
+      throw new Error('구매 후 포인트 정보를 확인하지 못했습니다')
+    }
+
+    if (userItemsResult.error) {
+      throw new Error('구매 후 보유 아이템 정보를 확인하지 못했습니다')
+    }
     
     // 캐시 갱신
     revalidatePath('/shop')
@@ -238,7 +266,12 @@ export async function purchaseItem(itemId: number) {
       }
     );
     
-    return data
+    return {
+      success: true,
+      itemId,
+      userPoints: profileResult.data?.points || 0,
+      userItems: userItemsResult.data?.map(item => item.item_id) || [],
+    }
   } catch (error) {
     // 기존 오류 그대로 전달
     throw error

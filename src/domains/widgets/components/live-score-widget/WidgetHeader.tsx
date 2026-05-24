@@ -5,7 +5,7 @@ import { ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 export default function WidgetHeader() {
   return (
     <ContainerHeader className="justify-between">
-      <ContainerTitle>빅매치</ContainerTitle>
+      <ContainerTitle>오늘의 빅매치</ContainerTitle>
       <Link
         href="/livescore/football"
         prefetch={false}

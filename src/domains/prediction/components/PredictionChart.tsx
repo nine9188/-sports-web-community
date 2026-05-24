@@ -256,14 +256,14 @@ function underOverLine(team: TeamData, line: string) {
   return (
     <div className="inline-block space-y-0.5 text-left leading-5">
       <div>
-        득점 Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
+        득점Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-        득점 Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
+        득점Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
       </div>
       <div>
-        실점 Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
+        실점Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-        실점 Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
+        실점Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
       </div>
     </div>
   );
@@ -276,14 +276,14 @@ function mobileUnderOverLine(team: TeamData, line: string) {
   return (
     <div className="inline-block space-y-0.5 text-left leading-4">
       <div>
-        득점 Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
+        득점Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
-        득점 Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
+        득점Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
       </div>
       <div>
-        실점 Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
+        실점Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
-        실점 Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
+        실점Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
       </div>
     </div>
   );
@@ -329,14 +329,16 @@ function CompareRow({
   mobileLayout?: 'two-column' | 'stack' | 'center-label';
   showMobileLabel?: boolean;
   showMobileSideLabels?: boolean;
-  mobileCenterLabelWidth?: 'normal' | 'wide';
+  mobileCenterLabelWidth?: 'narrow' | 'normal' | 'wide';
   mobileDensity?: 'normal' | 'compact';
 }) {
   const mobileHomeContent = mobileHome ?? home;
   const mobileAwayContent = mobileAway ?? away;
   const centerLabelGridClass = mobileCenterLabelWidth === 'wide'
     ? 'grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)]'
-    : 'grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)]';
+    : mobileCenterLabelWidth === 'narrow'
+      ? 'grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)]'
+    : 'grid-cols-[minmax(0,1fr)_48px_minmax(0,1fr)]';
   const mobileRowPaddingClass = mobileDensity === 'compact' ? 'px-3 py-1.5' : 'px-3 py-2.5';
 
   return (
@@ -346,7 +348,7 @@ function CompareRow({
           <div className="mb-2 text-[12px] font-semibold leading-none text-gray-500 dark:text-gray-400">{label}</div>
         )}
         {mobileLayout === 'center-label' ? (
-          <div className={`grid ${centerLabelGridClass} items-center gap-2`}>
+          <div className={`grid ${centerLabelGridClass} items-center gap-1.5`}>
             <div className={`min-w-0 break-words text-right leading-5 text-gray-900 dark:text-[#F0F0F0] ${homeClassName}`}>{mobileHomeContent}</div>
             <div className="text-center text-[11px] font-semibold leading-5 text-gray-500 dark:text-gray-400">{label}</div>
             <div className={`min-w-0 break-words text-left leading-5 text-gray-900 dark:text-[#F0F0F0] ${awayClassName}`}>{mobileAwayContent}</div>
@@ -554,7 +556,7 @@ function PredictionTeamComparison({
           {(home.league?.goals?.for?.under_over || home.league?.goals?.against?.under_over || away.league?.goals?.for?.under_over || away.league?.goals?.against?.under_over) && (
             <CompareSection title="언더/오버">
               {underOverLines.map((line) => (
-                <CompareRow key={line} label={line} home={underOverLine(home, line)} away={underOverLine(away, line)} mobileHome={mobileUnderOverLine(home, line)} mobileAway={mobileUnderOverLine(away, line)} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" mobileLayout="center-label" />
+                <CompareRow key={line} label={line} home={underOverLine(home, line)} away={underOverLine(away, line)} mobileHome={mobileUnderOverLine(home, line)} mobileAway={mobileUnderOverLine(away, line)} homeClassName="text-[11px] tabular-nums" awayClassName="text-[11px] tabular-nums" mobileLayout="center-label" mobileCenterLabelWidth="narrow" />
               ))}
             </CompareSection>
           )}

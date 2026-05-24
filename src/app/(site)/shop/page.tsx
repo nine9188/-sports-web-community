@@ -33,6 +33,23 @@ function parsePage(value: string | string[] | undefined): number {
   return Number.isFinite(parsed) ? Math.max(1, parsed) : 1;
 }
 
+function buildShopReturnPath(searchParams: ShopSearchParams): string {
+  const params = new URLSearchParams();
+  const cat = readQueryValue(searchParams.cat);
+  const page = readQueryValue(searchParams.page);
+
+  if (cat && cat !== "all") params.set("cat", cat);
+  if (page) params.set("page", page);
+
+  const query = params.toString();
+  return query ? `/shop?${query}` : "/shop";
+}
+
+function buildShopLoginHref(searchParams: ShopSearchParams): string {
+  const redirect = buildShopReturnPath(searchParams);
+  return `/signin?redirect=${encodeURIComponent(redirect)}&message=${encodeURIComponent("로그인이 필요한 기능입니다.")}`;
+}
+
 function normalizeCategoryParam(
   value: string | string[] | undefined,
   categories: ShopCategoryRow[],
@@ -82,7 +99,12 @@ function collectCategoryIds(
 
 export async function generateMetadata({ searchParams }: Props) {
   const sp = await (searchParams ?? Promise.resolve({} as ShopSearchParams));
-  const hasStateQuery = Boolean(readQueryValue(sp.cat) || readQueryValue(sp.page));
+  const hasStateQuery = Boolean(
+    readQueryValue(sp.cat) ||
+    readQueryValue(sp.page) ||
+    readQueryValue(sp.purchaseItemId) ||
+    readQueryValue(sp.purchasePackId)
+  );
 
   return buildMetadata({
     title: "상점 - 포인트 아이템",
@@ -135,6 +157,7 @@ export default async function ShopPage({ searchParams }: Props) {
     error,
   } = await supabase.auth.getUser();
   const sp = await (searchParams ?? Promise.resolve({} as ShopSearchParams));
+  const loginHref = buildShopLoginHref(sp);
   const activeCategory = normalizeCategoryParam(sp.cat, activeCategories);
   const page = parsePage(sp.page);
   const isEmoticonTab = emoticonCategoryId != null && activeCategory === String(emoticonCategoryId);
@@ -209,8 +232,8 @@ export default async function ShopPage({ searchParams }: Props) {
                 아이템을 구매하고 사용하려면 로그인이 필요합니다.
               </p>
               <a
-                href="/signin"
-                className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-md hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors text-[13px] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                href={loginHref}
+                className="mt-2 inline-block px-3 py-2 sm:px-4 sm:py-2 bg-brand-primary dark:bg-brand-primary-dark text-white rounded-md hover:bg-brand-hover dark:hover:bg-brand-hover-dark transition-colors text-[13px] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 로그인하기
               </a>

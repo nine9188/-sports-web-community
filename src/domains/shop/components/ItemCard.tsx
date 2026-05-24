@@ -80,29 +80,9 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
   // 테두리 색상 클래스 (티어 구분 없이 통일)
   const borderClass = 'border-black/7 dark:border-0'
 
-  const handleActivate = () => {
-    if (isDisabled) return
-    startTransition(() => onPurchase())
-  }
-
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (isDisabled) return
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      startTransition(() => onPurchase())
-    }
-  }
-
   return (
     <div
-      tabIndex={isDisabled ? -1 : 0}
-      role="button"
-      aria-disabled={isDisabled}
-      onClick={handleActivate}
-      onKeyDown={handleKeyDown}
-      className={`group border ${borderClass} rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-all flex flex-col outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-        isDisabled ? 'cursor-default' : 'cursor-pointer hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'
-      }`}
+      className={`border ${borderClass} rounded-md overflow-hidden bg-white dark:bg-[#1D1D1D] shadow-sm transition-colors flex flex-col`}
     >
       {/* 이미지 영역: 20x20 고정 */}
       <div className="p-3 flex justify-center bg-[#F5F5F5] dark:bg-[#262626]">
@@ -147,7 +127,7 @@ export default function ItemCard({ item, isOwned, onPurchase, teamLogoUrl }: Ite
             </span>
           ) : (
             <Button
-              onClick={(e) => { e.stopPropagation(); startTransition(() => onPurchase()) }}
+              onClick={() => startTransition(() => onPurchase())}
               variant="secondary"
               className={`h-8 px-2 text-[12px] font-medium whitespace-nowrap ${
                 isPending

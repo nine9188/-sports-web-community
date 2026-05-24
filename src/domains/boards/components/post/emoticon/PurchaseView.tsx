@@ -14,7 +14,7 @@ interface PurchaseViewProps {
   pack: EmoticonPackInfo;
   isMobile: boolean;
   onBack: () => void;
-  onComplete: () => void;
+  onComplete: (payload: { shopItemId: number; packId: string; userPoints: number; userItems: number[] }) => void;
 }
 
 export default function PurchaseView({ pack, isMobile, onBack, onComplete }: PurchaseViewProps) {
@@ -35,10 +35,15 @@ export default function PurchaseView({ pack, isMobile, onBack, onComplete }: Pur
 
     startTransition(async () => {
       try {
-        await purchaseItem(pack.shop_item_id!);
+        const result = await purchaseItem(pack.shop_item_id!);
         toast.success(`${pack.pack_name} 팩을 구매했습니다!`);
         invalidateAfterPurchase(pack.pack_id);
-        onComplete();
+        onComplete({
+          shopItemId: pack.shop_item_id!,
+          packId: pack.pack_id,
+          userPoints: result.userPoints,
+          userItems: result.userItems,
+        });
       } catch (error) {
         toast.error(error instanceof Error ? error.message : '구매에 실패했습니다.');
       }

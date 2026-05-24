@@ -1,10 +1,11 @@
 import React from 'react';
-import { AllPostsWidget, BoardCollectionWidget, BoardQuickLinksWidget, NewsWidget } from '@/domains/widgets/components';
+import { AllPostsWidget, BoardCollectionWidget, HomeActionWidget, HomeLinkWidget, NewsWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
 import { fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
+import { getCurrentUser } from '@/domains/auth/actions';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
@@ -93,12 +94,19 @@ const homeJsonLd = {
   },
 };
 
+const HOME_SECONDARY_LINKS = [
+  { key: 'soccer', label: '해외축구 게시판', href: '/boards/soccer', ariaLabel: '해외축구 게시판' },
+  { key: 'notice', label: '공지사항', href: '/boards/notice', ariaLabel: '공지사항 보기' },
+  { key: 'data-center', label: '팀·리그 찾기', href: '/livescore/football/leagues', ariaLabel: '팀·리그 찾기' },
+];
+
 export default async function HomePage() {
-  const [liveScoreData, boardCollectionData, latestPosts, news] = await Promise.all([
+  const [liveScoreData, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
     fetchTodayMatches().then(transformToWidgetLeagues),
     fetchBoardCollectionData(),
     fetchAllPostsWidgetData(),
     fetchNewsData(),
+    getCurrentUser(),
   ]);
 
   return (
@@ -112,12 +120,11 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
       <main className="bg-transparent space-y-4 overflow-visible">
-        <div className="bg-transparent overflow-visible">
-          <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>
-          <BoardQuickLinksWidget />
-        </div>
+        <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+        <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>
         <AdBanner />
         <LiveScoreWidgetV2 leagues={liveScoreData} />
+        <HomeLinkWidget items={HOME_SECONDARY_LINKS} ariaLabel="홈 보조 이동" />
         <BoardCollectionWidget data={boardCollectionData} />
         <AllPostsWidget posts={latestPosts} />
         <div className="hidden md:flex justify-center">

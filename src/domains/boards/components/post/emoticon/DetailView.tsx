@@ -10,9 +10,10 @@ interface DetailViewProps {
   isMobile: boolean;
   onBack: () => void;
   onPurchase: (pack: EmoticonPackInfo) => void;
+  ownedItemIds?: number[];
 }
 
-export default function DetailView({ packId, isMobile, onBack, onPurchase }: DetailViewProps) {
+export default function DetailView({ packId, isMobile, onBack, onPurchase, ownedItemIds }: DetailViewProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* 툴바 */}
@@ -32,6 +33,7 @@ export default function DetailView({ packId, isMobile, onBack, onPurchase }: Det
         packId={packId}
         isMobile={isMobile}
         onPurchaseClick={onPurchase}
+        ownedItemIds={ownedItemIds}
       />
     </div>
   );

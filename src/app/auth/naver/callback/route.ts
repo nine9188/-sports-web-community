@@ -5,6 +5,23 @@ import type { SetAllCookies } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/shared/lib/supabase/server'
 
+function readNextFromState(state: string | null): string {
+  if (!state) return '/'
+
+  try {
+    const decoded = JSON.parse(Buffer.from(state, 'base64url').toString('utf8')) as {
+      next?: unknown
+    }
+    return typeof decoded.next === 'string' &&
+      decoded.next.startsWith('/') &&
+      !decoded.next.startsWith('//')
+      ? decoded.next
+      : '/'
+  } catch {
+    return '/'
+  }
+}
+
 /**
  * 네이버 OAuth 콜백 처리
  * 1. 인증 코드로 액세스 토큰 교환
@@ -18,6 +35,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')
   const error = searchParams.get('error')
   const origin = process.env.NEXT_PUBLIC_SITE_URL
+  const next = readNextFromState(state)
 
   if (error || !code) {
     return NextResponse.redirect(`${origin}/signin?message=네이버+로그인이+취소되었습니다`)
@@ -167,7 +185,7 @@ export async function GET(request: NextRequest) {
       .single()
 
     const needsSignup = !profile || !profile.nickname || profile.nickname.trim() === ''
-    const redirectUrl = needsSignup ? `${origin}/social-signup` : `${origin}/`
+    const redirectUrl = needsSignup ? `${origin}/social-signup` : `${origin}${next}`
 
     // 6. Supabase SSR 클라이언트를 통해 세션 쿠키 설정
     const response = NextResponse.redirect(redirectUrl)

@@ -39,6 +39,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
   const [viewMode, setViewMode] = useState<ViewMode>('picker');
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [purchasePack, setPurchasePack] = useState<EmoticonPackInfo | null>(null);
+  const [purchasedItemIds, setPurchasedItemIds] = useState<number[]>([]);
   const [activePackageId, setActivePackageId] = useState<string>('');
   const [page, setPage] = useState(1);
 
@@ -46,7 +47,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   // React Query로 피커 데이터 로드 (캐시됨)
-  const { data: pickerData, isLoading: pickerLoading, isError } = usePickerData();
+  const { data: pickerData, isLoading: pickerLoading, isError, refetch: refetchPickerData } = usePickerData();
 
   // 데이터 소스: DB 성공 시 pickerData, 실패 시 fallback
   const packages = useMemo(() => {
@@ -90,7 +91,12 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
   const goToPicker = () => { setViewMode('picker'); setSelectedPackId(null); setPurchasePack(null); };
   const goToDetail = (packId: string) => { setSelectedPackId(packId); setViewMode('detail'); };
   const goToPurchase = (pack: EmoticonPackInfo) => { setPurchasePack(pack); setViewMode('purchase'); };
-  const onPurchaseComplete = () => { setViewMode('detail'); setPurchasePack(null); };
+  const onPurchaseComplete = ({ shopItemId, userItems }: { shopItemId: number; packId: string; userPoints: number; userItems: number[] }) => {
+    setPurchasedItemIds(userItems.includes(shopItemId) ? userItems : [...userItems, shopItemId]);
+    refetchPickerData();
+    setViewMode('detail');
+    setPurchasePack(null);
+  };
   const onSettingsSave = () => { setViewMode('picker'); };
 
   const headerTitle = (() => {
@@ -109,7 +115,13 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
         return <ShopView isMobile={!isDesktop} onBack={goToPicker} onPackClick={goToDetail} />;
       case 'detail':
         return selectedPackId ? (
-          <DetailView packId={selectedPackId} isMobile={!isDesktop} onBack={() => setViewMode('shop')} onPurchase={goToPurchase} />
+          <DetailView
+            packId={selectedPackId}
+            isMobile={!isDesktop}
+            onBack={() => setViewMode('shop')}
+            onPurchase={goToPurchase}
+            ownedItemIds={purchasedItemIds}
+          />
         ) : null;
       case 'purchase':
         return purchasePack ? (

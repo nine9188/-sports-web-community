@@ -2,12 +2,13 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { Button, Container, ContainerContent, Pagination } from '@/shared/components/ui'
 import { type EmoticonPackInfo, type EmoticonShopData } from '@/domains/boards/actions/emoticons'
 import { useEmoticonShopData } from '@/domains/boards/hooks/useEmoticonQueries'
 import EmoticonPackCard from './EmoticonPackCard'
-import EmoticonPackDetailModal from './EmoticonPackDetailModal'
+import EmoticonPackDetailModal, { type EmoticonPurchaseCompletePayload } from './EmoticonPackDetailModal'
 
 const PAGE_SIZE = 15
 
@@ -24,13 +25,18 @@ interface EmoticonShopSectionProps {
   userItems: number[]
   userPoints: number
   initialData?: EmoticonShopData
+  loginNotice?: React.ReactNode
 }
 
 export default function EmoticonShopSection({
   userId,
   initialData,
+  loginNotice,
 }: EmoticonShopSectionProps) {
-  const { data: shopData, isLoading } = useEmoticonShopData({
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { data: shopData, isLoading, mutate, refetch } = useEmoticonShopData({
     enabled: !initialData,
     initialData,
   })
@@ -49,8 +55,13 @@ export default function EmoticonShopSection({
     return ownedItemIds.includes(pack.shop_item_id)
   }
 
+  const shouldHideOwnedPack = (pack: EmoticonPackInfo) => {
+    if (!userId) return false
+    return Boolean(pack.shop_item_id && ownedItemIds.includes(pack.shop_item_id))
+  }
+
   const filteredPacks = useMemo(() => {
-    let result = packs
+    let result = packs.filter(pack => !shouldHideOwnedPack(pack))
     // 검색
     if (query.trim()) {
       const q = query.trim().toLowerCase()
@@ -62,7 +73,7 @@ export default function EmoticonShopSection({
       case 'paid': return result.filter(p => p.shop_item_id && (p.price ?? 0) > 0)
       default: return result
     }
-  }, [packs, subFilter, query])
+  }, [packs, subFilter, query, ownedItemIds, userId])
 
   const totalPages = Math.ceil(filteredPacks.length / PAGE_SIZE)
   const paginatedPacks = useMemo(() => {
@@ -73,6 +84,33 @@ export default function EmoticonShopSection({
   useEffect(() => {
     setCurrentPage(1)
   }, [subFilter, query])
+
+  useEffect(() => {
+    if (!userId) return
+
+    const purchasePackId = searchParams.get('purchasePackId')
+    if (!purchasePackId) return
+
+    setSelectedPackId(purchasePackId)
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('purchasePackId')
+    const nextQuery = params.toString()
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false })
+  }, [pathname, router, searchParams, userId])
+
+  const handlePurchaseComplete = ({ shopItemId, userPoints, userItems }: EmoticonPurchaseCompletePayload) => {
+    mutate(current => {
+      if (!current) return current
+
+      return {
+        ...current,
+        ownedItemIds: userItems.includes(shopItemId) ? userItems : [...userItems, shopItemId],
+        userPoints,
+      }
+    })
+    refetch()
+  }
 
   if (isLoading) {
     return <div className="py-16" />
@@ -133,6 +171,12 @@ export default function EmoticonShopSection({
         </ContainerContent>
       </Container>
 
+      {loginNotice && (
+        <div>
+          {loginNotice}
+        </div>
+      )}
+
       {/* 검색 결과 안내 */}
       {query.trim() && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -175,8 +219,9 @@ export default function EmoticonShopSection({
           isOpen={!!selectedPackId}
           onClose={() => setSelectedPackId(null)}
           userPoints={userPoints}
+          ownedItemIds={ownedItemIds}
           userId={userId}
-          onPurchaseComplete={() => {}}
+          onPurchaseComplete={handlePurchaseComplete}
         />
       )}
     </div>

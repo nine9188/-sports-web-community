@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import Image from 'next/image';
 import { type EmoticonPackInfo } from '@/domains/boards/actions/emoticons';
 import { usePackDetail } from '@/domains/boards/hooks/useEmoticonQueries';
@@ -11,6 +11,8 @@ interface EmoticonPackDetailContentProps {
   packId: string;
   isMobile: boolean;
   onPurchaseClick: (pack: EmoticonPackInfo) => void;
+  ownedItemIds?: number[];
+  guestPurchaseHref?: string;
   className?: string;
 }
 
@@ -18,12 +20,26 @@ export default function EmoticonPackDetailContent({
   packId,
   isMobile,
   onPurchaseClick,
+  ownedItemIds,
+  guestPurchaseHref,
   className,
 }: EmoticonPackDetailContentProps) {
   const { data: detail } = usePackDetail(packId);
+  const isOwned = Boolean(
+    detail?.isOwned || (
+      detail?.shop_item_id && ownedItemIds?.includes(detail.shop_item_id)
+    )
+  );
   const thumbnail = detail
     ? normalizeDisplayImageUrl(detail.pack_thumbnail, { fallback: SITE_ICON_URL, proxyExternal: true })
     : SITE_ICON_URL;
+  const isGuestPurchase = Boolean(guestPurchaseHref);
+  const previewEmoticons = detail
+    ? isGuestPurchase
+      ? detail.emoticons.slice(0, 6)
+      : detail.emoticons
+    : [];
+  const guestLoginHref = guestPurchaseHref ?? '/signin';
 
   const handlePurchaseClick = () => {
     if (!detail) return;
@@ -104,7 +120,7 @@ export default function EmoticonPackDetailContent({
           <>
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">이모티콘 미리보기</p>
             <div className={`grid ${isMobile ? 'grid-cols-4 gap-2' : 'grid-cols-6 gap-2'}`}>
-              {detail.emoticons.map((emo) => (
+              {previewEmoticons.map((emo) => (
                 <div
                   key={emo.id}
                   className="aspect-square flex items-center justify-center p-1 rounded"
@@ -114,6 +130,14 @@ export default function EmoticonPackDetailContent({
                 </div>
               ))}
             </div>
+            {isGuestPurchase && (
+              <div className="mt-4 rounded-lg border border-black/7 dark:border-white/10 bg-[#F5F5F5] dark:bg-[#262626] px-4 py-4 text-center">
+                <Lock className="mx-auto mb-2 h-6 w-6 text-gray-500 dark:text-gray-400" />
+                <p className="text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">회원을 위한 구매 화면입니다</p>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">로그인, 회원가입 후 이용해주세요</p>
+                <p className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">로그인하면 전체 이모티콘 미리보기를 확인할 수 있습니다.</p>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -130,13 +154,20 @@ export default function EmoticonPackDetailContent({
             </button>
           </div>
           <div className="flex-shrink-0">
-            {detail.isOwned ? (
+            {isOwned ? (
               <span className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                 <Check className="w-4 h-4" />보유중
               </span>
+            ) : isGuestPurchase ? (
+              <a
+                href={guestLoginHref}
+                className="inline-flex items-center justify-center px-4 h-9 rounded-lg text-[13px] font-medium bg-brand-primary dark:bg-brand-primary-dark text-white hover:bg-brand-hover dark:hover:bg-brand-hover-dark transition-colors"
+              >
+                로그인하기
+              </a>
             ) : (
               <button type="button" onClick={handlePurchaseClick}
-                className="px-4 h-9 rounded-lg text-[13px] font-medium bg-[#262626] dark:bg-[#3F3F3F] text-white hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] transition-colors">
+                className="px-4 h-9 rounded-lg text-[13px] font-medium bg-brand-primary dark:bg-brand-primary-dark text-white hover:bg-brand-hover dark:hover:bg-brand-hover-dark transition-colors">
                 {detail.isFree ? '무료 받기' : '구매하기'}
               </button>
             )}

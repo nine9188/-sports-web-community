@@ -14,6 +14,7 @@ export type QuickLinkItem = {
 
 export type BoardQuickLinksWidgetProps = {
   items?: QuickLinkItem[];
+  columns?: 3 | 4 | 5 | 6;
   className?: string;
 };
 
@@ -30,12 +31,20 @@ function classNames(...classes: Array<string | undefined | false>) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, className }: BoardQuickLinksWidgetProps) {
+const GRID_COLUMNS: Record<NonNullable<BoardQuickLinksWidgetProps['columns']>, string> = {
+  3: 'grid-cols-3',
+  4: 'grid-cols-4',
+  5: 'grid-cols-5',
+  6: 'grid-cols-6',
+};
+
+export default function BoardQuickLinksWidget({ items = DEFAULT_ITEMS, columns = 6, className }: BoardQuickLinksWidgetProps) {
   return (
     <nav
       className={classNames(
-        // 모바일/데스크탑 공통: 6칸 그리드
-        'w-full grid grid-cols-6 gap-2 md:gap-3',
+        // 모바일/데스크탑 공통 그리드
+        'w-full grid gap-2 md:gap-3',
+        GRID_COLUMNS[columns],
         // 모바일만: 전체 컨테이너 (사각형, 공통 UI Container 스타일)
         'max-md:bg-white max-md:dark:bg-[#1D1D1D] max-md:border max-md:border-black/7 max-md:dark:border-0 max-md:p-3',
         // 데스크탑: 투명 (기본값)

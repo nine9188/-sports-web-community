@@ -8,6 +8,7 @@
  */
 
 import Image from 'next/image'
+import { usePathname, useSearchParams } from 'next/navigation'
 import UnifiedSportsImageClient from '@/shared/components/UnifiedSportsImageClient'
 import { ShopItem } from '../types'
 import {
@@ -47,6 +48,8 @@ export default function PurchaseModal({
   onConfirm,
   itemImageUrl,
 }: PurchaseModalProps) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   // 4590 표준: itemImageUrl이 있으면 사용, 없으면 item.image_url 사용
   const displayImageUrl = normalizeDisplayImageUrl(itemImageUrl || item.image_url, {
     fallback: ITEM_PLACEHOLDER,
@@ -56,6 +59,12 @@ export default function PurchaseModal({
   const isStorageOrTeamImage = displayImageUrl.includes('supabase') || displayImageUrl.includes('/teams/');
   const remainingPoints = Math.max(userPoints - item.price, 0)
   const lackingPoints = Math.max(item.price - userPoints, 0)
+  const returnParams = new URLSearchParams(searchParams.toString())
+  returnParams.set('purchaseItemId', String(item.id))
+  const returnQuery = returnParams.toString()
+  const returnPath = returnQuery ? `${pathname}?${returnQuery}` : pathname
+  const loginHref = `/signin?redirect=${encodeURIComponent(returnPath)}&message=${encodeURIComponent('로그인이 필요한 기능입니다.')}`
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent variant="bottomSheet" className="grid grid-rows-[auto,1fr,auto] min-h-[50vh] md:min-h-fit md:h-auto">
@@ -169,8 +178,8 @@ export default function PurchaseModal({
             </Button>
           ) : (
             <a
-              href="/signin"
-              className="w-full h-12 px-3 text-base bg-[#262626] dark:bg-[#3F3F3F] text-white rounded-lg hover:bg-[#3F3F3F] dark:hover:bg-[#4A4A4A] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98] transition text-center inline-flex items-center justify-center"
+              href={loginHref}
+              className="w-full h-12 px-3 text-base bg-brand-primary dark:bg-brand-primary-dark text-white rounded-lg hover:bg-brand-hover dark:hover:bg-brand-hover-dark outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:scale-[0.98] transition text-center inline-flex items-center justify-center"
               aria-label="로그인하기"
             >
               로그인하기

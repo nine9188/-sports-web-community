@@ -337,7 +337,7 @@ export default function CategoryFilter({
       )}
 
       {/* 로그인 안내 */}
-      {loginNotice && (
+      {loginNotice && activeTab !== 'emoticons' && (
         <div className="mb-3">
           {loginNotice}
         </div>
@@ -351,6 +351,7 @@ export default function CategoryFilter({
             userItems={userItems}
             userPoints={userPoints}
             initialData={initialEmoticonData}
+            loginNotice={loginNotice}
           />
         ) : (
           <>
