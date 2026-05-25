@@ -63,9 +63,9 @@ export async function generateMetadata({
   }
 
   const team = teamData.team;
-  const teamName = team.name;
   const mappedTeam = await getTeamById(Number(id));
   const league = mappedTeam?.league_id ? await getLeagueById(mappedTeam.league_id) : null;
+  const teamName = mappedTeam?.name_ko || team.name;
   const leagueName = league?.name_ko || league?.name || '';
   const countryName = mappedTeam?.country_ko || mappedTeam?.country_en || team.country || '';
   const canonicalSlug = await resolveTeamCanonicalSlug(id);
@@ -84,13 +84,39 @@ export async function generateMetadata({
   });
 
   return buildMetadata({
-    title: `${teamName} - 순위·선수단·일정`,
+    title: `${teamName} 순위·선수단·경기 일정·경기 결과·통계·이적${leagueName ? ` - ${leagueName}` : ''}`,
     description,
     path: `/livescore/football/team/${id}/${teamSlug}`,
     image: ogImage,
     imageWidth: 1200,
     imageHeight: 630,
-    keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, ...(leagueName ? [`${leagueName} ${teamName}`] : []), '4590', '4590football'],
+    keywords: [
+      `${teamName} 순위`,
+      `${teamName} 선수단`,
+      `${teamName} 일정`,
+      `${teamName} 경기 일정`,
+      `${teamName} 경기결과`,
+      `${teamName} 경기 결과`,
+      `${teamName} 통계`,
+      `${teamName} 시즌 통계`,
+      `${teamName} 이적`,
+      `${teamName} 라인업`,
+      `${teamName} 선수 통계`,
+      `${teamName} 최근 경기`,
+      `${teamName} 다음 경기`,
+      ...(leagueName ? [
+        `${leagueName} ${teamName}`,
+        `${leagueName} ${teamName} 순위`,
+        `${leagueName} ${teamName} 경기 일정`,
+        `${leagueName} ${teamName} 경기 결과`,
+      ] : []),
+      '축구 팀 순위',
+      '축구 팀 선수단',
+      '축구 팀 경기 일정',
+      '축구 팀 통계',
+      '4590',
+      '4590football',
+    ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
     ...(hasTabState ? { robots: { index: false, follow: true } } : {}),

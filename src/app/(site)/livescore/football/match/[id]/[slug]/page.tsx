@@ -113,13 +113,17 @@ export async function generateMetadata({
   const isNotStarted = ['TBD', 'NS'].includes(match.status.code);
   const hasScore = match.goals.home !== null && match.goals.away !== null;
   const score = isNotStarted || !hasScore ? 'vs' : `${match.goals.home} - ${match.goals.away}`;
+  const titleScore = isNotStarted || !hasScore ? 'vs' : `${match.goals.home}-${match.goals.away}`;
+  const titleSearchIntent = isNotStarted || !hasScore
+    ? '경기 일정·라인업'
+    : '경기 결과·라인업·통계·선수 통계·하이라이트';
 
   const matchDate = match.time?.date ? new Date(match.time.date) : null;
   const dateStr = matchDate
     ? `${matchDate.getFullYear()}년 ${matchDate.getMonth() + 1}월 ${matchDate.getDate()}일`
     : '';
 
-  const title = `${homeTeam} ${score} ${awayTeam} - ${leagueName}`;
+  const title = `${homeTeam} ${titleScore} ${awayTeam} ${titleSearchIntent} - ${leagueName}`;
   const venueText = [match.venue?.name, match.venue?.city].filter(Boolean).join(', ');
   const roundText = match.league.round || '';
   const statusText = match.status.name || '';
@@ -149,13 +153,30 @@ export async function generateMetadata({
       : getMatchHrefByTeams(id, match.teams.home, match.teams.away) || `/livescore/football/match/${id}/${slug}`,
     keywords: [
       `${homeTeam} ${awayTeam}`,
+      `${homeTeam} vs ${awayTeam}`,
       `${homeTeam} ${score} ${awayTeam}`,
+      `${homeTeam} ${awayTeam} 경기`,
+      `${homeTeam} ${awayTeam} 경기 결과`,
+      `${homeTeam} ${awayTeam} 경기 일정`,
+      `${homeTeam} ${awayTeam} 라인업`,
+      `${homeTeam} ${awayTeam} 통계`,
+      `${homeTeam} ${awayTeam} 선수 통계`,
+      `${homeTeam} ${awayTeam} 하이라이트`,
       `${homeTeam} 라인업`,
       `${awayTeam} 라인업`,
+      `${homeTeam} 경기 결과`,
+      `${awayTeam} 경기 결과`,
+      `${homeTeam} 경기 일정`,
+      `${awayTeam} 경기 일정`,
       `${leagueName} 경기 결과`,
+      `${leagueName} 경기 일정`,
       `${leagueName} 스코어`,
       ...(dateStr ? [`${dateStr} 축구`, `${dateStr} ${leagueName}`] : []),
       '축구 경기 결과',
+      '축구 경기 일정',
+      '축구 라인업',
+      '축구 선수 통계',
+      '축구 하이라이트',
       '실시간 스코어',
       '4590',
       '4590football',

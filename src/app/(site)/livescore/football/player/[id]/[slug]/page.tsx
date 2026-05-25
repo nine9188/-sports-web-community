@@ -59,9 +59,12 @@ export async function generateMetadata({
 
   // 한글 매핑 (서버 액션으로 DB 조회)
   const playerName = player.name_ko || player.name;
-  const currentTeam = player.team?.name_ko || player.team?.name || '';
+  const mappedTeam = player.team?.id ? await getSafeTeamById(player.team.id) : null;
+  const currentTeam = mappedTeam?.name_ko || player.team?.name_ko || player.team?.name || '';
+  const currentTeamEn = mappedTeam?.name_en || player.team?.name_en || '';
   const position = getKoreanPosition(player.position);
   const leagueName = player.league?.name || '';
+  const playerEnglishName = player.name_en && player.name_en !== playerName ? player.name_en : '';
   const playerPhotoUrl = player.photo || '';
   const playerImage = playerPhotoUrl && !playerPhotoUrl.includes('placeholder') ? playerPhotoUrl : undefined;
   const profileParts = [
@@ -72,7 +75,7 @@ export async function generateMetadata({
     player.age ? `${player.age}세` : '',
     player.number ? `등번호 ${player.number}` : '',
   ].filter(Boolean);
-  const description = `${playerName}${profileParts.length ? ` (${profileParts.join(', ')})` : ''} 선수 프로필입니다. 시즌 출전 기록, 득점, 도움, 평점, 경기 일정과 이적 정보를 4590 Football에서 확인하세요.`;
+  const description = `${playerName}${profileParts.length ? ` (${profileParts.join(', ')})` : ''} 선수 프로필입니다. 시즌 출전 기록, 득점, 도움, 평점, 순위, 부상, 트로피, 경기 일정과 이적 정보를 4590 Football에서 확인하세요.`;
   const ogImage = buildFootballOgImageUrl({
     title: playerName,
     subtitle: profileParts.slice(0, 4).join(' · '),
@@ -81,13 +84,45 @@ export async function generateMetadata({
   });
 
   return buildMetadata({
-    title: `${playerName} - 통계·기록·프로필`,
+    title: `${playerName} 통계·기록·순위·부상·트로피·이적${currentTeam ? ` - ${currentTeam}` : ''}`,
     description,
     path: `/livescore/football/player/${id}/${slug || slugify(player.name) || 'player'}`,
     image: ogImage,
     imageWidth: 1200,
     imageHeight: 630,
-    keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} ${playerName}`] : []), '4590', '4590football'],
+    keywords: [
+      `${playerName} 프로필`,
+      `${playerName} 통계`,
+      `${playerName} 기록`,
+      `${playerName} 순위`,
+      `${playerName} 평점`,
+      `${playerName} 골`,
+      `${playerName} 도움`,
+      `${playerName} 경기 일정`,
+      `${playerName} 부상`,
+      `${playerName} 트로피`,
+      `${playerName} 이적`,
+      `${playerName} 소속팀`,
+      ...(position ? [`${playerName} ${position}`] : []),
+      ...(currentTeam ? [
+        `${currentTeam} ${playerName}`,
+        `${currentTeam} ${playerName} 통계`,
+        `${currentTeam} ${playerName} 기록`,
+        `${currentTeam} ${playerName} 이적`,
+      ] : []),
+      ...(currentTeamEn && currentTeamEn !== currentTeam ? [`${currentTeamEn} ${playerName}`] : []),
+      ...(playerEnglishName ? [
+        playerEnglishName,
+        `${playerEnglishName} stats`,
+        `${playerEnglishName} transfer`,
+        ...(currentTeamEn ? [`${currentTeamEn} ${playerEnglishName}`] : []),
+      ] : []),
+      '축구 선수 통계',
+      '축구 선수 기록',
+      '축구 선수 이적',
+      '4590',
+      '4590football',
+    ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
     ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),

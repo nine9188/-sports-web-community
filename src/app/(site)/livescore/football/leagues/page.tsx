@@ -11,10 +11,28 @@ import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '축구 리그 순위 · 팀 정보',
-    description: 'EPL 순위, 라리가 순위, 세리에A 순위, 분데스리가 순위, K리그 순위표와 팀별 선수단, 경기 일정, 통계를 한눈에 확인하세요. 축구 커뮤니티 4590 Football.',
+    title: '축구 리그·팀 순위표 - EPL·라리가·K리그 팀 정보',
+    description: '프리미어리그, 라리가, 세리에A, 분데스리가, 리그앙, K리그 등 주요 축구 리그의 팀 순위표, 팀 정보, 선수단과 기록을 4590 Football에서 확인하세요.',
     path: '/livescore/football/leagues',
-    keywords: ['EPL 순위', '프리미어리그 순위', '라리가 순위', 'K리그 순위', '세리에A 득점 순위', '챔피언스리그 대진표', '축구 리그 순위표', '해외축구', '축구 커뮤니티', '4590', '4590football'],
+    keywords: [
+      '축구 리그',
+      '축구 리그 순위표',
+      '축구 팀 순위표',
+      '축구 팀 정보',
+      '축구 선수단',
+      '프리미어리그 순위표',
+      'EPL 순위표',
+      '라리가 순위표',
+      '세리에A 순위표',
+      '분데스리가 순위표',
+      '리그앙 순위표',
+      'K리그 순위표',
+      '챔피언스리그 대진표',
+      '해외축구 리그',
+      '축구 커뮤니티',
+      '4590',
+      '4590football',
+    ],
   });
 }
 
@@ -42,8 +60,8 @@ export default async function LeaguesPage() {
     <div className="min-h-screen w-full">
       <TrackPageVisit id="datacenter" slug="livescore/football/leagues" name="리그·팀" />
       <DaumWebmasterHints
-        title="축구 리그 순위 및 팀 정보"
-        content="EPL, 라리가, 세리에A, 분데스리가, 리그앙, K리그 등 주요 축구 리그의 순위, 팀, 선수, 경기 일정을 확인하세요."
+        title="축구 리그·팀 순위표"
+        content="EPL, 라리가, 세리에A, 분데스리가, 리그앙, K리그 등 주요 축구 리그의 팀 순위표, 팀 정보와 선수단을 확인하세요."
       />
       <div className="container mx-auto w-full">
         {/* 페이지 헤더 */}

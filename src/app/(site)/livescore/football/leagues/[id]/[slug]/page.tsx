@@ -56,21 +56,62 @@ export async function generateMetadata({ params }: LeaguePageProps) {
     });
   }
 
-  return buildMetadata({
-    title: `${displayName} 순위 - 팀 순위 및 리그 순위`,
-    description: `${displayName}${league.country ? ` (${league.country})` : ''} 리그 순위, 팀 순위, 득점 순위와 도움 순위를 4590 Football에서 확인하세요.`,
-    path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10), league.name)}`,
-    keywords: [
-      `${displayName} 순위`,
-      `${displayName} 득점 순위`,
+  const isCup = league.type === 'Cup';
+  const title = isCup
+    ? `${displayName} 대진표·경기 일정·경기 결과`
+    : `${displayName} 팀 순위표·득점 순위·도움 순위`;
+  const description = isCup
+    ? `${displayName}${league.country ? ` (${league.country})` : ''} 대진표, 라운드별 경기 일정과 경기 결과를 4590 Football에서 확인하세요.`
+    : `${displayName}${league.country ? ` (${league.country})` : ''} 팀 순위표, 득점 순위, 도움 순위와 팀 정보를 4590 Football에서 확인하세요.`;
+  const keywords = isCup
+    ? [
+      `${displayName} 대진표`,
+      `${displayName} 경기 일정`,
+      `${displayName} 경기 결과`,
+      `${displayName} 라운드`,
+      `${displayName} 토너먼트`,
       `${displayName} 일정`,
       `${displayName} 결과`,
-      ...(league.name && league.name !== displayName ? [`${league.name} standings`, `${league.name} results`] : []),
-      '축구 리그 순위',
-      '축구 커뮤니티',
+      ...(league.name && league.name !== displayName ? [
+        `${league.name} fixtures`,
+        `${league.name} results`,
+        `${league.name} bracket`,
+      ] : []),
+      '축구 컵 대회',
+      '축구 대진표',
+      '축구 경기 일정',
+      '축구 경기 결과',
       '4590',
       '4590football',
-    ],
+    ]
+    : [
+      `${displayName} 순위표`,
+      `${displayName} 팀 순위표`,
+      `${displayName} 팀 순위`,
+      `${displayName} 득점 순위`,
+      `${displayName} 도움 순위`,
+      `${displayName} 선수 기록`,
+      `${displayName} 팀 정보`,
+      `${displayName} 선수단`,
+      ...(league.name && league.name !== displayName ? [
+        `${league.name} standings`,
+        `${league.name} table`,
+        `${league.name} top scorers`,
+        `${league.name} assists`,
+      ] : []),
+      '축구 팀 순위표',
+      '축구 득점 순위',
+      '축구 도움 순위',
+      '축구 선수 기록',
+      '4590',
+      '4590football',
+    ];
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10), league.name)}`,
+    keywords,
   });
 }
 async function LeaguePageContent({ id }: { id: string }) {
@@ -136,8 +177,12 @@ async function LeaguePageContent({ id }: { id: string }) {
   return (
     <div className="min-h-screen">
       <DaumWebmasterHints
-        title={`${displayName} - 리그 정보`}
-        content={`${displayName}${league.country ? ` (${league.country})` : ''} 리그 순위, 팀 순위, 득점 순위, 일정과 결과를 확인하세요.`}
+        title={isCup
+          ? `${displayName} 대진표 및 경기 일정`
+          : `${displayName} 팀 순위표 및 선수 기록`}
+        content={isCup
+          ? `${displayName}${league.country ? ` (${league.country})` : ''} 대진표, 라운드별 경기 일정과 결과를 확인하세요.`
+          : `${displayName}${league.country ? ` (${league.country})` : ''} 팀 순위표, 득점 순위, 도움 순위와 팀 정보를 확인하세요.`}
       />
       <script type="application/ld+json" {...jsonLdScriptProps(leagueSchema)} />
       <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
