@@ -2,6 +2,26 @@
  * SEO slug utilities.
  */
 
+const SLUG_TRANSLITERATIONS: Record<string, string> = {
+  Æ: 'AE',
+  æ: 'ae',
+  Ð: 'D',
+  ð: 'd',
+  Đ: 'D',
+  đ: 'd',
+  Þ: 'Th',
+  þ: 'th',
+  Ł: 'L',
+  ł: 'l',
+  Ø: 'O',
+  ø: 'o',
+  Œ: 'OE',
+  œ: 'oe',
+  ß: 'ss',
+  Ŋ: 'N',
+  ŋ: 'n',
+};
+
 /**
  * Create a URL-safe slug from a display name.
  */
@@ -13,10 +33,11 @@ export function slugify(text: string): string {
     .replace(/[çÇ]/g, 'c')
     .replace(/[öÖ]/g, 'o')
     .replace(/[üÜ]/g, 'u')
+    .replace(/[ÆæðÐĐđÞþŁłØøŒœßŊŋ]/g, (char) => SLUG_TRANSLITERATIONS[char] || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .normalize('NFC')
-    .replace(/[^\p{L}\p{N}_\s-]/gu, '')
+    .replace(/[^a-zA-Z0-9_\s-]/g, '')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')

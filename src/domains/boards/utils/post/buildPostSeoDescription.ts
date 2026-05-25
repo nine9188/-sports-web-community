@@ -117,10 +117,23 @@ function buildEntityContext(entities?: PostSeoEntities | null): string {
   return parts.length > 0 ? ` ${parts.join('. ')}.` : '';
 }
 
-function buildNewsDescription(title: string, seoEntities?: PostSeoEntities | null): string {
+function buildNewsDescription(
+  title: string,
+  summary?: string | null,
+  seoEntities?: PostSeoEntities | null
+): string {
   const context = buildEntityContext(seoEntities);
   const teams = getPrimaryTeams(seoEntities);
   const matches = getPrimaryMatches(seoEntities);
+  const cleanSummary = compactSeoText(summary);
+  const summarySentences = splitKoreanSentences(cleanSummary);
+
+  if (summarySentences.length > 0) {
+    const intro = summarySentences.slice(0, 2).join(' ');
+    if (intro.length >= 50) {
+      return sentence(`${sentence(intro, context ? 145 : 160)}${context}`);
+    }
+  }
 
   if (teams.length > 0 || matches.length > 0) {
     return sentence(`${sentence(title, context ? 95 : 140)} 관련 축구 뉴스입니다.${context}`);
@@ -215,7 +228,7 @@ export function buildPostSeoDescription({
 }: BuildPostSeoDescriptionParams): string {
   switch (contentType) {
     case 'news':
-      return buildNewsDescription(title, seoEntities);
+      return buildNewsDescription(title, summary, seoEntities);
     case 'article':
       return buildArticleDescriptionFromSummary(title, boardName, summary, seoEntities, postMeta);
     case 'deal':

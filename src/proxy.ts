@@ -38,6 +38,42 @@ function isUsableTeamSlug(teamId: string | number, slug?: string | null): slug i
   )
 }
 
+function isUsablePlayerSlug(playerId: string | number, slug?: string | null): slug is string {
+  const normalized = String(slug ?? '').trim().toLowerCase()
+  const normalizedId = String(playerId ?? '').trim().toLowerCase()
+
+  return Boolean(
+    normalized &&
+    normalized !== 'player' &&
+    normalized !== normalizedId &&
+    normalized !== `player-${normalizedId}`
+  )
+}
+
+function normalizeRouteSlug(slug?: string | null) {
+  try {
+    return decodeURIComponent(String(slug ?? '')).trim().toLowerCase()
+  } catch {
+    return String(slug ?? '').trim().toLowerCase()
+  }
+}
+
+async function fetchCanonicalPlayerSlug(playerId: string) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const res = await fetch(`${supabaseUrl}/rest/v1/football_players?player_id=eq.${playerId}&select=slug&limit=1`, {
+      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any[] = await res.json()
+    const slug = data?.[0]?.slug
+    return isUsablePlayerSlug(playerId, slug) ? slug : null
+  } catch {
+    return null
+  }
+}
+
 function shouldSkipSiteLayout(pathname: string) {
   return SITE_LAYOUT_SKIP_PATHS.has(pathname)
 }
@@ -120,7 +156,7 @@ export async function proxy(request: NextRequest) {
 
   const worthlessPlayerMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)\/([^/]+)$/)
   if (worthlessPlayerMatch) {
-    const playerId = Number(worthlessPlayerMatch[1])
+    const playerId = worthlessPlayerMatch[1]
     const playerSlug = worthlessPlayerMatch[2]?.toLowerCase()
     const isFallbackPlayerSlug = playerSlug === 'player' || playerSlug === `player-${playerId}`
     if (request.method !== 'GET' && isFallbackPlayerSlug) {
@@ -131,17 +167,36 @@ export async function proxy(request: NextRequest) {
         },
       })
     }
-    if (request.method === 'GET' && isFallbackPlayerSlug) {
-      const requestHeaders = new Headers(request.headers)
-      requestHeaders.set('x-skip-site-layout', '1')
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      })
-    }
-    if (!Number.isFinite(playerId) || playerId <= 0 || playerSlug === String(playerId)) {
+    if (!Number.isFinite(Number(playerId)) || Number(playerId) <= 0 || playerSlug === String(playerId)) {
       return plainNotFoundResponse()
+    }
+    if (request.method === 'GET') {
+      const canonicalSlug = await fetchCanonicalPlayerSlug(playerId)
+      if (canonicalSlug && normalizeRouteSlug(playerSlug) !== normalizeRouteSlug(canonicalSlug)) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}`
+        return NextResponse.redirect(url, 301)
+      }
+      if (isFallbackPlayerSlug) {
+        const requestHeaders = new Headers(request.headers)
+        requestHeaders.set('x-skip-site-layout', '1')
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        })
+      }
+    }
+  }
+
+  const playerIdOnlyMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)$/)
+  if (request.method === 'GET' && playerIdOnlyMatch) {
+    const playerId = playerIdOnlyMatch[1]
+    const canonicalSlug = await fetchCanonicalPlayerSlug(playerId)
+    if (canonicalSlug) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}`
+      return NextResponse.redirect(url, 301)
     }
   }
 
