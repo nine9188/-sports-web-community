@@ -255,18 +255,19 @@ export default function CupRoundsView({ rounds, currentMatchId }: CupRoundsViewP
                 />
               )}
             </button>
-            {isOpen && (
-              <div id={`round-${round.round}`} className="border-t border-gray-100 dark:border-gray-800">
-                {round.fixtures.map((fixture, idx) => (
-                  <FixtureRow
-                    key={fixture.id}
-                    fixture={fixture}
-                    isLast={idx === round.fixtures.length - 1}
-                    isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
-                  />
-                ))}
-              </div>
-            )}
+            <div
+              id={`round-${round.round}`}
+              className={`border-t border-gray-100 dark:border-gray-800 ${isOpen ? '' : 'hidden'}`}
+            >
+              {round.fixtures.map((fixture, idx) => (
+                <FixtureRow
+                  key={fixture.id}
+                  fixture={fixture}
+                  isLast={idx === round.fixtures.length - 1}
+                  isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
+                />
+              ))}
+            </div>
           </Container>
         );
       })}

@@ -116,7 +116,7 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
     keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, ...playerNames, '축구 이적시장', '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    noindex: hasQueryState,
+    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

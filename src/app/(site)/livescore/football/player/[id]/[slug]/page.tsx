@@ -90,7 +90,7 @@ export async function generateMetadata({
     keywords: [`${playerName} 평점`, `${playerName} 통계`, `${playerName} 골`, `${playerName} 이적`, ...(currentTeam ? [`${currentTeam} ${playerName}`] : []), '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasQueryState ? { noindex: true } : {}),
+    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

@@ -28,7 +28,7 @@ export async function generateMetadata({
         '실시간 스코어', '라이브스코어', '진행중 축구 경기',
         'EPL 실시간', '챔피언스리그 실시간', 'K리그 실시간',
       ],
-      noindex: true,
+      robots: { index: false, follow: true },
     });
   }
 
@@ -65,7 +65,7 @@ export async function generateMetadata({
       '챔피언스리그 결과', 'K리그 경기결과', '분데스리가 결과',
       '축구 경기 일정', '오늘 프리미어리그', '실시간 축구 결과',
     ],
-    ...(hasQueryState ? { noindex: true } : {}),
+    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

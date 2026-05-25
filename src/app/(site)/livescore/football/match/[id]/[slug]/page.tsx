@@ -162,7 +162,7 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasTabState ? { noindex: true } : {}),
+    ...(hasTabState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

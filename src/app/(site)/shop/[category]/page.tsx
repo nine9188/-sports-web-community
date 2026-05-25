@@ -80,7 +80,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: `${categoryData.name} - 상점`,
     description: `${categoryData.name} 아이템을 구매하세요.`,
     path: `/shop/${category}`,
-    noindex: hasFilterParams ? true : false,
+    ...(hasFilterParams ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

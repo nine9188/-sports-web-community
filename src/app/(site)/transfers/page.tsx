@@ -49,7 +49,7 @@ export async function generateMetadata({ searchParams }: TransfersPageProps): Pr
     keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', ...leagueNames, '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    noindex: hasQueryState,
+    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

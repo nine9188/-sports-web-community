@@ -45,6 +45,7 @@ const BLOCKED_STANDALONE_TEAM_ALIASES = new Set([
   'santos',
   '산투스',
   '산토스',
+  '수원',
 ]);
 const BLOCKED_STANDALONE_PLAYER_ALIASES = new Set([
   'fernandes',
@@ -58,6 +59,11 @@ const ALLOWED_CONTEXTUAL_PLAYER_SURNAME_ALIASES = new Set([
   '산토스',
 ]);
 const HANGUL_TOPIC_PARTICLES = new Set(['은', '는', '이', '가', '을', '를', '와', '과', '도', '에', '의', '로']);
+const KOREAN_TEAM_SUFFIX_PATTERNS = [
+  /\s*(FC|축구단)$/i,
+  /\s*(아이파크|드래곤즈|그리너스|블루윙즈)$/i,
+  /\s*(시민|시티)$/i,
+];
 const INTERNAL_LINK_LEAGUE_IDS = new Set([
   39,  // Premier League
   140, // La Liga
@@ -207,14 +213,29 @@ function collectTeamAliases(team) {
     if (!normalized) continue;
 
     if (isHangulText(normalized)) {
-      const withoutFootballClubSuffix = normalized.replace(/\s*(FC|축구단)$/i, '').trim();
-      if (withoutFootballClubSuffix && withoutFootballClubSuffix !== normalized) {
-        values.push(withoutFootballClubSuffix);
+      const variants = new Set([normalized]);
+      let current = normalized;
+
+      for (let iteration = 0; iteration < 3; iteration += 1) {
+        const next = KOREAN_TEAM_SUFFIX_PATTERNS.reduce(
+          (candidate, pattern) => candidate.replace(pattern, '').trim(),
+          current
+        );
+        if (!next || next === current) break;
+        variants.add(next);
+        current = next;
       }
 
-      const compact = normalized.replace(/\s+/g, '');
-      if (compact && compact !== normalized) {
-        values.push(compact);
+      for (const variant of [...variants]) {
+        const compact = variant.replace(/\s+/g, '');
+        if (compact && compact !== variant) variants.add(compact);
+
+        const spacedProvince = compact.replace(/^(충남|충북)(.+)$/u, '$1 $2');
+        if (spacedProvince !== compact) variants.add(spacedProvince);
+      }
+
+      for (const variant of variants) {
+        if (variant && variant !== normalized) values.push(variant);
       }
     }
   }

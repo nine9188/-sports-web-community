@@ -93,7 +93,7 @@ export async function generateMetadata({
     keywords: [`${teamName} 순위`, `${teamName} 선수단`, `${teamName} 일정`, `${teamName} 경기결과`, `${teamName} 이적`, `${teamName} 라인업`, ...(leagueName ? [`${leagueName} ${teamName}`] : []), '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasTabState ? { noindex: true } : {}),
+    ...(hasTabState ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

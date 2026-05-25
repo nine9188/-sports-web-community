@@ -109,6 +109,7 @@ export async function proxy(request: NextRequest) {
     request.method === 'GET' &&
     boardPostMatch &&
     (request.nextUrl.searchParams.has('page') ||
+      request.nextUrl.searchParams.has('listPage') ||
       request.nextUrl.searchParams.has('sort') ||
       request.nextUrl.searchParams.has('from'))
   ) {

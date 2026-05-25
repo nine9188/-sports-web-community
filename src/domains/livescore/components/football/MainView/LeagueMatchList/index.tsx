@@ -126,17 +126,15 @@ export default function LeagueMatchList({
                 </div>
               </Button>
 
-              {isExpanded && (
-                <div className="bg-white dark:bg-[#1D1D1D]">
-                  {group.matches.map((match, idx) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      isLast={idx === group.matches.length - 1}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className={`bg-white dark:bg-[#1D1D1D] ${isExpanded ? '' : 'hidden'}`}>
+                {group.matches.map((match, idx) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    isLast={idx === group.matches.length - 1}
+                  />
+                ))}
+              </div>
             </Container>
           </Fragment>
         );

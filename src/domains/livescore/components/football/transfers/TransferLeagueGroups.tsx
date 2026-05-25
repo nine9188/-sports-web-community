@@ -78,23 +78,24 @@ export default function TransferLeagueGroups({ groupedTeams }: TransferLeagueGro
               </Button>
             </ContainerHeader>
 
-            {isExpanded && (
-              <div id={`transfer-league-${league.id}`} className="bg-white p-3 dark:bg-[#1D1D1D]">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {leagueTeams.map((team) => (
-                    <Link
-                      key={team.id}
-                      href={getTransferTeamHref(team)}
-                      className="flex items-center justify-between gap-2 rounded border border-black/5 px-3 py-2 text-[13px] text-gray-900 transition-colors hover:bg-[#F5F5F5] dark:border-white/10 dark:text-[#F0F0F0] dark:hover:bg-[#262626]"
-                      prefetch={false}
-                    >
-                      <span className="truncate">{team.name_ko || team.name_en}</span>
-                      <span className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">이적시장</span>
-                    </Link>
-                  ))}
-                </div>
+            <div
+              id={`transfer-league-${league.id}`}
+              className={`bg-white p-3 dark:bg-[#1D1D1D] ${isExpanded ? '' : 'hidden'}`}
+            >
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {leagueTeams.map((team) => (
+                  <Link
+                    key={team.id}
+                    href={getTransferTeamHref(team)}
+                    className="flex items-center justify-between gap-2 rounded border border-black/5 px-3 py-2 text-[13px] text-gray-900 transition-colors hover:bg-[#F5F5F5] dark:border-white/10 dark:text-[#F0F0F0] dark:hover:bg-[#262626]"
+                    prefetch={false}
+                  >
+                    <span className="truncate">{team.name_ko || team.name_en}</span>
+                    <span className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">이적시장</span>
+                  </Link>
+                ))}
               </div>
-            )}
+            </div>
           </Container>
         );
       })}
