@@ -132,11 +132,6 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/sitemaps/:path*',
-        destination: '/sitemap.xml',
-        permanent: true,
-      },
-      {
         source: '/boards/sitemap.xml',
         destination: '/sitemap.xml',
         permanent: true,
