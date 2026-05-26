@@ -38,7 +38,7 @@ interface EditorToolbarProps {
   showTableModal: boolean;
   showPollModal?: boolean;
   handleToggleDropdown: (dropdown: DropdownType) => void;
-  onImageClick: () => void;
+  onImageClick: (options?: { fromUrlPrompt?: boolean }) => void;
   onVideoClick: () => void;
   onToolbarLinkButtonRect?: (rect: DOMRect) => void;
   onToolbarYoutubeButtonRect?: (rect: DOMRect) => void;
@@ -207,7 +207,7 @@ export default function EditorToolbar({
           event.preventDefault();
           event.stopPropagation();
           moveCursorAfterSelectedNode();
-          onImageClick();
+          onImageClick({ fromUrlPrompt: event.shiftKey });
         }}
         disabled={isImageUploading}
         className={`${toolButtonClass} ${isImageUploading ? `${activeClass} opacity-60` : ''}`}

@@ -933,7 +933,7 @@ export default function PostEditForm({
     await handleAddPlayer(...args);
   }, [handleAddPlayer, replaceSelectedEntityIfNeeded]);
 
-  const handleImageToolbarClick = useCallback(() => {
+  const handleImageToolbarClick = useCallback((options?: { fromUrlPrompt?: boolean }) => {
     if (isImageUploading) return;
 
     moveCursorAfterSelectedNode();
@@ -946,6 +946,33 @@ export default function PostEditForm({
     closePlayerPopover();
     closeTablePopover();
     closePollPopover();
+    if (options?.fromUrlPrompt) {
+      const imageUrl = window.prompt('삽입할 이미지 URL을 입력하세요.');
+      const trimmedImageUrl = imageUrl?.trim();
+
+      if (!trimmedImageUrl) {
+        imageInsertionPositionRef.current = null;
+        return;
+      }
+
+      try {
+        const parsedUrl = new URL(trimmedImageUrl);
+        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+          toast.error('http 또는 https 이미지 URL만 삽입할 수 있습니다.');
+          imageInsertionPositionRef.current = null;
+          return;
+        }
+      } catch {
+        toast.error('올바른 이미지 URL을 입력해주세요.');
+        imageInsertionPositionRef.current = null;
+        return;
+      }
+
+      handleAddImage(trimmedImageUrl, undefined, imageInsertionPositionRef.current);
+      imageInsertionPositionRef.current = null;
+      return;
+    }
+
     imageFileInputRef.current?.click();
   }, [
     closeLinkPopover,
@@ -957,6 +984,7 @@ export default function PostEditForm({
     closeTeamPopover,
     closeYoutubePopover,
     getCurrentInsertionPosition,
+    handleAddImage,
     isImageUploading,
     moveCursorAfterSelectedNode,
   ]);
