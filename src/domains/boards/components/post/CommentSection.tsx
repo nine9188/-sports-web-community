@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CommentType } from "@/domains/boards/types/post/comment";
 import { useComments } from "@/domains/boards/hooks/post/useComments";
 import Comment from "./Comment";
@@ -9,8 +9,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Container, ContainerHeader, ContainerTitle } from "@/shared/components/ui";
 import { useClickOutsideOrEscape } from '@/shared/hooks/useClickOutside';
 import EmoticonPicker from './EmoticonPicker';
-import { likePost, getUserPostAction } from '@/domains/boards/actions/posts/likes';
-import { usePathname } from 'next/navigation';
+import { reactToPost, type PostReactionType } from '@/domains/boards/utils/post/postReactionClient';
+import {
+  POST_REACTION_UPDATED_EVENT,
+  dispatchPostReactionUpdated,
+  type PostReactionUpdatedDetail,
+} from '@/domains/boards/utils/post/postReactionEvents';
 
 interface CommentSectionProps {
   postId: string;
@@ -18,6 +22,9 @@ interface CommentSectionProps {
   postNumber?: string;
   postOwnerId?: string;
   currentUserId?: string | null;
+  initialPostLikes?: number;
+  initialPostDislikes?: number;
+  initialPostUserAction?: PostReactionType | null;
   initialComments?: CommentType[];
 }
 
@@ -25,6 +32,9 @@ export default function CommentSection({
   postId,
   postOwnerId,
   currentUserId = null,
+  initialPostLikes = 0,
+  initialPostDislikes = 0,
+  initialPostUserAction = null,
   initialComments
 }: CommentSectionProps) {
   const router = useRouter();
@@ -38,11 +48,39 @@ export default function CommentSection({
   const replyFormRef = useRef<HTMLTextAreaElement>(null);
   const emoticonContainerRef = useRef<HTMLDivElement>(null);
   const submitTypeRef = useRef<'normal' | 'withLike'>('normal');
+  const postReactionStateRef = useRef({
+    likes: initialPostLikes,
+    dislikes: initialPostDislikes,
+    userAction: initialPostUserAction,
+  });
 
   const isLoggedIn = currentUserId !== null;
 
   // 이모티콘 피커 외부 클릭/ESC 닫기
   useClickOutsideOrEscape(emoticonContainerRef, () => setShowEmoticonPicker(false), showEmoticonPicker);
+
+  useEffect(() => {
+    postReactionStateRef.current = {
+      likes: initialPostLikes,
+      dislikes: initialPostDislikes,
+      userAction: initialPostUserAction,
+    };
+  }, [initialPostLikes, initialPostDislikes, initialPostUserAction]);
+
+  useEffect(() => {
+    const handlePostReactionUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<PostReactionUpdatedDetail>).detail;
+      if (!detail || detail.postId !== postId) return;
+      postReactionStateRef.current = {
+        likes: detail.likes,
+        dislikes: detail.dislikes,
+        userAction: detail.userAction,
+      };
+    };
+
+    window.addEventListener(POST_REACTION_UPDATED_EVENT, handlePostReactionUpdated);
+    return () => window.removeEventListener(POST_REACTION_UPDATED_EVENT, handlePostReactionUpdated);
+  }, [postId]);
 
   const {
     comments,
@@ -55,7 +93,7 @@ export default function CommentSection({
     deleteComment,
     likeComment,
     dislikeComment,
-    isLiking
+    likingCommentId
   } = useComments({ postId, initialComments });
 
   // URL 해시 감지 → 댓글 스크롤 + 하이라이트
@@ -138,14 +176,43 @@ export default function CommentSection({
     setErrorMessage(null);
 
     try {
+      const shouldLikeWithComment = submitTypeRef.current === 'withLike'
+        && postReactionStateRef.current.userAction !== 'like';
+      const previousReactionState = postReactionStateRef.current;
+      let reactionPromise: ReturnType<typeof reactToPost> | null = null;
+
+      if (shouldLikeWithComment) {
+        const optimisticState = {
+          likes: previousReactionState.likes + 1,
+          dislikes: previousReactionState.userAction === 'dislike'
+            ? Math.max(0, previousReactionState.dislikes - 1)
+            : previousReactionState.dislikes,
+          userAction: 'like' as const,
+        };
+
+        postReactionStateRef.current = optimisticState;
+        dispatchPostReactionUpdated({ postId, ...optimisticState });
+        reactionPromise = reactToPost(postId, 'like');
+      }
+
       await createComment(content.trim(), replyTo);
 
-      if (submitTypeRef.current === 'withLike') {
-        const actionResult = await getUserPostAction(postId);
-        if (actionResult.userAction !== 'like') {
-          await likePost(postId);
-          router.refresh();
-        }
+      if (reactionPromise) {
+        const reactionResult = await reactionPromise;
+          if (!reactionResult.success) {
+            postReactionStateRef.current = previousReactionState;
+            dispatchPostReactionUpdated({ postId, ...previousReactionState });
+            throw new Error(reactionResult.error || '추천 처리에 실패했습니다.');
+          }
+
+          const nextAction = reactionResult.userAction || null;
+        const nextState = {
+            likes: reactionResult.likes ?? 0,
+            dislikes: reactionResult.dislikes ?? 0,
+            userAction: nextAction,
+        };
+        postReactionStateRef.current = nextState;
+        dispatchPostReactionUpdated({ postId, ...nextState });
       }
 
       setContent('');
@@ -163,7 +230,7 @@ export default function CommentSection({
         alert(message);
       }
     }
-  }, [content, replyTo, createComment, postId, router]);
+  }, [content, replyTo, createComment, postId]);
 
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     await updateComment(commentId, updatedContent);
@@ -220,8 +287,8 @@ export default function CommentSection({
           onReply={handleReply}
           onLike={likeComment}
           onDislike={dislikeComment}
-          isLiking={isLiking}
-          isPostOwner={currentUserId === postOwnerId}
+          likingCommentId={likingCommentId}
+          postOwnerId={postOwnerId}
           isHighlighted={highlightedNumber === String(comment.comment_number ?? comment.id)}
           highlightedCommentId={highlightedNumber}
           commentPermalink={`${pathname}#comment-${comment.comment_number ?? comment.id}`}
@@ -232,7 +299,7 @@ export default function CommentSection({
         아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
       </div>
     );
-  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, isLiking, isLoading, highlightedNumber, pathname]);
+  }, [treeComments, currentUserId, handleUpdate, handleDelete, handleReply, postOwnerId, likeComment, dislikeComment, likingCommentId, isLoading, highlightedNumber, pathname]);
 
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4 !overflow-visible">

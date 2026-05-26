@@ -1,16 +1,13 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
-import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
-import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
-import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
-import { createCommentNotification, createReplyNotification } from '@/domains/notifications/actions';
-import { checkHotPostEntry } from '@/domains/notifications/actions/checkHotPostEntry';
-import { oneOrNull } from '@/shared/utils/supabaseRelations';
+import { runCommentCreateSideEffects } from './sideEffects';
+import { incrementUserEmoticonUsage } from '../emoticonUsage';
 
 /**
  * 댓글 작성 (대댓글 지원)
@@ -102,93 +99,21 @@ export async function createComment({
       }
     }
     
-    // 5. 댓글 작성 로그 기록
-    await logUserAction(
-      'COMMENT_CREATE',
-      parentId ? `대댓글 작성 (게시글 ID: ${postId})` : `댓글 작성 (게시글 ID: ${postId})`,
-      user.id,
-      {
-        commentId: data.id,
-        postId,
-        parentId: parentId || null,
-        content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
-      }
-    );
-    
-    // 6. 댓글 작성 보상 지급 (비동기로 처리하여 메인 로직에 영향 없도록)
-    try {
-      const activityTypes = await getActivityTypeValues();
-      await rewardUserActivity(user.id, activityTypes.COMMENT_CREATION, data.id);
-
-      // 첫 댓글 마일스톤 체크 (추천 시스템)
-      const { count: commentCount } = await supabase
-        .from('comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      if (commentCount === 1) {
-        // 첫 댓글이면 마일스톤 체크
-        await checkReferralMilestone(user.id, 'first_comment');
-      }
-    } catch (rewardError) {
-      console.error('댓글 작성 보상 지급 오류:', rewardError);
-    }
-    
-    // 7. 알림 생성 (비동기로 처리)
-    try {
-      // comment_number 별도 조회 (Supabase 생성 타입에 미포함 대비)
-      const { data: cnRow } = await supabase.rpc('get_single_comment_number', { p_comment_id: data.id }) as { data: { comment_number: number }[] | null; error: unknown };
-      const commentNumber = cnRow?.[0]?.comment_number;
-
-      // 게시글 정보 조회 (알림용)
-      const { data: postData } = await supabase
-        .from('posts')
-        .select(`
-          user_id,
-          title,
-          post_number,
-          board:boards(slug)
-        `)
-        .eq('id', postId)
-        .single();
-
-      if (postData) {
-        const boardSlug = oneOrNull(postData.board)?.slug || '';
-        const actorNickname = newComment.profiles?.nickname || '알 수 없음';
-
-        if (parentId && parentCommentOwnerId) {
-          // 대댓글인 경우: 부모 댓글 작성자에게 알림
-          await createReplyNotification({
-            parentCommentOwnerId,
-            actorId: user.id,
-            actorNickname,
-            postId,
-            postNumber: postData.post_number,
-            boardSlug,
-            commentContent: content,
-            commentNumber
-          });
-        } else {
-          // 일반 댓글인 경우: 게시글 작성자에게 알림
-          await createCommentNotification({
-            postOwnerId: postData.user_id,
-            actorId: user.id,
-            actorNickname,
-            postId,
-            postTitle: postData.title,
-            postNumber: postData.post_number,
-            boardSlug,
-            commentContent: content,
-            commentNumber
-          });
-        }
-      }
-      // HOT 게시글 진입 체크 (비동기, fire-and-forget)
-      checkHotPostEntry(postId).catch(() => {});
-    } catch (notificationError) {
-      console.error('알림 생성 오류:', notificationError);
-      // 알림 생성 실패해도 댓글 작성은 성공으로 처리
-    }
+    after(() => {
+      void Promise.all([
+        runCommentCreateSideEffects({
+          supabase,
+          postId,
+          commentId: data.id,
+          actorId: user.id,
+          actorNickname: newComment.profiles?.nickname || '알 수 없음',
+          parentId: parentId || null,
+          parentCommentOwnerId,
+          content
+        }),
+        incrementUserEmoticonUsage(supabase, sanitizedContent),
+      ]).catch(err => console.error('댓글 작성 후처리 실패 (무시됨):', err));
+    });
 
     // 유저 통계 캐시 무효화 (댓글 수 변경)
     revalidateTag(`user-stats-${user.id}`, 'default');

@@ -269,6 +269,28 @@ interface PredictionApiData {
   }>;
 }
 
+function formatMatchDateTimeKo(date?: string): string | null {
+  if (!date) return null
+
+  const parsedDate = new Date(date)
+  if (Number.isNaN(parsedDate.getTime())) return null
+
+  const dateText = parsedDate.toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short'
+  })
+  const timeText = parsedDate.toLocaleTimeString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+
+  return `${dateText} ${timeText} KST`
+}
+
 // 팀 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
 async function getTeamNameKo(teamId: number, fallbackName: string): Promise<string> {
   const teamMap = await getTeamsByIds([teamId])
@@ -759,6 +781,14 @@ async function generateMatchPredictionPost(
     attrs: {
       fixtureId: match.id.toString(),
       chartData: {
+        match: {
+          id: match.id,
+          date: match.date,
+          league: {
+            id: league.id,
+            name: leagueNameKo
+          }
+        },
         predictions: {
           ...predictionData.predictions,
           winner: predictionData.predictions.winner
@@ -914,6 +944,14 @@ async function generateMatchPredictionPost(
       // 예측 차트 (데이터가 있을 때만)
       ...chartNode,
       createEmptyParagraphNode(),
+      ...(match.date ? [{
+        type: 'paragraph',
+        content: [{
+          type: 'text',
+          text: `경기 일시: ${formatMatchDateTimeKo(match.date) || match.date}`,
+          marks: [{ type: 'bold' }]
+        }]
+      }, createEmptyParagraphNode()] : []),
       // 경기 개요
       ...overviewNodes,
       createEmptyParagraphNode(),

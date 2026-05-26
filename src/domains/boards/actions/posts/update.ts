@@ -9,6 +9,7 @@ import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstIm
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { revalidateTag } from 'next/cache';
+import { incrementUserEmoticonUsage } from '../emoticonUsage';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
 import { oneOrNull } from '@/shared/utils/supabaseRelations';
@@ -207,6 +208,7 @@ export async function updatePost(
           title
         }
       ),
+      incrementUserEmoticonUsage(supabase, content),
       boardSlug && postData.post_number
         ? submitIndexNowUrl(`/boards/${boardSlug}/${postData.post_number}`).then((result) => {
             if (!result.ok) console.error('[IndexNow] post update submit failed:', result);

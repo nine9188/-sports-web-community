@@ -35,6 +35,7 @@ type AnalysisPostRow = {
     public_id?: string | null;
   } | null;
   boards: { slug: string | null; name: string } | null;
+  comments?: Array<{ count: number | null }> | null;
 };
 
 /**
@@ -49,39 +50,19 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
     const [foreignPostsResult, domesticPostsResult] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name)')
+        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name), comments!post_id(count)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'foreign')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
       supabase
         .from('posts')
-        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name)')
+        .select('id, title, post_number, created_at, views, likes, profiles(nickname, public_id), boards(slug, name), comments!post_id(count)')
         .eq('meta->>prediction_type', 'league_analysis')
         .eq('meta->>analysis_region', 'domestic')
         .order('created_at', { ascending: false })
         .limit(POSTS_PER_SECTION),
     ]);
-
-    // 댓글 수 가져오기
-    const allPostIds = [
-      ...(foreignPostsResult.data || []).map((p: { id: string }) => p.id),
-      ...(domesticPostsResult.data || []).map((p: { id: string }) => p.id),
-    ];
-
-    const commentCountMap: Record<string, number> = {};
-    if (allPostIds.length > 0) {
-      const { data: commentCounts } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', allPostIds);
-
-      (commentCounts || []).forEach((c: { post_id: string | null }) => {
-        if (c.post_id) {
-          commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
-        }
-      });
-    }
 
     // 포맷팅 (실제 board slug 사용, fallback으로 기본 slug)
     const formatPosts = (posts: unknown, fallbackSlug: string, fallbackName: string): BoardPost[] => {
@@ -99,7 +80,7 @@ async function _fetchBoardCollectionDataImpl(): Promise<{ foreign: SectionData; 
         author_public_id: p.profiles?.public_id || null,
         views: p.views || 0,
         likes: p.likes || 0,
-        comment_count: commentCountMap[p.id] || 0,
+        comment_count: p.comments?.[0]?.count || 0,
         team_logo: null,
         league_logo: null,
       }));

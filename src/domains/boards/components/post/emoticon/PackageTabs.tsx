@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, ShoppingBag, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock3, ShoppingBag, Settings } from 'lucide-react';
 import Image from 'next/image';
 import type { PickerPackage } from '@/domains/boards/actions/emoticons';
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
@@ -37,6 +37,7 @@ export default function PackageTabs({
 
       <div ref={tabContainerRef as React.RefObject<HTMLDivElement>} className="flex-1 flex overflow-x-auto scrollbar-hide h-full">
         {packages.map((pkg) => {
+          const isFrequentPackage = pkg.pack_id === '__frequent__';
           const thumbnail = normalizeDisplayImageUrl(pkg.pack_thumbnail, {
             fallback: SITE_ICON_URL,
             proxyExternal: true,
@@ -54,14 +55,18 @@ export default function PackageTabs({
               }`}
               title={pkg.pack_name}
             >
-              <Image
-                src={thumbnail}
-                alt={pkg.pack_name}
-                width={24}
-                height={24}
-                unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
-                className={`w-6 h-6 object-contain ${activePackageId !== pkg.pack_id && 'opacity-60'} transition-opacity`}
-              />
+              {isFrequentPackage ? (
+                <Clock3 className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${activePackageId !== pkg.pack_id && 'opacity-60'} transition-opacity`} />
+              ) : (
+                <Image
+                  src={thumbnail}
+                  alt={pkg.pack_name}
+                  width={24}
+                  height={24}
+                  unoptimized={shouldUnoptimizeImageUrl(thumbnail)}
+                  className={`w-6 h-6 object-contain ${activePackageId !== pkg.pack_id && 'opacity-60'} transition-opacity`}
+                />
+              )}
             </button>
           );
         })}

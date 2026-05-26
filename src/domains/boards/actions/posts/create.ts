@@ -12,6 +12,7 @@ import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { pingWebSubHub } from '@/shared/utils/websub-ping';
 import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { cacheThumbnailToStorage } from './cacheThumbnail';
+import { incrementUserEmoticonUsage } from '../emoticonUsage';
 import type { PostActionResponse } from './utils';
 import { calculateBoardViewerPermissions } from '../permissions';
 import type { PostPollDraft } from '@/domains/boards/types/poll';
@@ -267,6 +268,8 @@ async function createPostInternal(params: {
       }),
       // 보상 처리
       getActivityTypeValues().then(types => rewardUserActivity(userId, types.POST_CREATION, postId)),
+      // 이모티콘 사용량 집계
+      incrementUserEmoticonUsage(supabase, content),
       // WebSub Hub 알림
       pingWebSubHub(),
       // IndexNow 알림

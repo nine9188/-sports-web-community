@@ -82,6 +82,25 @@ export interface PickerPackage {
   emoticons: EmoticonFromDB[]
 }
 
+const FREQUENT_PACKAGE_ID = '__frequent__'
+const FREQUENT_PACKAGE_NAME = '자주쓰는 이모티콘'
+const FREQUENT_PACKAGE_THUMBNAIL = '__clock__'
+const MAX_FREQUENT_EMOTICONS = 48
+
+async function getUserFrequentEmoticonUsage(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<Array<{ code: string; use_count: number; last_used_at: string }>> {
+  const { data } = await fromTable(supabase, 'user_emoticon_usage')
+    .select('code, use_count, last_used_at')
+    .eq('user_id', userId)
+    .order('use_count', { ascending: false })
+    .order('last_used_at', { ascending: false })
+    .limit(MAX_FREQUENT_EMOTICONS)
+
+  return (data || []) as Array<{ code: string; use_count: number; last_used_at: string }>
+}
+
 // ── 팩 목록 조회 ──
 
 /**
@@ -366,6 +385,43 @@ export async function getPickerData(): Promise<PickerPackage[]> {
       const orderB = idxB === -1 ? 9999 : idxB
       return orderA - orderB
     })
+  }
+
+  if (user) {
+    const frequentUsage = await getUserFrequentEmoticonUsage(supabase, user.id)
+    const availableEmoticons = new Map<string, EmoticonFromDB>()
+    for (const pkg of packages) {
+      for (const emoticon of pkg.emoticons) {
+        availableEmoticons.set(emoticon.code, emoticon)
+      }
+    }
+
+    const frequentEmoticons = frequentUsage
+      .map((usage) => availableEmoticons.get(usage.code))
+      .filter((emoticon): emoticon is EmoticonFromDB => !!emoticon)
+      .map((emoticon, index) => ({
+        ...emoticon,
+        id: -index - 1,
+      }))
+    const frequentCodes = new Set(frequentEmoticons.map(emoticon => emoticon.code))
+    const fallbackEmoticons = packages
+      .flatMap(pkg => pkg.emoticons)
+      .filter(emoticon => !frequentCodes.has(emoticon.code))
+      .slice(0, Math.max(0, MAX_FREQUENT_EMOTICONS - frequentEmoticons.length))
+      .map((emoticon, index) => ({
+        ...emoticon,
+        id: -frequentEmoticons.length - index - 1,
+      }))
+
+    return [
+      {
+        pack_id: FREQUENT_PACKAGE_ID,
+        pack_name: FREQUENT_PACKAGE_NAME,
+        pack_thumbnail: FREQUENT_PACKAGE_THUMBNAIL,
+        emoticons: [...frequentEmoticons, ...fallbackEmoticons],
+      },
+      ...packages,
+    ]
   }
 
   return packages

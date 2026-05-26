@@ -93,6 +93,14 @@ interface H2HMatch {
 
 // 예측 차트 데이터 타입
 export interface PredictionChartData {
+  match?: {
+    id?: number;
+    date?: string;
+    league?: {
+      id?: number;
+      name?: string;
+    };
+  };
   predictions: {
     percent: { home: string; draw: string; away: string };
     advice?: string | null;
@@ -146,6 +154,28 @@ function useTeamNameKo(): (teamId: number | string | null | undefined, fallbackN
 function sameTeamId(left: number | string | null | undefined, right: number | string | null | undefined) {
   if (left === null || left === undefined || right === null || right === undefined) return false;
   return String(left) === String(right);
+}
+
+function formatMatchDateTime(date?: string) {
+  if (!date) return null;
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  const dateText = parsedDate.toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const timeText = parsedDate.toLocaleTimeString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  return `${dateText} ${timeText}`;
 }
 
 // W/D/L 배지 컴포넌트
@@ -607,7 +637,7 @@ export default function PredictionChart({
   compact = false,
 }: PredictionChartProps) {
   const getTeamNameKo = useTeamNameKo();
-  const { predictions, comparison, teams, h2h } = data;
+  const { predictions, comparison, teams, h2h, match } = data;
 
   // 팀 이름 한국어
   const homeNameKo = getTeamNameKo(teams.home.id, teams.home.name);
@@ -668,12 +698,20 @@ export default function PredictionChart({
   const awayGoalVal = predictions.goals ? parseFloat(predictions.goals.away) : NaN;
   const homeGoalLabel = !isNaN(homeGoalVal) ? (homeGoalVal < 0 ? `U${Math.abs(homeGoalVal)}` : `O${homeGoalVal}`) : undefined;
   const awayGoalLabel = !isNaN(awayGoalVal) ? (awayGoalVal < 0 ? `U${Math.abs(awayGoalVal)}` : `O${awayGoalVal}`) : undefined;
+  const matchDateTime = formatMatchDateTime(match?.date);
 
   return (
     <div className="prediction-chart bg-white dark:bg-[#1D1D1D] rounded-lg border border-black/7 dark:border-white/10 overflow-hidden my-4">
       {/* AI 예측 */}
       {showPrediction && (
         <div className="p-4 border-b border-black/5 dark:border-white/10">
+          {(matchDateTime || match?.league?.name) && (
+            <div className="mb-3 text-center text-[12px] font-medium text-gray-500 dark:text-gray-400">
+              {match?.league?.name && <span>{match.league.name}</span>}
+              {match?.league?.name && matchDateTime && <span className="mx-1 text-gray-300 dark:text-gray-600">·</span>}
+              {matchDateTime && <time dateTime={match?.date}>{matchDateTime} KST</time>}
+            </div>
+          )}
           <div className="flex items-center justify-center gap-4 md:gap-8 mb-3">
             {/* 홈팀 */}
             <div className="flex items-center gap-1.5 md:gap-3">

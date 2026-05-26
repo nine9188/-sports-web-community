@@ -17,6 +17,7 @@ import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } from '@/shared/images/urls';
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
+import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
 
 /**
  * 데스크톱 게시글 아이템 (비가상화)
@@ -125,19 +126,14 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
                   {post.is_must_read ? '필독' : '공지'}
                 </span>
               )}
-              <h3 className={`${titleClassName} truncate`}>
-                {titleText}
-              </h3>
-              {!post.is_deleted && !post.is_hidden && (
-                <>
-                  {renderContentTypeIcons(post)}
-                  {post.comment_count > 0 && (
-                    <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
-                      [{post.comment_count}]
-                    </span>
-                  )}
-                </>
-              )}
+              <PostTitleWithCommentCount
+                title={titleText}
+                commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}
+                titleClassName={titleClassName}
+                childrenBeforeComment={!post.is_deleted && !post.is_hidden ? renderContentTypeIcons(post) : null}
+                inlineComment={!post.is_deleted && !post.is_hidden}
+                clampClassName="truncate"
+              />
             </div>
           </Link>
 
@@ -235,22 +231,14 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       <td className="py-2 px-1 align-middle">
         <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
-            <span className={`${titleClassName} truncate`}>
-              {titleText}
-            </span>
-            {!post.is_deleted && !post.is_hidden && (
-              <>
-                {renderContentTypeIcons(post)}
-                {post.comment_count > 0 && (
-                  <span
-                    className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0 whitespace-nowrap"
-                    title={`댓글 ${post.comment_count}개`}
-                  >
-                    [{post.comment_count}]
-                  </span>
-                )}
-              </>
-            )}
+            <PostTitleWithCommentCount
+              title={titleText}
+              commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}
+              titleClassName={titleClassName}
+              childrenBeforeComment={!post.is_deleted && !post.is_hidden ? renderContentTypeIcons(post) : null}
+              inlineComment={!post.is_deleted && !post.is_hidden}
+              clampClassName="truncate"
+            />
           </div>
         </Link>
       </td>

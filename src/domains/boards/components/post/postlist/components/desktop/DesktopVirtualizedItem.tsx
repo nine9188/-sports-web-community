@@ -12,6 +12,7 @@ import { Post, PostVariant } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
+import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -90,22 +91,14 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
       <div className="py-2 px-4 flex-1 min-w-0">
         <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
-            <span className={`${titleClassName} truncate`}>
-              {titleText}
-            </span>
-            {!post.is_deleted && !post.is_hidden && (
-              <>
-                {renderContentTypeIcons(post)}
-                {post.comment_count > 0 && (
-                  <span
-                    className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0 whitespace-nowrap"
-                    title={`댓글 ${post.comment_count}개`}
-                  >
-                    [{post.comment_count}]
-                  </span>
-                )}
-              </>
-            )}
+            <PostTitleWithCommentCount
+              title={titleText}
+              commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}
+              titleClassName={titleClassName}
+              childrenBeforeComment={!post.is_deleted && !post.is_hidden ? renderContentTypeIcons(post) : null}
+              inlineComment={!post.is_deleted && !post.is_hidden}
+              clampClassName="truncate"
+            />
           </div>
         </Link>
         <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">

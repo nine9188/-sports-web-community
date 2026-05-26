@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/shared/context/AuthContext';
-import { likePost, dislikePost } from '@/domains/boards/actions/posts/index';
+import { reactToPost } from '@/domains/boards/utils/post/postReactionClient';
 
 interface UsePostActionsProps {
   postId: string;
@@ -42,7 +42,7 @@ export function usePostActions({
     try {
       setIsLoading(true);
       
-      const result = await likePost(postId);
+      const result = await reactToPost(postId, 'like');
       
       if (result.success) {
         setLikes(result.likes || 0);
@@ -79,7 +79,7 @@ export function usePostActions({
     try {
       setIsLoading(true);
       
-      const result = await dislikePost(postId);
+      const result = await reactToPost(postId, 'dislike');
       
       if (result.success) {
         setLikes(result.likes || 0);

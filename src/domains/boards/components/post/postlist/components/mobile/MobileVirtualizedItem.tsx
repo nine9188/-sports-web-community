@@ -12,6 +12,7 @@ import { Post, PostVariant } from '../../types';
 import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTitleClassName } from '../../utils';
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
+import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -70,19 +71,14 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
     >
       <Link href={href} prefetch={false} className="block w-full overflow-hidden" onClick={handleClick}>
         <div className="flex items-center gap-1 mb-1.5">
-          <span className={`${titleClassName} truncate`}>
-            {titleText}
-          </span>
-          {!post.is_deleted && !post.is_hidden && (
-            <>
-              {renderContentTypeIcons(post)}
-              {post.comment_count > 0 && (
-                <span className="text-xs text-orange-600 dark:text-orange-400 font-medium flex-shrink-0 whitespace-nowrap">
-                  [{post.comment_count}]
-                </span>
-              )}
-            </>
-          )}
+          <PostTitleWithCommentCount
+            title={titleText}
+            commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}
+            titleClassName={titleClassName}
+            childrenBeforeComment={!post.is_deleted && !post.is_hidden ? renderContentTypeIcons(post) : null}
+            inlineComment={!post.is_deleted && !post.is_hidden}
+            clampClassName="truncate"
+          />
         </div>
       </Link>
 

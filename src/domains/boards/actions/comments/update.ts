@@ -1,10 +1,12 @@
 'use server';
 
+import { after } from 'next/server';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { CommentType } from '../../types/post/comment';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
 import { CommentActionResponse, sanitizeEmoticonCodes } from './utils';
+import { incrementUserEmoticonUsage } from '../emoticonUsage';
 
 /**
  * 댓글 수정
@@ -112,6 +114,11 @@ export async function updateComment(commentId: string, content: string): Promise
         content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
       }
     );
+
+    after(() => {
+      void incrementUserEmoticonUsage(supabase, sanitizedContent)
+        .catch(err => console.error('댓글 수정 이모티콘 사용량 집계 실패 (무시됨):', err));
+    });
     
     return {
       success: true,

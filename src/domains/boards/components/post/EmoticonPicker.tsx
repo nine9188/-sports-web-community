@@ -65,6 +65,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
 
   const currentPackage = packages?.find(p => p.pack_id === activePackageId);
   const filteredEmoticons = currentPackage?.emoticons || [];
+  const isFrequentPackage = currentPackage?.pack_id === '__frequent__';
   const totalPages = Math.max(1, Math.ceil(filteredEmoticons.length / ITEMS_PER_PAGE));
   const currentEmoticons = filteredEmoticons.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -159,22 +160,34 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
 
         {isDesktop ? (
           <div className="px-4 py-4">
-            <div className="grid grid-cols-6 gap-2.5">
-              {currentEmoticons.map((emo) => (
-                <EmoticonButton key={emo.id} emoticon={emo} onSelect={handleSelect} size="desktop" />
-              ))}
-              {Array.from({ length: ITEMS_PER_PAGE - currentEmoticons.length }).map((_, i) => (
-                <div key={`empty-${i}`} className="w-[100px] h-[100px]" />
-              ))}
-            </div>
+            {isFrequentPackage && currentEmoticons.length === 0 ? (
+              <div className="h-[430px] flex items-center justify-center text-xs text-gray-400 dark:text-gray-500">
+                자주 쓴 이모티콘이 없습니다
+              </div>
+            ) : (
+              <div className="grid grid-cols-6 gap-2.5">
+                {currentEmoticons.map((emo) => (
+                  <EmoticonButton key={emo.id} emoticon={emo} onSelect={handleSelect} size="desktop" />
+                ))}
+                {Array.from({ length: ITEMS_PER_PAGE - currentEmoticons.length }).map((_, i) => (
+                  <div key={`empty-${i}`} className="w-[100px] h-[100px]" />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div data-emoticon-scroll className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3">
-            <div className="grid grid-cols-6 gap-1.5">
-              {filteredEmoticons.map((emo) => (
-                <EmoticonButton key={emo.id} emoticon={emo} onSelect={handleSelect} size="mobile" />
-              ))}
-            </div>
+            {isFrequentPackage && filteredEmoticons.length === 0 ? (
+              <div className="h-full min-h-[220px] flex items-center justify-center text-xs text-gray-400 dark:text-gray-500">
+                자주 쓴 이모티콘이 없습니다
+              </div>
+            ) : (
+              <div className="grid grid-cols-6 gap-1.5">
+                {filteredEmoticons.map((emo) => (
+                  <EmoticonButton key={emo.id} emoticon={emo} onSelect={handleSelect} size="mobile" />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

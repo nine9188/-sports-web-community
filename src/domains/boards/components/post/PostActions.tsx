@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
+import { reactToPost } from '@/domains/boards/utils/post/postReactionClient';
+import {
+  POST_REACTION_UPDATED_EVENT,
+  dispatchPostReactionUpdated,
+  type PostReactionUpdatedDetail,
+} from '@/domains/boards/utils/post/postReactionEvents';
 
 interface PostActionsProps {
   postId: string;
@@ -48,6 +54,20 @@ export default function PostActions({
     setDislikes(initialDislikes);
     setUserAction(initialUserAction);
   }, [initialLikes, initialDislikes, initialUserAction]);
+
+  useEffect(() => {
+    const handleExternalReaction = (event: Event) => {
+      const detail = (event as CustomEvent<PostReactionUpdatedDetail>).detail;
+      if (!detail || detail.postId !== postId) return;
+
+      setLikes(detail.likes);
+      setDislikes(detail.dislikes);
+      setUserAction(detail.userAction);
+    };
+
+    window.addEventListener(POST_REACTION_UPDATED_EVENT, handleExternalReaction);
+    return () => window.removeEventListener(POST_REACTION_UPDATED_EVENT, handleExternalReaction);
+  }, [postId]);
   
   const handleReaction = async (type: ReactionType) => {
     if (isLiking || isDisliking) return;
@@ -61,20 +81,9 @@ export default function PostActions({
     }
 
     try {
-      const response = await fetch(`/api/posts/${postId}/reaction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type }),
-      });
-      const result = await response.json().catch(() => null) as {
-        success?: boolean;
-        likes?: number;
-        dislikes?: number;
-        userAction?: 'like' | 'dislike' | null;
-        error?: string;
-      } | null;
+      const result = await reactToPost(postId, type);
 
-      if (!response.ok || !result?.success) {
+      if (!result.success) {
         toast.error(result?.error || `${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);
         return;
       }
@@ -84,6 +93,12 @@ export default function PostActions({
       if (result.likes !== undefined) setLikes(result.likes);
       if (result.dislikes !== undefined) setDislikes(result.dislikes);
       setUserAction(nextAction);
+      dispatchPostReactionUpdated({
+        postId,
+        likes: result.likes ?? 0,
+        dislikes: result.dislikes ?? 0,
+        userAction: nextAction,
+      });
       toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
     } catch {
       toast.error(`${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);

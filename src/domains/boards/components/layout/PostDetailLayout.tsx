@@ -466,6 +466,9 @@ export default async function PostDetailLayout({
           postId={post.id}
           postOwnerId={post.user_id}
           currentUserId={currentUserId}
+          initialPostLikes={post.likes || 0}
+          initialPostDislikes={post.dislikes || 0}
+          initialPostUserAction={postUserAction}
           initialComments={comments}
         />
       </div>

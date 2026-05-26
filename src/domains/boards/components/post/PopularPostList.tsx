@@ -11,6 +11,7 @@ import { renderContentTypeIcons } from './postlist/components/shared/PostRendere
 import { formatPrice, getDiscountRate } from '../../utils/hotdeal';
 import type { DealInfo } from '../../types/hotdeal';
 import { Container } from '@/shared/components/ui';
+import PostTitleWithCommentCount from './PostTitleWithCommentCount';
 
 const FALLBACK_LIGHT = '/logo/4590_logo_02-01.jpg';
 const FALLBACK_DARK = '/logo/4590_logo_02-02.jpg';
@@ -135,15 +136,14 @@ export default function PopularPostList({
               {/* 제목 + 아이콘 + 댓글 수 */}
               <Link href={postUrl} prefetch={false} className="block overflow-hidden">
                 <div className="flex items-center gap-1 mb-2">
-                  <h3 className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0] line-clamp-2">
-                    {post.title}
-                  </h3>
+                  <PostTitleWithCommentCount
+                    title={post.title}
+                    commentCount={post.comment_count}
+                    titleClassName="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]"
+                    clampClassName="line-clamp-2"
+                    inlineComment
+                  />
                   {renderContentTypeIcons(post)}
-                  {post.comment_count > 0 && (
-                    <span className="text-xs text-orange-600 dark:text-orange-400 flex-shrink-0 whitespace-nowrap">
-                      [{post.comment_count}]
-                    </span>
-                  )}
                 </div>
               </Link>
 

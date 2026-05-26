@@ -1,10 +1,9 @@
 'use server';
 
+import { after } from 'next/server';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { CommentLikeResponse } from './utils';
-import { createCommentLikeNotification } from '@/domains/notifications/actions';
-import { oneOrNull } from '@/shared/utils/supabaseRelations';
+import { handleCommentLikeNotification } from './sideEffects';
 
 type ReactionType = 'like' | 'dislike';
 
@@ -117,7 +116,7 @@ async function toggleCommentReaction(
 
     // 좋아요가 새로 추가된 경우 알림 및 보상 처리
     if (reactionType === 'like' && newUserAction === 'like') {
-      await handleCommentLikeNotification(supabase, commentId, user.id);
+      after(() => handleCommentLikeNotification(supabase, commentId, user.id));
     }
 
     return { success: true, likes, dislikes, userAction: newUserAction };
@@ -127,63 +126,6 @@ async function toggleCommentReaction(
       success: false,
       error: error instanceof Error ? error.message : '처리 중 오류가 발생했습니다.'
     };
-  }
-}
-
-/**
- * 댓글 좋아요 알림 처리
- */
-async function handleCommentLikeNotification(
-  supabase: Awaited<ReturnType<typeof getSupabaseServer>>,
-  commentId: string,
-  userId: string
-): Promise<void> {
-  try {
-    const { data: commentData } = await supabase
-      .from('comments')
-      .select(`
-        user_id,
-        content,
-        post:posts(post_number, board:boards(slug))
-      `)
-      .eq('id', commentId)
-      .single();
-
-    if (!commentData?.user_id || commentData.user_id === userId) return;
-
-    // comment_number 별도 조회 (Supabase 생성 타입 미포함 대비)
-    const { data: cnRow } = await supabase.rpc('get_single_comment_number', { p_comment_id: commentId }) as { data: { comment_number: number }[] | null; error: unknown };
-    const commentNumber = cnRow?.[0]?.comment_number;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nickname')
-      .eq('id', userId)
-      .single();
-
-    const postRow = oneOrNull(commentData.post);
-    const post = postRow
-      ? { ...postRow, board: oneOrNull(postRow.board) }
-      : null;
-
-    if (profile && post?.board?.slug) {
-      await createCommentLikeNotification({
-        commentOwnerId: commentData.user_id,
-        actorId: userId,
-        actorNickname: profile.nickname || '알 수 없음',
-        commentId,
-        commentNumber,
-        commentContent: commentData.content,
-        postNumber: post.post_number,
-        boardSlug: post.board.slug
-      });
-    }
-
-    const activityTypes = await getActivityTypeValues();
-    await rewardUserActivity(commentData.user_id, activityTypes.RECEIVED_LIKE, commentId);
-    await rewardUserActivity(userId, activityTypes.GIVE_LIKE, commentId);
-  } catch (error) {
-    console.error('댓글 좋아요 알림/보상 처리 오류:', error);
   }
 }
 

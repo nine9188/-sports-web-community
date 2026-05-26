@@ -26,9 +26,33 @@ function textAt(source: unknown, path: string[], fallback = ''): string {
   return typeof value === 'string' || typeof value === 'number' ? String(value) : fallback;
 }
 
+function formatMatchDateTime(date?: string): string {
+  if (!date) return '';
+
+  const parsedDate = new Date(date);
+  if (Number.isNaN(parsedDate.getTime())) return '';
+
+  const dateText = parsedDate.toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const timeText = parsedDate.toLocaleTimeString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  return `${dateText} ${timeText} KST`;
+}
+
 function renderSeoSummary(chartData: Record<string, unknown>): string {
   const homeName = textAt(chartData, ['teams', 'home', 'name'], '홈팀');
   const awayName = textAt(chartData, ['teams', 'away', 'name'], '원정팀');
+  const leagueName = textAt(chartData, ['match', 'league', 'name']);
+  const matchDateTime = formatMatchDateTime(textAt(chartData, ['match', 'date']));
   const homePercent = textAt(chartData, ['predictions', 'percent', 'home'], '-');
   const drawPercent = textAt(chartData, ['predictions', 'percent', 'draw'], '-');
   const awayPercent = textAt(chartData, ['predictions', 'percent', 'away'], '-');
@@ -54,6 +78,7 @@ function renderSeoSummary(chartData: Record<string, unknown>): string {
         <p class="text-[13px] text-gray-700 dark:text-gray-300">
           승부 예측: ${escapeHtml(homeName)} ${escapeHtml(homePercent)}, 무승부 ${escapeHtml(drawPercent)}, ${escapeHtml(awayName)} ${escapeHtml(awayPercent)}
         </p>
+        ${leagueName || matchDateTime ? `<p class="text-[13px] text-gray-700 dark:text-gray-300">경기 정보: ${escapeHtml([leagueName, matchDateTime].filter(Boolean).join(' · '))}</p>` : ''}
         ${winner ? `<p class="text-[13px] text-gray-700 dark:text-gray-300">예상 승자: ${escapeHtml(winner)}</p>` : ''}
         ${underOver ? `<p class="text-[13px] text-gray-700 dark:text-gray-300">언더/오버: ${escapeHtml(underOver)}</p>` : ''}
         ${advice ? `<p class="text-[13px] text-gray-700 dark:text-gray-300 mt-2">${escapeHtml(advice)}</p>` : ''}

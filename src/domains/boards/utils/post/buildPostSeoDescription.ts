@@ -40,6 +40,21 @@ function splitKoreanSentences(value: string): string[] {
     .filter(Boolean);
 }
 
+function normalizeRssSpacing(value: string): string {
+  return compactSeoText(value)
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .trim();
+}
+
+function removeNewsAttribution(value: string): string {
+  return normalizeRssSpacing(value)
+    .replace(/^\[[^\]]+\]\s*/, '')
+    .replace(/^[가-힣A-Za-z\s]+ 기자\s*[=·-]\s*/, '')
+    .trim();
+}
+
 function cleanAnalysisSummary(value?: string | null): string {
   return compactSeoText(value)
     .replace(/^경기\s*개요\s*/i, '')
@@ -84,6 +99,28 @@ function getPredictionPercent(meta?: Record<string, unknown> | null): {
   return { home, draw, away };
 }
 
+function getPredictionTeams(meta?: Record<string, unknown> | null): {
+  home?: string;
+  away?: string;
+} | null {
+  const predictionData = meta?.prediction_data;
+  if (!Array.isArray(predictionData)) return null;
+
+  const firstPrediction = predictionData[0] as {
+    teams?: {
+      home?: { name?: unknown };
+      away?: { name?: unknown };
+    };
+  } | undefined;
+  const homeName = firstPrediction?.teams?.home?.name;
+  const awayName = firstPrediction?.teams?.away?.name;
+  const home = typeof homeName === 'string' ? compactSeoText(homeName) : '';
+  const away = typeof awayName === 'string' ? compactSeoText(awayName) : '';
+
+  if (!home && !away) return null;
+  return { home: home || undefined, away: away || undefined };
+}
+
 function formatPrice(price?: number | null): string | null {
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   return `${price.toLocaleString('ko-KR')}원`;
@@ -124,15 +161,24 @@ function buildNewsDescription(
 ): string {
   const context = buildEntityContext(seoEntities);
   const teams = getPrimaryTeams(seoEntities);
+  const players = getPrimaryPlayers(seoEntities);
   const matches = getPrimaryMatches(seoEntities);
-  const cleanSummary = compactSeoText(summary);
+  const cleanSummary = removeNewsAttribution(summary || '');
   const summarySentences = splitKoreanSentences(cleanSummary);
+  const primaryEntities = [
+    ...teams.slice(0, 2),
+    ...players.slice(0, 2),
+  ];
+
+  if (primaryEntities.length > 0 && summarySentences.length > 0) {
+    const topic = joinNames(primaryEntities, 4);
+    const intro = sentence(summarySentences.slice(0, 2).join(' '), context ? 95 : 115);
+    return sentence(`${topic} 관련 축구 뉴스입니다. ${intro}${context}`);
+  }
 
   if (summarySentences.length > 0) {
     const intro = summarySentences.slice(0, 2).join(' ');
-    if (intro.length >= 50) {
-      return sentence(`${sentence(intro, context ? 145 : 160)}${context}`);
-    }
+    if (intro.length >= 50) return sentence(`${sentence(title, 75)} 소식입니다. ${sentence(intro, 95)}${context}`);
   }
 
   if (teams.length > 0 || matches.length > 0) {
@@ -152,10 +198,12 @@ function buildArticleDescriptionFromSummary(
   const teams = getPrimaryTeams(seoEntities);
   const matches = getPrimaryMatches(seoEntities);
   const predictionPercent = getPredictionPercent(postMeta);
+  const predictionTeams = getPredictionTeams(postMeta);
   const matchDate = formatKoreanDate(postMeta?.target_date);
+  const homeTeam = teams[0] || predictionTeams?.home;
+  const awayTeam = teams[1] || predictionTeams?.away;
 
-  if (predictionPercent && teams.length >= 2) {
-    const [homeTeam, awayTeam] = teams;
+  if (predictionPercent && homeTeam && awayTeam) {
     const percentText = [
       predictionPercent.home ? `${homeTeam} ${predictionPercent.home}` : '',
       predictionPercent.draw ? `무승부 ${predictionPercent.draw}` : '',

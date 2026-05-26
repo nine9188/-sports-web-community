@@ -6,20 +6,31 @@ interface BoardPostItemProps {
   isLast: boolean;
 }
 
-/**
- * 댓글 수 서버 컴포넌트
- */
-function CommentCount({ count }: { count: number }) {
-  if (count <= 0) return null;
+const TITLE_PREVIEW_WIDTH = 24;
 
-  return (
-    <span
-      className="text-xs text-orange-600 dark:text-orange-400 font-medium ml-1"
-      title={`댓글 ${count}개`}
-    >
-      [{count}]
-    </span>
-  );
+function getTextWidth(value: string) {
+  return Array.from(value).reduce((width, char) => {
+    if (char === ' ') return width + 0.35;
+    if (/^[\x00-\x7F]$/.test(char)) return width + 0.55;
+    return width + 1;
+  }, 0);
+}
+
+function formatWidgetTitle(title: string) {
+  const normalized = title.replace(/\s+/g, ' ').trim();
+  if (getTextWidth(normalized) <= TITLE_PREVIEW_WIDTH) return normalized;
+
+  let preview = '';
+  let width = 0;
+
+  for (const char of normalized) {
+    const charWidth = char === ' ' ? 0.35 : /^[\x00-\x7F]$/.test(char) ? 0.55 : 1;
+    if (width + charWidth > TITLE_PREVIEW_WIDTH) break;
+    preview += char;
+    width += charWidth;
+  }
+
+  return `${preview.trimEnd()}...`;
 }
 
 function PostMeta({ post }: { post: BoardPost }) {
@@ -56,6 +67,8 @@ function PostMeta({ post }: { post: BoardPost }) {
  * 게시글 아이템 서버 컴포넌트
  */
 export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
+  const title = formatWidgetTitle(post.title);
+
   return (
     <Link
       href={`/boards/${post.board_slug}/${post.post_number}`}
@@ -64,9 +77,16 @@ export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
         isLast ? '' : 'border-b border-black/5 dark:border-white/10'
       }`}
     >
-      <span className="w-full min-w-0 truncate">
-        {post.title}
-        {post.comment_count > 0 && <CommentCount count={post.comment_count} />}
+      <span
+        className="block text-[13px] font-normal text-gray-900 dark:text-[#F0F0F0] whitespace-nowrap"
+        title={post.comment_count > 0 ? `${post.title} 댓글 ${post.comment_count}개` : post.title}
+      >
+        {title}
+        {post.comment_count > 0 && (
+          <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+            {' '}[{post.comment_count}]
+          </span>
+        )}
       </span>
       <PostMeta post={post} />
     </Link>

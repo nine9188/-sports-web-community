@@ -56,7 +56,8 @@ interface CommentProps {
   onLike: (commentId: string) => Promise<void>;
   onDislike: (commentId: string) => Promise<void>;
   isLiking?: boolean;
-  isPostOwner?: boolean;
+  likingCommentId?: string | null;
+  postOwnerId?: string;
   isReply?: boolean;
   isHighlighted?: boolean;
   highlightedCommentId?: string | null;
@@ -72,7 +73,8 @@ export default function Comment({
   onLike,
   onDislike,
   isLiking: parentIsLiking = false,
-  isPostOwner = false,
+  likingCommentId = null,
+  postOwnerId,
   isReply = false,
   isHighlighted = false,
   highlightedCommentId,
@@ -87,6 +89,8 @@ export default function Comment({
   const [showCopied, setShowCopied] = useState(false);
 
   const isCommentOwner = currentUserId === comment.user_id;
+  const isPostAuthor = postOwnerId === comment.user_id;
+  const isCurrentLiking = parentIsLiking || likingCommentId === comment.id;
   const isHidden = comment.is_hidden === true;
   const isDeleted = comment.is_deleted === true;
 
@@ -138,7 +142,7 @@ export default function Comment({
   }, [editContent]);
 
   const handleLike = async () => {
-    if (parentIsLiking || !currentUserId) return;
+    if (isCurrentLiking || !currentUserId) return;
     try {
       await onLike(comment.id);
     } catch {
@@ -147,7 +151,7 @@ export default function Comment({
   };
 
   const handleDislike = async () => {
-    if (parentIsLiking || !currentUserId) return;
+    if (isCurrentLiking || !currentUserId) return;
     try {
       await onDislike(comment.id);
     } catch {
@@ -192,7 +196,7 @@ export default function Comment({
                   priority
                   enableMobile
                 />
-                {isPostOwner && isCommentOwner && (
+                {isPostAuthor && (
                   <span className="text-xs bg-[#F5F5F5] dark:bg-[#333333] text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">작성자</span>
                 )}
               </div>
@@ -237,8 +241,8 @@ export default function Comment({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <ActionButton action="like" active={comment.userAction === 'like'} count={comment.likes || 0} onClick={handleLike} disabled={parentIsLiking || !currentUserId} />
-                <ActionButton action="dislike" active={comment.userAction === 'dislike'} count={comment.dislikes || 0} onClick={handleDislike} disabled={parentIsLiking || !currentUserId} />
+                <ActionButton action="like" active={comment.userAction === 'like'} count={comment.likes || 0} onClick={handleLike} disabled={isCurrentLiking || !currentUserId} />
+                <ActionButton action="dislike" active={comment.userAction === 'dislike'} count={comment.dislikes || 0} onClick={handleDislike} disabled={isCurrentLiking || !currentUserId} />
                 {!isReply && currentUserId && onReply && (
                   <Button
                     variant="ghost"
@@ -297,7 +301,8 @@ export default function Comment({
               onLike={onLike}
               onDislike={onDislike}
               isLiking={parentIsLiking}
-              isPostOwner={isPostOwner}
+              likingCommentId={likingCommentId}
+              postOwnerId={postOwnerId}
               isReply={true}
               isHighlighted={highlightedCommentId === String(childComment.comment_number ?? childComment.id)}
               highlightedCommentId={highlightedCommentId}

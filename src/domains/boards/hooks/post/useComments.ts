@@ -35,6 +35,7 @@ interface UseCommentsReturn {
   likeComment: (commentId: string) => Promise<void>;
   dislikeComment: (commentId: string) => Promise<void>;
   isLiking: boolean;
+  likingCommentId: string | null;
   refetch: () => void;
 }
 
@@ -49,6 +50,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [likingCommentId, setLikingCommentId] = useState<string | null>(null);
 
   const supabase = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -215,6 +217,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
 
   const likeComment = useCallback(async (commentId: string) => {
     setIsLiking(true);
+    setLikingCommentId(commentId);
     try {
       const result = await likeCommentAction(commentId);
       if (!result.success) {
@@ -227,11 +230,13 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
       ));
     } finally {
       setIsLiking(false);
+      setLikingCommentId(null);
     }
   }, []);
 
   const dislikeComment = useCallback(async (commentId: string) => {
     setIsLiking(true);
+    setLikingCommentId(commentId);
     try {
       const result = await dislikeCommentAction(commentId);
       if (!result.success) {
@@ -244,6 +249,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
       ));
     } finally {
       setIsLiking(false);
+      setLikingCommentId(null);
     }
   }, []);
 
@@ -263,6 +269,7 @@ export function useComments({ postId, enabled = true, initialComments }: UseComm
     likeComment,
     dislikeComment,
     isLiking,
+    likingCommentId,
     refetch,
   };
 }
