@@ -1,7 +1,7 @@
 'use server';
 
 import { after } from 'next/server';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAction } from '@/shared/lib/supabase/server';
 import { CommentLikeResponse } from './utils';
 import { handleCommentLikeNotification } from './sideEffects';
 
@@ -16,7 +16,7 @@ async function toggleCommentReaction(
   reactionType: ReactionType
 ): Promise<CommentLikeResponse> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = await getSupabaseAction();
     const oppositeType: ReactionType = reactionType === 'like' ? 'dislike' : 'like';
 
     // 인증된 사용자 확인
@@ -53,10 +53,13 @@ async function toggleCommentReaction(
 
       // 원자적 감소
       const column = reactionType === 'like' ? 'likes' : 'dislikes';
-      await supabase.rpc('decrement_comment_count', {
+      const { error: decrementError } = await supabase.rpc('decrement_comment_count', {
         row_id: commentId,
         column_name: column,
       });
+      if (decrementError) {
+        return { success: false, error: `카운트 감소 오류: ${decrementError.message}` };
+      }
 
       newUserAction = null;
     } else {
@@ -78,10 +81,13 @@ async function toggleCommentReaction(
         if (!deleteError) {
           // 반대 리액션 원자적 감소
           const oppositeColumn = oppositeType === 'like' ? 'likes' : 'dislikes';
-          await supabase.rpc('decrement_comment_count', {
+          const { error: decrementError } = await supabase.rpc('decrement_comment_count', {
             row_id: commentId,
             column_name: oppositeColumn,
           });
+          if (decrementError) {
+            return { success: false, error: `카운트 감소 오류: ${decrementError.message}` };
+          }
         }
       }
 
@@ -96,10 +102,13 @@ async function toggleCommentReaction(
 
       // 원자적 증가
       const column = reactionType === 'like' ? 'likes' : 'dislikes';
-      await supabase.rpc('increment_comment_count', {
+      const { error: incrementError } = await supabase.rpc('increment_comment_count', {
         row_id: commentId,
         column_name: column,
       });
+      if (incrementError) {
+        return { success: false, error: `카운트 증가 오류: ${incrementError.message}` };
+      }
 
       newUserAction = reactionType;
     }

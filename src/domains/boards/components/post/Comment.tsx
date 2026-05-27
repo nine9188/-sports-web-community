@@ -9,6 +9,7 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import Image from 'next/image';
 import EmoticonPicker from './EmoticonPicker';
 import { useEmoticonMap } from '@/domains/boards/hooks/useEmoticonMap';
+import { trackEvent } from '@/shared/lib/gtag';
 
 // 이모티콘 코드를 파싱하여 텍스트 + 이미지로 렌더링
 function renderContent(text: string, emoticonMap: Map<string, { code: string; url: string; name: string }>, emoticonRegex: RegExp) {
@@ -102,10 +103,15 @@ export default function Comment({
     if (!commentPermalink) return;
     const fullUrl = `${window.location.origin}${commentPermalink}`;
     navigator.clipboard.writeText(fullUrl).then(() => {
+      trackEvent('share_click', {
+        type: 'comment_link',
+        comment_id: comment.id,
+        page: window.location.pathname,
+      });
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
     });
-  }, [commentPermalink]);
+  }, [comment.id, commentPermalink]);
 
   const handleEdit = () => setIsEditing(true);
   const handleCancel = () => {

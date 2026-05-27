@@ -12,6 +12,7 @@ import Spinner from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/ui'
 import Calendar from '@/shared/components/Calendar'
 import BrandingPanel from '../components/BrandingPanel'
+import { trackEvent } from '@/shared/lib/gtag'
 
 export default function SocialSignupPage() {
   const router = useRouter()
@@ -272,6 +273,12 @@ export default function SocialSignupPage() {
         toast.error(result.error || '회원가입 중 오류가 발생했습니다.')
         return
       }
+
+      trackEvent('signup_complete', {
+        method: 'social',
+        provider: String(user.app_metadata?.provider || user.user_metadata?.provider || 'unknown'),
+        has_referral: Boolean(referralValid && referralCode.trim()),
+      })
 
       // 축하 팝업 표시
       setShowWelcomeModal(true)

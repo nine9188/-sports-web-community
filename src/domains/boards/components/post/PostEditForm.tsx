@@ -33,6 +33,7 @@ import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPicke
 import type { PostPollDraft } from '@/domains/boards/types/poll';
 import { PollBlockExtension } from '@/shared/components/editor/tiptap/PollBlockExtension';
 import { Bold, CalendarDays, Heading2, Heading3, Italic, Link as LinkIcon, Shield, Trash2, UserRound } from 'lucide-react';
+import { trackEvent } from '@/shared/lib/gtag';
 
 // Hotdeal options
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
@@ -1584,9 +1585,16 @@ export default function PostEditForm({
     const { post } = result;
     const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
 
+    trackEvent('post_create', {
+      board: boardSlug,
+      post_number: post.post_number,
+      is_hotdeal: isHotdeal,
+      has_poll: Boolean(pollDraft),
+    });
+
     toast.success('게시글이 작성되었습니다.');
     router.push(`/boards/${boardSlug}/${post.post_number}`);
-  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router]);
+  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router, categoryId]);
 
   // 寃뚯떆湲 ?섏젙 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const handleUpdatePost = useCallback(async () => {

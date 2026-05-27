@@ -15,6 +15,7 @@ import {
   dispatchPostReactionUpdated,
   type PostReactionUpdatedDetail,
 } from '@/domains/boards/utils/post/postReactionEvents';
+import { trackEvent } from '@/shared/lib/gtag';
 
 interface CommentSectionProps {
   postId: string;
@@ -196,6 +197,11 @@ export default function CommentSection({
       }
 
       await createComment(content.trim(), replyTo);
+      trackEvent('comment_submit', {
+        post_id: postId,
+        is_reply: Boolean(replyTo),
+        page: pathname,
+      });
 
       if (reactionPromise) {
         const reactionResult = await reactionPromise;
@@ -230,7 +236,7 @@ export default function CommentSection({
         alert(message);
       }
     }
-  }, [content, replyTo, createComment, postId]);
+  }, [content, replyTo, createComment, postId, pathname]);
 
   const handleUpdate = useCallback(async (commentId: string, updatedContent: string) => {
     await updateComment(commentId, updatedContent);

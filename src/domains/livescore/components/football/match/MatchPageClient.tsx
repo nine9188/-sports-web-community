@@ -10,6 +10,7 @@ import MatchAutoRefresh from './MatchAutoRefresh';
 import MatchSidebar from './sidebar/MatchSidebar';
 import TabContent from './TabContent';
 import TabNavigation from './TabNavigation';
+import MatchViewTracker from '@/shared/components/analytics/MatchViewTracker';
 
 export type MatchTabType = 'power' | 'events' | 'lineups' | 'stats' | 'standings' | 'support';
 
@@ -54,9 +55,23 @@ export default function MatchPageClient({
   const sidebarData = initialSidebarData ?? null;
   const statusCode = initialData.match?.status.code;
   const startDate = initialData.match?.time.date;
+  const matchData = initialData.matchData as {
+    league?: { name?: string };
+    teams?: {
+      home?: { name?: string; name_ko?: string };
+      away?: { name?: string; name_ko?: string };
+    };
+  } | undefined;
 
   return (
     <div className="container">
+      <MatchViewTracker
+        matchId={matchId}
+        league={matchData?.league?.name}
+        homeTeam={matchData?.teams?.home?.name_ko || matchData?.teams?.home?.name}
+        awayTeam={matchData?.teams?.away?.name_ko || matchData?.teams?.away?.name}
+        status={statusCode}
+      />
       <MatchAutoRefresh statusCode={statusCode} startDate={startDate} />
       <div className="flex gap-4">
         <div className="flex-1 min-w-0">

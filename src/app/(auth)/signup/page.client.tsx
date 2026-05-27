@@ -15,6 +15,7 @@ import BrandingPanel from '../components/BrandingPanel';
 import { TermsContent, PrivacyContent } from '@/shared/components/legal';
 import Calendar from '@/shared/components/Calendar';
 import { Button } from '@/shared/components/ui';
+import { trackEvent } from '@/shared/lib/gtag';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -759,6 +760,10 @@ export default function SignupPage() {
       }, captchaToken);
 
       if (result.success) {
+        trackEvent('signup_complete', {
+          method: 'email',
+          has_referral: Boolean(referralValid && referralCode.trim()),
+        });
         sessionStorage.setItem('signup-success', 'true');
         router.push('/signin');
       } else {
