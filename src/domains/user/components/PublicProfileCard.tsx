@@ -35,11 +35,9 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
           {/* 구분점 */}
           <span className="mx-2 text-gray-300 dark:text-gray-600">·</span>
 
-          {/* 레벨 / 아이디(마스킹) / 게시글 / 댓글 / 방문 */}
+          {/* 레벨 / 게시글 / 댓글 / 방문 */}
           <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
             <span>Lv.{profile.level}</span>
-            <span className="text-gray-300 dark:text-gray-600">/</span>
-            <span>{profile.masked_id}</span>
             <span className="text-gray-300 dark:text-gray-600">/</span>
             <span>글 {profile.post_count}</span>
             <span className="text-gray-300 dark:text-gray-600">/</span>
@@ -59,7 +57,7 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
       {/* 모바일: 두 줄 */}
       <div className="md:hidden space-y-1.5">
-        {/* 첫째 줄: 아이콘 + 닉네임 + 레벨 + 아이디 */}
+        {/* 첫째 줄: 아이콘 + 닉네임 + 레벨 */}
         <div className="flex items-center">
           <div className="flex items-center gap-2">
             <div aria-hidden="true">
@@ -78,8 +76,6 @@ export default function PublicProfileCard({ profile }: PublicProfileCardProps) {
           <span className="mx-1.5 text-gray-300 dark:text-gray-600">·</span>
           <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
             <span>Lv.{profile.level}</span>
-            <span className="text-gray-300 dark:text-gray-600">/</span>
-            <span>{profile.masked_id}</span>
           </div>
         </div>
 

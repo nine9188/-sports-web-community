@@ -200,6 +200,23 @@ export function renderTipTapNode(node: TipTapNode): string {
       `;
     }
 
+    if (platform === 'video' && url) {
+      return `
+        <div class="video-wrapper my-6">
+          <video
+            src="${url}"
+            controls
+            playsinline
+            preload="metadata"
+            class="max-w-full h-auto mx-auto rounded-lg"
+            style="max-height: 500px;"
+          >
+            브라우저가 비디오를 지원하지 않습니다.
+          </video>
+        </div>
+      `;
+    }
+
     return `
       <div data-type="social-embed" data-platform="${platform}" data-url="${url}" class="my-6">
         <div class="social-embed-placeholder p-4 bg-[#F5F5F5] dark:bg-[#262626] border border-black/7 dark:border-white/10 rounded-lg text-center">

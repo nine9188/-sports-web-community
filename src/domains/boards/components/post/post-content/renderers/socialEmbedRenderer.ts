@@ -28,6 +28,26 @@ export function renderYouTubeEmbed(url: string): string | null {
 }
 
 /**
+ * 직접 재생 가능한 비디오 HTML 생성
+ */
+export function renderVideoEmbed(url: string): string {
+  return `
+    <div class="video-wrapper my-6">
+      <video
+        src="${url}"
+        controls
+        playsinline
+        preload="metadata"
+        class="max-w-full h-auto mx-auto rounded-lg"
+        style="max-height: 500px;"
+      >
+        브라우저가 비디오를 지원하지 않습니다.
+      </video>
+    </div>
+  `;
+}
+
+/**
  * Twitter 임베드 HTML 생성
  */
 export function renderTwitterEmbed(url: string): string | null {
@@ -258,6 +278,11 @@ export function processSocialEmbed(element: Element): void {
     } else if (platform === 'linkedin') {
       const embedHtml = renderLinkedInEmbed(url);
       element.innerHTML = embedHtml;
+    } else if (platform === 'video') {
+      const embedHtml = renderVideoEmbed(url);
+      element.innerHTML = embedHtml;
+    } else {
+      element.innerHTML = renderEmbedError('지원하지 않는 소셜 미디어 링크입니다.');
     }
   } catch {
     element.innerHTML = renderEmbedError('소셜 미디어 콘텐츠를 로드하는 중 오류가 발생했습니다.');
