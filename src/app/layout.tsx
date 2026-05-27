@@ -144,13 +144,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google tag loaded with next/script to avoid hydration mismatch. */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
         />
-        <Script id="gtag-init" strategy="lazyOnload">
+        <Script id="gtag-init" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-MESEGFZZPF');`}
+window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+window.gtag('js', new Date());
+window.gtag('config', 'G-MESEGFZZPF');`}
         </Script>
       </body>
     </html>
