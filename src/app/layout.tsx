@@ -29,7 +29,15 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: siteConfig.ogTitle,
     description: siteConfig.description,
-    images: [siteConfig.getDefaultOgImageObject()],
+    images: [
+      siteConfig.getDefaultOgImageObject(),
+      {
+        url: siteConfig.defaultOgImageSquare,
+        width: 1200,
+        height: 1200,
+        alt: siteConfig.name,
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
