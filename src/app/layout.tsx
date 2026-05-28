@@ -1,7 +1,6 @@
 import './globals.css';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
@@ -77,6 +76,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href={`${siteConfig.url}/icon.png`} type="image/png" sizes="192x192" />
         <link rel="apple-touch-icon" href={`${siteConfig.url}/apple-icon.png`} type="image/png" sizes="180x180" />
         <link rel="manifest" href={`${siteConfig.url}/site.webmanifest`} />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+window.gtag('js', new Date());
+window.gtag('config', 'G-MESEGFZZPF');
+`,
+          }}
+        />
         <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
@@ -141,17 +151,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </RootLayoutProvider>
         <Analytics />
         <SpeedInsights />
-        {/* Google tag loaded with next/script to avoid hydration mismatch. */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF"
-          strategy="afterInteractive"
-        />
-        <Script id="gtag-init" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || [];
-window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
-window.gtag('js', new Date());
-window.gtag('config', 'G-MESEGFZZPF');`}
-        </Script>
       </body>
     </html>
   );
