@@ -179,10 +179,10 @@ async function LeaguePageContent({ id }: { id: string }) {
       <DaumWebmasterHints
         title={isCup
           ? `${displayName} 대진표 및 경기 일정`
-          : `${displayName} 팀 순위표 및 선수 기록`}
+          : `${displayName} 순위 및 경기 일정`}
         content={isCup
           ? `${displayName}${league.country ? ` (${league.country})` : ''} 대진표, 라운드별 경기 일정과 결과를 확인하세요.`
-          : `${displayName}${league.country ? ` (${league.country})` : ''} 팀 순위표, 득점 순위, 도움 순위와 팀 정보를 확인하세요.`}
+          : `${displayName}${league.country ? ` (${league.country})` : ''} 순위, 경기 일정, 결과, 득점 순위와 팀 정보를 확인하세요.`}
       />
       <script type="application/ld+json" {...jsonLdScriptProps(leagueSchema)} />
       <script type="application/ld+json" {...jsonLdScriptProps(breadcrumbSchema)} />
