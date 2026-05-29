@@ -71,6 +71,26 @@ function formatKoreanDate(value: unknown): string | null {
   return `${date.getMonth() + 1}월 ${date.getDate()}일`;
 }
 
+function normalizeLeagueName(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const normalized = value.trim();
+  const leagueMap: Record<string, string> = {
+    'Premier League': '프리미어리그',
+    'La Liga': '라리가',
+    Bundesliga: '분데스리가',
+    'Serie A': '세리에A',
+    'Ligue 1': '리그앙',
+    'UEFA Champions League': '챔피언스리그',
+    'UEFA Europa League': '유로파리그',
+    'UEFA Europa Conference League': '컨퍼런스리그',
+    'K League 1': 'K리그1',
+    'K League 2': 'K리그2',
+    'FA Cup': 'FA컵',
+  };
+
+  return leagueMap[normalized] || normalized;
+}
+
 function getPredictionPercent(meta?: Record<string, unknown> | null): {
   home?: string;
   draw?: string;
@@ -200,6 +220,7 @@ function buildArticleDescriptionFromSummary(
   const predictionPercent = getPredictionPercent(postMeta);
   const predictionTeams = getPredictionTeams(postMeta);
   const matchDate = formatKoreanDate(postMeta?.target_date);
+  const leagueName = normalizeLeagueName(postMeta?.league_name) || boardName;
   const homeTeam = teams[0] || predictionTeams?.home;
   const awayTeam = teams[1] || predictionTeams?.away;
 
@@ -211,7 +232,7 @@ function buildArticleDescriptionFromSummary(
     ].filter(Boolean).join(', ');
 
     return sentence(
-      `${matchDate ? `${matchDate} ` : ''}${boardName} ${homeTeam} vs ${awayTeam} 경기 예측 분석입니다. 승률 예측: ${percentText}. 최근 흐름과 맞대결 관전 포인트를 정리했습니다.`
+      `${matchDate ? `${matchDate} ` : ''}${leagueName} ${homeTeam} vs ${awayTeam} 경기 예측 분석입니다. 승률 예측: ${percentText}. 최근 흐름과 맞대결 관전 포인트를 정리했습니다.`
     );
   }
 
@@ -231,7 +252,7 @@ function buildArticleDescriptionFromSummary(
     return sentence(`${sentence(title, 105)}입니다. ${joinNames(teams, 2)}의 최근 흐름, 맞대결 기록, 승부 예측과 주요 변수를 정리했습니다.`);
   }
 
-  return sentence(`${sentence(title, 115)}입니다. ${boardName} 경기의 최근 흐름, 맞대결 기록, 승부 예측과 주요 변수를 정리했습니다.`);
+  return sentence(`${sentence(title, 115)}입니다. ${leagueName} 경기의 최근 흐름, 맞대결 기록, 승부 예측과 주요 변수를 정리했습니다.`);
 }
 
 function buildDealDescription(title: string, boardName: string, dealInfo?: DealInfo | null): string {
