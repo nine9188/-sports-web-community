@@ -16,7 +16,7 @@ const URL_PATTERNS: Record<SocialPlatform, RegExp> = {
   twitter: /(?:twitter\.com|x\.com)\/(?:#!\/)?(\w+)\/status(?:es)?\/(\d+)/i,
   instagram: /(?:www\.)?instagram\.com\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/i,
   tiktok: /(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i,
-  youtube: /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i,
+  youtube: /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i,
   facebook: /(?:www\.)?facebook\.com\/(?:[\w.-]+\/)?(?:posts|videos|photo\.php|permalink\.php|pfbid)[\/?]?[^\s]*/i,
   linkedin: /(?:www\.)?linkedin\.com\/(?:feed\/update|posts)\/[\w-]+/i,
 };

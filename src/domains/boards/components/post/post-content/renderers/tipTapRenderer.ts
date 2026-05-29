@@ -133,7 +133,7 @@ export function renderTipTapNode(node: TipTapNode): string {
   if (node.type === 'youtube' && node.attrs?.src) {
     const src = node.attrs.src as string;
     let videoId = '';
-    const youtubeMatch = src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+    const youtubeMatch = src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
     if (youtubeMatch) {
       videoId = youtubeMatch[1];
     } else if (src.length === 11) {
@@ -162,7 +162,7 @@ export function renderTipTapNode(node: TipTapNode): string {
     const url = node.attrs.url as string;
 
     if (platform === 'youtube' && url) {
-      const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+      const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
       const videoId = youtubeMatch ? youtubeMatch[1] : null;
 
       if (videoId) {
