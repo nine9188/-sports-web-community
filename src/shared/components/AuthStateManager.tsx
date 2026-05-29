@@ -54,17 +54,7 @@ const AuthStateManager = React.memo(function AuthStateManager({
   
   return (
     <div className="flex flex-col min-h-screen w-full" data-site-shell>
-      <div className="contents" data-site-header>
-        <HeaderClient
-          onProfileClick={onProfileClick}
-          isSidebarOpen={false}
-          initialUserData={headerUserData}
-          boards={headerBoards || []}
-          isAdmin={headerIsAdmin}
-          totalPostCountSlot={headerTotalPostCountSlot}
-        />
-      </div>
-      <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto pb-4 bg-transparent" data-site-content-row>
+      <div className="order-2 flex flex-1 w-full md:max-w-[1360px] md:mx-auto pb-4 bg-transparent" data-site-content-row>
         <main className="order-2 flex-1 mt-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
           {children}
         </main>
@@ -85,12 +75,22 @@ const AuthStateManager = React.memo(function AuthStateManager({
         {/* 매치 페이지일 때는 사이드바 없음, 아니면 기본 사이드바 */}
         {!isMatchPage && <div className="order-3" data-site-right-sidebar>{rightSidebar}</div>}
       </div>
-      <div data-site-footer>
+      <div className="contents order-1" data-site-header>
+        <HeaderClient
+          onProfileClick={onProfileClick}
+          isSidebarOpen={false}
+          initialUserData={headerUserData}
+          boards={headerBoards || []}
+          isAdmin={headerIsAdmin}
+          totalPostCountSlot={headerTotalPostCountSlot}
+        />
+      </div>
+      <div className="order-3" data-site-footer>
         <Footer />
       </div>
 
       {/* 챗봇 - 모든 사용자에게 표시 (로그인/비로그인 자동 감지) */}
-      <div data-site-chatbot>
+      <div className="order-4" data-site-chatbot>
         <UniversalChatbot />
       </div>
     </div>
