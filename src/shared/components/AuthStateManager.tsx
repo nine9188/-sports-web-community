@@ -65,14 +65,14 @@ const AuthStateManager = React.memo(function AuthStateManager({
         />
       </div>
       <div className="flex flex-1 w-full md:max-w-[1360px] md:mx-auto pb-4 bg-transparent" data-site-content-row>
+        <main className="order-2 flex-1 mt-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
+          {children}
+        </main>
         <ProfileSidebar
           isOpen={isProfileOpen}
           onClose={onProfileClose}
           userData={fullUserData}
         />
-        <main className="order-2 flex-1 mt-4 md:px-4 w-full min-w-0 box-border bg-transparent" data-site-main>
-          {children}
-        </main>
         <div className="order-1" data-site-left-sidebar>
           <Sidebar
             isOpen={isOpen}
