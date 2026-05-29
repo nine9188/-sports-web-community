@@ -6,16 +6,17 @@
  * YouTube 임베드 HTML 생성
  */
 export function renderYouTubeEmbed(url: string): string | null {
-  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(youtubeRegex);
   const videoId = match ? match[1] : null;
+  const isShorts = /youtube\.com\/shorts\//i.test(url);
 
   if (!videoId) {
     return null;
   }
 
   return `
-    <div class="youtube-container">
+    <div class="youtube-container${isShorts ? ' youtube-shorts' : ''}">
       <iframe
         src="https://www.youtube.com/embed/${videoId}"
         title="YouTube video"

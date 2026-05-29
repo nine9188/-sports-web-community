@@ -232,7 +232,7 @@ export function checkContentType(content: string | undefined): ContentTypeCheck 
     const hasYoutube =
       foundYoutube ||
       contentToCheck.includes('[유튜브]') ||
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)/i.test(contentToCheck);
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)/i.test(contentToCheck);
 
     // 트위터 확인
     const hasTwitter =

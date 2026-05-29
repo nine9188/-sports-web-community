@@ -133,6 +133,7 @@ export function renderTipTapNode(node: TipTapNode): string {
   if (node.type === 'youtube' && node.attrs?.src) {
     const src = node.attrs.src as string;
     let videoId = '';
+    const isShorts = /youtube\.com\/shorts\//i.test(src);
     const youtubeMatch = src.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
     if (youtubeMatch) {
       videoId = youtubeMatch[1];
@@ -141,9 +142,13 @@ export function renderTipTapNode(node: TipTapNode): string {
     }
 
     if (videoId) {
+      const aspectStyle = isShorts
+        ? 'padding-bottom: 177.78%; max-width: 420px; margin-left: auto; margin-right: auto;'
+        : 'padding-bottom: 56.25%;';
+
       return `
-        <div class="youtube-wrapper my-6">
-          <div class="relative w-full" style="padding-bottom: 56.25%;">
+        <div class="youtube-wrapper${isShorts ? ' youtube-shorts-wrapper' : ''} my-6">
+          <div class="relative w-full" style="${aspectStyle}">
             <iframe
               src="https://www.youtube.com/embed/${videoId}"
               class="absolute top-0 left-0 w-full h-full rounded-lg"
@@ -162,13 +167,18 @@ export function renderTipTapNode(node: TipTapNode): string {
     const url = node.attrs.url as string;
 
     if (platform === 'youtube' && url) {
+      const isShorts = /youtube\.com\/shorts\//i.test(url);
       const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
       const videoId = youtubeMatch ? youtubeMatch[1] : null;
 
       if (videoId) {
+        const aspectStyle = isShorts
+          ? 'padding-bottom: 177.78%; max-width: 420px; margin-left: auto; margin-right: auto;'
+          : 'padding-bottom: 56.25%;';
+
         return `
-          <div class="youtube-wrapper my-6">
-            <div class="relative w-full" style="padding-bottom: 56.25%;">
+          <div class="youtube-wrapper${isShorts ? ' youtube-shorts-wrapper' : ''} my-6">
+            <div class="relative w-full" style="${aspectStyle}">
               <iframe
                 src="https://www.youtube.com/embed/${videoId}"
                 class="absolute top-0 left-0 w-full h-full rounded-lg"

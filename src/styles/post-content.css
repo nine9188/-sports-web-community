@@ -191,6 +191,13 @@
   background-color: #000;
 }
 
+.youtube-container.youtube-shorts {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: min(177.78%, 747px);
+}
+
 /* iframe이 투명하게 나타나는 문제 해결 */
 iframe[src*="youtube.com/embed/"],
 iframe[src*="youtu.be/"] {
@@ -660,6 +667,14 @@ iframe[src*="youtu.be/"] {
   overflow: hidden;
   max-width: 100%;
   margin-bottom: 1rem;
+}
+
+.youtube-container.youtube-shorts,
+.responsive-video-container.youtube-shorts {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: min(177.78%, 747px);
 }
 
 .youtube-container iframe,

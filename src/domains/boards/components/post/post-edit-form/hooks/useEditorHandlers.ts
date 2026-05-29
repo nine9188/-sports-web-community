@@ -273,12 +273,21 @@ function toYoutubeEmbedUrl(url: string) {
     return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
   }
 
+  if (url.includes('youtube.com/shorts/')) {
+    const videoId = url.split('youtube.com/shorts/')[1]?.split(/[?&/]/)[0];
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+  }
+
   if (url.includes('youtu.be/')) {
     const videoId = url.split('youtu.be/')[1]?.split('?')[0];
     return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
   }
 
   return url;
+}
+
+function isYoutubeShortsUrl(url: string) {
+  return /youtube\.com\/shorts\//i.test(url);
 }
 
 export function useEditorHandlers({
@@ -355,8 +364,9 @@ export function useEditorHandlers({
 
       if (!success) {
         const embedUrl = toYoutubeEmbedUrl(url);
+        const containerClass = isYoutubeShortsUrl(url) ? 'youtube-container youtube-shorts' : 'youtube-container';
         editor.commands.insertContent(`
-          <div class="youtube-container">
+          <div class="${containerClass}">
             <iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
           </div>
           <p></p>

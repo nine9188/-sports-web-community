@@ -102,6 +102,7 @@ export const YoutubeExtension = Node.create<YoutubeOptions>({
     
     // YouTube ID 추출
     const youtubeId = getYoutubeId(attrs.src);
+    const isShorts = typeof attrs.src === 'string' && /youtube\.com\/shorts\//i.test(attrs.src);
     
     if (!youtubeId) {
       return ['div', { class: 'invalid-youtube' }, '유효하지 않은 YouTube URL입니다'];
@@ -122,6 +123,7 @@ export const YoutubeExtension = Node.create<YoutubeOptions>({
     const containerClass = this.options.responsive 
       ? `${this.options.HTMLAttributes.class} responsive-video-container` 
       : this.options.HTMLAttributes.class;
+    const finalContainerClass = isShorts ? `${containerClass} youtube-shorts` : containerClass;
     
     // 최종 iframe 소스 URL 생성
     const embedUrl = `https://${domain}/embed/${youtubeId}${params ? `?${params}` : ''}`;
@@ -131,7 +133,7 @@ export const YoutubeExtension = Node.create<YoutubeOptions>({
       { 
         'data-type': 'youtube',
         'data-youtube-video': '',
-        class: containerClass, 
+        class: finalContainerClass, 
       },
       [
         'iframe',
