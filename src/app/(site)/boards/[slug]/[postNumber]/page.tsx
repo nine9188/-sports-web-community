@@ -130,9 +130,28 @@ function getArticleSection(contentType: string, boardName: string, postMeta?: Re
   return boardName;
 }
 
+function normalizeLeagueName(value: string): string {
+  const normalized = value.trim();
+  const leagueMap: Record<string, string> = {
+    'Premier League': '프리미어리그',
+    'La Liga': '라리가',
+    Bundesliga: '분데스리가',
+    'Serie A': '세리에A',
+    'Ligue 1': '리그앙',
+    'UEFA Champions League': 'UEFA 챔피언스리그',
+    'UEFA Europa League': 'UEFA 유로파리그',
+    'UEFA Europa Conference League': 'UEFA 컨퍼런스리그',
+    'K League 1': 'K리그1',
+    'K League 2': 'K리그2',
+    'FA Cup': 'FA컵',
+  };
+
+  return leagueMap[normalized] || normalized;
+}
+
 function getLeagueNameForJsonLd(boardName: string, postMeta?: Record<string, unknown> | null) {
   return typeof postMeta?.league_name === 'string' && postMeta.league_name.trim()
-    ? boardName
+    ? normalizeLeagueName(postMeta.league_name)
     : boardName;
 }
 

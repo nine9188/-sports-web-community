@@ -32,6 +32,31 @@ function getCurrentSeason(leagueId: number, matchDate: string): number {
   }
 }
 
+function getLeagueNameKo(leagueName?: string | null): string {
+  const normalized = leagueName?.trim()
+  if (!normalized) return '대회 정보 없음'
+
+  const leagueMap: Record<string, string> = {
+    'Premier League': '프리미어리그',
+    'La Liga': '라리가',
+    Bundesliga: '분데스리가',
+    'Serie A': '세리에A',
+    'Ligue 1': '리그앙',
+    'UEFA Champions League': 'UEFA 챔피언스리그',
+    'UEFA Europa League': 'UEFA 유로파리그',
+    'UEFA Europa Conference League': 'UEFA 컨퍼런스리그',
+    'K League 1': 'K리그1',
+    'K League 2': 'K리그2',
+    'FA Cup': 'FA컵',
+    'Coupe de France': '쿠프 드 프랑스',
+    'DFB Pokal': 'DFB 포칼',
+    'Coppa Italia': '코파 이탈리아',
+    'Copa del Rey': '코파 델 레이',
+  }
+
+  return leagueMap[normalized] || normalized
+}
+
 // 팀의 주요 소속 리그 ID를 가져오는 함수
 async function getTeamMainLeague(teamId: number, season: number): Promise<number | null> {
   try {
@@ -418,6 +443,8 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
     // predictionApiData가 있으면 /predictions 엔드포인트 데이터 사용 (차트와 동일한 데이터)
     // 없으면 기존 방식으로 개별 API 호출
     let home: any, away: any, matchDate: string, leagueId: number, season: number
+    let leagueName = ''
+    let leagueNameKo = ''
     let homeStats: any, awayStats: any, homeForm: any, awayForm: any
     let homeInjuries: any, awayInjuries: any, h2h: any, odds: any
     let prompt: string
@@ -439,6 +466,8 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
       matchForCache = match
       matchDate = match?.fixture?.date?.split('T')[0] || new Date().toISOString().split('T')[0]
       leagueId = match?.league?.id || 0
+      leagueName = match?.league?.name || pd.league?.name || ''
+      leagueNameKo = getLeagueNameKo(leagueName)
       season = getCurrentSeason(leagueId, matchDate)
 
       const hf = homeStats?.fixtures
@@ -472,6 +501,10 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
 - 홈팀: ${home.name}
 - 어웨이팀: ${away.name}
 - 날짜: ${matchDate}
+- 대회: ${leagueNameKo}
+- 원본 대회명: ${leagueName || '정보 없음'}
+- 국가: ${match?.league?.country || '정보 없음'}
+- 라운드: ${match?.league?.round || match?.league?.season || '정보 없음'}
 - 승률 예측: 홈 ${pd.predictions.percent.home} / 무승부 ${pd.predictions.percent.draw} / 원정 ${pd.predictions.percent.away}
 
 [홈팀 최근 5경기]
@@ -522,6 +555,8 @@ ${h2hList}
       away = match.teams.away
       matchDate = match.fixture.date.split('T')[0]
       leagueId = match.league.id
+      leagueName = match.league.name
+      leagueNameKo = getLeagueNameKo(leagueName)
       season = getCurrentSeason(leagueId, matchDate)
 
       const results = await Promise.all([
@@ -584,7 +619,8 @@ ${h2hList}
 - 홈팀: ${home.name}
 - 어웨이팀: ${away.name}
 - 날짜: ${matchDate}
-- 대회: ${match.league.name}
+- 대회: ${leagueNameKo}
+- 원본 대회명: ${leagueName}
 
 [홈팀 시즌 성적]
 - 홈경기: ${homeStats?.fixtures?.played?.home ?? '?'}경기 ${homeStats?.fixtures?.wins?.home ?? '?'}승 ${homeStats?.fixtures?.draws?.home ?? '?'}무 ${homeStats?.fixtures?.loses?.home ?? '?'}패
@@ -618,7 +654,7 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
 
 1. 제공된 데이터에 있는 수치만 사용하세요. 데이터에 없는 숫자, 확률, 스코어를 절대 만들어내지 마세요.
 2. 팀 이름은 반드시 한국에서 통용되는 한글 이름으로 쓰세요 (예: Arsenal→아스널, Liverpool→리버풀, Manchester City→맨체스터 시티, Chelsea→첼시, Tottenham→토트넘, Manchester United→맨체스터 유나이티드, Barcelona→바르셀로나, Real Madrid→레알 마드리드, Bayern Munich→바이에른 뮌헨, PSG→파리 생제르맹, Juventus→유벤투스, Inter→인테르, AC Milan→AC밀란, Napoli→나폴리, Borussia Dortmund→도르트문트, Union Berlin→우니온 베를린, Werder Bremen→베르더 브레멘, Bayer Leverkusen→레버쿠젠, RB Leipzig→라이프치히 등). 영어 팀명을 그대로 쓰지 마세요.
-3. 리그 이름도 한글로 쓰세요 (Premier League→프리미어리그, La Liga→라리가, Bundesliga→분데스리가, Serie A→세리에A, Ligue 1→리그앙).
+3. 리그 이름도 한글로 쓰세요 (Premier League→프리미어리그, La Liga→라리가, Bundesliga→분데스리가, Serie A→세리에A, Ligue 1→리그앙, UEFA Champions League→UEFA 챔피언스리그, UEFA Europa League→UEFA 유로파리그, K League 1→K리그1, K League 2→K리그2).
 4. 선수 이름은 한국에서 통용되는 표기가 있으면 한글로, 없으면 영어 그대로 쓰세요.
 5. 다음 표현을 절대 사용하지 마세요: "~할 것으로 보입니다", "~예상됩니다", "~될 것입니다", "~노력할 것입니다", "~만회하려 할 것입니다". 미래 예측이나 추측은 금지입니다. 오직 과거 데이터 팩트만 서술하세요.
 6. 데이터에 없는 수치를 절대 생성하지 마세요. 맞대결 전적을 계산할 때 제공된 스코어를 하나하나 직접 세어서 정확히 계산하세요.
@@ -626,7 +662,8 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
 8. 반드시 존댓말(~습니다, ~됩니다, ~있습니다)을 사용하세요. 반말(~있다, ~보인다, ~했다) 절대 금지.
 9. 시즌 폼 원본 문자열(WLLWDLWLDD...)을 그대로 쓰지 마세요. "최근 5경기 중 2승 1무 2패" 같은 요약으로 쓰세요.
 10. 한 문장이 너무 길지 않게, 2~3문장마다 줄바꿈하세요.
-11. 글 구조를 반드시 아래처럼 소제목과 문단으로 나누세요. 소제목은 반드시 별도 줄에 쓰고 내용과 분리하세요:
+11. [경기 정보]의 대회명만 사용하세요. 제공된 대회가 리그앙이면 "프리미어리그 경기"라고 쓰면 안 됩니다. 제공 데이터에 없는 대회명은 절대 쓰지 마세요.
+12. 글 구조를 반드시 아래처럼 소제목과 문단으로 나누세요. 소제목은 반드시 별도 줄에 쓰고 내용과 분리하세요:
 
 **경기 개요**
 양 팀 소개와 승률 예측 데이터 요약. 2~3문장.
@@ -640,7 +677,7 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
 **맞대결 & 관전 포인트**
 상대전적 요약, 핵심 관전 포인트. 2~3문장.
 
-12. 분량은 500~700자 정도로 작성하세요.` },
+13. 분량은 500~700자 정도로 작성하세요.` },
         { role: 'user', content: prompt }
       ],
     })
@@ -699,12 +736,13 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
       .replace(/배팅[^.]*\./g, '')
       .replace(/도박[^.]*\./g, '')
       .replace(/베팅[^.]*\./g, '')
+      .replace(/프리미어리그 경기/g, leagueNameKo && leagueNameKo !== '프리미어리그' ? `${leagueNameKo} 경기` : '프리미어리그 경기')
       .replace(/\n{3,}/g, '\n\n')
       .trim()
 
     // 예측 결과를 데이터베이스에 저장
     const fixtureForCache = predictionApiData
-      ? { teams: { home, away }, league: { id: leagueId, name: '' }, fixture: { date: matchDate } }
+      ? { teams: { home, away }, league: { id: leagueId, name: leagueNameKo || leagueName }, fixture: { date: matchDate } }
       : matchForCache
 
     if (fixtureForCache) {

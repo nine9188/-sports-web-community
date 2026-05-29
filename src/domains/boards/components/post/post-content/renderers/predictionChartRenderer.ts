@@ -26,6 +26,21 @@ function textAt(source: unknown, path: string[], fallback = ''): string {
   return typeof value === 'string' || typeof value === 'number' ? String(value) : fallback;
 }
 
+function formatPercent(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === '-') return trimmed || '-';
+  return trimmed.endsWith('%') ? trimmed : `${trimmed}%`;
+}
+
+function normalizeAdviceText(advice: string): string {
+  return advice
+    .replace(/^Combo\s+Double chance\s*:\s*/i, '조합 더블 찬스: ')
+    .replace(/^Double chance\s*:\s*/i, '더블 찬스: ')
+    .replace(/\bCombo Double chance\b/gi, '조합 더블 찬스')
+    .replace(/\bDouble chance\b/gi, '더블 찬스')
+    .replace(/\s+or draw\b/gi, ' 또는 무승부');
+}
+
 function formatMatchDateTime(date?: string): string {
   if (!date) return '';
 
@@ -58,7 +73,7 @@ function renderSeoSummary(chartData: Record<string, unknown>): string {
   const awayPercent = textAt(chartData, ['predictions', 'percent', 'away'], '-');
   const winner = textAt(chartData, ['predictions', 'winner', 'name']);
   const underOver = textAt(chartData, ['predictions', 'under_over']);
-  const advice = textAt(chartData, ['predictions', 'advice']);
+  const advice = normalizeAdviceText(textAt(chartData, ['predictions', 'advice']));
 
   const rows = [
     ['폼', textAt(chartData, ['comparison', 'form', 'home']), textAt(chartData, ['comparison', 'form', 'away'])],
@@ -90,7 +105,7 @@ function renderSeoSummary(chartData: Record<string, unknown>): string {
             ${rows.map(([label, home, away]) => `
               <div>
                 <dt class="font-medium">${escapeHtml(label)}</dt>
-                <dd>${escapeHtml(homeName)} ${escapeHtml(home)}% / ${escapeHtml(awayName)} ${escapeHtml(away)}%</dd>
+                <dd>${escapeHtml(homeName)} ${escapeHtml(formatPercent(home))} / ${escapeHtml(awayName)} ${escapeHtml(formatPercent(away))}</dd>
               </div>
             `).join('')}
           </dl>
