@@ -142,6 +142,16 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/sitemaps/:section/sitemap/:path*',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
+        source: '/sitemaps/:section/sitemap.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
         source: '/livescore/football/:kind(leagues|team|player|match)/sitemap.xml',
         destination: '/sitemap.xml',
         permanent: true,

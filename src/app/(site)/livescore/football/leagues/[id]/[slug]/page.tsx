@@ -59,10 +59,10 @@ export async function generateMetadata({ params }: LeaguePageProps) {
   const isCup = league.type === 'Cup';
   const title = isCup
     ? `${displayName} 대진표·경기 일정·경기 결과`
-    : `${displayName} 팀 순위표·득점 순위·도움 순위`;
+    : `${displayName} 순위·일정·득점 순위`;
   const description = isCup
     ? `${displayName}${league.country ? ` (${league.country})` : ''} 대진표, 라운드별 경기 일정과 경기 결과를 4590 Football에서 확인하세요.`
-    : `${displayName}${league.country ? ` (${league.country})` : ''} 팀 순위표, 득점 순위, 도움 순위와 팀 정보를 4590 Football에서 확인하세요.`;
+    : `${displayName}${league.country ? ` (${league.country})` : ''} 순위, 경기 일정, 결과, 득점 순위와 팀 정보를 4590 Football에서 확인하세요.`;
   const keywords = isCup
     ? [
       `${displayName} 대진표`,
