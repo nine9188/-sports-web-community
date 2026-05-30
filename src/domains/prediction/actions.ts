@@ -291,6 +291,73 @@ function formatMatchDateTimeKo(date?: string): string | null {
   return `${dateText} ${timeText} KST`
 }
 
+function parsePercentValue(value?: string | null): number | null {
+  if (!value) return null
+  const parsed = Number(value.replace('%', '').trim())
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function buildPredictionTitleAngle(
+  predictionData: PredictionApiData | null,
+  homeName: string,
+  awayName: string
+) {
+  const homePercent = parsePercentValue(predictionData?.predictions.percent.home)
+  const drawPercent = parsePercentValue(predictionData?.predictions.percent.draw)
+  const awayPercent = parsePercentValue(predictionData?.predictions.percent.away)
+  const underOver = predictionData?.predictions.under_over?.trim()
+  const advice = predictionData?.predictions.advice?.trim()
+
+  if (underOver?.startsWith('-')) {
+    return '저득점 흐름과 승부 변수'
+  }
+  if (underOver?.startsWith('+')) {
+    return '득점 흐름과 공격 지표'
+  }
+  if (homePercent !== null && drawPercent !== null && Math.abs(homePercent - drawPercent) <= 5 && homePercent > (awayPercent ?? 0)) {
+    return `${homeName} 우세와 무승부 변수`
+  }
+  if (awayPercent !== null && drawPercent !== null && Math.abs(awayPercent - drawPercent) <= 5 && awayPercent > (homePercent ?? 0)) {
+    return `${awayName} 우세와 무승부 변수`
+  }
+  if (homePercent !== null && awayPercent !== null && Math.abs(homePercent - awayPercent) <= 8) {
+    return '승부 균형과 접전 흐름'
+  }
+  if (advice?.includes('Double chance')) {
+    return '더블찬스 관점의 안정적인 접근'
+  }
+  if (homePercent !== null && awayPercent !== null && homePercent > awayPercent) {
+    return `${homeName} 홈 우세 포인트`
+  }
+  if (homePercent !== null && awayPercent !== null && awayPercent > homePercent) {
+    return `${awayName} 원정 우세 포인트`
+  }
+
+  return '최근 흐름과 승부 변수'
+}
+
+function buildPredictionPostTitle({
+  targetDate,
+  leagueName,
+  homeName,
+  awayName,
+  predictionData,
+}: {
+  targetDate: string
+  leagueName: string
+  homeName: string
+  awayName: string
+  predictionData: PredictionApiData | null
+}) {
+  const formattedDate = new Date(targetDate).toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+  })
+  const angle = buildPredictionTitleAngle(predictionData, homeName, awayName)
+
+  return `${homeName} vs ${awayName}, ${angle} | ${leagueName} ${formattedDate} 분석`
+}
+
 // 팀 이름 한국어 가져오기 (매핑 없으면 원본 이름 사용)
 async function getTeamNameKo(teamId: number, fallbackName: string): Promise<string> {
   const teamMap = await getTeamsByIds([teamId])
@@ -768,12 +835,13 @@ async function generateMatchPredictionPost(
     targetBoardId = OVERSEAS_FOOTBALL_ANALYSIS_BOARD_ID
   }
 
-  // 게시글 제목: "3월 9일 팀A vs 팀B 경기 예측 분석"
-  const formattedDate = new Date(targetDate).toLocaleDateString('ko-KR', {
-    month: 'long',
-    day: 'numeric'
+  const title = buildPredictionPostTitle({
+    targetDate,
+    leagueName: leagueNameKo,
+    homeName: homeNameKo,
+    awayName: awayNameKo,
+    predictionData,
   })
-  const title = `${formattedDate} ${leagueNameKo} ${homeNameKo} vs ${awayNameKo} 경기 예측 분석`
 
   // 예측 차트 노드 (데이터가 있을 때만)
   const chartNode = predictionData ? [{

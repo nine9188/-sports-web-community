@@ -1,6 +1,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
 import { siteConfig } from '@/shared/config';
+import { buildPostDisplayTitle } from '@/domains/boards/utils/post/buildPostDisplayTitle';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,11 +11,14 @@ type RssPost = {
   post_number: number;
   title: string;
   summary: string | null;
+  source_url: string | null;
+  meta: Record<string, unknown> | null;
   created_at: string | null;
   updated_at: string | null;
   board: {
     slug: string;
     name: string;
+    content_type: string | null;
   } | null;
 };
 
@@ -49,9 +53,11 @@ export async function GET() {
         post_number,
         title,
         summary,
+        source_url,
+        meta,
         created_at,
         updated_at,
-        board:boards!inner(slug, name)
+        board:boards!inner(slug, name, content_type)
       `)
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
@@ -68,9 +74,16 @@ export async function GET() {
     const rssItems = rssPosts
       ?.filter((post) => post.board && typeof post.board === 'object' && 'slug' in post.board)
       .map((post) => {
-        const board = post.board as { slug: string; name: string };
+        const board = post.board as { slug: string; name: string; content_type: string | null };
         const postUrl = `${baseUrl}/boards/${board.slug}/${post.post_number}`;
         const pubDate = new Date(post.created_at || new Date()).toUTCString();
+        const displayTitle = buildPostDisplayTitle({
+          title: post.title,
+          contentType: board.content_type,
+          boardName: board.name,
+          sourceUrl: post.source_url,
+          meta: post.meta,
+        });
 
         // summary 컬럼 사용 (300자 제한)
         const summary = post.summary || '';
@@ -80,7 +93,7 @@ export async function GET() {
 
         return `
     <item>
-      <title>${escapeXml(post.title)}</title>
+      <title>${escapeXml(displayTitle)}</title>
       <link>${escapeXml(postUrl)}</link>
       <guid isPermaLink="true">${escapeXml(postUrl)}</guid>
       <description>${escapeXml(description)}</description>

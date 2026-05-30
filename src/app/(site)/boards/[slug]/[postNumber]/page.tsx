@@ -14,6 +14,7 @@ import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { buildPostSeoDescription, buildPostSeoKeywords } from '@/domains/boards/utils/post/buildPostSeoDescription';
 import { extractPostSeoEntities, type PostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
+import { buildPostDisplayTitle } from '@/domains/boards/utils/post/buildPostDisplayTitle';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -209,11 +210,18 @@ export async function generateMetadata({
   }
 
   const contentType = (board as { content_type?: string | null }).content_type || 'community';
+  const displayTitle = buildPostDisplayTitle({
+    title: post.title,
+    contentType,
+    boardName: board.name,
+    sourceUrl: post.source_url,
+    meta: (post.meta as Record<string, unknown> | null) ?? null,
+  });
   const metadataSummary = (post as { content_summary?: string | null }).content_summary || post.summary;
   const seoEntities = (post as { seo_entities?: PostSeoEntities }).seo_entities ?? null;
   const description = buildPostSeoDescription({
     summary: metadataSummary,
-    title: post.title,
+    title: displayTitle,
     boardName: board.name,
     contentType,
     dealInfo: post.deal_info ?? null,
@@ -221,14 +229,14 @@ export async function generateMetadata({
     postMeta: (post.meta as Record<string, unknown> | null) ?? null,
   });
   const keywords = buildPostSeoKeywords({
-    title: post.title,
+    title: displayTitle,
     boardName: board.name,
     contentType,
     seoEntities,
   });
 
   return buildMetadata({
-    title: post.title,
+    title: displayTitle,
     titleOnly: true,
     description,
     path: `/boards/${slug}/${postNumber}`,
@@ -389,8 +397,20 @@ async function PostDetailContent({
           })
         : undefined;
 
+    const contentType = (result.board as { content_type?: string }).content_type || 'community';
+    const boardName = result.board.name?.trim() || '게시판';
+    const postMeta = (result.post.meta as Record<string, unknown> | null) ?? null;
+    const postTitle = buildPostDisplayTitle({
+      title: result.post.title,
+      contentType,
+      boardName,
+      sourceUrl: result.post.source_url,
+      meta: postMeta,
+    }) || `${boardName} 게시글`;
+
     const postWithIcon = {
       ...result.post,
+      title: postTitle,
       content: result.post.content as Record<string, unknown>,
       profiles: {
         ...(postProfiles || {}),
@@ -412,10 +432,6 @@ async function PostDetailContent({
       (result.post as { thumbnail_url?: string | null }).thumbnail_url,
       firstImage,
     );
-    const contentType = (result.board as { content_type?: string }).content_type || 'community';
-    const postTitle = result.post.title?.trim() || `${result.board.name} 게시글`;
-    const boardName = result.board.name?.trim() || '게시판';
-    const postMeta = (result.post.meta as Record<string, unknown> | null) ?? null;
     const seoEntities = extractPostSeoEntities(result.post.content);
     const seoDescription = buildPostSeoDescription({
       summary: articleDescription,
