@@ -3,7 +3,7 @@
 import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server'
 import { logAuthEvent, logError } from '@/shared/actions/log-actions'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { redirect, unstable_rethrow } from 'next/navigation'
 import type { User, Session } from '@supabase/supabase-js'
 
 import { checkLoginAttempts, recordAttempt, clearAttempts } from './utils/login-attempts'
@@ -316,6 +316,7 @@ export async function getCurrentUser(): Promise<{
       profile: profile as UserProfile
     }
   } catch (error) {
+    unstable_rethrow(error)
     console.error('사용자 정보 조회 중 오류:', error)
     return { user: null }
   }

@@ -13,6 +13,8 @@ import { fetchAllPostsWidgetData } from '@/domains/widgets/components/AllPostsWi
 import { fetchNewsData } from '@/domains/widgets/components/news-widget';
 import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata() {
   return buildMetadata({
     title: '4590 Football - 축구 커뮤니티 | 라이브스코어, 해외축구, 국내축구 게시판',
