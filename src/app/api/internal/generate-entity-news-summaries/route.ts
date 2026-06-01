@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/client.server';
 
 export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 type SummaryModule = {
   generateEntityNewsSummary: (
