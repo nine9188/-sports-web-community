@@ -18,7 +18,7 @@ export const revalidate = 0;
 /**
  * 게시판 slug 기반으로 SEO 키워드/설명을 동적 생성
  */
-function getBoardSeoData(slug: string, boardName: string) {
+function getBoardSeoData(slug: string, boardName: string, parentBoardName?: string | null) {
   // 축구 소식/뉴스
   if (slug === 'news' || slug === 'foreign-news' || slug === 'domestic-news' || slug === 'official') {
     return {
@@ -40,9 +40,9 @@ function getBoardSeoData(slug: string, boardName: string) {
   // 리그 게시판
   if (['premier', 'laliga', 'serie-a', 'bundesliga', 'LIGUE1', 'k-league', 'k-league-1', 'k-league-2'].includes(slug)) {
     return {
-      title: `${boardName} - 리그 게시판`,
-      desc: `${boardName} 최신 소식, 경기 결과, 순위, 이적 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [`${boardName} 순위`, `${boardName} 일정`, `${boardName} 소식`, '축구 커뮤니티', '4590', '4590football'],
+      title: `${boardName} 게시판 - ${boardName} 커뮤니티`,
+      desc: `${boardName} 게시판에서 ${boardName} 관련 소식, 경기 이야기, 이적 이야기와 팬들의 의견을 나눠보세요.`,
+      keywords: [`${boardName} 게시판`, `${boardName} 커뮤니티`, `${boardName} 소식`, `${boardName} 경기`, `${boardName} 이적`, `${boardName} 팬`, '축구 커뮤니티', '4590', '4590football'],
     };
   }
 
@@ -51,10 +51,14 @@ function getBoardSeoData(slug: string, boardName: string) {
   const isTeamBoard = !slug.startsWith('hotdeal') && !slug.startsWith('foreign-analysis') && !NON_TEAM_SLUGS.includes(slug);
 
   if (isTeamBoard) {
+    const communityScope = parentBoardName?.trim()
+      ? `${parentBoardName.trim()} ${boardName}`
+      : boardName;
+
     return {
-      title: `${boardName} 게시판 - 팬 커뮤니티`,
-      desc: `${boardName} 최신 소식, 경기 결과, 이적 루머, 라인업 정보를 확인하세요. 축구 커뮤니티 4590 Football.`,
-      keywords: [`${boardName} 소식`, `${boardName} 경기`, `${boardName} 이적`, `${boardName} 라인업`, '축구 커뮤니티', '4590', '4590football'],
+      title: `${boardName} 게시판 - ${communityScope} 커뮤니티`,
+      desc: `${boardName} 게시판에서 ${communityScope} 관련 소식, 경기 이야기, 이적 이야기와 팬들의 의견을 나눠보세요.`,
+      keywords: [`${boardName} 게시판`, `${boardName} 커뮤니티`, `${boardName} 소식`, `${boardName} 이적`, `${boardName} 경기`, `${boardName} 팬`, parentBoardName || '', '축구 커뮤니티', '4590', '4590football'].filter(Boolean),
     };
   }
 
@@ -81,7 +85,7 @@ export async function generateMetadata({
   // 게시판 정보 조회
   const { data: board } = await supabase
     .from('boards')
-    .select('name, description')
+    .select('name, description, parent_id')
     .eq('slug', slug)
     .single();
 
@@ -94,7 +98,17 @@ export async function generateMetadata({
     });
   }
 
-  const seo = getBoardSeoData(slug, board.name);
+  let parentBoardName: string | null = null;
+  if (board.parent_id) {
+    const { data: parentBoard } = await supabase
+      .from('boards')
+      .select('name')
+      .eq('id', board.parent_id)
+      .maybeSingle();
+    parentBoardName = parentBoard?.name ?? null;
+  }
+
+  const seo = getBoardSeoData(slug, board.name, parentBoardName);
 
   return buildMetadata({
     title: seo.title,

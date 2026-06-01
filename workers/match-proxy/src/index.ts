@@ -40,6 +40,7 @@ const ALLOWED_LEAGUE_IDS = new Set<number>([
   88, 94, 119,                   // 유럽 기타
   292, 293, 98, 307, 253,        // 아시아/미주
   2, 3, 848, 531, 5, 45, 48,     // 컵 7개
+  667,                            // 클럽 친선경기
 ]);
 
 interface CacheEntry {

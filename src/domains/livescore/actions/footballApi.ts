@@ -12,6 +12,7 @@ import {
   type TeamData,
 } from './teamLeagueData';
 import { getTeamLogoUrls, getLeagueLogoUrls } from './images';
+import { CLUB_FRIENDLY_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 
 // 매치 데이터 인터페이스
 export interface MatchData {
@@ -353,8 +354,9 @@ async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
     }
 
     const majorLeagueIds = await getMajorLeagueIds();
+    const visibleLeagueIds = new Set([...majorLeagueIds, ...CLUB_FRIENDLY_LEAGUE_IDS]);
     const filteredApiMatches = data.response.filter(
-      (match: ApiMatch) => majorLeagueIds.includes(match.league?.id ?? 0)
+      (match: ApiMatch) => visibleLeagueIds.has(match.league?.id ?? 0)
     );
 
     return filteredApiMatches.map((match: ApiMatch): MatchData => ({

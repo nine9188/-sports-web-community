@@ -15,6 +15,11 @@ export const CUP_LEAGUE_IDS = [
   17,  // AFC 챔피언스 리그
 ]
 
+// 친선 경기 ID
+export const CLUB_FRIENDLY_LEAGUE_IDS = [
+  667, // Club Friendlies
+]
+
 // 리그 ID
 export const LEAGUE_IDS = [
   // 주요 유럽 리그 (Top 5)
@@ -48,3 +53,6 @@ export const LEAGUE_IDS = [
 
 // 전체 허용 리그 (검색 필터용)
 export const ALLOWED_LEAGUE_IDS = [...CUP_LEAGUE_IDS, ...LEAGUE_IDS]
+
+// 경기 일정/매치 페이지 허용 리그
+export const MATCH_LEAGUE_IDS = [...ALLOWED_LEAGUE_IDS, ...CLUB_FRIENDLY_LEAGUE_IDS]

@@ -13,6 +13,7 @@ import { Match as UIMatch } from './tabs/overview/components/MatchItems';
 import { FixturesTab } from './tabs/fixtures';
 import { TransfersTab } from './tabs/transfers';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
+import type { TeamDailyBriefingData } from '@/domains/livescore/actions/teams/dailyBriefing';
 import { PlayerKoreanNames } from './TeamPageClient';
 
 // 팀 상세 탭 타입.
@@ -23,13 +24,14 @@ interface TabContentProps {
   tab: string;
   initialData: TeamFullDataResponse;
   playerKoreanNames?: PlayerKoreanNames;
+  dailyBriefing?: TeamDailyBriefingData | null;
 }
 
 /**
  * 서버 페이지가 현재 URL 탭 기준으로 준비한 initialData를 받아
  * 해당 탭 컴포넌트에 props로 전달합니다.
  */
-export default function TabContent({ teamId, tab, initialData, playerKoreanNames = {} }: TabContentProps) {
+export default function TabContent({ teamId, tab, initialData, playerKoreanNames = {}, dailyBriefing = null }: TabContentProps) {
   // 하위 탭 컴포넌트들은 number 팀 ID를 기대합니다.
   const numericTeamId = parseInt(teamId, 10);
 
@@ -83,6 +85,7 @@ export default function TabContent({ teamId, tab, initialData, playerKoreanNames
           teamLogoUrls={teamLogoUrls}
           leagueLogoUrls={leagueLogoUrls}
           leagueLogoDarkUrls={leagueLogoDarkUrls}
+          dailyBriefing={dailyBriefing}
         />
       );
 

@@ -39,6 +39,10 @@ const getLeaguePriority = (leagueId?: number): number => {
   const cups = [45, 48, 143, 137, 66, 81, 531]; // FA컵, EFL컵, 코파델레이, 코파이탈리아, 쿠프드프랑스, DFB포칼, UEFA슈퍼컵
   if (cups.includes(leagueId)) return 10;
 
+  // 친선 경기
+  const friendlies = [667]; // 클럽 친선경기
+  if (friendlies.includes(leagueId)) return 11;
+
   return 20; // 기타
 };
 

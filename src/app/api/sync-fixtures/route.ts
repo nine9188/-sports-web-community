@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { TRANSFER_LEAGUE_IDS } from '@/domains/livescore/constants/transferLeagues';
+import { CLUB_FRIENDLY_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 
-// Highlight-supported leagues plus the transfer league set.
-const SYNC_LEAGUE_IDS = [...new Set([1, 2, 3, ...TRANSFER_LEAGUE_IDS])];
+// Highlight-supported leagues plus the transfer league set and club friendlies.
+const SYNC_LEAGUE_IDS = [...new Set([1, 2, 3, ...TRANSFER_LEAGUE_IDS, ...CLUB_FRIENDLY_LEAGUE_IDS])];
 
 const API_BASE = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || '';

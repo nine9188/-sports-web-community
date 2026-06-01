@@ -7,6 +7,10 @@
     {
       "path": "/api/generate-sitemap",
       "schedule": "10 3 * * *"
+    },
+    {
+      "path": "/api/internal/generate-entity-news-summaries",
+      "schedule": "30 3 * * *"
     }
   ],
   "routes": [

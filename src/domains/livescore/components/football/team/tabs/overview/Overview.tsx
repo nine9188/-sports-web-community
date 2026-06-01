@@ -7,6 +7,8 @@ import StatsCards from './components/StatsCards';
 import SeasonHighlights from './components/SeasonHighlights';
 import StandingsPreview from './components/StandingsPreview';
 import RecentTransfers from './components/RecentTransfers';
+import TeamDailyBriefing from './components/TeamDailyBriefing';
+import TeamAbout from './components/TeamAbout';
 import MatchItems from './components/MatchItems';
 import { Match } from './components/MatchItems';
 import { StandingDisplay } from '@/domains/livescore/types/standings';
@@ -14,6 +16,7 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { PlayerStats } from '@/domains/livescore/actions/teams/player-stats';
 import { Player, Coach } from '@/domains/livescore/actions/teams/squad';
 import { TeamTransfersData } from '@/domains/livescore/actions/teams/transfers';
+import type { TeamDailyBriefingData } from '@/domains/livescore/actions/teams/dailyBriefing';
 import { PlayerKoreanNames } from '../../TeamPageClient';
 import { Button, Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
 import TeamTabEmptyState from '../TeamTabEmptyState';
@@ -23,6 +26,8 @@ interface Team {
     id: number;
     name: string;
     logo: string;
+    country?: string;
+    founded?: number;
   };
   venue?: {
     name: string;
@@ -94,6 +99,7 @@ interface OverviewProps {
   teamLogoUrls?: Record<number, string>;
   leagueLogoUrls?: Record<number, string>;
   leagueLogoDarkUrls?: Record<number, string>;  // Dark mode league logos.
+  dailyBriefing?: TeamDailyBriefingData | null;
 }
 function OverviewSectionLoading({ title }: { title: string }) {
   return (
@@ -213,7 +219,8 @@ export default function Overview({
   playerPhotoUrls = {},
   teamLogoUrls = {},
   leagueLogoUrls = {},
-  leagueLogoDarkUrls = {}
+  leagueLogoDarkUrls = {},
+  dailyBriefing = null
 }: OverviewProps) {
   const { getLeagueKoreanName } = useTeamLeague();
   const router = useRouter();
@@ -333,6 +340,19 @@ export default function Overview({
       ) : false ? (
         <OverviewSectionEmpty title="최근 이적" message="이적 정보를 불러오지 못했습니다." />
       ) : null}
+
+      <TeamDailyBriefing data={dailyBriefing} />
+
+      <TeamAbout
+        team={team}
+        stats={stats}
+        matches={displayMatches}
+        standings={displayStandings}
+        playerStats={displayPlayerStats}
+        squad={displaySquad}
+        transfers={displayTransfers}
+        playerKoreanNames={displayPlayerKoreanNames}
+      />
     </div>
   );
 } 

@@ -94,6 +94,7 @@ const BIG_MATCH_LEAGUES = [
   45,
   292,
   293,
+  667,
 ];
 
 const LEAGUE_PRIORITY: Record<number, number> = {
@@ -110,6 +111,7 @@ const LEAGUE_PRIORITY: Record<number, number> = {
   531: 8,
   292: 9,
   293: 9.5,
+  667: 10,
 };
 
 const FINAL_STATUS_CODES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'ABD']);

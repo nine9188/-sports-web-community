@@ -104,6 +104,7 @@ function parseArgs(argv) {
     apply: false,
     verbose: false,
     fixCardSpacing: false,
+    syncCardLinks: false,
   };
 
   for (let index = 2; index < argv.length; index += 1) {
@@ -114,6 +115,8 @@ function parseArgs(argv) {
       args.verbose = true;
     } else if (value === '--fix-card-spacing') {
       args.fixCardSpacing = true;
+    } else if (value === '--sync-card-links') {
+      args.syncCardLinks = true;
     } else if (value.startsWith('--')) {
       const key = value.slice(2);
       const next = argv[index + 1];
@@ -627,6 +630,126 @@ function hasMatchCard(content) {
 
 function isMatchCardNode(node) {
   return node?.type === 'matchCard';
+}
+
+function extractCardLinksFromContent(content) {
+  if (!content || typeof content !== 'object') return [];
+
+  const links = [];
+  const seen = new Set();
+
+  function addLink(link) {
+    const key = `${link.card_type}-${link.match_id || ''}-${link.team_id || ''}-${link.player_id || ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push(link);
+  }
+
+  function addEntityHref(href) {
+    const value = normalizeText(href);
+    if (!value) return;
+
+    const teamMatch = value.match(/\/livescore\/football\/team\/(\d+)(?:\/|$)/);
+    if (teamMatch) {
+      addLink({ card_type: 'team', team_id: Number(teamMatch[1]) });
+      return;
+    }
+
+    const playerMatch = value.match(/\/livescore\/football\/player\/(\d+)(?:\/|$)/);
+    if (playerMatch) {
+      addLink({ card_type: 'player', player_id: Number(playerMatch[1]) });
+    }
+  }
+
+  function traverse(node) {
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node.marks)) {
+      for (const mark of node.marks) {
+        if (mark?.type === 'link') addEntityHref(mark.attrs?.href);
+      }
+    }
+
+    if (node.type === 'matchCard' && node.attrs) {
+      const matchData = node.attrs.matchData || null;
+      const matchId = String(node.attrs.matchId ?? matchData?.id ?? '');
+
+      if (matchId) {
+        addLink({ card_type: 'match', match_id: matchId });
+
+        const homeId = Number(matchData?.teams?.home?.id);
+        if (homeId) addLink({ card_type: 'team', match_id: matchId, team_id: homeId });
+
+        const awayId = Number(matchData?.teams?.away?.id);
+        if (awayId) addLink({ card_type: 'team', match_id: matchId, team_id: awayId });
+      }
+    }
+
+    if (node.type === 'teamCard' && node.attrs) {
+      const teamId = Number(node.attrs.teamId);
+      if (teamId) addLink({ card_type: 'team', team_id: teamId });
+    }
+
+    if (node.type === 'playerCard' && node.attrs) {
+      const playerId = Number(node.attrs.playerId);
+      const teamId = Number(node.attrs.playerData?.team?.id);
+      if (playerId) {
+        addLink({
+          card_type: 'player',
+          team_id: teamId || undefined,
+          player_id: playerId,
+        });
+      }
+    }
+
+    if (node.type === 'entityCardGroup' && node.attrs && Array.isArray(node.attrs.items)) {
+      for (const item of node.attrs.items) {
+        if (item?.type === 'team') {
+          const teamId = Number(item.id ?? item.data?.id);
+          if (teamId) addLink({ card_type: 'team', team_id: teamId });
+        }
+
+        if (item?.type === 'player') {
+          const playerId = Number(item.id ?? item.data?.id);
+          const teamId = Number(item.data?.team?.id);
+          if (playerId) {
+            addLink({
+              card_type: 'player',
+              team_id: teamId || undefined,
+              player_id: playerId,
+            });
+          }
+        }
+      }
+    }
+
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) traverse(child);
+    }
+  }
+
+  traverse(content);
+  return links;
+}
+
+async function syncPostCardLinks(supabase, postId, content) {
+  const cardLinks = extractCardLinksFromContent(content);
+
+  const { error: deleteError } = await supabase
+    .from('post_card_links')
+    .delete()
+    .eq('post_id', postId);
+
+  if (deleteError) throw deleteError;
+
+  if (cardLinks.length === 0) return 0;
+
+  const { error: insertError } = await supabase
+    .from('post_card_links')
+    .insert(cardLinks.map((link) => ({ ...link, post_id: postId })));
+
+  if (insertError) throw insertError;
+  return cardLinks.length;
 }
 
 function buildTeamCardData(team) {
@@ -1351,11 +1474,54 @@ async function enrichRssPosts(supabase, args) {
             .eq('post_id', post.id);
 
           if (error) throw error;
+          await syncPostCardLinks(supabase, post.id, result.content);
         }
       }
     }
 
     return changedCount;
+  }
+
+  if (args.syncCardLinks) {
+    const posts = await loadAllPosts(supabase, args, board.id);
+    console.log(`Loaded posts=${posts.length}`);
+
+    let linkedPostCount = 0;
+    let totalLinkCount = 0;
+
+    for (let batchIndex = 0; batchIndex < posts.length; batchIndex += POST_BATCH_SIZE) {
+      const batchPosts = posts.slice(batchIndex, batchIndex + POST_BATCH_SIZE);
+      const contentRows = await loadContentRows(supabase, batchPosts.map((post) => post.id));
+
+      for (const post of batchPosts) {
+        const content = contentRows.get(post.id);
+        if (!content) {
+          if (args.verbose) console.log(`#${post.post_number} skip: no content`);
+          continue;
+        }
+
+        const cardLinks = extractCardLinksFromContent(content);
+        if (cardLinks.length === 0) {
+          if (args.verbose) console.log(`#${post.post_number} no card links: ${post.title}`);
+          if (args.apply) await syncPostCardLinks(supabase, post.id, content);
+          continue;
+        }
+
+        linkedPostCount += 1;
+        totalLinkCount += cardLinks.length;
+        console.log(`#${post.post_number} cardLinks=${cardLinks.length} ${post.title}`);
+
+        if (args.apply) {
+          await syncPostCardLinks(supabase, post.id, content);
+        }
+      }
+    }
+
+    console.log(args.apply
+      ? `Synced card links for ${linkedPostCount} posts (${totalLinkCount} links).`
+      : `${linkedPostCount} posts have card links (${totalLinkCount} links). Re-run with --apply to sync.`);
+
+    return linkedPostCount;
   }
 
   const [entities, posts] = await Promise.all([
@@ -1411,6 +1577,7 @@ async function enrichRssPosts(supabase, args) {
 
       if (!result.changed) {
         if (args.verbose) console.log(`#${post.post_number} unchanged: ${post.title}`);
+        if (args.apply) await syncPostCardLinks(supabase, post.id, originalContent);
         continue;
       }
 
@@ -1437,6 +1604,7 @@ async function enrichRssPosts(supabase, args) {
           .eq('post_id', post.id);
 
         if (error) throw error;
+        await syncPostCardLinks(supabase, post.id, result.content);
       }
     }
   }

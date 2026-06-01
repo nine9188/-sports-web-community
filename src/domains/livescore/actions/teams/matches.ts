@@ -5,6 +5,7 @@ import { getTeamsByIds, getLeagueIdByTeamId } from '@/domains/livescore/actions/
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 import { resolveCurrentTeamMainLeague } from './currentLeague';
+import { CLUB_FRIENDLY_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 
 // 경기 정보 인터페이스 (기본)
 export interface Match {
@@ -123,6 +124,16 @@ function sortByDateDesc(matches: Match[]): Match[] {
   });
 }
 
+function dedupeMatches(matches: Match[]): Match[] {
+  const seen = new Set<number>();
+  return matches.filter((match) => {
+    const fixtureId = match.fixture?.id;
+    if (!fixtureId || seen.has(fixtureId)) return false;
+    seen.add(fixtureId);
+    return true;
+  });
+}
+
 /**
  * 통합 팀 경기 조회 함수
  *
@@ -163,43 +174,49 @@ export async function fetchTeamMatchesUnified(
     let matches: Match[] = [];
 
     if (mode === 'season') {
-      // 시즌 전체 경기 가져오기
-      const data = await fetchFromFootballApi('fixtures', {
-        team: teamIdNum,
-        season: season
-      });
-      matches = data.response || [];
+      // 시즌 전체 경기 + 현재 연도 클럽 친선경기 가져오기
+      const [seasonMatches, ...clubFriendlyMatches] = await Promise.all([
+        fetchFromFootballApi('fixtures', {
+          team: teamIdNum,
+          season: season
+        }),
+        ...CLUB_FRIENDLY_LEAGUE_IDS.map((leagueId) => fetchFromFootballApi('fixtures', {
+          team: teamIdNum,
+          league: leagueId,
+          season: new Date().getFullYear()
+        }).catch(() => ({ response: [] })))
+      ]);
+      matches = dedupeMatches([
+        ...(seasonMatches.response || []),
+        ...clubFriendlyMatches.flatMap((result) => result.response || [])
+      ]);
     } else if (mode === 'recent') {
       // recent 모드: 최근 경기와 예정 경기를 각각 가져오기
       const halfLimit = Math.floor(limit / 2);
       const [lastMatches, nextMatches] = await Promise.all([
         fetchFromFootballApi('fixtures', {
           team: teamIdNum,
-          season: season,
           last: halfLimit
         }).catch(() => ({ response: [] })),
         fetchFromFootballApi('fixtures', {
           team: teamIdNum,
-          season: season,
           next: Math.ceil(limit / 2)
         }).catch(() => ({ response: [] }))
       ]);
 
-      matches = [
+      matches = dedupeMatches([
         ...(lastMatches.response || []),
         ...(nextMatches.response || [])
-      ];
+      ]);
     } else if (mode === 'last') {
       const data = await fetchFromFootballApi('fixtures', {
         team: teamIdNum,
-        season: season,
         last: limit
       });
       matches = data.response || [];
     } else {
       const data = await fetchFromFootballApi('fixtures', {
         team: teamIdNum,
-        season: season,
         next: limit
       });
       matches = data.response || [];

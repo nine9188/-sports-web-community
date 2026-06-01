@@ -395,7 +395,6 @@ function generateChartData(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function predictMatch(fixtureId: number, forceRefresh: boolean = false, predictionApiData?: any) {
   try {
     // 캐시된 예측 먼저 확인 (강제 새로고침이 아닌 경우)
@@ -429,7 +428,7 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
                 null // 배당률 데이터도 마찬가지
               )
             }
-          } catch (error) {
+          } catch {
           }
         }
         

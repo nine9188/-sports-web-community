@@ -8,6 +8,7 @@ import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQuality';
 import { siteConfig } from '@/shared/config';
+import { MATCH_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 export const SITEMAP_PAGE_SIZE = 50000;
@@ -61,6 +62,7 @@ type FixtureRow = {
   fixture_id: number;
   home_team_id: number | null;
   away_team_id: number | null;
+  league_id: number | null;
   match_date: string | null;
   updated_at: string | null;
 };
@@ -595,6 +597,7 @@ export async function getMatchSitemapCount(): Promise<number> {
   const { count, error } = await runSitemapQuery('fixtures count query', () => supabase
     .from('fixtures')
     .select('fixture_id', { count: 'exact', head: true })
+    .in('league_id', MATCH_LEAGUE_IDS)
     .gte('match_date', fromDate)
     .lte('match_date', toDate));
 
@@ -612,7 +615,8 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
   const supabase = getSupabaseAdmin();
   const { data: fixtures, error } = await runSitemapQuery('fixtures page query', () => supabase
     .from('fixtures')
-    .select('fixture_id, home_team_id, away_team_id, match_date, updated_at')
+    .select('fixture_id, home_team_id, away_team_id, league_id, match_date, updated_at')
+    .in('league_id', MATCH_LEAGUE_IDS)
     .gte('match_date', fromDate)
     .lte('match_date', toDate)
     .order('match_date', { ascending: false })

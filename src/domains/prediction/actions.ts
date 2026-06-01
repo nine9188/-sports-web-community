@@ -59,6 +59,24 @@ function replaceTeamNameVariants(text: string, names: Array<string | null | unde
   return nextText
 }
 
+const KNOWN_TEAM_NAME_VARIANTS: Record<string, string[]> = {
+  '크루제이루': ['크루이조로', '크루이제로', '크루제이로', '크루제이루 EC', '크루제이루EC'],
+  '플루미넨시': ['플루미네이세', '플루미넨세', '플루미넨시 FC', '플루미넨시FC'],
+  '샤페코엔시': ['Chapecoense-sc', 'Chapecoense-SC', '차페코엔세', '샤페코엔세'],
+}
+
+function normalizeKnownTeamNameVariants(text: string, displayNames: string[]) {
+  let nextText = text
+
+  for (const displayName of displayNames) {
+    for (const variant of KNOWN_TEAM_NAME_VARIANTS[displayName] ?? []) {
+      nextText = nextText.replace(new RegExp(escapeRegExp(variant), 'g'), displayName)
+    }
+  }
+
+  return nextText
+}
+
 async function insertPredictionPostPoll(params: {
   supabase: ReturnType<typeof getSupabaseAdmin>
   postId: string
@@ -112,6 +130,230 @@ function getTiptapHeadingText(node: TiptapNode) {
     .map((child) => (child && typeof child === 'object' && 'text' in child ? String(child.text || '') : ''))
     .join('')
     .trim()
+}
+
+function getTiptapText(node: TiptapNode) {
+  const content = node.content
+  if (!Array.isArray(content)) return ''
+
+  return content
+    .map((child) => (child && typeof child === 'object' && 'text' in child ? String(child.text || '') : ''))
+    .join('')
+    .trim()
+}
+
+function createParagraphNode(text: string): TiptapNode {
+  return {
+    type: 'paragraph',
+    content: [{ type: 'text', text }],
+  }
+}
+
+function splitSentences(text: string) {
+  return text
+    .split(/(?<=[.!?。]|다\.)\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+}
+
+function getPredictionDistributionSentence(
+  predictionData: PredictionApiData | null,
+  homeName: string,
+  awayName: string
+) {
+  const home = parsePercentValue(predictionData?.predictions.percent.home)
+  const draw = parsePercentValue(predictionData?.predictions.percent.draw)
+  const away = parsePercentValue(predictionData?.predictions.percent.away)
+
+  if (home === null || draw === null || away === null) return null
+
+  if (Math.max(home, draw, away) - Math.min(home, draw, away) <= 5) {
+    return `이번 경기는 한쪽 우세가 뚜렷하지 않아 ${homeName} 승리, 무승부, ${awayName} 승리 가능성을 함께 열어두고 봐야 합니다.`
+  }
+
+  if (Math.abs(home - draw) <= 5 && home > away) {
+    return `${homeName}가 조금 더 앞서고 있으며, ${awayName} 승리보다는 무승부가 더 현실적인 변수로 잡히는 경기입니다.`
+  }
+
+  if (Math.abs(away - draw) <= 5 && away > home) {
+    return `${awayName}가 조금 더 앞서고 있으며, ${homeName} 승리보다는 무승부가 더 현실적인 변수로 잡히는 경기입니다.`
+  }
+
+  if (home > draw && home > away) {
+    return `${homeName} 쪽으로 흐름이 조금 더 기울어 있지만, 경기 운영이 흔들리면 무승부 가능성도 함께 봐야 합니다.`
+  }
+
+  if (away > draw && away > home) {
+    return `${awayName} 쪽으로 흐름이 조금 더 기울어 있지만, 원정 경기 변수 때문에 무승부 가능성도 함께 봐야 합니다.`
+  }
+
+  return `이번 경기는 승패보다 경기 흐름이 어느 쪽으로 먼저 기우는지가 더 중요한 변수입니다.`
+}
+
+async function generateLeadInsightText(
+  predictionData: PredictionApiData | null,
+  homeName: string,
+  awayName: string,
+  leagueName: string
+) {
+  if (!predictionData) return ''
+
+  try {
+    const { openai } = await import('./libs/openai')
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4.1-nano-2025-04-14',
+      temperature: 0.5,
+      messages: [
+        {
+          role: 'system',
+          content: `축구 경기 분석글 상단에 들어갈 짧은 핵심 해석만 작성하세요.
+
+규칙:
+1. 2~3문장만 작성하세요.
+2. 제목, 목록, 마크다운, 소제목은 쓰지 마세요.
+3. 퍼센트 숫자와 시즌 승무패 숫자를 직접 쓰지 마세요.
+4. 제공된 승률, 팀 비교 지표, 최근 득실 흐름은 판단 근거로만 사용하세요.
+5. 홈/원정 상세 성적, 시즌 전체 성적, 맞대결 전적을 나열하지 마세요.
+6. 팀 이름은 제공된 이름 그대로 쓰고 임의로 바꾸지 마세요.
+7. "균등", "예상됩니다", "보입니다", "작용할 것으로 보입니다" 표현은 쓰지 마세요.
+8. "승리"만 단독으로 쓰지 말고 "홈팀 승리", "원정팀 승리", 또는 팀명을 붙인 "크루제이루 승리"처럼 주어를 명확히 쓰세요.
+9. 자연스럽게 쓰세요. 예: "크루제이루가 조금 더 앞서고 있으며, 플루미넨시 승리보다는 무승부가 더 현실적인 변수입니다."`,
+        },
+        {
+          role: 'user',
+          content: `[경기 정보]
+- 대회: ${leagueName}
+- 홈팀: ${homeName}
+- 원정팀: ${awayName}
+
+[승률 예측]
+- 홈 승: ${predictionData.predictions.percent.home}
+- 무승부: ${predictionData.predictions.percent.draw}
+- 원정 승: ${predictionData.predictions.percent.away}
+
+[팀 비교 지표]
+- 폼: 홈 ${predictionData.comparison.form.home} / 원정 ${predictionData.comparison.form.away}
+- 공격: 홈 ${predictionData.comparison.att.home} / 원정 ${predictionData.comparison.att.away}
+- 수비: 홈 ${predictionData.comparison.def.home} / 원정 ${predictionData.comparison.def.away}
+- 득점: 홈 ${predictionData.comparison.goals.home} / 원정 ${predictionData.comparison.goals.away}
+- 종합: 홈 ${predictionData.comparison.total.home} / 원정 ${predictionData.comparison.total.away}
+
+[최근 5경기 득실]
+- ${homeName}: 평균 ${predictionData.teams.home.last_5.goals.for.average}득점 / ${predictionData.teams.home.last_5.goals.against.average}실점
+- ${awayName}: 평균 ${predictionData.teams.away.last_5.goals.for.average}득점 / ${predictionData.teams.away.last_5.goals.against.average}실점`,
+        },
+      ],
+    })
+
+    return completion.choices[0].message.content?.trim() || ''
+  } catch (error) {
+    console.error(`상단 핵심 해석 생성 실패:`, error)
+    return ''
+  }
+}
+
+function shouldDropLeadInsightSentence(sentence: string) {
+  return [
+    /%/u,
+    /승률/u,
+    /균등/u,
+    /약간의\s*우위/u,
+    /조금\s*더\s*유리/u,
+    /조금\s*더\s*앞/u,
+    /조금\s*더\s*높/u,
+    /조금\s*더\s*안정/u,
+    /다소\s*낮게\s*평가/u,
+    /홈.*무승부.*비슷/u,
+    /원정\s*승.*낮/u,
+    /전체\s*\d+\s*경기/u,
+    /홈\s*경기/u,
+    /원정\s*경기/u,
+    /최근\s*맞대결/u,
+    /상대전적/u,
+    /최근\s*\d+\s*경기/u,
+    /\d+\s*승\s*\d+\s*무/u,
+    /\d+\s*승\s*\d+\s*패/u,
+    /시즌\s*성적/u,
+  ].some((pattern) => pattern.test(sentence))
+}
+
+function polishLeadInsightSentence(sentence: string) {
+  return sentence
+    .replace(/^그러나\s+/u, '')
+    .replace(/^하지만\s+/u, '')
+    .replace(/^반면,\s*/u, '')
+    .replace(/최근\s*폼/u, '최근 흐름')
+    .replace(/공격과\s*수비\s*모두에서\s*안정성을\s*보여줍니다/u, '공수 균형에서 안정적인 모습을 보입니다')
+    .replace(/수비\s*안정성도\s*무시할\s*수\s*없는\s*변수입니다/u, '수비 안정성을 바탕으로 버틸 수 있다는 점도 변수입니다')
+    .replace(/작용할 것으로 보입니다\.?$/u, '핵심 변수입니다.')
+    .replace(/좌우할 것으로 보입니다\.?$/u, '좌우할 수 있습니다.')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function dedupeLeadInsightSentences(sentences: string[]) {
+  const result: string[] = []
+  const seenKeys = new Set<string>()
+
+  for (const sentence of sentences) {
+    const key = sentence
+      .replace(/크루제이루|플루미넨시|홈팀|원정팀/g, '')
+      .replace(/조금|약간|다소|더|모두|전체적인/g, '')
+      .replace(/[^\p{L}\p{N}]/gu, '')
+      .slice(0, 24)
+
+    if (key && seenKeys.has(key)) continue
+    if (key) seenKeys.add(key)
+    result.push(sentence)
+  }
+
+  return result
+}
+
+function sanitizeLeadInsightNodes(
+  nodes: TiptapNode[],
+  predictionData: PredictionApiData | null,
+  homeName: string,
+  awayName: string
+) {
+  if (nodes.length === 0) return []
+
+  const distributionSentence = getPredictionDistributionSentence(predictionData, homeName, awayName)
+  const sanitizedNodes: TiptapNode[] = []
+  let sentenceCount = 0
+  let hasParagraph = false
+
+  for (const node of nodes) {
+    if (node.type === 'heading') {
+      sanitizedNodes.push(node)
+      continue
+    }
+
+    if (node.type !== 'paragraph') {
+      continue
+    }
+
+    const sentences = dedupeLeadInsightSentences(splitSentences(getTiptapText(node))
+      .map(polishLeadInsightSentence)
+      .filter((sentence) => !shouldDropLeadInsightSentence(sentence))
+    )
+      .filter(() => {
+        if (sentenceCount >= 5) return false
+        sentenceCount += 1
+        return true
+      })
+
+    if (sentences.length > 0) {
+      sanitizedNodes.push(createParagraphNode(sentences.join(' ')))
+      hasParagraph = true
+    }
+  }
+
+  if (!hasParagraph && distributionSentence) {
+    sanitizedNodes.push(createParagraphNode(distributionSentence))
+  }
+
+  return sanitizedNodes
 }
 
 function findFirstHeadingIndex(nodes: TiptapNode[], matcher: (heading: string) => boolean) {
@@ -805,6 +1047,11 @@ async function generateMatchPredictionPost(
     ],
     awayNameKo
   )
+  aiAnalysis = normalizeKnownTeamNameVariants(aiAnalysis, [homeNameKo, awayNameKo])
+  const leadInsightText = normalizeKnownTeamNameVariants(
+    await generateLeadInsightText(predictionData, homeNameKo, awayNameKo, leagueNameKo),
+    [homeNameKo, awayNameKo]
+  )
 
   // 매치 데이터의 로고 URL을 Storage URL로 교체
   match.teams.home.logo = teamLogoMap[match.teams.home.id] || SPORTS_PLACEHOLDERS.teams
@@ -989,26 +1236,42 @@ async function generateMatchPredictionPost(
     },
   }
 
-  const insightStartIndex = findFirstHeadingIndex(aiParagraphs, (heading) => (
+  const rawLeadInsightNodes = leadInsightText
+    ? [
+        {
+          type: 'heading',
+          attrs: { level: 3 },
+          content: [{ type: 'text', text: '핵심 해석' }],
+        },
+        ...leadInsightText.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => createParagraphNode(line)),
+      ]
+    : []
+  const leadInsightNodes = sanitizeLeadInsightNodes(rawLeadInsightNodes, predictionData, homeNameKo, awayNameKo)
+  const mainAnalysisNodes = aiParagraphs
+
+  const insightStartIndex = findFirstHeadingIndex(mainAnalysisNodes, (heading) => (
     heading.includes('관전') || heading.includes('맞대결') || heading.toLowerCase().includes('h2h')
   ))
-  const teamAnalysisStartIndex = findFirstHeadingIndex(aiParagraphs, (heading) => (
+  const teamAnalysisStartIndex = findFirstHeadingIndex(mainAnalysisNodes, (heading) => (
     heading.includes('홈팀') || heading.includes('어웨이') || heading.includes('원정') || heading.includes('Home') || heading.includes('Away')
   ))
   const pollInsertIndex = teamAnalysisStartIndex >= 0
     ? teamAnalysisStartIndex
     : insightStartIndex >= 0
       ? insightStartIndex
-      : aiParagraphs.length
+      : mainAnalysisNodes.length
 
-  const overviewNodes = aiParagraphs.slice(0, pollInsertIndex)
-  const analysisEndIndex = insightStartIndex >= 0 ? insightStartIndex : aiParagraphs.length
-  const teamAnalysisNodes = aiParagraphs.slice(pollInsertIndex, analysisEndIndex)
-  const insightNodes = insightStartIndex >= 0 ? aiParagraphs.slice(insightStartIndex) : []
+  const overviewNodes = mainAnalysisNodes.slice(0, pollInsertIndex)
+  const analysisEndIndex = insightStartIndex >= 0 ? insightStartIndex : mainAnalysisNodes.length
+  const teamAnalysisNodes = mainAnalysisNodes.slice(pollInsertIndex, analysisEndIndex)
+  const insightNodes = insightStartIndex >= 0 ? mainAnalysisNodes.slice(insightStartIndex) : []
 
   const tiptapContent = {
     type: 'doc',
     content: [
+      // 차트 전에 확률과 지표를 해석하는 고유 문단을 먼저 노출
+      ...leadInsightNodes,
+      ...(leadInsightNodes.length > 0 ? [createEmptyParagraphNode()] : []),
       // 예측 차트 (데이터가 있을 때만)
       ...chartNode,
       createEmptyParagraphNode(),

@@ -26,6 +26,7 @@ import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeag
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamLogoUrl } from '@/domains/livescore/actions/images';
+import { getTeamDailyBriefing } from '@/domains/livescore/actions/teams/dailyBriefing';
 import { isUsableTeamSlug, resolveTeamCanonicalSlug } from '@/domains/livescore/actions/teams/slug';
 import {
   isNextNotFoundError,
@@ -156,6 +157,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       overviewRecentMatches,
       overviewUpcomingMatches,
       overviewStandings,
+      dailyBriefing,
     ] = await Promise.all([
       fetchTeamFullData(id, {
         fetchMatches: needsMatches,
@@ -180,6 +182,9 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
         : Promise.resolve(null),
       initialTab === 'overview'
         ? fetchTeamOverviewStandingsData(id)
+        : Promise.resolve(null),
+      initialTab === 'overview'
+        ? getTeamDailyBriefing(Number(id))
         : Promise.resolve(null),
     ]);
 
@@ -415,6 +420,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
           initialTab={initialTab}
           initialData={initialData}
           playerKoreanNames={playerKoreanNames}
+          dailyBriefing={dailyBriefing}
         />
       </>
     );
