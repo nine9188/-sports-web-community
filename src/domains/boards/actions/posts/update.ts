@@ -13,6 +13,7 @@ import { incrementUserEmoticonUsage } from '../emoticonUsage';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
 import { oneOrNull } from '@/shared/utils/supabaseRelations';
+import { revalidatePostListCaches } from './cacheInvalidation';
 
 /**
  * 게시글 수정 서버 액션
@@ -176,6 +177,7 @@ export async function updatePost(
     if (postData.board_id && postData.post_number) {
       revalidateTag(`post-${postData.board_id}-${postData.post_number}`, 'default');
     }
+    revalidatePostListCaches(boardSlug);
 
     // 후처리 작업 (병렬 실행 - 응답 차단하지 않음)
     Promise.all([

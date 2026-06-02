@@ -5,9 +5,9 @@ import type { Database } from '@/shared/types/supabase'
 
 function canonicalHost() {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com').host
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590fb.com').host
   } catch {
-    return '4590football.com'
+    return '4590fb.com'
   }
 }
 

@@ -26,7 +26,10 @@ const ALLOWED_BUCKETS = new Set([
 const ALLOWED_EXTENSIONS = new Set(['webp', 'png', 'jpg', 'jpeg', 'gif', 'svg']);
 
 const ALLOWED_ORIGINS = [
+  '4590fb.com',
+  'www.4590fb.com',
   '4590football.com',
+  'www.4590football.com',
   'localhost',
 ];
 

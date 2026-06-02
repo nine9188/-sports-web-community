@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   },
   verification: {
     other: {
-      'naver-site-verification': '2b10354399e2b85e4e7aad7ba1aabfcb23eca1e3',
+      'naver-site-verification': '1745a17c4467db80fe93a10672edb29175d76260',
       'google-adsense-account': 'ca-pub-8892057636180546',
     },
   },
@@ -125,7 +125,7 @@ window.gtag('config', 'G-MESEGFZZPF');
                     'https://www.instagram.com/4590_football',
                     'https://www.youtube.com/@4590football',
                   ],
-                  email: 'support@4590football.com',
+                  email: 'support@4590fb.com',
                   contactPoint: {
                     '@type': 'ContactPoint',
                     contactType: 'Customer Support',

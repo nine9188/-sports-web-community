@@ -1,4 +1,4 @@
-const baseUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
+const baseUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://4590fb.com';
 
 const rootSitemap = { path: '/sitemap.xml', minUrlLocs: 1000 };
 

@@ -221,7 +221,7 @@ export default function TermsPage() {
             <p>서비스 이용과 관련한 문의사항은 아래 연락처로 문의하실 수 있습니다.</p>
             <div className="bg-[#F5F5F5] dark:bg-[#2D2D2D] p-4 rounded-lg mt-4">
               <ul className="list-none space-y-1 text-gray-700 dark:text-gray-300">
-                <li>이메일: <a href="mailto:support@4590football.com" className="text-blue-600 dark:text-blue-400 hover:underline">support@4590football.com</a></li>
+                <li>이메일: <a href="mailto:support@4590fb.com" className="text-blue-600 dark:text-blue-400 hover:underline">support@4590fb.com</a></li>
               </ul>
             </div>
           </section>

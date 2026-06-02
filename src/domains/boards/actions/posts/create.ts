@@ -16,6 +16,7 @@ import { incrementUserEmoticonUsage } from '../emoticonUsage';
 import type { PostActionResponse } from './utils';
 import { calculateBoardViewerPermissions } from '../permissions';
 import type { PostPollDraft } from '@/domains/boards/types/poll';
+import { revalidatePostListCaches } from './cacheInvalidation';
 
 // 생성된 게시글 타입
 interface CreatedPost {
@@ -218,6 +219,7 @@ async function createPostInternal(params: {
     revalidatePath(`/boards/${boardSlug}`);
     revalidatePath('/boards');
     revalidateTag(`user-stats-${userId}`, 'default');
+    revalidatePostListCaches(boardSlug);
 
     // 후처리: 본문 분리 저장, 카드 링크, 로그, 보상 (전부 fire-and-forget)
     // 게시글 INSERT 이미 성공 → 사용자 응답 차단하지 않음

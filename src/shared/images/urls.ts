@@ -1,8 +1,14 @@
-const DEFAULT_STORAGE_CDN_BASE_URL = 'https://cdn.4590football.com';
+const DEFAULT_STORAGE_CDN_BASE_URL = 'https://cdn.4590fb.com';
+const LEGACY_STORAGE_CDN_BASE_URL = 'https://cdn.4590football.com';
 
-export const STORAGE_CDN_BASE_URL = (
-  process.env.NEXT_PUBLIC_STORAGE_CDN_URL || DEFAULT_STORAGE_CDN_BASE_URL
-).replace(/\/+$/, '');
+function resolveStorageCdnBaseUrl(value: string | undefined): string {
+  const normalized = (value || DEFAULT_STORAGE_CDN_BASE_URL).replace(/\/+$/, '');
+  return normalized === LEGACY_STORAGE_CDN_BASE_URL ? DEFAULT_STORAGE_CDN_BASE_URL : normalized;
+}
+
+export const STORAGE_CDN_BASE_URL = resolveStorageCdnBaseUrl(
+  process.env.NEXT_PUBLIC_STORAGE_CDN_URL
+);
 
 export const SITE_LOGO_LIGHT_URL = '/logo/4590football-logo.png';
 export const SITE_LOGO_DARK_URL = '/logo/4590football-logo-white.webp';

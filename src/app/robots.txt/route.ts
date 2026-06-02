@@ -1,7 +1,9 @@
 import { siteUrl } from '@/shared/seo/sitemap';
 
-const DAUM_WEBMASTER_PIN =
-  '#DaumWebMasterTool:01765042dd66f6f3757a98813cab0c841580123d8059d5895751b2575132466f:Qc8LDKHH1AV7wtQw2Sv8Rw==';
+const DAUM_WEBMASTER_PINS = [
+  '#DaumWebMasterTool:01765042dd66f6f3757a98813cab0c841580123d8059d5895751b2575132466f:Qc8LDKHH1AV7wtQw2Sv8Rw==',
+  '#DaumWebMasterTool:3e549d9c1a77e503e2696c627bf9858821746d0331110e34995eefacf0803040:MeMBEDgiMukoYtb9XFlQLw==',
+] as const;
 
 export const revalidate = 3600;
 
@@ -179,7 +181,7 @@ export async function GET() {
     '',
     `Sitemap: ${siteUrl('/sitemap.xml')}`,
     '',
-    DAUM_WEBMASTER_PIN,
+    ...DAUM_WEBMASTER_PINS,
     '',
   ];
 

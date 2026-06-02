@@ -29,6 +29,8 @@ async function _fetchNewsPostsImpl(boardSlug: string): Promise<NewsItem[]> {
       .from('posts')
       .select('id, title, summary, thumbnail_url, created_at, views, likes, post_number, profiles(nickname, public_id)')
       .eq('board_id', boardData.id)
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .order('created_at', { ascending: false })
       .limit(POSTS_LIMIT);
 

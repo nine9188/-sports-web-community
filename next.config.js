@@ -51,6 +51,12 @@ const nextConfig = {
       // Cloudflare Storage CDN (Supabase 프록시)
       {
         protocol: 'https',
+        hostname: 'cdn.4590fb.com',
+        pathname: '/**',
+      },
+      // 기존 도메인에 저장된 이미지 URL 호환용
+      {
+        protocol: 'https',
         hostname: 'cdn.4590football.com',
         pathname: '/**',
       },

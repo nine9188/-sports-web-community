@@ -4,9 +4,9 @@
  * Submit URL lists to IndexNow.
  *
  * Usage:
- *   npm run indexnow:submit -- --sitemap https://4590football.com/sitemap.xml --dry-run
- *   npm run indexnow:submit -- --sitemap https://4590football.com/sitemap.xml
- *   npm run indexnow:submit -- --url https://4590football.com/boards/all
+ *   npm run indexnow:submit -- --sitemap https://4590fb.com/sitemap.xml --dry-run
+ *   npm run indexnow:submit -- --sitemap https://4590fb.com/sitemap.xml
+ *   npm run indexnow:submit -- --url https://4590fb.com/boards/all
  */
 
 const fs = require('fs');
@@ -18,9 +18,9 @@ const INDEXNOW_ENDPOINTS = {
 };
 function defaultIndexNowHost() {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com').host;
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590fb.com').host;
   } catch {
-    return '4590football.com';
+    return '4590fb.com';
   }
 }
 
@@ -94,7 +94,7 @@ Options:
   -h, --help           Show help
 
 Environment:
-  INDEXNOW_HOST        Default: NEXT_PUBLIC_SITE_URL host, fallback 4590football.com
+  INDEXNOW_HOST        Default: NEXT_PUBLIC_SITE_URL host, fallback 4590fb.com
   INDEXNOW_KEY         Default: project IndexNow key
   INDEXNOW_KEY_LOCATION
 `);

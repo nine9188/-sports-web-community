@@ -4,7 +4,7 @@ import { siteConfig } from '@/shared/config';
 import StandalonePageHeader from '../_components/StandalonePageHeader';
 import { Mail, Handshake, Megaphone, HelpCircle } from 'lucide-react';
 
-const CONTACT_EMAIL = 'support@4590football.com';
+const CONTACT_EMAIL = 'support@4590fb.com';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
@@ -85,7 +85,7 @@ export default function ContactPage() {
           <Mail className="w-8 h-8 text-gray-900 dark:text-[#F0F0F0] mx-auto mb-3" />
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">대표 이메일</p>
           <a
-            href="mailto:support@4590football.com"
+            href="mailto:support@4590fb.com"
             className="text-xl font-semibold text-gray-900 dark:text-[#F0F0F0] hover:underline"
           >
             {CONTACT_EMAIL}

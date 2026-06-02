@@ -17,7 +17,7 @@ interface EmailTemplate {
   html: string;
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590fb.com';
 const LOGO_EMAIL_URL = `${SITE_URL}/logo/4590football-logo-email.png?v=4`;
 
 /**

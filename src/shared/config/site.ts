@@ -5,7 +5,7 @@
  * 모든 페이지에서 이 모듈을 통해 URL을 생성해야 함
  */
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://4590fb.com';
 
 export const logoOptions = [
   '/logo/4590football-logo.png',
