@@ -48,7 +48,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       title: "상점",
       description: "상품을 구매하세요.",
       path: `/shop/${category}`,
-      noindex: true,
+      robots: { index: false, follow: true },
     });
   }
 
@@ -62,25 +62,22 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   });
   const { total } = await getCategoryItemsPaginated(allCategoryIds, 1, 1);
 
-  // 필터/정렬 파라미터 체크 (cat, page 등)
-  const hasFilterParams = readQueryValue(sp["cat"]) || readQueryValue(sp["page"]);
-
   // 아이템 0개 → noindex
   if (total === 0) {
     return buildMetadata({
       title: `${categoryData.name} - 상점`,
       description: `${categoryData.name} 아이템을 구매하세요.`,
       path: `/shop/${category}`,
-      noindex: true,
+      robots: { index: false, follow: true },
     });
   }
 
-  // 필터 파라미터 있으면 canonical을 기본 URL로 고정 (중복 방지)
+  // 상점은 메인 페이지만 색인 대상으로 두고 카테고리는 탐색 URL로 유지한다.
   return buildMetadata({
     title: `${categoryData.name} - 상점`,
     description: `${categoryData.name} 아이템을 구매하세요.`,
     path: `/shop/${category}`,
-    ...(hasFilterParams ? { robots: { index: false, follow: true } } : {}),
+    robots: { index: false, follow: true },
   });
 }
 

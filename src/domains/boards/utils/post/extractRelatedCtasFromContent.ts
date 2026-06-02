@@ -57,7 +57,7 @@ function buildInternalLinkCta(href: unknown, label: unknown): RelatedPostCta | n
   let pathname = href.trim();
 
   try {
-    pathname = new URL(pathname, 'https://4590football.com').pathname;
+    pathname = new URL(pathname, 'https://internal.local').pathname;
   } catch {
     return null;
   }

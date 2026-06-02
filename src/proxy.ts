@@ -3,7 +3,13 @@ import type { CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/shared/types/supabase'
 
-const CANONICAL_HOST = '4590football.com'
+function canonicalHost() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com').host
+  } catch {
+    return '4590football.com'
+  }
+}
 
 const SITE_LAYOUT_SKIP_PATHS = new Set([
   '/about',
@@ -136,7 +142,7 @@ export async function proxy(request: NextRequest) {
   if (process.env.NODE_ENV === 'production' && host?.endsWith('.vercel.app')) {
     const canonicalUrl = request.nextUrl.clone()
     canonicalUrl.protocol = 'https'
-    canonicalUrl.host = CANONICAL_HOST
+    canonicalUrl.host = canonicalHost()
     return NextResponse.redirect(canonicalUrl, 308)
   }
 

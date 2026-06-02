@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
+import { siteConfig } from '@/shared/config';
 
-const AI_TXT = `# ai.txt - 4590 Football
-# https://4590football.com/ai.txt
+function buildAiTxt() {
+  const baseUrl = siteConfig.url;
+
+  return `# ai.txt - 4590 Football
+# ${baseUrl}/ai.txt
 # Last updated: 2026-05-12
 
 Site-Name: 4590 Football
-Site-URL: https://4590football.com
+Site-URL: ${baseUrl}
 Site-Language: ko-KR
 Site-Description: Korean football community with live scores, match schedules, football news, match analysis, teams, players, standings, transfers, and fan discussions.
-Contact: https://4590football.com/contact
+Contact: ${baseUrl}/contact
 
 # Access policy for AI assistants and answer engines
 User-Agent: *
@@ -21,7 +25,7 @@ Allow: /boards/*
 Allow: /livescore
 Allow: /livescore/*
 Allow: /transfers
-Allow: /search
+Allow: /shop
 Allow: /privacy
 Allow: /terms
 Allow: /llms.txt
@@ -40,6 +44,7 @@ Disallow: /signup
 Disallow: /social-signup
 Disallow: /auth/
 Disallow: /notifications
+Disallow: /search
 Disallow: /boards/*/create
 Disallow: /boards/*/edit
 Disallow: /ui
@@ -50,13 +55,14 @@ Disallow: /ui
 
 Crawl-Delay: 1
 
-Robots: https://4590football.com/robots.txt
-Sitemap: https://4590football.com/sitemap.xml
-LLMs-txt: https://4590football.com/llms.txt
+Robots: ${baseUrl}/robots.txt
+Sitemap: ${baseUrl}/sitemap.xml
+LLMs-txt: ${baseUrl}/llms.txt
 `;
+}
 
 export async function GET() {
-  return new NextResponse(AI_TXT, {
+  return new NextResponse(buildAiTxt(), {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'public, max-age=86400, s-maxage=86400',

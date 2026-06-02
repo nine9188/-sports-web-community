@@ -65,7 +65,7 @@ function isGeneratedEntitySlug(slug: string, entity: 'team' | 'player' | 'match'
 }
 
 export function getTeamId(team: TeamLinkSource): string | number {
-  return team.id ?? team.team_id ?? 0;
+  return team.team_id ?? team.id ?? 0;
 }
 
 export function getPlayerId(player: PlayerLinkSource): string | number {

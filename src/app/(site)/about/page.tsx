@@ -4,6 +4,7 @@ import StandalonePageHeader from '../_components/StandalonePageHeader';
 import AboutPageClient from './AboutPageClient';
 import { ABOUT_DEMO_IMAGES } from './demoAssets';
 import { ABOUT_FAQ_ITEMS } from './faq';
+import { siteConfig } from '@/shared/config';
 import '@/styles/post-content.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +20,7 @@ export default function AboutPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    '@id': 'https://4590football.com/about#faq',
+    '@id': `${siteConfig.url}/about#faq`,
     name: '4590 Football About FAQ',
     mainEntity: ABOUT_FAQ_ITEMS.map((item) => ({
       '@type': 'Question',

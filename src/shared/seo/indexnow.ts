@@ -1,7 +1,6 @@
 import { siteUrl } from '@/shared/seo/sitemap';
 
 const INDEXNOW_KEY = 'c1df662b78d0423d9ef5095856359889';
-const INDEXNOW_HOST = '4590football.com';
 const INDEXNOW_KEY_LOCATION = siteUrl(`/${INDEXNOW_KEY}.txt`);
 
 const INDEXNOW_ENDPOINTS = {
@@ -30,8 +29,9 @@ type IndexNowSubmitResult = {
 
 function toCanonicalUrl(urlOrPath: string): string | null {
   try {
+    const canonicalHost = new URL(siteUrl('/')).host;
     const url = new URL(urlOrPath, siteUrl('/'));
-    if (url.protocol !== 'https:' || url.host !== INDEXNOW_HOST) return null;
+    if (url.protocol !== 'https:' || url.host !== canonicalHost) return null;
     url.hash = '';
     return url.toString();
   } catch {
@@ -48,13 +48,14 @@ async function submitIndexNowBatch(
   submitted: string[],
 ): Promise<IndexNowEngineResult> {
   try {
+    const canonicalHost = new URL(siteUrl('/')).host;
     const response = await fetch(INDEXNOW_ENDPOINTS[engine], {
       method: 'POST',
       headers: {
         'content-type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
-        host: INDEXNOW_HOST,
+        host: canonicalHost,
         key: INDEXNOW_KEY,
         keyLocation: INDEXNOW_KEY_LOCATION,
         urlList: submitted,

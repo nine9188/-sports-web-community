@@ -1,20 +1,55 @@
+import type { MetadataRoute } from 'next';
 import {
   getBoardSitemap,
-  getLeagueSitemap,
-  getMatchSitemap,
-  getPlayerSitemap,
-  getPostSitemap,
-  getShopSitemap,
+  getCoreLeagueSitemap,
+  getCoreMatchSitemap,
+  getCorePlayerSitemap,
+  getCoreTeamSitemap,
+  getRecentPostSitemap,
   getStaticSitemap,
-  getSitemapQueryFailures,
-  getTeamSitemap,
   getTransferTeamSitemap,
-  resetSitemapQueryFailures,
+  siteUrl,
 } from '@/shared/seo/sitemap';
-import { assertCompleteMainSitemap } from '@/shared/seo/sitemapSnapshot';
-import { sitemapUrlsetXml } from '@/shared/seo/sitemapXml';
+import { sitemapIndexXml, sitemapUrlsetXml } from '@/shared/seo/sitemapXml';
 
-type SitemapEntry = Awaited<ReturnType<typeof getPostSitemap>>[number];
+type SitemapEntry = MetadataRoute.Sitemap[number];
+
+export const MAIN_SITEMAP_SECTIONS = [
+  {
+    key: 'static',
+    path: '/sitemaps/static.xml',
+  },
+  {
+    key: 'boards',
+    path: '/sitemaps/boards.xml',
+  },
+  {
+    key: 'recent-posts',
+    path: '/sitemaps/recent-posts.xml',
+  },
+  {
+    key: 'livescore-leagues',
+    path: '/sitemaps/livescore-leagues.xml',
+  },
+  {
+    key: 'livescore-teams',
+    path: '/sitemaps/livescore-teams.xml',
+  },
+  {
+    key: 'livescore-players',
+    path: '/sitemaps/livescore-players.xml',
+  },
+  {
+    key: 'livescore-matches',
+    path: '/sitemaps/livescore-matches.xml',
+  },
+  {
+    key: 'transfers',
+    path: '/sitemaps/transfers.xml',
+  },
+] as const;
+
+export type MainSitemapSection = typeof MAIN_SITEMAP_SECTIONS[number]['key'];
 
 function uniqueSitemapEntries(entries: SitemapEntry[]): SitemapEntry[] {
   const seen = new Set<string>();
@@ -26,52 +61,40 @@ function uniqueSitemapEntries(entries: SitemapEntry[]): SitemapEntry[] {
   });
 }
 
-export async function buildMainSitemapXml(): Promise<string> {
-  resetSitemapQueryFailures();
-
-  const [
-    boardEntries,
-    postEntries,
-    leagueEntries,
-    teamEntries,
-    playerEntries,
-    matchEntries,
-    transferEntries,
-    shopEntries,
-  ] = await Promise.all([
-    getBoardSitemap(),
-    getPostSitemap(0),
-    getLeagueSitemap(),
-    getTeamSitemap(0),
-    getPlayerSitemap(0),
-    getMatchSitemap(0),
-    getTransferTeamSitemap(),
-    getShopSitemap(),
-  ]);
-
-  const failures = getSitemapQueryFailures();
-  if (failures.length) {
-    throw new Error(`Main sitemap generation failed queries: ${failures.join(', ')}`);
-  }
-
-  const entries = uniqueSitemapEntries([
-    ...getStaticSitemap(),
-    ...boardEntries,
-    ...postEntries,
-    ...leagueEntries,
-    ...teamEntries,
-    ...playerEntries,
-    ...matchEntries,
-    ...transferEntries,
-    ...shopEntries,
-  ]);
-
-  const xml = sitemapUrlsetXml(entries);
-  assertCompleteMainSitemap(xml);
-
-  return xml;
+export function buildMainSitemapIndexXml(): string {
+  return sitemapIndexXml(
+    MAIN_SITEMAP_SECTIONS.map((section) => ({
+      loc: siteUrl(section.path),
+    }))
+  );
 }
 
-export async function buildMainSitemapIndexXml(): Promise<string> {
-  return buildMainSitemapXml();
+export async function getSitemapSectionEntries(section: string): Promise<MetadataRoute.Sitemap | null> {
+  if (section === 'static') return getStaticSitemap();
+  if (section === 'boards') return getBoardSitemap();
+  if (section === 'recent-posts') return getRecentPostSitemap();
+  if (section === 'transfers') return getTransferTeamSitemap();
+  if (section === 'livescore-leagues') return getCoreLeagueSitemap();
+  if (section === 'livescore-teams') return getCoreTeamSitemap();
+  if (section === 'livescore-players') return getCorePlayerSitemap();
+  if (section === 'livescore-matches') return getCoreMatchSitemap();
+
+  return null;
+}
+
+export async function buildSitemapSectionXml(section: string): Promise<string | null> {
+  const entries = await getSitemapSectionEntries(section);
+  if (!entries) return null;
+  return sitemapUrlsetXml(uniqueSitemapEntries(entries));
+}
+
+export async function getSitemapSectionCounts(): Promise<Record<string, number>> {
+  const result: Record<string, number> = {};
+
+  for (const section of MAIN_SITEMAP_SECTIONS) {
+    const entries = await getSitemapSectionEntries(section.key);
+    result[section.key] = entries?.length ?? 0;
+  }
+
+  return result;
 }

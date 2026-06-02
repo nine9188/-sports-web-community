@@ -16,7 +16,15 @@ const INDEXNOW_ENDPOINTS = {
   bing: 'https://www.bing.com/indexnow',
   naver: 'https://searchadvisor.naver.com/indexnow',
 };
-const INDEXNOW_HOST = process.env.INDEXNOW_HOST || '4590football.com';
+function defaultIndexNowHost() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://4590football.com').host;
+  } catch {
+    return '4590football.com';
+  }
+}
+
+const INDEXNOW_HOST = process.env.INDEXNOW_HOST || defaultIndexNowHost();
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || 'c1df662b78d0423d9ef5095856359889';
 const INDEXNOW_KEY_LOCATION =
   process.env.INDEXNOW_KEY_LOCATION || `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`;
@@ -86,7 +94,7 @@ Options:
   -h, --help           Show help
 
 Environment:
-  INDEXNOW_HOST        Default: 4590football.com
+  INDEXNOW_HOST        Default: NEXT_PUBLIC_SITE_URL host, fallback 4590football.com
   INDEXNOW_KEY         Default: project IndexNow key
   INDEXNOW_KEY_LOCATION
 `);

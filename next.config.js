@@ -152,6 +152,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/sitemaps/livescore.xml',
+        destination: '/sitemap.xml',
+        permanent: true,
+      },
+      {
         source: '/livescore/football/:kind(leagues|team|player|match)/sitemap.xml',
         destination: '/sitemap.xml',
         permanent: true,

@@ -12,6 +12,7 @@ import { MATCH_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 
 export const SITEMAP_PAGE_SIZE = 50000;
+export const CORE_SITEMAP_LEAGUE_IDS = [39, 140, 78, 135, 61, 292, 293] as const;
 const SITEMAP_QUERY_MAX_ATTEMPTS = 3;
 const SITEMAP_QUERY_RETRY_DELAYS_MS = [250, 1000];
 const FIXTURE_TEAM_QUERY_CHUNK_SIZE = 500;
@@ -65,16 +66,6 @@ type FixtureRow = {
   league_id: number | null;
   match_date: string | null;
   updated_at: string | null;
-};
-
-type ShopCategoryRow = {
-  id: number;
-  slug: string | null;
-  parent_id: number | null;
-};
-
-type ShopItemCategoryRow = {
-  category_id: number | null;
 };
 
 type SupabaseQueryResult = {
@@ -209,9 +200,6 @@ export function getStaticSitemap(): MetadataRoute.Sitemap {
       url: siteUrl('/shop'),
     },
     {
-      url: siteUrl('/shop/emoticon-studio'),
-    },
-    {
       url: siteUrl('/boards/all'),
     },
     {
@@ -286,47 +274,12 @@ export async function getLeagueSitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 }
 
-export async function getShopSitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = getSupabaseAdmin();
-  const [{ data, error }, { data: itemCategories, error: itemError }] = await Promise.all([
-    runSitemapQuery('shop_categories query', () => supabase
-    .from('shop_categories')
-    .select('id, slug, parent_id')
-      .eq('is_active', true)),
-    runSitemapQuery('shop_items category query', () => supabase
-      .from('shop_items')
-      .select('category_id')
-      .eq('is_active', true)),
-  ]);
-
-  if (error) {
-    console.error('[sitemap] shop_categories query failed:', error);
-    return [];
-  }
-
-  if (itemError) {
-    console.error('[sitemap] shop_items category query failed:', itemError);
-  }
-
-  const categories = (data || []) as ShopCategoryRow[];
-  const parentById = new Map(categories.map((category) => [category.id, category.parent_id]));
-  const categoryIdsWithItems = new Set<number>();
-
-  for (const row of (itemCategories || []) as ShopItemCategoryRow[]) {
-    let categoryId = row.category_id;
-    while (categoryId) {
-      categoryIdsWithItems.add(categoryId);
-      categoryId = parentById.get(categoryId) ?? null;
-    }
-  }
-
-  return categories
-    .filter((category) => Boolean(category.slug) && categoryIdsWithItems.has(category.id))
-    .map((category): SitemapEntry => ({
-      url: siteUrl(`/shop/${category.slug}`),
-      changeFrequency: 'weekly',
-      priority: 0.3,
-    }));
+export function getCoreLeagueSitemap(): MetadataRoute.Sitemap {
+  return CORE_SITEMAP_LEAGUE_IDS.map((leagueId): SitemapEntry => ({
+    url: siteUrl(`/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}`),
+    changeFrequency: 'daily',
+    priority: 0.7,
+  }));
 }
 
 export async function getPostSitemapCount(): Promise<number> {
@@ -371,6 +324,36 @@ export async function getPostSitemap(id: string | number): Promise<MetadataRoute
         lastModified: post.updated_at || post.created_at || undefined,
         changeFrequency: 'weekly',
         priority: 0.4,
+      };
+    })
+    .filter((entry): entry is SitemapEntry => Boolean(entry));
+}
+
+export async function getRecentPostSitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await runSitemapQuery('recent posts sitemap query', () => supabase
+    .from('posts')
+    .select('post_number, updated_at, created_at, boards!inner(slug)')
+    .eq('is_deleted', false)
+    .eq('is_hidden', false)
+    .order('created_at', { ascending: false })
+    .limit(1000));
+
+  if (error) {
+    console.error('[sitemap] recent posts query failed:', error);
+    return [];
+  }
+
+  return ((data || []) as unknown as PostRow[])
+    .map((post): SitemapEntry | null => {
+      const boardSlug = boardSlugFromPost(post);
+      if (!boardSlug) return null;
+
+      return {
+        url: siteUrl(`/boards/${boardSlug}/${post.post_number}`),
+        lastModified: post.updated_at || post.created_at || undefined,
+        changeFrequency: 'hourly',
+        priority: 0.6,
       };
     })
     .filter((entry): entry is SitemapEntry => Boolean(entry));
@@ -421,6 +404,65 @@ export async function getTeamSitemap(id: string | number): Promise<MetadataRoute
       };
     })
     .filter((entry): entry is SitemapEntry => Boolean(entry));
+}
+
+export async function getCoreTeamSitemap(): Promise<MetadataRoute.Sitemap> {
+  const groups = await getTransferLeagueTeamGroups();
+
+  return groups.flatMap((group) => group.teams.map((team): SitemapEntry => ({
+    url: siteUrl(`/livescore/football/team/${team.id}/${team.slug}`),
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  })));
+}
+
+export async function getCoreLeagueTeamSitemap(): Promise<MetadataRoute.Sitemap> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await runSitemapQuery('football_teams core query', () => supabase
+    .from('football_teams')
+    .select('team_id, league_id, slug, updated_at, name, name_ko, display_name, short_name')
+    .eq('is_active', true)
+    .not('name', 'is', null)
+    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS])
+    .order('team_id', { ascending: true }));
+
+  if (error) {
+    console.error('[sitemap] football_teams core query failed:', error);
+    return [];
+  }
+
+  return ((data || []) as TeamRow[])
+    .map((team): SitemapEntry | null => {
+      const slug = canonicalTeamSlugFromRow(team);
+      if (!slug) return null;
+
+      return {
+        url: siteUrl(`/livescore/football/team/${team.team_id}/${slug}`),
+        lastModified: team.updated_at || undefined,
+        changeFrequency: 'weekly',
+        priority: 0.6,
+      };
+    })
+    .filter((entry): entry is SitemapEntry => Boolean(entry));
+}
+
+async function getCoreSitemapTeamIds(): Promise<Set<number>> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await runSitemapQuery('football_teams core ids query', () => supabase
+    .from('football_teams')
+    .select('team_id')
+    .eq('is_active', true)
+    .not('name', 'is', null)
+    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS]));
+
+  if (error) {
+    console.error('[sitemap] football_teams core ids query failed:', error);
+    return new Set();
+  }
+
+  return new Set(((data || []) as TeamRow[])
+    .map((team) => team.team_id)
+    .filter((teamId): teamId is number => typeof teamId === 'number'));
 }
 
 export async function getTeamSitemapByLeagueSlug(leagueSlug: string): Promise<MetadataRoute.Sitemap> {
@@ -520,6 +562,46 @@ export async function getPlayerSitemap(id: string | number): Promise<MetadataRou
       };
     })
     .filter((entry): entry is SitemapEntry => Boolean(entry));
+}
+
+export async function getCorePlayerSitemap(): Promise<MetadataRoute.Sitemap> {
+  const teamIds = await getCoreSitemapTeamIds();
+  if (!teamIds.size) return [];
+
+  const supabase = getSupabaseAdmin();
+  const entries: SitemapEntry[] = [];
+
+  for (const teamIdChunk of chunks([...teamIds], 500)) {
+    const { data, error } = await runSitemapQuery('football_players core query', () => supabase
+      .from('football_players')
+      .select('player_id, slug, updated_at, name, display_name, korean_name, team_id, team_name, position, number, age, photo_url')
+      .eq('is_active', true)
+      .not('name', 'is', null)
+      .in('team_id', teamIdChunk)
+      .order('player_id', { ascending: true }));
+
+    if (error) {
+      console.error('[sitemap] football_players core query failed:', error);
+      continue;
+    }
+
+    entries.push(...((data || []) as PlayerRow[])
+      .filter((player) => player.player_id > 0 && !isWorthlessSitemapPlayer(player))
+      .map((player): SitemapEntry | null => {
+        const slug = canonicalPlayerSlugFromRow(player);
+        if (!slug) return null;
+
+        return {
+          url: siteUrl(`/livescore/football/player/${player.player_id}/${slug}`),
+          lastModified: player.updated_at || undefined,
+          changeFrequency: 'monthly',
+          priority: 0.4,
+        };
+      })
+      .filter((entry): entry is SitemapEntry => Boolean(entry)));
+  }
+
+  return entries;
 }
 
 async function getTeamIdsForLeagueGroup(group: SitemapLeagueGroup): Promise<Set<number>> {
@@ -645,6 +727,68 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
 
       if (teamsError) {
         console.error('[sitemap] fixture team slug query failed:', teamsError);
+        continue;
+      }
+
+      for (const team of (teams || []) as TeamRow[]) {
+        const slug = canonicalTeamSlugFromRow(team);
+        if (team.team_id && slug) teamSlugById.set(team.team_id, slug);
+      }
+    }
+  }
+
+  const now = Date.now();
+
+  return ((fixtures || []) as FixtureRow[])
+    .map((fixture): SitemapEntry | null => {
+      const slug = fixtureSlug(fixture, teamSlugById);
+      if (!slug) return null;
+
+      const isPast = fixture.match_date ? new Date(fixture.match_date).getTime() < now : true;
+      return {
+        url: siteUrl(`/livescore/football/match/${fixture.fixture_id}/${slug}`),
+        lastModified: fixture.updated_at || fixture.match_date || undefined,
+        changeFrequency: isPast ? 'weekly' : 'daily',
+        priority: isPast ? 0.6 : 0.7,
+      };
+    })
+    .filter((entry): entry is SitemapEntry => Boolean(entry));
+}
+
+export async function getCoreMatchSitemap(): Promise<MetadataRoute.Sitemap> {
+  const { fromDate, toDate } = matchDateWindow();
+  const supabase = getSupabaseAdmin();
+  const { data: fixtures, error } = await runSitemapQuery('fixtures core query', () => supabase
+    .from('fixtures')
+    .select('fixture_id, home_team_id, away_team_id, league_id, match_date, updated_at')
+    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS])
+    .gte('match_date', fromDate)
+    .lte('match_date', toDate)
+    .order('match_date', { ascending: false }));
+
+  if (error) {
+    console.error('[sitemap] fixtures core query failed:', error);
+    return [];
+  }
+
+  const teamIds = [
+    ...new Set(
+      ((fixtures || []) as FixtureRow[])
+        .flatMap((fixture) => [fixture.home_team_id, fixture.away_team_id])
+        .filter((teamId): teamId is number => typeof teamId === 'number')
+    ),
+  ];
+
+  const teamSlugById = new Map<number, string>();
+  if (teamIds.length) {
+    for (const teamIdChunk of chunks(teamIds, FIXTURE_TEAM_QUERY_CHUNK_SIZE)) {
+      const { data: teams, error: teamsError } = await runSitemapQuery('core fixture team slug query', () => supabase
+        .from('football_teams')
+        .select('team_id, slug, updated_at, name, name_ko, display_name, short_name')
+        .in('team_id', teamIdChunk));
+
+      if (teamsError) {
+        console.error('[sitemap] core fixture team slug query failed:', teamsError);
         continue;
       }
 

@@ -76,6 +76,7 @@ export interface TeamSearchResult {
   id: string
   team_id: number
   name: string
+  slug?: string | null
   display_name: string
   short_name: string | null
   code: string | null

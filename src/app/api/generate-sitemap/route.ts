@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import { buildMainSitemapXml } from '@/shared/seo/sitemapIndex';
-import { saveMainSitemapSnapshot } from '@/shared/seo/sitemapSnapshot';
+import {
+  MAIN_SITEMAP_SECTIONS,
+  buildMainSitemapIndexXml,
+  getSitemapSectionCounts,
+} from '@/shared/seo/sitemapIndex';
 
 export const maxDuration = 60;
 
@@ -14,14 +17,18 @@ export async function GET(request: Request) {
   }
 
   const startedAt = Date.now();
-  const xml = await buildMainSitemapXml();
-  const snapshot = await saveMainSitemapSnapshot(xml);
+  const indexXml = buildMainSitemapIndexXml();
+  const sectionCounts = await getSitemapSectionCounts();
 
   return NextResponse.json({
     ok: true,
-    key: snapshot.key,
-    urlCount: snapshot.url_count,
-    generatedAt: snapshot.generated_at,
+    mode: 'sitemap-index',
+    snapshot: false,
+    sections: MAIN_SITEMAP_SECTIONS.map((section) => ({
+      ...section,
+      urlCount: sectionCounts[section.key],
+    })),
+    indexLocCount: (indexXml.match(/<loc>/g) || []).length,
     durationMs: Date.now() - startedAt,
   });
 }

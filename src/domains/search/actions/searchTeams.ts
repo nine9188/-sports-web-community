@@ -42,6 +42,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
       .select(`
         id,
         team_id,
+        slug,
         name,
         display_name,
         short_name,
@@ -132,6 +133,7 @@ export async function searchTeams(options: TeamSearchOptions): Promise<{
 
         return {
           ...team,
+          id: String(team.team_id),
           // 4590 표준: Storage URL로 대체
           logo_url: teamLogoStorageUrls[team.team_id] || null,
           league_name_ko: leagueNames[team.league_id] || '',
@@ -199,6 +201,7 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
       .select(`
         id,
         team_id,
+        slug,
         name,
         display_name,
         short_name,
@@ -240,6 +243,7 @@ export async function getPopularTeams(limit: number = 12): Promise<TeamSearchRes
 
       return {
         ...team,
+        id: String(team.team_id),
         logo_url: popularTeamLogoStorageUrls[team.team_id] || null,
         league_name_ko: popularLeagueNames[team.league_id] || '',
         display_name: mappedTeam?.name_ko || team.display_name,
@@ -274,6 +278,7 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
       .select(`
         id,
         team_id,
+        slug,
         name,
         display_name,
         short_name,
@@ -311,6 +316,7 @@ async function getFallbackTeams(limit: number): Promise<TeamSearchResult[]> {
 
       return {
         ...team,
+        id: String(team.team_id),
         logo_url: fbTeamLogoStorageUrls[team.team_id] || null,
         league_name_ko: fbLeagueName,
         display_name: mappedTeam?.name_ko || team.display_name,

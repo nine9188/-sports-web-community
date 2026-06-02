@@ -16,6 +16,7 @@ import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd'
 import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfers/transferTeams';
 import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
+import { siteConfig } from '@/shared/config';
 
 interface TeamTransfersPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -181,14 +182,14 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
   const webPageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    '@id': `https://4590football.com${teamUrl}#webpage`,
-    url: `https://4590football.com${teamUrl}`,
+    '@id': `${siteConfig.url}${teamUrl}#webpage`,
+    url: `${siteConfig.url}${teamUrl}`,
     name: `${teamName} 이적시장`,
     description,
     inLanguage: 'ko-KR',
     isPartOf: {
       '@type': 'WebSite',
-      '@id': 'https://4590football.com#website',
+      '@id': `${siteConfig.url}#website`,
       name: '4590 Football',
     },
   };

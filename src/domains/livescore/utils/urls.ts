@@ -5,12 +5,19 @@
 
 type EntityId = number | string;
 
+function hasPositiveEntityId(id: EntityId): boolean {
+  const numericId = typeof id === 'number' ? id : Number.parseInt(id, 10);
+  return Number.isFinite(numericId) && numericId > 0;
+}
+
 export function teamUrl(id: EntityId, slug?: string): string {
   const s = slug ? `/${slug}` : '';
   return `/livescore/football/team/${id}${s}`;
 }
 
 export function playerUrl(id: EntityId, slug?: string): string {
+  if (!hasPositiveEntityId(id)) return '#';
+
   const s = slug ? `/${slug}` : '';
   return `/livescore/football/player/${id}${s}`;
 }
