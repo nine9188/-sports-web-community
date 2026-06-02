@@ -106,6 +106,8 @@ DB 기준 후보 규모:
 - `/api/generate-sitemap`: 스냅샷 저장 대신 현재 sitemap index/섹션 카운트 확인용으로 변경
 - `robots.txt`: 대표 sitemap은 `/sitemap.xml` 하나만 안내
 - `robots.txt`: Google/Bing/Yeti/Yandex/AI crawler 그룹의 인증, 검색, 관리자, 개인화, 작성/수정 URL 차단 규칙 정렬
+- `robots.txt`: Googlebot 기준 무시되는 `Host`, `Crawl-delay` 지시어 제거
+- `robots.txt`: Daum 웹마스터 인증 문자열은 주석(`#DaumWebMasterTool`)으로 유지. Google은 주석으로 무시하므로 색인 규칙에 영향 없음
 - `next.config.js`: 기존 sitemap URL 패턴은 `/sitemap.xml`로 영구 리디렉션 정규화
 - `next.config.js`: 제거된 `/sitemaps/livescore.xml`도 `/sitemap.xml`로 영구 리디렉션 정규화
 - `src/proxy.ts`: `/sitemap.xml`, `/sitemaps/*`, `robots.txt`, `rss.xml`, `ai.txt`, `llms.txt`는 proxy matcher에서 제외됨
@@ -190,3 +192,55 @@ env SITE_URL=http://localhost:3004 npm run verify:sitemaps
 - match URL은 핵심 리그/날짜 범위 안의 경기만 들어가는지 확인
 - player URL은 핵심 리그 선수만 들어가는지 확인
 - `robots.txt`가 `/sitemap.xml` 하나만 안내하는지 확인
+- `robots.txt`에 Google이 지원하지 않는 `Host`, `Crawl-delay`가 남아있지 않은지 확인
+
+## robots.txt 지시어 판단
+
+2026-06-02 Google robots.txt 테스트 경고 기준 정리:
+
+| 항목 | 처리 | 이유 |
+| --- | --- | --- |
+| `Sitemap: https://4590football.com/sitemap.xml` | 유지 | 표준 sitemap 위치 안내 지시어 |
+| `#DaumWebMasterTool:...` | 유지 가능 | 주석이라 Googlebot은 무시하며, Daum 인증 용도일 수 있음 |
+| `Host: 4590football.com` | 제거 | Googlebot이 지원하지 않는 지시어 |
+| `Crawl-delay:` | 제거 | Googlebot이 지원하지 않는 지시어. 크롤 속도 조절은 robots.txt가 아니라 검색엔진 도구/서버 정책에서 처리 |
+| `User-agent: SERankingBacklinksBot` / `Disallow: /` | 선택 유지 | Googlebot에는 해당 없는 별도 UA 그룹이라 Google 테스트에서 무시되는 것이 정상 |
+
+Daum은 별도 `User-agent`를 추가하지 않아도 기본 `User-agent: *` 규칙을 따른다. Daum만 다른 정책을 적용할 때만 별도 그룹을 둔다.
+
+## 봇/방화벽 점검 기록
+
+2026-06-02 운영 도메인 `https://4590football.com` 기준:
+
+| 대상 | 확인 결과 | 판단 |
+| --- | --- | --- |
+| 일반 브라우저 UA | `/`, `/robots.txt`, `/sitemap.xml` 200 | 정상 |
+| Googlebot UA | `/` 200 | 정상 |
+| Moz DotBot UA | `/` 200 | 코드/Vercel/Cloudflare 응답 기준 차단 없음 |
+| Moz rogerbot UA | `/` 200 | 코드/Vercel/Cloudflare 응답 기준 차단 없음 |
+| SemrushBot UA | `/` 200 | 코드/Vercel/Cloudflare 응답 기준 차단 없음 |
+| AhrefsBot UA | `/`, `/robots.txt`, `/sitemap.xml` 403 | Cloudflare 단계 차단으로 판단 |
+| SERankingBacklinksBot UA | `/` 403, `x-vercel-mitigated: deny` | Vercel `vercel.json` 명시 차단 |
+
+Vercel Firewall 확인:
+
+- 프로젝트: `sports-web-community`
+- `managedRules.ai_bots`: active, action `deny`
+- `managedRules.bot_protection`: active, action `log`
+- Custom rule `bypass SEO files`: robots/sitemap/SEO 파일 bypass
+- Custom rule `Bypass Search Bots`: Google/Bing/Yeti/Daum/AI 검색봇 등 bypass
+- Ahrefs/Moz/Semrush는 Vercel bypass 목록에 없지만, 운영 응답 기준 Moz/Semrush는 200
+- SERankingBacklinksBot은 `vercel.json`에서 명시 deny
+
+Cloudflare 확인:
+
+- Cloudflare MCP 계정 목록 조회는 성공
+- Zone/Firewall/Rulesets API 조회는 `Authentication error` 발생
+- 운영 응답에서 AhrefsBot 403 응답은 `server: cloudflare`, Cloudflare challenge/block HTML 헤더 형태
+- AhrefsBot은 Vercel까지 도달하지 못하는 것으로 판단
+
+조치 후보:
+
+- Ahrefs/Moz 같은 SEO 크롤러 조회를 허용하려면 Cloudflare WAF/Bot 설정에서 `AhrefsBot`, `DotBot`, `rogerbot`, `SemrushBot` 허용 또는 skip rule 추가
+- SERankingBacklinksBot 조회가 필요하면 `vercel.json` deny rule 제거 또는 예외 처리
+- Cloudflare MCP/API 토큰에 Zone/Rulesets read 권한을 추가한 뒤 실제 WAF/Bot rule을 재조회
