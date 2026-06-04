@@ -39,7 +39,7 @@ export default async function BrandingPage() {
             <div className="flex items-center gap-3">
               <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
               <div>
-                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">favicon.ico (48x48)</p>
+                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">favicon.ico (48/96/192)</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">/public/favicon.ico - 브라우저 탭 아이콘</p>
               </div>
             </div>
@@ -59,10 +59,10 @@ export default async function BrandingPage() {
 
           <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
-              <img src="/icon-96.png" alt="icon-96" className="w-8 h-8 rounded" />
+              <img src="/icon.png" alt="icon" className="w-8 h-8 rounded" />
               <div>
-                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">Desktop Icon (96x96)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-96.png - 데스크톱 바로가기용</p>
+                <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">Search Icon (192x192)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon.png - 검색/브라우저 아이콘용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
@@ -70,10 +70,10 @@ export default async function BrandingPage() {
 
           <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
-              <img src="/icon-192.png" alt="icon-192" className="w-8 h-8 rounded" />
+              <img src="/android-chrome-192x192-new.png" alt="android-chrome-192" className="w-8 h-8 rounded" />
               <div>
                 <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">Web App Icon (192x192)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-192.png - PWA용</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/android-chrome-192x192-new.png - PWA용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>
@@ -81,10 +81,10 @@ export default async function BrandingPage() {
 
           <div className="flex items-center justify-between p-3 bg-[#F5F5F5] dark:bg-[#262626] rounded-lg">
             <div className="flex items-center gap-3">
-              <img src="/icon-512.png" alt="icon-512" className="w-8 h-8 rounded" />
+              <img src="/android-chrome-512x512-new.png" alt="android-chrome-512" className="w-8 h-8 rounded" />
               <div>
                 <p className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">Web App Icon (512x512)</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">/public/icon-512.png - PWA 고해상도용</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">/public/android-chrome-512x512-new.png - PWA 고해상도용</p>
               </div>
             </div>
             <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ 적용됨</span>

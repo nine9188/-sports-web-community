@@ -180,7 +180,7 @@ export default function BrandingSettingsForm({ initialSettings }: BrandingSettin
             <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
               <li>• <strong>favicon.ico</strong>: 브라우저 탭 아이콘</li>
               <li>• <strong>apple-icon.png</strong>: iOS 홈 화면 아이콘</li>
-              <li>• <strong>icon-192.png, icon-512.png</strong>: PWA 아이콘</li>
+              <li>• <strong>android-chrome-192x192-new.png, android-chrome-512x512-new.png</strong>: PWA 아이콘</li>
             </ul>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               파비콘 상태는 아래 &quot;파비콘 상태&quot; 섹션에서 확인할 수 있습니다.

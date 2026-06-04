@@ -8,11 +8,11 @@
 /public/
 ├── README.md                   # 이 파일
 │
-├── favicon.ico                 # 브라우저 탭 아이콘 (48x48)
+├── favicon.ico                 # 브라우저 탭 아이콘 (48/96/192)
 ├── apple-icon.png             # iOS 홈화면 아이콘 (180x180)
-├── icon-96.png                # 데스크톱 바로가기 (96x96)
-├── icon-192.png               # PWA 아이콘 (192x192)
-├── icon-512.png               # PWA 고해상도 아이콘 (512x512)
+├── icon.png                   # 검색/브라우저 아이콘 (192x192)
+├── android-chrome-192x192-new.png  # PWA 아이콘 (192x192)
+├── android-chrome-512x512-new.png  # PWA 고해상도 아이콘 (512x512)
 ├── og-image.png               # SNS 공유 이미지 (1200x630) ✅ DB 관리
 │
 ├── site.webmanifest           # PWA 설정 파일
@@ -30,7 +30,7 @@
 ## 🔖 파비콘 & 아이콘
 
 ### favicon.ico
-- **크기**: 48x48px (멀티사이즈 ICO 권장)
+- **크기**: 48x48, 96x96, 192x192px (멀티사이즈 ICO)
 - **용도**: 브라우저 탭, 북마크 아이콘
 - **경로**: `/favicon.ico` (루트 필수)
 - **참조 파일**: `src/app/layout.tsx`
@@ -41,10 +41,10 @@
 - **경로**: `/apple-icon.png`
 - **참조 파일**: `src/app/layout.tsx`, `site.webmanifest`
 
-### icon-96.png, icon-192.png, icon-512.png
-- **크기**: 각각 96x96, 192x192, 512x512px
+### icon.png, android-chrome-192x192-new.png, android-chrome-512x512-new.png
+- **크기**: 각각 192x192, 192x192, 512x512px
 - **용도**: PWA 설치 시 앱 아이콘, 데스크톱 바로가기
-- **경로**: `/icon-*.png`
+- **경로**: `/icon.png`, `/android-chrome-192x192-new.png`, `/android-chrome-512x512-new.png`
 - **참조 파일**: `src/app/layout.tsx`, `site.webmanifest`
 
 ---
@@ -166,8 +166,8 @@
 
 ### 앱 아이콘 변경
 - [ ] `/public/apple-icon.png` 교체 (180x180)
-- [ ] `/public/icon-192.png` 교체 (192x192)
-- [ ] `/public/icon-512.png` 교체 (512x512)
+- [ ] `/public/android-chrome-192x192-new.png` 교체 (192x192)
+- [ ] `/public/android-chrome-512x512-new.png` 교체 (512x512)
 - [ ] `/public/site.webmanifest` 경로 확인
 
 ### OG 이미지 변경

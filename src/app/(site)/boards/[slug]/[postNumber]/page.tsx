@@ -15,6 +15,7 @@ import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { buildPostSeoDescription, buildPostSeoKeywords } from '@/domains/boards/utils/post/buildPostSeoDescription';
 import { extractPostSeoEntities, type PostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
 import { buildPostDisplayTitle } from '@/domains/boards/utils/post/buildPostDisplayTitle';
+import { isNextNotFoundError, isNextRedirectError } from '@/shared/utils/nextNavigationErrors';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -686,14 +687,8 @@ async function PostDetailContent({
       </>
     );
   } catch (error) {
-    // notFound() 에러는 그대로 throw
-    if (
-      error &&
-      typeof error === 'object' &&
-      'digest' in error &&
-      typeof error.digest === 'string' &&
-      error.digest.includes('NEXT_NOT_FOUND')
-    ) {
+    // Next navigation errors are control flow, not application errors.
+    if (isNextRedirectError(error) || isNextNotFoundError(error)) {
       throw error;
     }
 
