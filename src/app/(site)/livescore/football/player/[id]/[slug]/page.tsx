@@ -24,6 +24,7 @@ import { getTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { getPlayerSeoQuality } from '@/domains/livescore/utils/playerSeoQuality';
 import { isNextRedirectError, normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
+import { getRelatedPosts } from '@/domains/livescore/actions/match/relatedPosts';
 
 /**
  * ============================================
@@ -294,6 +295,13 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
     const playerInfo = initialData.playerData?.info;
     const playerStats = initialData.playerData?.statistics;
     const currentTeam = playerStats?.[0]?.team;
+    const relatedPosts = !Number.isNaN(playerNumericId)
+      ? await getRelatedPosts({
+          playerIds: [playerNumericId],
+          teamIds: currentTeam?.id ? [currentTeam.id] : [],
+          limit: 30,
+        })
+      : [];
     const currentTeamMapping = currentTeam?.id
       ? await getSafeTeamById(currentTeam.id)
       : null;
@@ -394,6 +402,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
           playerKoreanName={playerKoreanName}
           rankingsKoreanNames={rankingsKoreanNames}
           initialPage={fixturePage}
+          relatedPosts={relatedPosts}
         />
       </>
     );

@@ -1,6 +1,7 @@
 import './globals.css';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import RootLayoutProvider from './RootLayoutProvider';
@@ -49,6 +50,17 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
   },
+  icons: {
+    icon: [
+      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [
+      { url: '/apple-icon.png', type: 'image/png', sizes: '180x180' },
+    ],
+  },
+  manifest: '/site.webmanifest',
   other: {
     'msapplication-TileColor': brandColors.primary,
     'application-name': '4590 Football',
@@ -84,8 +96,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href={`${siteConfig.url}/icon.png`} type="image/png" sizes="192x192" />
         <link rel="apple-touch-icon" href={`${siteConfig.url}/apple-icon.png`} type="image/png" sizes="180x180" />
         <link rel="manifest" href={`${siteConfig.url}/site.webmanifest`} />
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF" />
-        <script
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-MESEGFZZPF" strategy="afterInteractive" />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
 window.dataLayer = window.dataLayer || [];
@@ -95,10 +109,11 @@ window.gtag('config', 'G-MESEGFZZPF');
 `,
           }}
         />
-        <script
+        <Script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
           crossOrigin="anonymous"
+          strategy="afterInteractive"
         />
       </head>
 

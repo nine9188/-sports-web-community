@@ -288,7 +288,7 @@ export default function Formation({
       ctx.fillStyle = '#9ca3af';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillText('4590football.com', cardW - PAD, HEADER_H / 2);
+      ctx.fillText('4590fb.com', cardW - PAD, HEADER_H / 2);
     };
 
     const homeLogo = homeLogoResult.status === 'fulfilled' ? homeLogoResult.value : null;

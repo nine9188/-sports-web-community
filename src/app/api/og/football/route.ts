@@ -81,7 +81,7 @@ function renderOgSvg({
   ${renderImageSlot(rightImage, Math.min(952, textX + textWidth + 28), 226)}
 
   <text x="64" y="548" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="26" font-weight="500" fill="#D0D5DD">축구 라이브스코어 &amp; 커뮤니티</text>
-  <text x="1136" y="548" text-anchor="end" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF">4590football.com</text>
+  <text x="1136" y="548" text-anchor="end" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF">4590fb.com</text>
 </svg>`;
 }
 

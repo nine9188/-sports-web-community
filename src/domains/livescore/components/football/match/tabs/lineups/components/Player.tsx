@@ -92,35 +92,50 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl
   }, [playerId]);
 
   const imageUrl = photoUrl || null;
-  const isUsingFallback = !imageUrl || hasError;
-  const imageSrc = isUsingFallback ? PLAYER_PLACEHOLDER : imageUrl;
+  const shouldRenderPlayerImage = Boolean(imageUrl && imageUrl !== PLAYER_PLACEHOLDER && !hasError);
+  const imageSrc = imageUrl || PLAYER_PLACEHOLDER;
 
   // 재시도용 캐시버스터
-  const src = !isUsingFallback && retryCount > 0 ? `${imageSrc}?r=${retryCount}` : imageSrc;
+  const src = shouldRenderPlayerImage && retryCount > 0 ? `${imageSrc}?r=${retryCount}` : imageSrc;
 
   return (
-    <image
-      x="-2.5"
-      y="-2.5"
-      width="5"
-      height="5"
-      href={src}
-      crossOrigin="anonymous"
-      clipPath={`url(#clip-${teamId}-${playerId})`}
-      role="img"
-      aria-labelledby={`player-name-${teamId}-${playerId}`}
-      style={{ imageRendering: 'auto' }}
-      onLoad={onImageLoad}
-      onError={() => {
-        if (!isUsingFallback && retryCount < 2) {
-          // 최대 2회 재시도
-          setRetryCount(prev => prev + 1);
-        } else {
-          setHasError(true);
-          onImageError();
-        }
-      }}
-    />
+    <>
+      <image
+        x="-2.5"
+        y="-2.5"
+        width="5"
+        height="5"
+        href={PLAYER_PLACEHOLDER}
+        clipPath={`url(#clip-${teamId}-${playerId})`}
+        role="img"
+        aria-labelledby={`player-name-${teamId}-${playerId}`}
+        style={{ imageRendering: 'auto' }}
+      />
+      {shouldRenderPlayerImage && (
+        <image
+          x="-2.5"
+          y="-2.5"
+          width="5"
+          height="5"
+          href={src}
+          crossOrigin="anonymous"
+          clipPath={`url(#clip-${teamId}-${playerId})`}
+          role="img"
+          aria-labelledby={`player-name-${teamId}-${playerId}`}
+          style={{ imageRendering: 'auto' }}
+          onLoad={onImageLoad}
+          onError={() => {
+            if (retryCount < 2) {
+              // 최대 2회 재시도
+              setRetryCount(prev => prev + 1);
+            } else {
+              setHasError(true);
+              onImageError();
+            }
+          }}
+        />
+      )}
+    </>
   );
 });
 

@@ -10,7 +10,7 @@ import confetti from 'canvas-confetti';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
 import type { ISourceOptions } from '@tsparticles/engine';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/shared/context/ThemeContext';
 
 const darkParticles: ISourceOptions = {
   fullScreen: false,

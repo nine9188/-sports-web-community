@@ -128,6 +128,28 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: '4590football.com',
+          },
+        ],
+        destination: 'https://4590fb.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.4590football.com',
+          },
+        ],
+        destination: 'https://4590fb.com/:path*',
+        permanent: true,
+      },
+      {
         source: '/sitemap-index.xml',
         destination: '/sitemap.xml',
         permanent: true,

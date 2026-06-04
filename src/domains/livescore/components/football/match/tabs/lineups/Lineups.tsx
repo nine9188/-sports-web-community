@@ -321,9 +321,9 @@ export default function Lineups({ matchData, allPlayerStats, playerKoreanNames =
       onClick={() => handlePlayerClick(player, team.id, team.name, allPlayers)}
     >
       <div className="relative flex-shrink-0">
-        {player.id ? (
+        {player.photo ? (
           <UnifiedSportsImageClient
-            src={player.photo || PLAYER_PLACEHOLDER}
+            src={player.photo}
             alt={`${player.name} 선수 사진`}
             size="lg"
             variant="circle"

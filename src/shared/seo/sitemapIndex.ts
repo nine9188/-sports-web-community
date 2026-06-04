@@ -16,8 +16,8 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 
 export const MAIN_SITEMAP_SECTIONS = [
   {
-    key: 'static',
-    path: '/sitemaps/static.xml',
+    key: 'core',
+    path: '/sitemaps/core.xml',
   },
   {
     key: 'boards',
@@ -26,10 +26,6 @@ export const MAIN_SITEMAP_SECTIONS = [
   {
     key: 'recent-posts',
     path: '/sitemaps/recent-posts.xml',
-  },
-  {
-    key: 'livescore-leagues',
-    path: '/sitemaps/livescore-leagues.xml',
   },
   {
     key: 'livescore-teams',
@@ -70,6 +66,14 @@ export function buildMainSitemapIndexXml(): string {
 }
 
 export async function getSitemapSectionEntries(section: string): Promise<MetadataRoute.Sitemap | null> {
+  if (section === 'core') {
+    const [staticEntries, leagueEntries] = await Promise.all([
+      getStaticSitemap(),
+      getCoreLeagueSitemap(),
+    ]);
+
+    return [...staticEntries, ...leagueEntries];
+  }
   if (section === 'static') return getStaticSitemap();
   if (section === 'boards') return getBoardSitemap();
   if (section === 'recent-posts') return getRecentPostSitemap();

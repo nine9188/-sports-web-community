@@ -20,10 +20,78 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
 ])
 
 const PUBLIC_CRAWLER_USER_AGENT_PATTERN =
-  /(googlebot|adsbot-google|mediapartners-google|gptbot|chatgpt-user|oai-searchbot|claudebot|claude-searchbot|perplexitybot|perplexity-user|google-extended|ccbot|applebot-extended|bytespider|amazonbot|facebookbot|meta-externalagent)/i
+  /(googlebot|google-inspectiontool|googleother|storebot-google|adsbot-google|mediapartners-google|bingbot|yeti|daum|daumoa|duckduckbot|baiduspider|yandexbot|yandex|gptbot|chatgpt-user|oai-searchbot|claudebot|claude-searchbot|perplexitybot|perplexity-user|google-extended|ccbot|applebot-extended|bytespider|amazonbot|facebookbot|meta-externalagent)/i
 
 function isPublicCrawlerUserAgent(userAgent: string | null) {
   return Boolean(userAgent && PUBLIC_CRAWLER_USER_AGENT_PATTERN.test(userAgent))
+}
+
+const EXPENSIVE_PUBLIC_PATH_PATTERN =
+  /^\/(?:livescore\/football(?:$|\/(?:player|team|match|leagues)(?:\/|$))|boards\/[^/]+\/\d+)/
+
+function isLikelyBrowserImpersonator(request: NextRequest) {
+  const userAgent = request.headers.get('user-agent')
+  if (!userAgent || isPublicCrawlerUserAgent(userAgent)) return false
+  const isChromiumUserAgent = /\b(?:Chrome|CriOS|Edg)\//i.test(userAgent)
+  if (!isChromiumUserAgent) return false
+
+  const secFetchMode = request.headers.get('sec-fetch-mode')
+  const secFetchDest = request.headers.get('sec-fetch-dest')
+  const secFetchUser = request.headers.get('sec-fetch-user')
+  const secChUa = request.headers.get('sec-ch-ua')
+  const acceptLanguage = request.headers.get('accept-language')
+  const hasBrowserNavigationHeaders =
+    secFetchMode?.toLowerCase() === 'navigate' &&
+    secFetchDest?.toLowerCase() === 'document' &&
+    secFetchUser === '?1' &&
+    Boolean(secChUa) &&
+    Boolean(acceptLanguage)
+
+  return !hasBrowserNavigationHeaders
+}
+
+function shouldDenyExpensiveBotRequest(request: NextRequest) {
+  if (request.method !== 'GET') return false
+  if (!EXPENSIVE_PUBLIC_PATH_PATTERN.test(request.nextUrl.pathname)) return false
+  const referer = request.headers.get('referer')
+  if (referer) {
+    try {
+      const refererHost = new URL(referer).host.toLowerCase()
+      if (
+        refererHost === canonicalHost() ||
+        refererHost === 'www.4590fb.com' ||
+        refererHost === '4590football.com' ||
+        refererHost === 'www.4590football.com'
+      ) {
+        return false
+      }
+    } catch {
+      // Ignore malformed referers and continue with bot checks.
+    }
+  }
+  if (
+    request.nextUrl.searchParams.has('_rsc') ||
+    request.url.includes('?_rsc=') ||
+    request.url.includes('&_rsc=') ||
+    request.headers.get('rsc') === '1' ||
+    request.headers.get('accept')?.includes('text/x-component')
+  ) {
+    return false
+  }
+  if (hasSupabaseAuthCookie(request)) return false
+
+  return isLikelyBrowserImpersonator(request)
+}
+
+function botDeniedResponse() {
+  return new NextResponse('Forbidden', {
+    status: 403,
+    headers: {
+      'cache-control': 'private, no-store, max-age=0',
+      'x-robots-tag': 'noindex, nofollow',
+      'x-bot-guard': 'browser-impersonator',
+    },
+  })
 }
 
 function hasSupabaseAuthCookie(request: NextRequest) {
@@ -144,6 +212,10 @@ export async function proxy(request: NextRequest) {
     canonicalUrl.protocol = 'https'
     canonicalUrl.host = canonicalHost()
     return NextResponse.redirect(canonicalUrl, 308)
+  }
+
+  if (process.env.NODE_ENV === 'production' && shouldDenyExpensiveBotRequest(request)) {
+    return botDeniedResponse()
   }
 
   const boardPostMatch = pathname.match(/^\/boards\/[^/]+\/\d+$/)
@@ -406,8 +478,7 @@ export const config = {
      * - Next.js image optimizer
      * - favicon and static public files
      * - API routes
-     * - match detail pages, which do not need proxy-side auth or redirects
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|livescore/football/match/|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|ads\\.txt|llms\\.txt|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|sitemap[^/]*\\.xml|sitemaps|rss\\.xml|robots\\.txt|ai\\.txt|ads\\.txt|llms\\.txt|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',
   ],
 } 

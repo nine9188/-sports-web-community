@@ -109,6 +109,7 @@ export default function MatchPageClient({
             playerKoreanNames={playerKoreanNames}
             lineupPlayerPhotoUrls={lineupPlayerPhotoUrls}
             cupRoundsData={cupRoundsData}
+            headerGoalEvents={headerGoalEvents}
           />
         </div>
 

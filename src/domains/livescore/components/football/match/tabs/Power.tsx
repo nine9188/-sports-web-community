@@ -96,6 +96,13 @@ function findStandingForTeam(standings: StandingsData | null | undefined, teamId
     .find((standing) => standing.team.id === teamId);
 }
 
+function formatShortKoreanDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const seoulDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  return `${String(seoulDate.getUTCFullYear()).slice(2)}. ${seoulDate.getUTCMonth() + 1}. ${seoulDate.getUTCDate()}.`;
+}
+
 export default function Power({ data: initialData, homeTeam, awayTeam, playerKoreanNames = {}, mode = 'all' }: PowerProps) {
   const { getTeamDisplayName, getLeagueKoreanName } = useTeamLeague();
   const showComparison = ['all', 'summary', 'comparison', 'comparisonRecent'].includes(mode);
@@ -511,7 +518,7 @@ export default function Power({ data: initialData, homeTeam, awayTeam, playerKor
                   <span className="font-semibold flex-shrink-0">{aScore}</span>
                 </div>
                 <div className="min-w-0 text-center text-gray-500 dark:text-gray-400 px-1">
-                  <div className="text-xs whitespace-nowrap">{new Date(m.utcDate).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'Asia/Seoul' }).replace(/\./g, '. ')}</div>
+                  <div className="text-xs whitespace-nowrap">{formatShortKoreanDate(m.utcDate)}</div>
                   <div className="min-w-0 truncate whitespace-nowrap text-xs">{getLeagueKoreanName(m.league.name)}</div>
                 </div>
                 <div className="flex min-w-0 items-center justify-start px-1 gap-2">

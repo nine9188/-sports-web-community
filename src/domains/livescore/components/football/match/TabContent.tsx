@@ -9,12 +9,15 @@ import Lineups from './tabs/lineups/Lineups';
 import MatchPredictionClient from './sidebar/MatchPredictionClient';
 import SupportCommentsSection from './sidebar/SupportCommentsSection';
 import RelatedPosts from './sidebar/RelatedPosts';
+import MatchAbout from './MatchAbout';
+import MatchDailyBriefing from './MatchDailyBriefing';
 import { EmptyState } from '@/domains/livescore/components/common/CommonComponents';
 import { MatchFullDataResponse } from '@/domains/livescore/actions/match/matchData';
 import { HeadToHeadTestData } from '@/domains/livescore/actions/match/headtohead';
 import { AllPlayerStatsResponse, PlayerStatsData } from '@/domains/livescore/types/lineup';
 import { MatchPlayerStatsResponse } from '@/domains/livescore/actions/match/matchPlayerStats';
 import { MatchTabType, PlayerKoreanNames } from './MatchPageClient';
+import type { HeaderGoalEvent } from './MatchHeader';
 import type { SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
@@ -109,6 +112,7 @@ interface TabContentProps {
   playerKoreanNames?: PlayerKoreanNames;
   lineupPlayerPhotoUrls?: Record<number, string>;
   cupRoundsData?: import('@/domains/livescore/actions/match/cupFixtures').CupRound[];
+  headerGoalEvents?: HeaderGoalEvent[];
 }
 
 export default function TabContent({
@@ -127,6 +131,7 @@ export default function TabContent({
   playerKoreanNames = {},
   lineupPlayerPhotoUrls,
   cupRoundsData,
+  headerGoalEvents = [],
 }: TabContentProps) {
   const { getTeamById } = useTeamLeague();
   const activeData = initialData;
@@ -225,7 +230,25 @@ export default function TabContent({
 
     case 'power':
       return homeTeam && awayTeam
-        ? <Power matchId={matchId} homeTeam={homeTeam} awayTeam={awayTeam} data={initialPowerData ? { ...initialPowerData, standings } : undefined} playerKoreanNames={mergedPlayerKoreanNames} mode={powerMode} />
+        ? (
+          <div className="space-y-4">
+            <Power
+              matchId={matchId}
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
+              data={initialPowerData ? { ...initialPowerData, standings } : undefined}
+              playerKoreanNames={mergedPlayerKoreanNames}
+              mode={powerMode}
+            />
+            <MatchDailyBriefing posts={relatedPosts ?? sidebarData?.relatedPosts ?? []} />
+            <MatchAbout
+              initialData={initialData}
+              powerData={initialPowerData}
+              goalEvents={headerGoalEvents}
+              playerKoreanNames={mergedPlayerKoreanNames}
+            />
+          </div>
+        )
         : <EmptyState title="전력 분석 없음" message="이 경기의 전력 데이터를 찾을 수 없습니다." />;
 
     case 'support':

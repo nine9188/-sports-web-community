@@ -4,6 +4,7 @@ import TabContent from './TabContent';
 import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data';
 import AdBanner from '@/shared/components/AdBanner';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
+import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 
 interface PlayerPageClientProps {
   playerId: string;
@@ -12,6 +13,7 @@ interface PlayerPageClientProps {
   playerKoreanName?: string | null;
   rankingsKoreanNames?: Record<number, string | null>;
   initialPage?: number;
+  relatedPosts?: RelatedPost[];
 }
 
 export default function PlayerPageClient({
@@ -21,6 +23,7 @@ export default function PlayerPageClient({
   playerKoreanName,
   rankingsKoreanNames = {},
   initialPage = 1,
+  relatedPosts = [],
 }: PlayerPageClientProps) {
   const currentTab = initialTab;
 
@@ -51,8 +54,10 @@ export default function PlayerPageClient({
         playerId={playerId}
         currentTab={currentTab}
         initialData={initialData}
+        playerKoreanName={playerKoreanName}
         rankingsKoreanNames={rankingsKoreanNames}
         initialPage={initialPage}
+        relatedPosts={relatedPosts}
       />
     </>
   );

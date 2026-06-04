@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { type SidebarData } from '@/domains/livescore/actions/match/sidebarData';
 import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
-import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 
 // 매치 데이터 타입 정의
 interface MatchDataType {
@@ -51,10 +50,26 @@ interface MatchDataType {
   };
 }
 
+function formatKoreanDateTime(value?: string) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const seoulDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  const year = seoulDate.getUTCFullYear();
+  const month = seoulDate.getUTCMonth() + 1;
+  const day = seoulDate.getUTCDate();
+  const hour24 = seoulDate.getUTCHours();
+  const minute = seoulDate.getUTCMinutes();
+  const period = hour24 < 12 ? '오전' : '오후';
+  const hour12 = hour24 % 12 || 12;
+
+  return `${year}년 ${month}월 ${day}일 ${period} ${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
 // 승무패 예측 섹션 컴포넌트 - 클라이언트 컴포넌트로 분리
 import MatchPredictionClient from './MatchPredictionClient';
 import SupportCommentsSection from './SupportCommentsSection';
-import RelatedPosts from './RelatedPosts';
 import HighlightBanner from '../HighlightBanner';
 import type { MatchHighlight } from '@/domains/livescore/types/highlight';
 
@@ -76,7 +91,6 @@ export function MatchInfoSection({
   teamLogoUrls?: Record<number, string>;
   highlight?: MatchHighlight | null;
 }) {
-  const { getTeamById } = useTeamLeague();
   const [matchData, setMatchData] = useState<MatchDataType | null>(initialData || null);
   const [error, setError] = useState<string | null>(null);
 
@@ -232,14 +246,7 @@ export function MatchInfoSection({
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 dark:text-gray-400">경기 시간</span>
                 <span className="font-medium text-gray-900 dark:text-[#F0F0F0] text-right">
-                  {new Date(fixture.date).toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: 'Asia/Seoul'
-                  })}
+                  {formatKoreanDateTime(fixture.date)}
                 </span>
               </div>
             )}
@@ -269,14 +276,6 @@ export function MatchInfoSection({
             initialComments={sidebarData?.comments}
           />
 
-          {/* 관련 게시글 섹션 */}
-          <RelatedPosts
-            posts={sidebarData?.relatedPosts ?? []}
-            teams={{
-              home: matchData.teams?.home ? { id: matchData.teams.home.id!, name: getTeamById(matchData.teams.home.id!)?.name_ko || matchData.teams.home.name!, boardSlug: sidebarData?.homeBoardSlug } : undefined,
-              away: matchData.teams?.away ? { id: matchData.teams.away.id!, name: getTeamById(matchData.teams.away.id!)?.name_ko || matchData.teams.away.name!, boardSlug: sidebarData?.awayBoardSlug } : undefined,
-            }}
-          />
         </>
       )}
     </>

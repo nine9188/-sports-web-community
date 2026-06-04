@@ -11,6 +11,9 @@ import PlayerTransfers from './tabs/PlayerTransfers';
 import PlayerInjuries from './tabs/PlayerInjuries';
 import PlayerRankings from './tabs/PlayerRankings';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
+import PlayerDailyBriefing from './PlayerDailyBriefing';
+import PlayerAbout from './PlayerAbout';
+import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
 
 // ============================================
 // 탭 컴포넌트들 (메모이제이션)
@@ -241,8 +244,10 @@ interface TabContentProps {
   playerId: string;
   currentTab: PlayerTabType;
   initialData?: Partial<PlayerFullDataResponse>;
+  playerKoreanName?: string | null;
   rankingsKoreanNames?: Record<number, string | null>;
   initialPage?: number;
+  relatedPosts?: RelatedPost[];
 }
 
 // ============================================
@@ -253,8 +258,10 @@ export default function TabContent({
   playerId,
   currentTab,
   initialData,
+  playerKoreanName,
   rankingsKoreanNames = {},
   initialPage = 1,
+  relatedPosts = [],
 }: TabContentProps) {
   const statsData = initialData?.statistics
     ? {
@@ -284,12 +291,20 @@ export default function TabContent({
       case 'stats': {
         const statistics = statsData?.statistics || [];
         return (
-          <StatsTab
-            statistics={statistics}
-            teamLogoUrls={statsData?.teamLogoUrls || {}}
-            leagueLogoUrls={statsData?.leagueLogoUrls || {}}
-            leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
-          />
+          <div className="space-y-4">
+            <StatsTab
+              statistics={statistics}
+              teamLogoUrls={statsData?.teamLogoUrls || {}}
+              leagueLogoUrls={statsData?.leagueLogoUrls || {}}
+              leagueLogoDarkUrls={statsData?.leagueLogoDarkUrls || {}}
+            />
+            <PlayerDailyBriefing posts={relatedPosts} />
+            <PlayerAbout
+              playerId={playerId}
+              initialData={initialData}
+              playerKoreanName={playerKoreanName}
+            />
+          </div>
         );
       }
 
@@ -358,9 +373,12 @@ export default function TabContent({
     transfersTeamLogoUrls,
     injuriesTeamLogoUrls,
     playerIdNum,
+    playerId,
     initialData,
+    playerKoreanName,
     rankingsKoreanNames,
     initialPage,
+    relatedPosts,
   ]);
 
   return renderTabContent;

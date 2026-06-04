@@ -45,7 +45,7 @@ export default function PhoneVerificationPopup({ userId, phoneVerified }: PhoneV
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" />
       <div className="relative w-full max-w-sm bg-white dark:bg-[#1D1D1D] rounded-xl shadow-xl">
         <button
