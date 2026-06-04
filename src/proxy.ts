@@ -16,6 +16,7 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
   '/contact',
   '/guide',
   '/privacy',
+  '/search-engine-check-4590',
   '/terms',
 ])
 
