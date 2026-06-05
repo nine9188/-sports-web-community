@@ -377,6 +377,7 @@ export default function PostEditForm({
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const imageInsertionPositionRef = useRef<number | null>(null);
   const videoInsertionPositionRef = useRef<number | null>(null);
+  const initialContentAppliedRef = useRef(false);
   const linkPopoverAnchorRef = useRef<SelectionPositionAnchor | null>(null);
   const tableInsertionRangeRef = useRef<{ from: number; to: number } | null>(null);
   const entityReplacementRangeRef = useRef<{ from: number; to: number } | null>(null);
@@ -629,6 +630,23 @@ export default function PostEditForm({
     },
     immediatelyRender: false
   }, [extensionsLoaded, loadedExtensions, parsedInitialContent]);
+
+  useEffect(() => {
+    if (!editor || !extensionsLoaded || !parsedInitialContent || initialContentAppliedRef.current) return;
+
+    if (!editor.isEmpty) {
+      initialContentAppliedRef.current = true;
+      return;
+    }
+
+    editor.commands.setContent(parsedInitialContent as Content, true);
+    const editorJson = editor.getJSON();
+    const jsonContent = JSON.stringify(editorJson);
+    setContent(jsonContent);
+    setAutoTags(extractAutoTagsFromContent(editorJson));
+    setRelatedConnections(extractRelatedCtasFromContent(editorJson));
+    initialContentAppliedRef.current = true;
+  }, [editor, extensionsLoaded, parsedInitialContent]);
 
   // ?먮뵒???몃뱾????
   const {

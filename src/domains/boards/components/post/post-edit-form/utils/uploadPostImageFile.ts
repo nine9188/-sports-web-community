@@ -5,6 +5,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 const WEBP_QUALITY = 0.85;
 const CONVERT_TIMEOUT_MS = 10_000;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_SYNC_CONVERT_SIZE_BYTES = 4 * 1024 * 1024;
 
 async function convertToWebP(file: File): Promise<File> {
   if (file.type === 'image/webp' || file.type === 'image/gif') return file;
@@ -82,7 +83,9 @@ export async function uploadPostImageFile(file: File): Promise<{ publicUrl: stri
     throw new Error('로그인 상태를 확인해주세요.');
   }
 
-  const fileToUpload = await convertToWebP(file);
+  const fileToUpload = file.size <= MAX_SYNC_CONVERT_SIZE_BYTES
+    ? await convertToWebP(file)
+    : file;
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 8);
   const safeFileName = fileToUpload.name.replace(/[^a-zA-Z0-9.]/g, '_');

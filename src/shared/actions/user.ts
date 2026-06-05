@@ -34,6 +34,20 @@ async function getCachedUserStats(userId: string) {
   return _getCachedUserStatsImpl(userId);
 }
 
+function isSupabaseInvalidRefreshTokenError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const authError = error as { code?: unknown; message?: unknown };
+  const code = typeof authError.code === 'string' ? authError.code : '';
+  const message = typeof authError.message === 'string' ? authError.message : '';
+
+  return (
+    code === 'refresh_token_not_found' ||
+    message.includes('Invalid Refresh Token') ||
+    message.includes('Refresh Token Not Found')
+  );
+}
+
 /**
  * 통합 사용자 데이터 fetch 함수
  * 서버에서 1번만 호출하여 모든 사용자 관련 데이터를 가져옴
@@ -280,6 +294,10 @@ export const getFullUserData = cache(async (): Promise<FullUserDataWithSession |
       session: null
     };
   } catch (error) {
+    if (isSupabaseInvalidRefreshTokenError(error)) {
+      return null;
+    }
+
     // 빌드 단계 로그 오염 방지 (DYNAMIC_SERVER_USAGE는 정상 동작)
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (!errorMessage.includes('DYNAMIC_SERVER_USAGE') && !errorMessage.includes('cookies')) {

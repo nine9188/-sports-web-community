@@ -28,7 +28,7 @@ function isPublicCrawlerUserAgent(userAgent: string | null) {
 }
 
 const EXPENSIVE_PUBLIC_PATH_PATTERN =
-  /^\/(?:livescore\/football(?:$|\/(?:player|team|match|leagues)(?:\/|$))|boards\/[^/]+\/\d+)/
+  /^\/livescore\/football(?:$|\/(?:player|team|match|leagues)(?:\/|$))/
 
 function isLikelyBrowserImpersonator(request: NextRequest) {
   const userAgent = request.headers.get('user-agent')
@@ -99,6 +99,34 @@ function hasSupabaseAuthCookie(request: NextRequest) {
   return request.cookies
     .getAll()
     .some(cookie => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token'))
+}
+
+function isSupabaseInvalidRefreshTokenError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+
+  const authError = error as { code?: unknown; message?: unknown }
+  const code = typeof authError.code === 'string' ? authError.code : ''
+  const message = typeof authError.message === 'string' ? authError.message : ''
+
+  return (
+    code === 'refresh_token_not_found' ||
+    message.includes('Invalid Refresh Token') ||
+    message.includes('Refresh Token Not Found')
+  )
+}
+
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  for (const cookie of request.cookies.getAll()) {
+    if (!cookie.name.startsWith('sb-') || !cookie.name.includes('auth-token')) continue
+
+    request.cookies.delete(cookie.name)
+    response.cookies.set(cookie.name, '', {
+      path: '/',
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: 'lax',
+    })
+  }
 }
 
 function isUsableTeamSlug(teamId: string | number, slug?: string | null): slug is string {
@@ -464,6 +492,11 @@ export async function proxy(request: NextRequest) {
     }
 
   } catch (error) {
+    if (isSupabaseInvalidRefreshTokenError(error)) {
+      clearSupabaseAuthCookies(request, response)
+      return response
+    }
+
     console.error('Proxy error:', error)
     // Continue the request even if auth middleware fails.
   }

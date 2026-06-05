@@ -226,8 +226,11 @@ function insertContent(
   insertAt?: number | null
 ) {
   if (typeof insertAt === 'number') {
+    const safeInsertAt = Math.min(Math.max(insertAt, 0), editor.state.doc.content.size);
+
     return editor.chain()
-      .insertContentAt(insertAt, content)
+      .focus()
+      .insertContentAt(safeInsertAt, content)
       .focus()
       .run();
   }
