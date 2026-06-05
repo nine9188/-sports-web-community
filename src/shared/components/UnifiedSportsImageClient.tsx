@@ -25,6 +25,7 @@ interface UnifiedSportsImageClientProps {
   priority?: boolean;
   unoptimized?: boolean;
   fit?: 'cover' | 'contain';
+  objectPosition?: React.CSSProperties['objectPosition'];
   className?: string;
   showBorder?: boolean;
   width?: number;
@@ -54,6 +55,7 @@ export default function UnifiedSportsImageClient({
   priority = false,
   unoptimized = true,
   fit = 'contain',
+  objectPosition,
   className = '',
   showBorder = false,
   width,
@@ -162,6 +164,7 @@ export default function UnifiedSportsImageClient({
             height={finalHeight}
             unoptimized
             className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
+            style={objectPosition ? { objectPosition } : undefined}
             sizes={`${finalWidth}px`}
           />
         ) : null}
@@ -181,6 +184,7 @@ export default function UnifiedSportsImageClient({
         unoptimized={unoptimized || shouldUnoptimizeImageUrl(srcWithRetry)}
         onError={handleError}
         className={`w-full h-full ${fit === 'contain' ? 'object-contain' : 'object-cover'} ${shapeClasses[variant]}`}
+        style={objectPosition ? { objectPosition } : undefined}
         sizes={`${finalWidth}px`}
       />
     </div>

@@ -21,6 +21,14 @@ export function TeamCard({ teamId, teamData, isEditable = false }: TeamCardProps
     return () => observer.disconnect();
   }, []);
 
+  if (!teamData) {
+    return (
+      <div className="team-card border border-red-200 bg-red-50 p-3 text-[13px] text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        팀 카드 데이터를 불러올 수 없습니다.
+      </div>
+    );
+  }
+
   const { name, koreanName, league, logo } = teamData;
   const displayName = koreanName || name;
   const leagueDisplayName = league?.koreanName || league?.name || '';

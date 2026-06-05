@@ -34,6 +34,10 @@ interface LeagueLogosResult {
   dark: Record<number, string>;
 }
 
+const leagueTeamsCache = new Map<number, LeagueTeamsResult>();
+const teamPlayersCache = new Map<number, TeamPlayersResult>();
+const leagueLogosCache = new Map<string, LeagueLogosResult>();
+
 export function useLeagueLogos(leagueIds: number[]) {
   const [data, setData] = useState<LeagueLogosResult>({ light: {}, dark: {} });
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +53,14 @@ export function useLeagueLogos(leagueIds: number[]) {
     let cancelled = false;
 
     async function loadLogos() {
+      const cached = leagueLogosCache.get(key);
+      if (cached) {
+        setData(cached);
+        setIsLoading(false);
+        setError(null);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
@@ -56,7 +68,9 @@ export function useLeagueLogos(leagueIds: number[]) {
           getLeagueLogoUrls(leagueIds, false),
           getLeagueLogoUrls(leagueIds, true),
         ]);
-        if (!cancelled) setData({ light, dark });
+        const nextData = { light, dark };
+        leagueLogosCache.set(key, nextData);
+        if (!cancelled) setData(nextData);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err : new Error('Failed to load league logos'));
       } finally {
@@ -80,7 +94,7 @@ export function useLeagueLogos(leagueIds: number[]) {
 }
 
 export function useLeagueTeams(leagueId: number | null) {
-  const { getTeamById } = useTeamLeague();
+  const { getTeamById, getTeamsByLeagueId } = useTeamLeague();
   const [result, setResult] = useState<LeagueTeamsResult>({ teams: [], teamLogoUrls: {} });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -97,25 +111,46 @@ export function useLeagueTeams(leagueId: number | null) {
     const currentLeagueId = leagueId;
 
     async function loadTeams() {
+      const cached = leagueTeamsCache.get(currentLeagueId);
+      if (cached) {
+        if (!cancelled) {
+          setResult(cached);
+          setIsLoading(false);
+          setError(null);
+        }
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
       try {
-        const apiTeams = await fetchLeagueTeams(currentLeagueId.toString());
-        const teams: TeamMapping[] = apiTeams.map(apiTeam => {
-          const localTeam = getTeamById(apiTeam.id);
-          return {
-            id: apiTeam.id,
-            name_ko: localTeam?.name_ko || apiTeam.name,
-            name_en: apiTeam.name,
-            country_ko: localTeam?.country_ko,
-            country_en: localTeam?.country_en,
-            code: localTeam?.code,
-            logo: apiTeam.logo,
-          };
-        });
+        const localTeams = getTeamsByLeagueId(currentLeagueId);
+        const teams: TeamMapping[] = localTeams.length > 0
+          ? localTeams.map(team => ({
+              id: team.id,
+              name_ko: team.name_ko || team.name_en,
+              name_en: team.name_en,
+              country_ko: team.country_ko,
+              country_en: team.country_en,
+              code: team.code,
+            }))
+          : (await fetchLeagueTeams(currentLeagueId.toString())).map(apiTeam => {
+              const localTeam = getTeamById(apiTeam.id);
+              return {
+                id: apiTeam.id,
+                name_ko: localTeam?.name_ko || apiTeam.name,
+                name_en: apiTeam.name,
+                country_ko: localTeam?.country_ko,
+                country_en: localTeam?.country_en,
+                code: localTeam?.code,
+                logo: apiTeam.logo,
+              };
+            });
         const teamLogoUrls = await getTeamLogoUrls(teams.map(team => team.id));
-        if (!cancelled) setResult({ teams, teamLogoUrls });
+        const nextResult = { teams, teamLogoUrls };
+        leagueTeamsCache.set(currentLeagueId, nextResult);
+        if (!cancelled) setResult(nextResult);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err : new Error('Failed to load teams'));
@@ -131,7 +166,7 @@ export function useLeagueTeams(leagueId: number | null) {
     return () => {
       cancelled = true;
     };
-  }, [leagueId, getTeamById]);
+  }, [leagueId, getTeamById, getTeamsByLeagueId]);
 
   return {
     data: result.teams,
@@ -158,6 +193,16 @@ export function useTeamPlayers(teamId: number | null) {
       return;
     }
 
+    const cached = teamPlayersCache.get(teamId);
+    if (cached) {
+      if (!cancelledRef?.current) {
+        setResult(cached);
+        setIsLoading(false);
+        setError(null);
+      }
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -177,12 +222,14 @@ export function useTeamPlayers(teamId: number | null) {
       ]);
 
       if (!cancelledRef?.current) {
-        setResult({
+        const nextResult = {
           players,
           koreanNames,
           playerPhotoUrls,
           teamLogoUrl: teamLogoUrls[teamId],
-        });
+        };
+        teamPlayersCache.set(teamId, nextResult);
+        setResult(nextResult);
       }
     } catch (err) {
       if (!cancelledRef?.current) {

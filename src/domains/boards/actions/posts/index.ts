@@ -8,6 +8,10 @@ export { createPost, createPostWithParams } from './create';
 // 게시글 수정 관련
 export { updatePost } from './update';
 
+// 게시글 임시저장 관련
+export { getPostDraft, listPostDrafts, savePostDraft, deletePostDraft } from './drafts';
+export type { PostDraft, PostDraftDealInfo } from './drafts';
+
 // 게시글 삭제 관련
 export { deletePost } from './delete';
 

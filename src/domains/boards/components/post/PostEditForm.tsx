@@ -12,7 +12,15 @@ import Link from '@tiptap/extension-link';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
 import { toast } from 'sonner';
-import { createPost, updatePost } from '@/domains/boards/actions/posts/index';
+import {
+  createPost,
+  deletePostDraft,
+  listPostDrafts,
+  savePostDraft,
+  updatePost,
+  type PostDraft,
+  type PostDraftDealInfo,
+} from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, NativeSelect } from '@/shared/components/ui';
 import { useEditorHandlers } from './post-edit-form/hooks';
@@ -117,24 +125,6 @@ function getSelectedEntityPickerMode(editor: Editor): 'team' | 'player' {
   return 'team';
 }
 
-function findEmptyEntityCardGroup(editor: Editor, nearPosition: number) {
-  let match: { from: number; to: number } | null = null;
-
-  editor.state.doc.descendants((node, pos) => {
-    if (node.type.name !== 'entityCardGroup') return true;
-
-    const isNearGroup = nearPosition >= pos && nearPosition <= pos + node.nodeSize;
-    if (isNearGroup && node.childCount === 0) {
-      match = { from: pos, to: pos + node.nodeSize };
-      return false;
-    }
-
-    return true;
-  });
-
-  return match;
-}
-
 function expandEntityCardGroupsInContent(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value;
 
@@ -160,6 +150,7 @@ function expandEntityCardGroupsInContent(value: unknown): unknown {
         if (!item || typeof item !== 'object') return [];
 
         const card = item as { type?: string; id?: string | number; data?: unknown };
+        if (!card.data) return [];
         return card.type === 'player'
           ? { type: 'playerCard', attrs: { playerId: card.id, playerData: card.data } }
           : { type: 'teamCard', attrs: { teamId: card.id, teamData: card.data } };
@@ -177,10 +168,81 @@ function expandEntityCardGroupsInContent(value: unknown): unknown {
   return value;
 }
 
+function sanitizeDraftContent(value: unknown): unknown {
+  if (!value || typeof value !== 'object') return value;
+
+  if (Array.isArray(value)) {
+    return value
+      .map(sanitizeDraftContent)
+      .filter((item) => item !== null);
+  }
+
+  const node = value as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+
+  if (node.type === 'teamCard' && !node.attrs?.teamData) return null;
+  if (node.type === 'playerCard' && !node.attrs?.playerData) return null;
+
+  if (Array.isArray(node.content)) {
+    const content = sanitizeDraftContent(node.content) as unknown[];
+
+    if (node.type === 'entityCardGroup' && content.length === 0) {
+      return null;
+    }
+
+    return {
+      ...node,
+      content,
+    };
+  }
+
+  return value;
+}
+
+function toPlainJson(value: unknown): unknown {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function RelatedConnectionIcon({ type }: { type: RelatedPostCta['type'] }) {
   if (type === 'match') return <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />;
   if (type === 'player') return <UserRound className="h-3.5 w-3.5" aria-hidden="true" />;
   return <Shield className="h-3.5 w-3.5" aria-hidden="true" />;
+}
+
+function formatDraftTime(value: string | null) {
+  if (!value) return '';
+
+  try {
+    return new Intl.DateTimeFormat('ko-KR', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value));
+  } catch {
+    return '';
+  }
+}
+
+function hasDraftBody(title: string, editor: Editor | null, isHotdeal: boolean, hotdeal: {
+  dealUrl: string;
+  store: string;
+  productName: string;
+  price: string;
+  originalPrice: string;
+  shipping: string;
+}) {
+  return Boolean(
+    title.trim() ||
+    (editor && !editor.isEmpty) ||
+    (isHotdeal && (
+      hotdeal.dealUrl.trim() ||
+      hotdeal.store ||
+      hotdeal.productName.trim() ||
+      hotdeal.price ||
+      hotdeal.originalPrice ||
+      hotdeal.shipping
+    ))
+  );
 }
 
 function findCurrentTableEnd(editor: Editor) {
@@ -373,11 +435,18 @@ export default function PostEditForm({
   const editorShellRef = useRef<HTMLDivElement>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [drafts, setDrafts] = useState<PostDraft[]>([]);
+  const [showDraftList, setShowDraftList] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const imageInsertionPositionRef = useRef<number | null>(null);
   const videoInsertionPositionRef = useRef<number | null>(null);
   const initialContentAppliedRef = useRef(false);
+  const lastAutoSavedDraftPayloadRef = useRef<string | null>(null);
+  const pendingRestoreDraftRef = useRef<PostDraft | null>(null);
   const linkPopoverAnchorRef = useRef<SelectionPositionAnchor | null>(null);
   const tableInsertionRangeRef = useRef<{ from: number; to: number } | null>(null);
   const entityReplacementRangeRef = useRef<{ from: number; to: number } | null>(null);
@@ -476,7 +545,11 @@ export default function PostEditForm({
           SocialEmbedsModule,
           EntityCardGroupExt,
           TeamCardExt,
-          PlayerCardExt
+          PlayerCardExt,
+          TableExtension,
+          TableRow,
+          TableCell,
+          TableHeader
         ] = result;
 
         // 異붽? ?뺤옣 ?ㅼ젙 (以묐났 諛⑹?瑜??꾪빐 prev ?ъ슜 ????
@@ -488,7 +561,14 @@ export default function PostEditForm({
           SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
           EntityCardGroupExt,
           TeamCardExt,
-          PlayerCardExt
+          PlayerCardExt,
+          TableExtension.configure({
+            resizable: false,
+            allowTableNodeSelection: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell
         ]);
         setExtensionsLoaded(true);
       } catch (error) {
@@ -678,6 +758,245 @@ export default function PostEditForm({
     editor,
     extensionsLoaded
   });
+
+  const applyDraftToEditor = useCallback((draft: PostDraft) => {
+    if (!editor) return;
+
+    const sanitizedContent = sanitizeDraftContent(draft.content);
+    setTitle(draft.title);
+    editor.commands.setContent(sanitizedContent as Content, true);
+
+    const draftDealInfo = draft.dealInfo;
+    if (draftDealInfo) {
+      setDealUrl(typeof draftDealInfo.deal_url === 'string' ? draftDealInfo.deal_url : '');
+      setStore(typeof draftDealInfo.store === 'string' ? draftDealInfo.store : '');
+      setProductName(typeof draftDealInfo.product_name === 'string' ? draftDealInfo.product_name : '');
+      setPrice(draftDealInfo.price !== undefined && draftDealInfo.price !== null ? String(draftDealInfo.price) : '');
+      setOriginalPrice(
+        draftDealInfo.original_price !== undefined && draftDealInfo.original_price !== null
+          ? String(draftDealInfo.original_price)
+          : ''
+      );
+      setShipping(typeof draftDealInfo.shipping === 'string' ? draftDealInfo.shipping : '');
+    }
+
+    setPollDraft(draft.poll);
+
+    const editorJson = editor.getJSON();
+    const jsonContent = JSON.stringify(editorJson);
+    setContent(jsonContent);
+    setAutoTags(extractAutoTagsFromContent(editorJson));
+    setRelatedConnections(extractRelatedCtasFromContent(editorJson));
+    setCurrentDraftId(draft.id);
+    setShowDraftList(false);
+    setDraftSavedAt(draft.updatedAt);
+    setDraftStatus('saved');
+    lastAutoSavedDraftPayloadRef.current = JSON.stringify({
+      draftId: draft.id,
+      boardId: draft.boardId,
+      title: draft.title,
+      content: sanitizedContent,
+      dealInfo: draft.dealInfo,
+      poll: draft.poll,
+    });
+    toast.success('임시저장을 불러왔습니다.');
+  }, [editor]);
+
+  const restoreDraft = useCallback((draft: PostDraft) => {
+    if (!editor) return;
+
+    if (!extensionsLoaded) {
+      pendingRestoreDraftRef.current = draft;
+      void ensureAdditionalExtensions();
+      return;
+    }
+
+    applyDraftToEditor(draft);
+  }, [applyDraftToEditor, editor, ensureAdditionalExtensions, extensionsLoaded]);
+
+  useEffect(() => {
+    if (!editor || !extensionsLoaded || !pendingRestoreDraftRef.current) return;
+
+    const draft = pendingRestoreDraftRef.current;
+    pendingRestoreDraftRef.current = null;
+    applyDraftToEditor(draft);
+  }, [applyDraftToEditor, editor, extensionsLoaded]);
+
+  const refreshDrafts = useCallback(async () => {
+    if (!categoryId) return;
+
+    const result = await listPostDrafts(categoryId);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
+    setDrafts(result.drafts);
+  }, [categoryId]);
+
+  const buildCurrentDraftDealInfo = useCallback((): PostDraftDealInfo | null => {
+    if (!isHotdeal) return null;
+
+    return {
+      deal_url: dealUrl.trim(),
+      store,
+      product_name: productName.trim(),
+      price,
+      original_price: originalPrice,
+      shipping,
+    };
+  }, [dealUrl, isHotdeal, originalPrice, price, productName, shipping, store]);
+
+  const buildCurrentDraftPayload = useCallback(() => {
+    if (!editor || !categoryId) return null;
+
+    return {
+      draftId: currentDraftId,
+      boardId: categoryId,
+      title: title.trim(),
+      content: toPlainJson(editor.getJSON()),
+      dealInfo: buildCurrentDraftDealInfo(),
+      poll: pollDraft,
+    };
+  }, [buildCurrentDraftDealInfo, categoryId, currentDraftId, editor, pollDraft, title]);
+
+  const saveCurrentDraft = useCallback(async (options?: { silent?: boolean }) => {
+    if (!editor || !categoryId) return false;
+    const hotdealDraft = { dealUrl, store, productName, price, originalPrice, shipping };
+    if (!hasDraftBody(title, editor, isHotdeal, hotdealDraft)) {
+      if (!options?.silent) toast.error('저장할 내용이 없습니다.');
+      return false;
+    }
+
+    setDraftStatus('saving');
+    const payload = buildCurrentDraftPayload();
+    if (!payload) return false;
+
+    const result = await savePostDraft(payload);
+
+    if (!result.success) {
+      setDraftStatus('error');
+      if (!options?.silent) toast.error(result.error);
+      return false;
+    }
+
+    const savedAt = result.draft?.updatedAt || new Date().toISOString();
+    if (result.draft?.id) setCurrentDraftId(result.draft.id);
+    setDraftSavedAt(savedAt);
+    setDraftStatus('saved');
+    if (result.draft) {
+      setDrafts((items) => [result.draft!, ...items.filter((item) => item.id !== result.draft!.id)]);
+    }
+    lastAutoSavedDraftPayloadRef.current = JSON.stringify({
+      ...payload,
+      draftId: result.draft?.id || payload.draftId,
+    });
+    if (!options?.silent) toast.success('임시저장했습니다.');
+    return true;
+  }, [
+    categoryId,
+    buildCurrentDraftPayload,
+    dealUrl,
+    editor,
+    isHotdeal,
+    originalPrice,
+    pollDraft,
+    price,
+    productName,
+    shipping,
+    store,
+    title,
+  ]);
+
+  const handleOpenDraftList = useCallback(async () => {
+    if (!isCreateMode) return;
+    await refreshDrafts();
+    setShowDraftList((value) => !value);
+  }, [isCreateMode, refreshDrafts]);
+
+  const handleDeleteDraft = useCallback(async (draftId: string) => {
+    const result = await deletePostDraft(draftId);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
+    setDrafts((items) => items.filter((item) => item.id !== draftId));
+    if (currentDraftId === draftId) {
+      setCurrentDraftId(null);
+      setDraftSavedAt(null);
+      setDraftStatus('idle');
+    }
+    toast.success('임시저장을 삭제했습니다.');
+  }, [currentDraftId]);
+
+  useEffect(() => {
+    if (!isCreateMode) return;
+    setCurrentDraftId(null);
+    setDraftSavedAt(null);
+    setDraftStatus('idle');
+    lastAutoSavedDraftPayloadRef.current = null;
+    setShowDraftList(false);
+    setDrafts([]);
+  }, [categoryId, isCreateMode]);
+
+  useEffect(() => {
+    if (!isCreateMode || !editor || !categoryId || isSubmitting) return;
+
+    const hotdealDraft = { dealUrl, store, productName, price, originalPrice, shipping };
+    if (!hasDraftBody(title, editor, isHotdeal, hotdealDraft)) return;
+
+    const payload = buildCurrentDraftPayload();
+    if (!payload) return;
+
+    const serializedPayload = JSON.stringify(payload);
+    if (serializedPayload === lastAutoSavedDraftPayloadRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void saveCurrentDraft({ silent: true });
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    buildCurrentDraftPayload,
+    categoryId,
+    content,
+    dealUrl,
+    editor,
+    isCreateMode,
+    isHotdeal,
+    isSubmitting,
+    originalPrice,
+    price,
+    productName,
+    saveCurrentDraft,
+    shipping,
+    store,
+    title,
+  ]);
+
+  useEffect(() => {
+    if (!isCreateMode) return;
+
+    const saveBeforeLeaving = () => {
+      void saveCurrentDraft({ silent: true });
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveBeforeLeaving();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', saveBeforeLeaving);
+    window.addEventListener('beforeunload', saveBeforeLeaving);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', saveBeforeLeaving);
+      window.removeEventListener('beforeunload', saveBeforeLeaving);
+    };
+  }, [isCreateMode, saveCurrentDraft]);
 
   useEffect(() => {
     if (!editor || pollDraftRef.current) return;
@@ -918,21 +1237,6 @@ export default function PostEditForm({
       setShowTeamModal(true);
     }
   }, [editor, setShowPlayerModal, setShowTeamModal]);
-
-  const handleRemoveSelectedEntityCard = useCallback(() => {
-    if (!editor || !isEntityCardSelected(editor)) return;
-
-    const deleteTo = editor.state.selection.to;
-    editor.chain().focus().deleteSelection().run();
-
-    const emptyGroup = findEmptyEntityCardGroup(editor, deleteTo);
-    if (emptyGroup) {
-      editor.chain().focus().deleteRange(emptyGroup).run();
-    }
-
-    entityReplacementRangeRef.current = null;
-    toast.success('카드가 삭제되었습니다.');
-  }, [editor]);
 
   const replaceSelectedEntityIfNeeded = useCallback(() => {
     if (!editor || !entityReplacementRangeRef.current) return;
@@ -1611,8 +1915,11 @@ export default function PostEditForm({
     });
 
     toast.success('게시글이 작성되었습니다.');
+    if (currentDraftId) {
+      void deletePostDraft(currentDraftId);
+    }
     router.push(`/boards/${boardSlug}/${post.post_number}`);
-  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router, categoryId]);
+  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router, categoryId, currentDraftId]);
 
   // 寃뚯떆湲 ?섏젙 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const handleUpdatePost = useCallback(async () => {
@@ -1665,6 +1972,19 @@ export default function PostEditForm({
     }
   }, [isSubmitting, validateForm, isCreateMode, handleCreatePost, handleUpdatePost]);
 
+  const handleCancel = useCallback(async () => {
+    if (!isCreateMode) {
+      router.back();
+      return;
+    }
+
+    const saved = await saveCurrentDraft({ silent: true });
+    if (saved) {
+      toast.success('작성 중인 글을 임시저장했습니다.');
+    }
+    router.back();
+  }, [isCreateMode, router, saveCurrentDraft]);
+
   return (
     <Container className="mt-0">
       <ContainerHeader>
@@ -1682,6 +2002,89 @@ export default function PostEditForm({
             </div>
           )}
 
+          {isCreateMode && (
+            <div className="space-y-2">
+              <div className="flex flex-col gap-2 rounded-md border border-black/7 bg-[#FAFAFA] px-3 py-2 dark:border-white/10 dark:bg-[#262626] sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-[12px] text-gray-500 dark:text-gray-400">
+                  {draftStatus === 'saving' && '임시저장 중...'}
+                  {draftStatus === 'saved' && draftSavedAt && `임시저장됨 ${formatDraftTime(draftSavedAt)} · 3일 후 자동 삭제`}
+                  {draftStatus === 'error' && '임시저장 실패'}
+                  {draftStatus === 'idle' && '작성 중 자동으로 임시저장됩니다. 버튼으로 즉시 저장할 수도 있습니다.'}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void saveCurrentDraft()}
+                    disabled={draftStatus === 'saving' || !categoryId}
+                    className="h-8 px-3 text-[12px]"
+                  >
+                    임시저장
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenDraftList}
+                    disabled={!categoryId}
+                    className="h-8 px-3 text-[12px]"
+                  >
+                    임시저장 불러오기
+                  </Button>
+                </div>
+              </div>
+
+              {showDraftList && (
+                <div className="rounded-md border border-black/7 bg-white p-2 dark:border-white/10 dark:bg-[#1D1D1D]">
+                  {drafts.length === 0 ? (
+                    <div className="px-2 py-3 text-[13px] text-gray-500 dark:text-gray-400">
+                      불러올 임시저장이 없습니다.
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {drafts.map((draft) => (
+                        <div
+                          key={draft.id}
+                          className="flex flex-col gap-2 rounded border border-black/7 px-3 py-2 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-[13px] font-semibold text-gray-900 dark:text-[#F0F0F0]">
+                              {draft.title || '제목 없음'}
+                            </div>
+                            <div className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">
+                              {formatDraftTime(draft.updatedAt)} 저장됨
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => restoreDraft(draft)}
+                              className="h-8 px-3 text-[12px]"
+                            >
+                              불러오기
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteDraft(draft.id)}
+                              className="h-8 px-3 text-[12px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                            >
+                              삭제
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 寃뚯떆???좏깮 ?꾨뱶 (?앹꽦 紐⑤뱶?먯꽌留??쒖떆) */}
           {isCreateMode && (
             <div className="space-y-2">
@@ -1696,7 +2099,6 @@ export default function PostEditForm({
               />
             </div>
           )}
-
 
           {/* ?쒕ぉ ?꾨뱶 - ?ル뵜 寃뚯떆?먯씠 ?꾨땺 ?뚮쭔 ?쒖떆 (?ル뵜? ?쒕ぉ ?먮룞 ?앹꽦) */}
           {!isHotdeal && (
@@ -2121,14 +2523,6 @@ export default function PostEditForm({
                     >
                       변경
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                      title="카드 삭제"
-                      onClick={handleRemoveSelectedEntityCard}
-                    >
-                      <Trash2 size={15} />
-                    </button>
                   </div>
                 </BubbleMenu>
               )}
@@ -2363,8 +2757,8 @@ export default function PostEditForm({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => router.back()}
-              disabled={isSubmitting}
+              onClick={() => void handleCancel()}
+              disabled={isSubmitting || draftStatus === 'saving'}
             >
               취소
             </Button>

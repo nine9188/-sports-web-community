@@ -314,15 +314,15 @@ export function EntityPickerForm({
                       onClick={() => handlePlayerSelect(player)}
                       className="flex h-[86px] min-w-0 flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
                     >
-                      <div className="relative h-9 w-9 shrink-0 overflow-visible">
-                        <div className="h-9 w-9 overflow-hidden rounded-full border border-black/7 dark:border-white/10">
+                      <div className="relative h-10 w-10 shrink-0 overflow-visible">
+                        <div className="h-10 w-10 overflow-hidden rounded-md border border-black/7 bg-white dark:border-white/10 dark:bg-[#1D1D1D]">
                           <UnifiedSportsImageClient
                             src={getPlayerPhoto(player.id)}
                             alt={displayName}
-                            width={36}
-                            height={36}
-                            className="h-full w-full object-cover"
-                            variant="circle"
+                            width={40}
+                            height={40}
+                            variant="square"
+                            fit="contain"
                           />
                         </div>
                         {selectedTeam && (

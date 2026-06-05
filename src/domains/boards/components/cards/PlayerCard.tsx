@@ -10,6 +10,14 @@ const PLAYER_PLACEHOLDER = '/images/placeholder-player.svg';
 const TEAM_PLACEHOLDER = '/images/placeholder-team.svg';
 
 export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerCardProps) {
+  if (!playerData) {
+    return (
+      <div className="player-card border border-red-200 bg-red-50 p-3 text-[13px] text-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+        선수 카드 데이터를 불러올 수 없습니다.
+      </div>
+    );
+  }
+
   const { name, koreanName, team, photo } = playerData;
   const displayName = koreanName || name;
   const teamDisplayName = team?.koreanName || team?.name || '';
@@ -51,7 +59,7 @@ export function PlayerCard({ playerId, playerData, isEditable = false }: PlayerC
             height={64}
             draggable={false}
             unoptimized
-            style={{ width: '64px', height: '64px', objectFit: 'cover' }}
+            style={{ width: '64px', height: '64px', objectFit: 'contain', objectPosition: 'center' }}
           />
         </div>
         <span className="player-name">{displayName}</span>

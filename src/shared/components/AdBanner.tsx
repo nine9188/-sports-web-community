@@ -34,12 +34,14 @@ export default function AdBanner() {
       {/* PC 배너 - 728x90 */}
       <div className="hidden md:flex justify-center">
         <div style={{ width: 728, height: 90 }}>
+          {/* 원래 구글 광고 자리 */}
           {ready && <AdSense adSlot={ADSENSE.PC_BANNER} width={728} height={90} />}
         </div>
       </div>
       {/* 모바일 배너 - 320x100 */}
       <div className="md:hidden flex justify-center">
         <div style={{ width: 320, height: 100, maxWidth: '100%' }}>
+          {/* 원래 구글 광고 자리 */}
           {ready && <AdSense adSlot={ADSENSE.MOBILE_BANNER} width={320} height={100} />}
         </div>
       </div>

@@ -27,6 +27,8 @@ export const MatchCardExtension = Node.create<MatchCardOptions>({
   group: 'block',
   
   atom: true,
+
+  selectable: true,
   
   draggable: true,
   
@@ -109,4 +111,4 @@ export const MatchCardExtension = Node.create<MatchCardOptions>({
   },
 });
 
-export default MatchCardExtension; 
+export default MatchCardExtension;

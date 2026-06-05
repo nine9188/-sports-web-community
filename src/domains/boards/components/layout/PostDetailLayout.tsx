@@ -452,6 +452,7 @@ export default async function PostDetailLayout({
 
       {/* 모바일 전용 배너 광고 (300x50) */}
       <div className="mb-4 md:hidden flex justify-center">
+        {/* 원래 구글 광고 자리 */}
         <AdSense adSlot={ADSENSE.POST_MOBILE_BANNER} width={320} height={100} />
       </div>
 

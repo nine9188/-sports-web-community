@@ -833,6 +833,63 @@ iframe[src*="youtu.be/"] {
   background: rgba(96, 165, 250, 0.32);
 }
 
+.ProseMirror .match-card-node.ProseMirror-selectednode .match-card,
+.ProseMirror .match-card-error.ProseMirror-selectednode {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+
+.ProseMirror .match-card-node {
+  position: relative;
+  display: block;
+}
+
+.ProseMirror .card-node-delete {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 1.75rem;
+  padding: 0 0.5rem;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: rgb(220, 38, 38);
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+
+.ProseMirror .match-card-node:hover .card-node-delete,
+.ProseMirror .match-card-node.ProseMirror-selectednode .card-node-delete,
+.ProseMirror .team-card-node:hover .card-node-delete,
+.ProseMirror .team-card-node.ProseMirror-selectednode .card-node-delete,
+.ProseMirror .player-card-node:hover .card-node-delete,
+.ProseMirror .player-card-node.ProseMirror-selectednode .card-node-delete,
+.ProseMirror .entity-card-group-item:hover .card-node-delete,
+.ProseMirror .card-node-delete:focus-visible {
+  opacity: 1;
+}
+
+.ProseMirror .card-node-delete:hover {
+  background: rgb(254, 242, 242);
+}
+
+.dark .ProseMirror .card-node-delete {
+  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(29, 29, 29, 0.95);
+  color: rgb(248, 113, 113);
+}
+
+.dark .ProseMirror .card-node-delete:hover {
+  background: rgba(127, 29, 29, 0.35);
+}
+
 .ProseMirror .editor-poll-block {
   display: block;
   margin: 1rem 0;
@@ -1371,7 +1428,7 @@ iframe[src*="youtu.be/"] {
   width: 3rem;
   height: 3rem;
   flex-shrink: 0;
-  border-radius: 50%;
+  border-radius: 0.375rem;
   overflow: hidden;
   background: #f3f4f6;
   display: flex;
@@ -1383,7 +1440,8 @@ iframe[src*="youtu.be/"] {
 .player-card .player-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 
 .dark .player-card .player-photo {
@@ -1682,6 +1740,7 @@ iframe[src*="youtu.be/"] {
 
 .ProseMirror .team-card-node,
 .ProseMirror .player-card-node {
+  position: relative;
   display: inline-block !important;
   margin: 0.25rem;
   vertical-align: top;
@@ -1698,6 +1757,10 @@ iframe[src*="youtu.be/"] {
   white-space: normal;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.ProseMirror .entity-card-group-item {
+  position: relative;
 }
 
 .ProseMirror .team-card-node,

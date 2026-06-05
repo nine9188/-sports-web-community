@@ -3,6 +3,7 @@
 import React from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { Trash2 } from 'lucide-react';
 import { TeamCard } from './TeamCard';
 import { PlayerCard } from './PlayerCard';
 import type { TeamCardData } from '@/shared/types/teamCard';
@@ -60,10 +61,12 @@ function SortableEntityCard({
   card,
   groupPosition,
   onCardDrop,
+  onCardDelete,
 }: {
   card: EntityCardNode;
   groupPosition: number | null;
   onCardDrop: (event: React.DragEvent, insertionIndex: number) => void;
+  onCardDelete: (cardIndex: number) => void;
 }) {
   const [isDragging, setIsDragging] = React.useState(false);
   const [dropSide, setDropSide] = React.useState<'before' | 'after' | null>(null);
@@ -116,6 +119,23 @@ function SortableEntityCard({
         onCardDrop(event, getInsertionIndex(event, card.index));
       }}
     >
+      <button
+        type="button"
+        className="card-node-delete"
+        title={card.type === 'playerCard' ? '선수카드 삭제' : '팀카드 삭제'}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onCardDelete(card.index);
+        }}
+      >
+        <Trash2 size={14} />
+        <span>삭제</span>
+      </button>
       {card.type === 'playerCard' ? (
         <PlayerCard
           playerId={card.attrs.playerId as string | number}
@@ -221,6 +241,28 @@ const EntityCardGroupNode: React.FC<NodeViewProps> = ({ editor, getPos, node }) 
     editor.view.dispatch(transaction);
   }
 
+  function handleCardDelete(cardIndex: number) {
+    if (typeof groupPosition !== 'number') return;
+
+    const targetGroup = editor.state.doc.nodeAt(groupPosition);
+    if (!targetGroup || targetGroup.type.name !== 'entityCardGroup') return;
+
+    const targetCards = getChildNodes(targetGroup);
+    if (!targetCards[cardIndex]) return;
+
+    const nextCards = targetCards.filter((_, index) => index !== cardIndex);
+    const transaction = editor.state.tr;
+
+    if (nextCards.length === 0) {
+      transaction.delete(groupPosition, groupPosition + targetGroup.nodeSize);
+    } else {
+      const nextGroup = targetGroup.type.create(targetGroup.attrs, nextCards, targetGroup.marks);
+      transaction.replaceWith(groupPosition, groupPosition + targetGroup.nodeSize, nextGroup);
+    }
+
+    editor.view.dispatch(transaction);
+  }
+
   if (cards.length === 0) {
     return <NodeViewWrapper className="entity-card-group-node entity-card-group-cols-4" contentEditable={false} />;
   }
@@ -238,6 +280,7 @@ const EntityCardGroupNode: React.FC<NodeViewProps> = ({ editor, getPos, node }) 
                 card={card}
                 groupPosition={groupPosition}
                 onCardDrop={handleCardDrop}
+                onCardDelete={handleCardDelete}
               />
             ))}
           </div>

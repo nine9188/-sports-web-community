@@ -32,12 +32,12 @@ export interface PlayerCardData {
 
 export interface PlayerCardAttrs {
   playerId: string | number;
-  playerData: PlayerCardData;
+  playerData: PlayerCardData | null;
 }
 
 export interface PlayerCardProps {
   playerId: string | number;
-  playerData: PlayerCardData;
+  playerData: PlayerCardData | null;
   isEditable?: boolean;
 }
 

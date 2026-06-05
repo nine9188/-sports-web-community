@@ -26,6 +26,7 @@ export default async function RightSidebar() {
         <div className="h-full pt-4">
           <TopicTabsServer postsData={postsData} />
           <div className="my-4">
+            {/* 원래 구글 광고 자리 */}
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
@@ -57,6 +58,7 @@ export default async function RightSidebar() {
         <div className="h-full pt-4">
           <TopicTabsServer postsData={emptyData} />
           <div className="my-4">
+            {/* 원래 구글 광고 자리 */}
             <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />

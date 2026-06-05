@@ -23,6 +23,7 @@ interface UnifiedSportsImageProps {
   loading?: 'lazy' | 'eager';
   priority?: boolean;
   fit?: 'cover' | 'contain';
+  objectPosition?: React.CSSProperties['objectPosition'];
   className?: string;
   showBorder?: boolean;
   width?: number;
@@ -48,6 +49,7 @@ export default async function UnifiedSportsImage({
   loading = 'eager',
   priority = false,
   fit,
+  objectPosition,
   className = '',
   showBorder = false,
   width,
@@ -90,6 +92,7 @@ export default async function UnifiedSportsImage({
       loading={loading}
       priority={priority}
       fit={finalFit}
+      objectPosition={objectPosition}
       className={className}
       showBorder={showBorder}
       width={width}

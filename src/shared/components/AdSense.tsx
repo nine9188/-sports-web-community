@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ADSENSE } from '@/shared/constants/ad-constants';
 
 declare global {
@@ -27,10 +27,31 @@ export default function AdSense({
   className,
 }: AdSenseProps) {
   const adRef = useRef<HTMLModElement>(null);
+  const [noFill, setNoFill] = useState(false);
 
   useEffect(() => {
     const el = adRef.current;
     if (!el || el.dataset.adsbygoogleStatus) return;
+
+    setNoFill(false);
+
+    const checkAdStatus = () => {
+      if (el.dataset.adStatus === 'unfilled') {
+        setNoFill(true);
+      }
+    };
+
+    const observer = new MutationObserver(checkAdStatus);
+    observer.observe(el, {
+      attributes: true,
+      attributeFilter: ['data-ad-status', 'data-adsbygoogle-status'],
+    });
+
+    const timeout = window.setTimeout(() => {
+      if (!el.dataset.adsbygoogleStatus && el.childElementCount === 0) {
+        setNoFill(true);
+      }
+    }, 6000);
 
     const tryPush = () => {
       try {
@@ -43,7 +64,10 @@ export default function AdSense({
     // adsbygoogle 스크립트가 이미 로드되었으면 즉시 push
     if (window.adsbygoogle && window.adsbygoogle.length !== undefined) {
       tryPush();
-      return;
+      return () => {
+        observer.disconnect();
+        window.clearTimeout(timeout);
+      };
     }
 
     // 아직 로드 안 됐으면 대기 (lazyOnload 스크립트와 호환)
@@ -54,8 +78,12 @@ export default function AdSense({
       }
     }, 500);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [adSlot]);
 
   if (process.env.NODE_ENV === 'development') {
     // fluid 포맷은 전체 너비, 자동 높이로 표시
@@ -105,6 +133,8 @@ export default function AdSense({
 
   // fluid 포맷
   if (format === 'fluid') {
+    if (noFill) return null;
+
     return (
       <ins
         ref={adRef}
@@ -119,6 +149,8 @@ export default function AdSense({
   }
 
   // 고정 크기 광고
+  if (noFill) return null;
+
   return (
     <div style={{ width: `${width}px`, height: `${height}px`, overflow: 'hidden' }}>
       <ins

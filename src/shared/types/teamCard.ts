@@ -23,12 +23,12 @@ export interface TeamCardData {
 
 export interface TeamCardAttrs {
   teamId: string | number;
-  teamData: TeamCardData;
+  teamData: TeamCardData | null;
 }
 
 export interface TeamCardProps {
   teamId: string | number;
-  teamData: TeamCardData;
+  teamData: TeamCardData | null;
   isEditable?: boolean;
 }
 
