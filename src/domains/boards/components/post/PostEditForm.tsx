@@ -61,6 +61,15 @@ const POLL_POPOVER_WIDTH = 360;
 const TABLE_MENU_WIDTH = 274;
 const TABLE_MENU_HEIGHT = 42;
 const EDITOR_EMPTY_PLACEHOLDER = '자유롭게 팬들과 소통하세요!\n이미지, 링크, 경기, 팀/선수를 본문에 추가할 수 있습니다.\n도박, 불법 홍보 관련 내용은 작성할 수 없습니다.\n욕설, 도배, 허위 정보는 삭제될 수 있습니다.';
+const IMAGE_FILE_EXTENSIONS = /\.(avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i;
+const SOCIAL_IMAGE_PAGE_HOSTS = new Set([
+  'x.com',
+  'www.x.com',
+  'twitter.com',
+  'www.twitter.com',
+  'instagram.com',
+  'www.instagram.com',
+]);
 type SelectionPositionAnchor = {
   from: number;
   to: number;
@@ -1282,6 +1291,18 @@ export default function PostEditForm({
         const parsedUrl = new URL(trimmedImageUrl);
         if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
           toast.error('http 또는 https 이미지 URL만 삽입할 수 있습니다.');
+          imageInsertionPositionRef.current = null;
+          return;
+        }
+
+        if (SOCIAL_IMAGE_PAGE_HOSTS.has(parsedUrl.hostname.toLowerCase())) {
+          toast.error('X/인스타 링크는 이미지 파일 URL이 아닙니다. 소셜 버튼을 쓰거나 이미지를 저장해서 업로드해주세요.');
+          imageInsertionPositionRef.current = null;
+          return;
+        }
+
+        if (!IMAGE_FILE_EXTENSIONS.test(parsedUrl.pathname)) {
+          toast.error('이미지 URL은 jpg, png, gif, webp 같은 직접 파일 주소만 삽입할 수 있습니다.');
           imageInsertionPositionRef.current = null;
           return;
         }

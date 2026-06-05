@@ -188,7 +188,7 @@ export function EntityPickerForm({
       onClick={(event) => event.stopPropagation()}
     >
       <div className="flex h-11 items-center justify-between gap-2 border-b border-black/10 bg-[#F5F5F5] px-2 dark:border-white/10 dark:bg-[#262626]">
-        <div className="flex min-w-0 items-center gap-1">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           {step !== 'league' && (
             <Button
               type="button"
@@ -303,7 +303,7 @@ export function EntityPickerForm({
                 선수 정보가 없습니다.
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {players.map((player) => {
                   const displayName = koreanNames[player.id] || player.name
 
@@ -312,15 +312,15 @@ export function EntityPickerForm({
                       key={player.id}
                       type="button"
                       onClick={() => handlePlayerSelect(player)}
-                      className="flex h-[86px] min-w-0 flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
+                      className="flex h-[108px] min-w-0 flex-col items-center justify-center rounded-md border border-black/7 bg-[#F5F5F5] p-2 text-center outline-none transition-colors hover:bg-[#EAEAEA] dark:border-white/10 dark:bg-[#262626] dark:hover:bg-[#333333]"
                     >
-                      <div className="relative h-10 w-10 shrink-0 overflow-visible">
-                        <div className="h-10 w-10 overflow-hidden rounded-md border border-black/7 bg-white dark:border-white/10 dark:bg-[#1D1D1D]">
+                      <div className="relative h-12 w-12 shrink-0 overflow-visible">
+                        <div className="h-12 w-12 overflow-hidden rounded-md">
                           <UnifiedSportsImageClient
                             src={getPlayerPhoto(player.id)}
                             alt={displayName}
-                            width={40}
-                            height={40}
+                            width={48}
+                            height={48}
                             variant="square"
                             fit="contain"
                           />
@@ -337,7 +337,7 @@ export function EntityPickerForm({
                           </div>
                         )}
                       </div>
-                      <div className="mt-1.5 min-w-0 max-w-full truncate text-[11px] font-medium leading-tight text-gray-900 dark:text-[#F0F0F0]">
+                      <div className="mt-2 min-w-0 max-w-full truncate text-[11px] font-medium leading-tight text-gray-900 dark:text-[#F0F0F0]">
                         {displayName}
                       </div>
                       <div className="mt-0.5 min-h-3 truncate text-[9px] leading-none text-gray-500 dark:text-gray-400">

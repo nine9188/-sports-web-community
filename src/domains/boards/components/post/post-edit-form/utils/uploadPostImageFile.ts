@@ -4,8 +4,28 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 const WEBP_QUALITY = 0.85;
 const CONVERT_TIMEOUT_MS = 10_000;
+const UPLOAD_TIMEOUT_MS = 30_000;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_SYNC_CONVERT_SIZE_BYTES = 4 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/gif',
+  'image/webp',
+]);
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+
+    Promise.resolve(promise)
+      .then(resolve, reject)
+      .finally(() => window.clearTimeout(timer));
+  });
+}
 
 async function convertToWebP(file: File): Promise<File> {
   if (file.type === 'image/webp' || file.type === 'image/gif') return file;
@@ -72,14 +92,19 @@ export async function uploadPostImageFile(file: File): Promise<{ publicUrl: stri
     throw new Error('이미지 파일만 업로드할 수 있습니다.');
   }
 
+  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
+    throw new Error('png, jpg, jpeg, gif, webp 이미지만 업로드할 수 있습니다.');
+  }
+
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
     throw new Error('이미지 파일은 10MB 이하만 업로드할 수 있습니다.');
   }
 
   const supabase = getSupabaseBrowser();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const user = sessionData.session?.user;
 
-  if (userError || !userData?.user) {
+  if (sessionError || !user) {
     throw new Error('로그인 상태를 확인해주세요.');
   }
 
@@ -89,15 +114,20 @@ export async function uploadPostImageFile(file: File): Promise<{ publicUrl: stri
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 8);
   const safeFileName = fileToUpload.name.replace(/[^a-zA-Z0-9.]/g, '_');
-  const fileName = `${userData.user.id}/images/${timestamp}_${randomString}_${safeFileName}`;
+  const fileName = `${user.id}/images/${timestamp}_${randomString}_${safeFileName}`;
 
-  const { error: uploadError } = await supabase.storage
+  const uploadRequest = supabase.storage
     .from('post-images')
     .upload(fileName, fileToUpload, {
       cacheControl: '3600',
       upsert: true,
       contentType: fileToUpload.type,
     });
+  const { error: uploadError } = await withTimeout<Awaited<typeof uploadRequest>>(
+    uploadRequest,
+    UPLOAD_TIMEOUT_MS,
+    '이미지 업로드 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.'
+  );
 
   if (uploadError) {
     if (uploadError.message.includes('Row Level Security')) {

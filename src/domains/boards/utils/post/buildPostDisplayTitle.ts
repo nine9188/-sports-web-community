@@ -20,6 +20,10 @@ function cleanTitle(value?: string | null): string {
     .trim();
 }
 
+function hasHangul(value: string): boolean {
+  return /[가-힣]/.test(value);
+}
+
 function stripClickbaitPrefix(value: string): string {
   return value
     .replace(/^\[[^\]]{1,16}\]\s*/u, '')
@@ -171,6 +175,12 @@ function buildPredictionDisplayTitle(params: BuildPostDisplayTitleParams): strin
 
 export function buildPostDisplayTitle(params: BuildPostDisplayTitleParams): string {
   const originalTitle = cleanTitle(params.title);
+  const isPredictionPost = params.meta?.prediction_type === 'league_analysis';
+
+  if (isPredictionPost && hasHangul(originalTitle)) {
+    return originalTitle;
+  }
+
   const predictionTitle = buildPredictionDisplayTitle(params);
   if (predictionTitle) return predictionTitle;
 
