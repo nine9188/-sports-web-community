@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdSense from './AdSense';
-import { ADSENSE } from '@/shared/constants/ad-constants';
+import KakaoAd from './KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 
 /**
  * 페이지 배너 광고
@@ -35,14 +35,14 @@ export default function AdBanner() {
       <div className="hidden md:flex justify-center">
         <div style={{ width: 728, height: 90 }}>
           {/* 원래 구글 광고 자리 */}
-          {ready && <AdSense adSlot={ADSENSE.PC_BANNER} width={728} height={90} />}
+          {ready && <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />}
         </div>
       </div>
       {/* 모바일 배너 - 320x100 */}
       <div className="md:hidden flex justify-center">
         <div style={{ width: 320, height: 100, maxWidth: '100%' }}>
           {/* 원래 구글 광고 자리 */}
-          {ready && <AdSense adSlot={ADSENSE.MOBILE_BANNER} width={320} height={100} />}
+          {ready && <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />}
         </div>
       </div>
     </>

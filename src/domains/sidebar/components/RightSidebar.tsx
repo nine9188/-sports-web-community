@@ -3,8 +3,8 @@ import { getHotdealBestPosts } from '../actions/getHotdealBestPosts';
 import TopicTabsServer from './TopicTabsServer';
 import HotdealTabsServer from './HotdealTabsServer';
 import ServerLeagueStandings from './league/ServerLeagueStandings';
-import AdSense from '@/shared/components/AdSense';
-import { ADSENSE } from '@/shared/constants/ad-constants';
+import KakaoAd from '@/shared/components/KakaoAd';
+import { KAKAO } from '@/shared/constants/ad-constants';
 
 export default async function RightSidebar() {
   try {
@@ -27,7 +27,7 @@ export default async function RightSidebar() {
           <TopicTabsServer postsData={postsData} />
           <div className="my-4">
             {/* 원래 구글 광고 자리 */}
-            <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
+            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
           <HotdealTabsServer postsData={hotdealData} />
@@ -59,7 +59,7 @@ export default async function RightSidebar() {
           <TopicTabsServer postsData={emptyData} />
           <div className="my-4">
             {/* 원래 구글 광고 자리 */}
-            <AdSense adSlot={ADSENSE.RIGHT_SIDEBAR} width={300} height={250} />
+            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
           <HotdealTabsServer postsData={emptyHotdealData} />
