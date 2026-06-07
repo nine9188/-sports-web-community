@@ -31,17 +31,17 @@ export default function AdBanner() {
 
   return (
     <>
+      {/* adsense-placeholder: former shared PC page banner slot, 728x90. */}
       {/* PC 배너 - 728x90 */}
       <div className="hidden md:flex justify-center">
         <div style={{ width: 728, height: 90 }}>
-          {/* 원래 구글 광고 자리 */}
           {ready && <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />}
         </div>
       </div>
+      {/* adsense-placeholder: former shared mobile page banner slot, 320x100. */}
       {/* 모바일 배너 - 320x100 */}
       <div className="md:hidden flex justify-center">
         <div style={{ width: 320, height: 100, maxWidth: '100%' }}>
-          {/* 원래 구글 광고 자리 */}
           {ready && <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />}
         </div>
       </div>

@@ -146,7 +146,7 @@ export default function ProfileSidebar({
                 {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
                 {isOpen && (
                   <div className="flex justify-center pt-2">
-                    <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+                    <KakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} />
                   </div>
                 )}
               </div>
@@ -185,7 +185,7 @@ export default function ProfileSidebar({
                   {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
                   {isOpen && (
                     <div className="flex justify-center pt-2">
-                      <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+                      <KakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} />
                     </div>
                   )}
                 </div>

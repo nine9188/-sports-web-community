@@ -17,9 +17,8 @@ import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
 import BoardSearchBar from "../board/BoardSearchBar";
 import PostDetailRelatedList from "./PostDetailRelatedList";
-import AdSense from "@/shared/components/AdSense";
 import KakaoAd from "@/shared/components/KakaoAd";
-import { ADSENSE, KAKAO } from "@/shared/constants/ad-constants";
+import { KAKAO } from "@/shared/constants/ad-constants";
 import PostHashScroller from "./PostHashScroller";
 import PostPollCard from "../post/PostPollCard";
 import type { PostPoll } from "../../types/poll";
@@ -379,15 +378,10 @@ export default async function PostDetailLayout({
           </div>
         </div>
 
-        {/* PC 전용 인피드 광고 */}
-        <div className="hidden md:block border-t border-black/5 dark:border-white/10">
-          <AdSense
-            adSlot={ADSENSE.POST_PC_INFEED}
-            width={0}
-            height={0}
-            format="fluid"
-            layoutKey="-ed+5p-2-bb+pw"
-          />
+        {/* adsense-placeholder: former PC post-detail in-feed slot, keep this location for future AdSense restore. */}
+        {/* PC 전용 카카오 본문 하단 광고 */}
+        <div className="hidden md:flex justify-center py-4 border-t border-black/5 dark:border-white/10">
+          <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
         </div>
 
         {/* 첨부파일 섹션 (있는 경우) */}
@@ -450,12 +444,13 @@ export default async function PostDetailLayout({
         />
       </div>
 
-      {/* 모바일 전용 배너 광고 (300x50) */}
+      {/* adsense-placeholder: former mobile post-detail bottom banner slot, 320x100. */}
+      {/* 모바일 전용 카카오 배너 광고 */}
       <div className="mb-4 md:hidden flex justify-center">
-        {/* 원래 구글 광고 자리 */}
         <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
       </div>
 
+      {/* adsense-placeholder: former PC post-detail bottom banner slot, 728x90. */}
       {/* PC 전용 카카오 배너 광고 */}
       <div className="hidden md:flex justify-center mb-4">
         <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />

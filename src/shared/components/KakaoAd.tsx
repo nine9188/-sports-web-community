@@ -30,7 +30,7 @@ export default function KakaoAd({
           if (oldScript) oldScript.remove();
 
           const script = document.createElement('script');
-          script.src = '//t1.daumcdn.net/kas/static/ba.min.js';
+          script.src = '//t1.kakaocdn.net/kas/static/ba.min.js';
           script.async = true;
           container.appendChild(script);
           observer.disconnect();
