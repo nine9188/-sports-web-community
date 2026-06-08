@@ -9,6 +9,9 @@ export const KAKAO = {
   // 왼쪽 사이드바
   LEFT_SIDEBAR: 'DAN-ZD3sGdw5Tg2wQXp6',   // 300x250
 
+  // 오른쪽 사이드바
+  RIGHT_SIDEBAR: 'DAN-oGuO9he4YEoYoZgm',   // 300x250
+
   // 게시글 PC 배너
   POST_PC_BANNER: 'DAN-1pcdg9VkUBDfzAby',  // 728x90
 

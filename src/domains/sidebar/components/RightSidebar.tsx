@@ -27,7 +27,7 @@ export default async function RightSidebar() {
           <TopicTabsServer postsData={postsData} />
           <div className="my-4">
             {/* adsense-placeholder: former right-sidebar rectangle slot, 300x250. */}
-            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
+            <KakaoAd adUnit={KAKAO.RIGHT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
           <HotdealTabsServer postsData={hotdealData} />
@@ -59,7 +59,7 @@ export default async function RightSidebar() {
           <TopicTabsServer postsData={emptyData} />
           <div className="my-4">
             {/* adsense-placeholder: former right-sidebar rectangle slot, 300x250. */}
-            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
+            <KakaoAd adUnit={KAKAO.RIGHT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
           <ServerLeagueStandings initialLeague="premier" />
           <HotdealTabsServer postsData={emptyHotdealData} />
