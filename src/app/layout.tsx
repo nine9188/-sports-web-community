@@ -50,16 +50,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
   },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
-    apple: [
-      { url: '/apple-icon.png', type: 'image/png', sizes: '180x180' },
-    ],
-  },
   manifest: '/site.webmanifest',
   other: {
     'msapplication-TileColor': brandColors.primary,
