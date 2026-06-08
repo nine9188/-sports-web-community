@@ -7,8 +7,19 @@ const DAUM_WEBMASTER_PINS = [
 
 export const revalidate = 3600;
 
+const iconAllowRules = [
+  'Allow: /favicon.ico',
+  'Allow: /favicon.svg',
+  'Allow: /icon.png',
+  'Allow: /apple-icon.png',
+  'Allow: /android-chrome-192x192-new.png',
+  'Allow: /android-chrome-512x512-new.png',
+  'Allow: /site.webmanifest',
+];
+
 const publicCrawlerRules = [
   'Allow: /',
+  ...iconAllowRules,
   'Allow: /about',
   'Allow: /guide',
   'Allow: /contact',
@@ -42,6 +53,7 @@ export async function GET() {
   const lines = [
     'User-agent: *',
     'Allow: /',
+    ...iconAllowRules,
     'Allow: /livescore/',
     'Disallow: /signin',
     'Disallow: /signup',
@@ -74,6 +86,7 @@ export async function GET() {
     'User-agent: APIs-Google',
     'User-agent: Storebot-Google',
     'Allow: /',
+    ...iconAllowRules,
     'Allow: /livescore/',
     'Disallow: /signin',
     'Disallow: /signup',
@@ -94,6 +107,7 @@ export async function GET() {
     '',
     'User-agent: YandexBot',
     'Allow: /',
+    ...iconAllowRules,
     'Allow: /shop',
     'Disallow: /signin',
     'Disallow: /signup',
@@ -114,6 +128,7 @@ export async function GET() {
     '',
     'User-agent: bingbot',
     'Allow: /',
+    ...iconAllowRules,
     'Allow: /shop',
     'Disallow: /signin',
     'Disallow: /signup',
@@ -134,6 +149,7 @@ export async function GET() {
     '',
     'User-agent: Yeti',
     'Allow: /',
+    ...iconAllowRules,
     'Allow: /shop',
     'Disallow: /signin',
     'Disallow: /signup',

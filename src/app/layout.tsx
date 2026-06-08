@@ -52,10 +52,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
+      { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' },
       { url: '/icon.png', type: 'image/png', sizes: '192x192' },
-      { url: '/favicon.ico', type: 'image/x-icon', sizes: '48x48 96x96' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
     apple: [
       { url: '/apple-icon.png', type: 'image/png', sizes: '180x180' },
