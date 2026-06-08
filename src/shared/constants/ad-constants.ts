@@ -7,14 +7,14 @@
 // Kakao AdFit
 export const KAKAO = {
   // 왼쪽 사이드바
-  LEFT_SIDEBAR: 'DAN-28DfhfIX87Zmmwmh',   // 300x250
+  LEFT_SIDEBAR: 'DAN-ZD3sGdw5Tg2wQXp6',   // 300x250
 
   // 게시글 PC 배너
-  POST_PC_BANNER: 'DAN-aicQZoBCV6PIHO02',  // 728x90
+  POST_PC_BANNER: 'DAN-1pcdg9VkUBDfzAby',  // 728x90
 
   // 모바일 페이지 배너
-  MOBILE_BANNER: 'DAN-saruAPs26Wy3DJhL',   // 320x100
+  MOBILE_BANNER: 'DAN-QHHDOL6PisGQW7b6',   // 320x100
 
   // 모바일 모달/슬림 배너
-  MOBILE_SLIM_BANNER: 'DAN-nFHBvWKnDMOyCLO9', // 320x50
+  MOBILE_SLIM_BANNER: 'DAN-xQCe8VgP6G8I1XtL', // 320x50
 } as const;
