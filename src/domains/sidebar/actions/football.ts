@@ -7,6 +7,7 @@ import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 
 // 사이드바에서 표시하는 5대 리그 ID 매핑 (API-Football ID)
 const LEAGUE_IDS: Record<string, number> = {
+  worldcup: 1,
   premier: 39,
   laliga: 140,
   bundesliga: 78,
@@ -30,7 +31,7 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
-    const season = month >= 8 ? year : year - 1;
+    const season = leagueId === 'worldcup' ? 2026 : (month >= 8 ? year : year - 1);
 
     // 표준 API 래퍼 사용 (standings: 30분 revalidate)
     const data = await fetchFromFootballApi('standings', {
@@ -45,7 +46,8 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
 
     // 리그 정보 및 스탠딩 데이터 추출
     const leagueInfo = data.response[0].league;
-    const standings = leagueInfo.standings?.[0] || [];
+    const standingsGroups = Array.isArray(leagueInfo.standings) ? leagueInfo.standings : [];
+    const standings = standingsGroups.flat();
 
     // 팀 ID 추출
     const teamIds = standings.map((team: { team: { id: number } }) => team.team.id);
@@ -63,9 +65,9 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
         flag: leagueInfo.flag || '',
         season: leagueInfo.season
       },
-      standings: [
-        standings.map((team: {
+      standings: standingsGroups.map((group: Array<{
           rank: number;
+          group?: string;
           team: {
             id: number;
             name: string;
@@ -80,8 +82,9 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
             draw: number;
             lose: number;
           };
-        }) => ({
+        }>) => group.map((team) => ({
           rank: team.rank,
+          group: team.group || null,
           team: {
             team_id: team.team.id,
             name: team.team.name,
@@ -95,8 +98,7 @@ export const fetchStandingsData = cache(async (leagueId: string = 'premier'): Pr
             draw: team.all.draw,
             lose: team.all.lose
           }
-        }))
-      ],
+        }))),
       // 4590 표준: 팀 로고 URL
       teamLogoUrls,
     };

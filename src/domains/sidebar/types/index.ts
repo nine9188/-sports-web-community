@@ -59,6 +59,7 @@ export interface StandingsData {
   };
   standings: Array<{
     rank: number;
+    group?: string | null;
     team: Team;
     points: number;
     goalsDiff: number;

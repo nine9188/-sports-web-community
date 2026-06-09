@@ -158,6 +158,9 @@ const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.FOOTBALL_API_KEY || process.env.RAPID_API_KEY || process.env.NEXT_PUBLIC_RAPIDAPI_KEY || '';
 const FOOTBALL_API_MAX_ATTEMPTS = 3;
 const FOOTBALL_API_RETRY_DELAYS_MS = [300, 1200];
+const WORLD_CUP_LEAGUE_ID = 1;
+const WORLD_CUP_SEASON = 2026;
+const NON_PLAYABLE_STATUS_CODES = new Set(['TBD', 'PST', 'CANC', 'ABD', 'AWD', 'WO']);
 
 // ── 유틸리티 ──
 
@@ -169,6 +172,48 @@ function toKstDateString(baseUtc: Date): string {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function apiMatchToMatchData(match: ApiMatch): MatchData {
+  return {
+    id: match.fixture?.id || 0,
+    status: {
+      code: match.fixture?.status?.short || '',
+      name: match.fixture?.status?.long || '',
+      elapsed: match.fixture?.status?.elapsed || null
+    },
+    time: {
+      timestamp: match.fixture?.timestamp || 0,
+      date: match.fixture?.date || '',
+      timezone: match.fixture?.timezone || 'UTC'
+    },
+    league: {
+      id: match.league?.id || 0,
+      name: match.league?.name || '',
+      country: match.league?.country || '',
+      logo: '',
+      logoDark: '',
+      flag: match.league?.flag || ''
+    },
+    teams: {
+      home: {
+        id: match.teams?.home?.id || 0,
+        name: match.teams?.home?.name || '',
+        logo: '',
+        winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
+      },
+      away: {
+        id: match.teams?.away?.id || 0,
+        name: match.teams?.away?.name || '',
+        logo: '',
+        winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
+      }
+    },
+    goals: {
+      home: match.goals?.home ?? 0,
+      away: match.goals?.away ?? 0
+    }
+  };
 }
 
 function footballApiErrorText(error: unknown): string {
@@ -359,47 +404,28 @@ async function fetchMatchesByDateRaw(date: string): Promise<MatchData[]> {
       (match: ApiMatch) => visibleLeagueIds.has(match.league?.id ?? 0)
     );
 
-    return filteredApiMatches.map((match: ApiMatch): MatchData => ({
-      id: match.fixture?.id || 0,
-      status: {
-        code: match.fixture?.status?.short || '',
-        name: match.fixture?.status?.long || '',
-        elapsed: match.fixture?.status?.elapsed || null
-      },
-      time: {
-        timestamp: match.fixture?.timestamp || 0,
-        date: match.fixture?.date || '',
-        timezone: match.fixture?.timezone || 'UTC'
-      },
-      league: {
-        id: match.league?.id || 0,
-        name: match.league?.name || '',
-        country: match.league?.country || '',
-        logo: '',
-        logoDark: '',
-        flag: match.league?.flag || ''
-      },
-      teams: {
-        home: {
-          id: match.teams?.home?.id || 0,
-          name: match.teams?.home?.name || '',
-          logo: '',
-          winner: match.teams?.home?.winner !== undefined ? match.teams.home.winner : null
-        },
-        away: {
-          id: match.teams?.away?.id || 0,
-          name: match.teams?.away?.name || '',
-          logo: '',
-          winner: match.teams?.away?.winner !== undefined ? match.teams.away.winner : null
-        }
-      },
-      goals: {
-        home: match.goals?.home ?? 0,
-        away: match.goals?.away ?? 0
-      }
-    }));
+    return filteredApiMatches.map(apiMatchToMatchData);
   } catch (error) {
     console.error(`[fetchMatchesByDateRaw] ${date} 조회 실패:`, error);
+    return [];
+  }
+}
+
+async function fetchWorldCupMatchesRaw(): Promise<MatchData[]> {
+  try {
+    const data = await fetchFromFootballApi(
+      'fixtures',
+      { league: WORLD_CUP_LEAGUE_ID, season: WORLD_CUP_SEASON },
+      { revalidate: 900 }
+    );
+
+    if (!data.response) {
+      return [];
+    }
+
+    return data.response.map(apiMatchToMatchData);
+  } catch (error) {
+    console.error('[fetchWorldCupMatchesRaw] 월드컵 경기 조회 실패:', error);
     return [];
   }
 }
@@ -580,6 +606,36 @@ const _fetchTodayMatchesCached = async (): Promise<TodayMatchesResult> => {
 
 // React cache()로 같은 렌더 사이클 내 중복 호출도 방지
 export const fetchTodayMatches = cache(_fetchTodayMatchesCached);
+
+export const fetchWorldCupWidgetMatches = cache(async (limit = 8): Promise<MatchData[]> => {
+  const rawMatches = await fetchWorldCupMatchesRaw();
+  if (rawMatches.length === 0) return [];
+
+  const now = Date.now();
+  const todayKst = toKstDateString(new Date());
+  const playableMatches = rawMatches
+    .filter((match) => !NON_PLAYABLE_STATUS_CODES.has(match.status.code))
+    .filter((match) => Number.isFinite(new Date(match.time.date).getTime()))
+    .sort((a, b) => new Date(a.time.date).getTime() - new Date(b.time.date).getTime());
+
+  const openingKickoff = playableMatches[0]?.time.date
+    ? new Date(playableMatches[0].time.date).getTime()
+    : NaN;
+  const openingDateKst = playableMatches[0]?.time.date
+    ? toKstDateString(new Date(playableMatches[0].time.date))
+    : '';
+  const selectedMatches = (Number.isFinite(openingKickoff) && now < openingKickoff
+    ? playableMatches.filter((match) => toKstDateString(new Date(match.time.date)) === openingDateKst)
+    : playableMatches.filter((match) => toKstDateString(new Date(match.time.date)) === todayKst)
+  )
+    .slice(0, limit);
+
+  if (selectedMatches.length === 0) return [];
+
+  const resolved = await resolveMatchImages([{ key: 'worldcup', matches: selectedMatches }]);
+  const localized = await applyLocalizedNames(resolved.get('worldcup') || []);
+  return JSON.parse(JSON.stringify(localized));
+});
 
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용
 // 참고: API-Football의 from/to 파라미터는 league/season 필수 → date 파라미터 3회 병렬 호출 사용

@@ -4,7 +4,7 @@ import AdBanner from '@/shared/components/AdBanner';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
-import { fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
+import { fetchTodayMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
 import { getCurrentUser } from '@/domains/auth/actions';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
@@ -12,6 +12,7 @@ import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { fetchAllPostsWidgetData } from '@/domains/widgets/components/AllPostsWidget';
 import { fetchNewsData } from '@/domains/widgets/components/news-widget';
 import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
+import WorldCupSidebarCard from '@/domains/sidebar/components/WorldCupSidebarCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,7 +105,10 @@ const HOME_SECONDARY_LINKS = [
 
 export default async function HomePage() {
   const [liveScoreData, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
-    fetchTodayMatches().then(transformToWidgetLeagues),
+    Promise.all([
+      fetchTodayMatches(),
+      fetchWorldCupWidgetMatches(),
+    ]).then(([todayMatches, worldCupMatches]) => transformToWidgetLeagues(todayMatches, worldCupMatches)),
     fetchBoardCollectionData(),
     fetchAllPostsWidgetData(),
     fetchNewsData(),
@@ -121,8 +125,14 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
-      <main className="bg-transparent space-y-4 overflow-visible">
-        <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+      <main className="flex flex-col gap-4 bg-transparent overflow-visible">
+        <div className="hidden md:block">
+          <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+        </div>
+        <div className="flex flex-col gap-4 md:hidden">
+          <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+          <WorldCupSidebarCard />
+        </div>
         <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>
         <AdBanner />
         <LiveScoreWidgetV2 leagues={liveScoreData} />

@@ -328,22 +328,17 @@ export default function CommentSection({
         )}
 
         {!isLoggedIn ? (
-          <div
-            className="relative cursor-pointer"
+          <button
+            type="button"
+            className="block w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-left text-gray-400 dark:text-gray-500 rounded-lg text-base sm:text-[13px] min-h-[96px] cursor-pointer"
             onClick={() => {
               if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
                 router.push('/signin');
               }
             }}
           >
-            <textarea
-              className="w-full px-3 py-3 border border-black/7 dark:border-white/10 bg-gray-50 dark:bg-[#262626] text-gray-400 dark:text-gray-500 rounded-lg text-[13px] placeholder-gray-400 dark:placeholder-gray-500 resize-none pointer-events-none"
-              rows={3}
-              placeholder="댓글을 작성하려면 로그인해주세요."
-              disabled
-              readOnly
-            />
-          </div>
+            댓글을 작성하려면 로그인해주세요.
+          </button>
         ) : (
           <>
             {/* 답글 대상 표시 */}

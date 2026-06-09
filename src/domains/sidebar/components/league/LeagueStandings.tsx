@@ -20,6 +20,8 @@ const LEAGUES: League[] = [
   { id: 'ligue1', name: '리그1', fullName: '리그 1', apiId: 61 },
 ];
 
+const WORLD_CUP_LEAGUE: League = { id: 'worldcup', name: '월드컵', fullName: '2026 FIFA 월드컵', apiId: 1 };
+
 const shortenTeamName = (name: string) => {
   if (name.length <= 8) return name;
   return name.substring(0, 8);
@@ -42,7 +44,7 @@ interface LeagueStandingsProps {
 }
 
 export default function LeagueStandings({
-  initialLeague = 'premier',
+  initialLeague = 'worldcup',
   initialStandings = null,
   leagueLogoUrls = {},
   leagueLogoUrlsDark = {},
@@ -54,7 +56,10 @@ export default function LeagueStandings({
     [initialLeague]: initialStandings,
   });
   const [loadingLeagueId, setLoadingLeagueId] = useState<string | null>(null);
-  const currentLeague = LEAGUES.find(league => league.id === activeLeagueId) ?? LEAGUES[0];
+  const isWorldCupActive = activeLeagueId === WORLD_CUP_LEAGUE.id;
+  const currentLeague = isWorldCupActive
+    ? WORLD_CUP_LEAGUE
+    : LEAGUES.find(league => league.id === activeLeagueId) ?? LEAGUES[0];
   const currentStandings = standingsByLeague[currentLeague.id] ?? null;
   const currentTeamLogoUrls = currentStandings?.teamLogoUrls || teamLogoUrls;
   const isCurrentLeagueLoading = loadingLeagueId === currentLeague.id;
@@ -68,6 +73,72 @@ export default function LeagueStandings({
     id: league.id,
     label: league.name,
   }));
+  const worldCupTabs: TabItem[] = [
+    {
+      id: WORLD_CUP_LEAGUE.id,
+      label: WORLD_CUP_LEAGUE.name,
+    },
+  ];
+  const renderStandingsTable = (
+    teams: NonNullable<StandingsData['standings'][number]>,
+    options: { compact?: boolean } = {}
+  ) => (
+    <table className="w-full text-xs border-collapse table-fixed">
+      <colgroup>
+        <col className="w-[30px]" />
+        <col />
+        <col className="w-[28px]" />
+        <col className="w-[20px]" />
+        <col className="w-[20px]" />
+        <col className="w-[20px]" />
+        <col className="w-[30px]" />
+      </colgroup>
+      {!options.compact && (
+        <thead>
+          <tr className="border-b border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400">
+            <th className="text-center py-1 px-0 text-xs font-medium">순위</th>
+            <th className="text-left py-1 px-1 text-xs font-medium">팀</th>
+            <th className="text-center py-1 px-0 text-xs font-medium">경기</th>
+            <th className="text-center py-1 px-0 text-xs font-medium">승</th>
+            <th className="text-center py-1 px-0 text-xs font-medium">무</th>
+            <th className="text-center py-1 px-0 text-xs font-medium">패</th>
+            <th className="text-center py-1 px-0 text-xs font-medium">승점</th>
+          </tr>
+        </thead>
+      )}
+      <tbody>
+        {teams.map((team, index) => (
+          <tr
+            key={`${team.group || 'league'}-${team.team.team_id}`}
+            className={`${index < teams.length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]`}
+          >
+            <td className="text-center py-1.5 px-0">{team.rank}</td>
+            <td className="text-left py-1.5 px-1">
+              <Link href={getTeamHref(team.team)} prefetch={false} className="flex items-center gap-1">
+                <div className="w-5 h-5 relative flex-shrink-0">
+                  <UnifiedSportsImageClient
+                    src={getTeamLogo(team.team.team_id)}
+                    alt={team.team.name}
+                    width={20}
+                    height={20}
+                    className="object-contain"
+                  />
+                </div>
+                <span className="truncate max-w-[100px] text-[13px]">
+                  {getKoreanTeamName(team.team.team_id, team.team.name)}
+                </span>
+              </Link>
+            </td>
+            <td className="text-center py-1 px-0">{team.all.played}</td>
+            <td className="text-center py-1 px-0">{team.all.win}</td>
+            <td className="text-center py-1 px-0">{team.all.draw}</td>
+            <td className="text-center py-1 px-0">{team.all.lose}</td>
+            <td className="text-center py-1 px-0 font-medium">{team.points}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 
   const loadLeagueStandings = async (leagueId: string) => {
     if (Object.prototype.hasOwnProperty.call(standingsByLeague, leagueId)) {
@@ -111,8 +182,16 @@ export default function LeagueStandings({
       </ContainerHeader>
 
       <TabList
+        tabs={worldCupTabs}
+        activeTab={isWorldCupActive ? WORLD_CUP_LEAGUE.id : ''}
+        onTabChange={handleLeagueChange}
+        variant="contained"
+        className="mb-0"
+      />
+
+      <TabList
         tabs={leagueTabs}
-        activeTab={currentLeague.id}
+        activeTab={isWorldCupActive ? '' : currentLeague.id}
         onTabChange={handleLeagueChange}
         variant="contained"
         className="mb-0"
@@ -137,63 +216,29 @@ export default function LeagueStandings({
           <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
             불러오는 중...
           </div>
-        ) : currentStandings?.standings?.[0]?.length ? (
-          <table className="w-full text-xs border-collapse table-fixed">
-            <colgroup>
-              <col className="w-[30px]" />
-              <col />
-              <col className="w-[28px]" />
-              <col className="w-[20px]" />
-              <col className="w-[20px]" />
-              <col className="w-[20px]" />
-              <col className="w-[30px]" />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400">
-                <th className="text-center py-1 px-0 text-xs font-medium">순위</th>
-                <th className="text-left py-1 px-1 text-xs font-medium">팀</th>
-                <th className="text-center py-1 px-0 text-xs font-medium">경기</th>
-                <th className="text-center py-1 px-0 text-xs font-medium">승</th>
-                <th className="text-center py-1 px-0 text-xs font-medium">무</th>
-                <th className="text-center py-1 px-0 text-xs font-medium">패</th>
-                <th className="text-center py-1 px-0 text-xs font-medium">승점</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentStandings.standings[0].map((team, index) => (
-                <tr
-                  key={team.team.team_id}
-                  className={`${index < currentStandings.standings[0].length - 1 ? 'border-b border-black/5 dark:border-white/10' : ''} hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors text-gray-900 dark:text-[#F0F0F0]`}
-                >
-                  <td className="text-center py-1.5 px-0">{team.rank}</td>
-                  <td className="text-left py-1.5 px-1">
-                    <Link href={getTeamHref(team.team)} prefetch={false} className="flex items-center gap-1">
-                      <div className="w-5 h-5 relative flex-shrink-0">
-                        <UnifiedSportsImageClient
-                          src={getTeamLogo(team.team.team_id)}
-                          alt={team.team.name}
-                          width={20}
-                          height={20}
-                          className="object-contain"
-                        />
-                      </div>
-                      <span className="truncate max-w-[100px] text-[13px]">
-                        {getKoreanTeamName(team.team.team_id, team.team.name)}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="text-center py-1 px-0">{team.all.played}</td>
-                  <td className="text-center py-1 px-0">{team.all.win}</td>
-                  <td className="text-center py-1 px-0">{team.all.draw}</td>
-                  <td className="text-center py-1 px-0">{team.all.lose}</td>
-                  <td className="text-center py-1 px-0 font-medium">{team.points}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        ) : currentStandings?.standings?.some(group => group.length) ? (
+          isWorldCupActive ? (
+            <div>
+              {currentStandings.standings.map((group, index) => {
+                if (!group.length) return null;
+                const groupName = group[0]?.group || `${String.fromCharCode(65 + index)}조`;
+
+                return (
+                  <div key={`${groupName}-${index}`} className={index > 0 ? 'border-t border-black/5 dark:border-white/10' : ''}>
+                    <div className="px-3 py-1.5 bg-[#FAFAFA] dark:bg-[#232323] text-xs font-bold text-gray-700 dark:text-gray-300">
+                      {groupName.replace(/^Group\s+/i, '')}
+                    </div>
+                    {renderStandingsTable(group, { compact: index > 0 })}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            renderStandingsTable(currentStandings.standings[0])
+          )
         ) : (
           <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
-            데이터가 없습니다.
+            {isWorldCupActive ? '월드컵 조별 순위는 대회 시작 후 표시됩니다.' : '데이터가 없습니다.'}
           </div>
         )}
       </div>

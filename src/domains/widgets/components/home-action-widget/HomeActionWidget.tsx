@@ -65,7 +65,7 @@ export default function HomeActionWidget({ isLoggedIn }: HomeActionWidgetProps) 
     {
       key: 'matches',
       label: '오늘 경기 보기',
-      shortLabel: '오늘 경기',
+      shortLabel: '오늘 경기 보기',
       description: '일정, 스코어, 라인업',
       href: '/livescore/football',
       icon: CalendarDays,
@@ -77,7 +77,7 @@ export default function HomeActionWidget({ isLoggedIn }: HomeActionWidgetProps) 
     {
       key: 'popular',
       label: '인기글 보기',
-      shortLabel: '인기글',
+      shortLabel: '인기글 보기',
       description: '지금 많이 보는 이야기',
       href: '/boards/popular',
       icon: TrendingUp,
@@ -116,7 +116,7 @@ export default function HomeActionWidget({ isLoggedIn }: HomeActionWidgetProps) 
               href={item.href}
               prefetch={false}
               aria-label={item.ariaLabel ?? item.label}
-              className={`group relative flex min-h-[96px] flex-col justify-between overflow-hidden rounded-lg border border-black/7 p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-black/12 hover:shadow-md md:min-h-[136px] md:p-4 dark:border-white/10 dark:hover:border-white/16 ${item.cardClass}`}
+              className={`group relative flex min-h-[96px] flex-col justify-between overflow-hidden rounded-none border border-black/7 p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-black/12 hover:shadow-md md:min-h-[136px] md:rounded-lg md:p-4 dark:border-white/10 dark:hover:border-white/16 ${item.cardClass}`}
             >
               <span className="pointer-events-none absolute -right-1 bottom-0 text-[48px] font-black leading-none text-black/[0.055] transition duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-110 group-hover:text-black/[0.085] md:-right-1 md:bottom-0 md:text-[64px] dark:text-white/[0.06] dark:group-hover:text-white/[0.10]">
                 {item.number}

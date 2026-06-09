@@ -2,8 +2,8 @@ import { fetchStandingsData } from '../../actions/football';
 import LeagueStandings from './LeagueStandings';
 import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
-// 5대 리그 API-Football IDs
-const LEAGUE_API_IDS = [39, 140, 78, 135, 61];
+// 월드컵 + 5대 리그 API-Football IDs
+const LEAGUE_API_IDS = [1, 39, 140, 78, 135, 61];
 
 interface ServerLeagueStandingsProps {
   initialLeague?: string;
@@ -11,7 +11,7 @@ interface ServerLeagueStandingsProps {
 
 // 서버 컴포넌트 - async 사용 가능
 export default async function ServerLeagueStandings({
-  initialLeague = 'premier'
+  initialLeague = 'worldcup'
 }: ServerLeagueStandingsProps) {
   try {
     // 서버 컴포넌트에서 직접 서버 액션 호출

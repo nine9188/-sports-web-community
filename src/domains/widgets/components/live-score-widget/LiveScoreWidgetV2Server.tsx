@@ -1,4 +1,9 @@
-import { MatchData as FootballMatchData, TodayMatchesResult, fetchTodayMatches } from '@/domains/livescore/actions/footballApi';
+import {
+  MatchData as FootballMatchData,
+  TodayMatchesResult,
+  fetchTodayMatches,
+  fetchWorldCupWidgetMatches,
+} from '@/domains/livescore/actions/footballApi';
 import { Container } from '@/shared/components/ui';
 import LeagueToggleClient from './LeagueToggleClient';
 import LeagueHeader from './LeagueHeader';
@@ -25,9 +30,37 @@ function getKickoffTime(dateString?: string): string | undefined {
   }
 }
 
+function getDateMeta(dateString?: string): {
+  dateLabel: 'yesterday' | 'today' | 'tomorrow' | 'other';
+  displayDateLabel?: string;
+} {
+  if (!dateString) return { dateLabel: 'today' };
+
+  try {
+    const matchDate = new Date(dateString);
+    const now = new Date();
+    const kstMatch = new Date(matchDate.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    const kstNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    const matchDay = new Date(kstMatch.getFullYear(), kstMatch.getMonth(), kstMatch.getDate()).getTime();
+    const today = new Date(kstNow.getFullYear(), kstNow.getMonth(), kstNow.getDate()).getTime();
+    const diffDays = Math.round((matchDay - today) / (24 * 60 * 60 * 1000));
+
+    if (diffDays === -1) return { dateLabel: 'yesterday' };
+    if (diffDays === 0) return { dateLabel: 'today' };
+    if (diffDays === 1) return { dateLabel: 'tomorrow' };
+
+    return {
+      dateLabel: 'other',
+      displayDateLabel: `${kstMatch.getMonth() + 1}.${kstMatch.getDate()}`,
+    };
+  } catch {
+    return { dateLabel: 'today' };
+  }
+}
+
 function groupMatchesByLeague(
   matches: FootballMatchData[],
-  dateLabel: 'yesterday' | 'today' | 'tomorrow' = 'today'
+  dateLabel: 'yesterday' | 'today' | 'tomorrow' | 'other' = 'today'
 ): WidgetLeague[] {
   const leagueMap = new Map<number, { matches: WidgetMatch[]; firstMatch: FootballMatchData }>();
 
@@ -38,6 +71,7 @@ function groupMatchesByLeague(
     const homeId = match.teams?.home?.id || 0;
     const awayId = match.teams?.away?.id || 0;
 
+    const dateMeta = dateLabel === 'other' ? getDateMeta(match.time?.date) : { dateLabel };
     const widgetMatch: WidgetMatch = {
       id: String(match.id),
       homeTeam: {
@@ -58,7 +92,8 @@ function groupMatchesByLeague(
       },
       status: match.status?.code || 'NS',
       elapsed: match.status?.elapsed || 0,
-      dateLabel,
+      dateLabel: dateMeta.dateLabel,
+      displayDateLabel: dateMeta.displayDateLabel,
       kickoffTime: getKickoffTime(match.time?.date),
     };
 
@@ -116,13 +151,19 @@ const LEAGUE_PRIORITY: Record<number, number> = {
 
 const FINAL_STATUS_CODES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO', 'CANC', 'ABD']);
 
-export function transformToWidgetLeagues(result: TodayMatchesResult): WidgetLeague[] {
-  if (!result.success || !result.data) return [];
-
-  const todayMatches = (result.data.today?.matches || [])
+export function transformToWidgetLeagues(
+  result: TodayMatchesResult,
+  worldCupMatches: FootballMatchData[] = []
+): WidgetLeague[] {
+  const todayMatches = (result.success && result.data ? result.data.today?.matches || [] : [])
     .filter((match) => BIG_MATCH_LEAGUES.includes(match.league?.id || 0));
+  const worldCupIds = new Set(worldCupMatches.map((match) => match.id));
+  const nonWorldCupTodayMatches = todayMatches.filter((match) => match.league?.id !== 1 || !worldCupIds.has(match.id));
 
-  const leagues = groupMatchesByLeague(todayMatches, 'today');
+  const leagues = [
+    ...groupMatchesByLeague(worldCupMatches, 'other'),
+    ...groupMatchesByLeague(nonWorldCupTodayMatches, 'today'),
+  ];
 
   leagues.sort((a, b) => {
     const pa = LEAGUE_PRIORITY[Number(a.id)] ?? 99;
@@ -195,6 +236,10 @@ export default async function LiveScoreWidgetV2Server({ leagues }: LiveScoreWidg
 }
 
 export async function LiveScoreWidgetStreaming() {
-  const leagues = transformToWidgetLeagues(await fetchTodayMatches());
+  const [todayMatches, worldCupMatches] = await Promise.all([
+    fetchTodayMatches(),
+    fetchWorldCupWidgetMatches(),
+  ]);
+  const leagues = transformToWidgetLeagues(todayMatches, worldCupMatches);
   return <LiveScoreWidgetV2Server leagues={leagues} />;
 }

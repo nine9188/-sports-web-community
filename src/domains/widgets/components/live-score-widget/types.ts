@@ -17,7 +17,8 @@ export interface WidgetMatch {
   };
   status: string; // 'FT', 'LIVE', 'NS', 'HT' etc
   elapsed?: number; // 경과 시간 (분)
-  dateLabel?: 'yesterday' | 'today' | 'tomorrow'; // 어제/오늘/내일 구분
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow' | 'other'; // 어제/오늘/내일/기타 날짜 구분
+  displayDateLabel?: string; // 기타 날짜 표시 (예: 6.12)
   kickoffTime?: string; // 경기 시작 시간 (HH:mm)
 }
 
@@ -29,7 +30,8 @@ export interface WidgetLeague {
   logo?: string;
   logoDark?: string;  // 다크모드 리그 로고
   leagueIdNumber?: number;
-  dateLabel?: 'yesterday' | 'today' | 'tomorrow'; // 어제/오늘/내일 구분
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow' | 'other'; // 어제/오늘/내일/기타 날짜 구분
+  displayDateLabel?: string; // 기타 날짜 표시 (예: 6.12)
   matches: WidgetMatch[];
 }
 

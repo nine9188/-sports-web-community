@@ -5,6 +5,7 @@ import HotdealTabsServer from './HotdealTabsServer';
 import ServerLeagueStandings from './league/ServerLeagueStandings';
 import KakaoAd from '@/shared/components/KakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
+import WorldCupSidebarCard from './WorldCupSidebarCard';
 
 export default async function RightSidebar() {
   try {
@@ -24,12 +25,15 @@ export default async function RightSidebar() {
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
+          <div className="mb-4">
+            <WorldCupSidebarCard />
+          </div>
           <TopicTabsServer postsData={postsData} />
           <div className="my-4">
             {/* adsense-placeholder: former right-sidebar rectangle slot, 300x250. */}
             <KakaoAd adUnit={KAKAO.RIGHT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
-          <ServerLeagueStandings initialLeague="premier" />
+          <ServerLeagueStandings initialLeague="worldcup" />
           <HotdealTabsServer postsData={hotdealData} />
         </div>
       </aside>
@@ -56,12 +60,15 @@ export default async function RightSidebar() {
     return (
       <aside className="hidden xl:block w-[300px] shrink-0">
         <div className="h-full pt-4">
+          <div className="mb-4">
+            <WorldCupSidebarCard />
+          </div>
           <TopicTabsServer postsData={emptyData} />
           <div className="my-4">
             {/* adsense-placeholder: former right-sidebar rectangle slot, 300x250. */}
             <KakaoAd adUnit={KAKAO.RIGHT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
-          <ServerLeagueStandings initialLeague="premier" />
+          <ServerLeagueStandings initialLeague="worldcup" />
           <HotdealTabsServer postsData={emptyHotdealData} />
         </div>
       </aside>

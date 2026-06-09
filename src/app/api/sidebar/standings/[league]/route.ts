@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchStandingsData } from '@/domains/sidebar/actions/football';
 
-const ALLOWED_LEAGUES = new Set(['premier', 'laliga', 'bundesliga', 'serieA', 'ligue1']);
+const ALLOWED_LEAGUES = new Set(['worldcup', 'premier', 'laliga', 'bundesliga', 'serieA', 'ligue1']);
 
 export async function GET(
   _request: Request,

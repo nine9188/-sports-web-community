@@ -7,6 +7,7 @@ import ReportButton from '@/domains/reports/components/ReportButton';
 import AuthorLink from '@/domains/user/components/AuthorLink';
 import { formatDate } from '@/shared/utils/dateUtils';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import EmoticonPicker from './EmoticonPicker';
 import { useEmoticonMap } from '@/domains/boards/hooks/useEmoticonMap';
 import { trackEvent } from '@/shared/lib/gtag';
@@ -81,6 +82,7 @@ export default function Comment({
   highlightedCommentId,
   commentPermalink
 }: CommentProps) {
+  const router = useRouter();
   const { emoticonMap, emoticonRegex } = useEmoticonMap();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
@@ -94,6 +96,12 @@ export default function Comment({
   const isCurrentLiking = parentIsLiking || likingCommentId === comment.id;
   const isHidden = comment.is_hidden === true;
   const isDeleted = comment.is_deleted === true;
+
+  const promptLogin = useCallback(() => {
+    if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
+      router.push('/signin');
+    }
+  }, [router]);
 
   useEffect(() => {
     setEditContent(comment.content);
@@ -148,7 +156,11 @@ export default function Comment({
   }, [editContent]);
 
   const handleLike = async () => {
-    if (isCurrentLiking || !currentUserId) return;
+    if (isCurrentLiking) return;
+    if (!currentUserId) {
+      promptLogin();
+      return;
+    }
     try {
       await onLike(comment.id);
     } catch {
@@ -157,7 +169,11 @@ export default function Comment({
   };
 
   const handleDislike = async () => {
-    if (isCurrentLiking || !currentUserId) return;
+    if (isCurrentLiking) return;
+    if (!currentUserId) {
+      promptLogin();
+      return;
+    }
     try {
       await onDislike(comment.id);
     } catch {
@@ -247,12 +263,18 @@ export default function Comment({
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <ActionButton action="like" active={comment.userAction === 'like'} count={comment.likes || 0} onClick={handleLike} disabled={isCurrentLiking || !currentUserId} />
-                <ActionButton action="dislike" active={comment.userAction === 'dislike'} count={comment.dislikes || 0} onClick={handleDislike} disabled={isCurrentLiking || !currentUserId} />
-                {!isReply && currentUserId && onReply && (
+                <ActionButton action="like" active={comment.userAction === 'like'} count={comment.likes || 0} onClick={handleLike} disabled={isCurrentLiking} />
+                <ActionButton action="dislike" active={comment.userAction === 'dislike'} count={comment.dislikes || 0} onClick={handleDislike} disabled={isCurrentLiking} />
+                {!isReply && onReply && (
                   <Button
                     variant="ghost"
-                    onClick={() => onReply(comment.id)}
+                    onClick={() => {
+                      if (!currentUserId) {
+                        promptLogin();
+                        return;
+                      }
+                      onReply(comment.id);
+                    }}
                     className="flex items-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-auto px-0 py-0"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

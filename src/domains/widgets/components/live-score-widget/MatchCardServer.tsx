@@ -37,7 +37,8 @@ function getStatusInfo(
   status: string,
   elapsed?: number,
   kickoffTime?: string,
-  dateLabel?: 'yesterday' | 'today' | 'tomorrow'
+  dateLabel?: 'yesterday' | 'today' | 'tomorrow' | 'other',
+  displayDateLabel?: string
 ): { label: string; isLive: boolean; subLabel?: string } {
   // 진행 중인 경기에서 경과 시간이 있으면 시간 표시
   const liveStatuses = ['LIVE', '1H', '2H', 'ET', 'P', 'IN_PLAY'];
@@ -64,6 +65,13 @@ function getStatusInfo(
           subLabel: '내일'
         };
       }
+      if (dateLabel === 'other') {
+        return {
+          label: kickoffTime || '예정',
+          isLive: false,
+          subLabel: displayDateLabel
+        };
+      }
       // 오늘 경기면 시간 또는 "예정"
       if (kickoffTime) {
         return {
@@ -75,6 +83,9 @@ function getStatusInfo(
     // 어제 경기 - 종료 상태에 "어제" subLabel 추가
     if (dateLabel === 'yesterday' && !statusInfo.isLive) {
       return { ...statusInfo, subLabel: '어제' };
+    }
+    if (dateLabel === 'other' && !statusInfo.isLive && displayDateLabel) {
+      return { ...statusInfo, subLabel: displayDateLabel };
     }
     return statusInfo;
   }
@@ -99,7 +110,13 @@ interface MatchCardServerProps {
  * - eager=true: 첫 리그 이미지 즉시 로딩 (lazy 대신)
  */
 export default function MatchCardServer({ match, isLast, eager }: MatchCardServerProps) {
-  const statusInfo = getStatusInfo(match.status, match.elapsed, match.kickoffTime, match.dateLabel);
+  const statusInfo = getStatusInfo(
+    match.status,
+    match.elapsed,
+    match.kickoffTime,
+    match.dateLabel,
+    match.displayDateLabel
+  );
   const homeLogo = normalizeDisplayImageUrl(match.homeTeam.logo, { fallback: TEAM_PLACEHOLDER });
   const awayLogo = normalizeDisplayImageUrl(match.awayTeam.logo, { fallback: TEAM_PLACEHOLDER });
 
