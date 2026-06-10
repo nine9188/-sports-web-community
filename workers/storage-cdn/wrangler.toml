@@ -1,8 +1,0 @@
-name = "storage-cdn"
-main = "worker.js"
-compatibility_date = "2024-01-01"
-
-# 커스텀 도메인 설정 (Cloudflare 대시보드에서도 가능)
-# routes = [
-#   { pattern = "cdn.4590football.com/*", zone_name = "4590football.com" }
-# ]

@@ -9,6 +9,7 @@ import Sidebar from '@/domains/sidebar/components/Sidebar';
 import ProfileSidebar from '@/domains/sidebar/components/ProfileSidebar';
 import { HeaderUserData, FullUserDataWithSession } from '@/shared/types/user';
 import { Board } from '@/domains/layout/types/board';
+import MobileFloatingTabBar from '@/domains/layout/components/MobileFloatingTabBar';
 const UniversalChatbot = dynamic(
   () => import('@/domains/chatbot/components/UniversalChatbot').then(mod => ({ default: mod.UniversalChatbot })),
   { ssr: false }
@@ -88,6 +89,8 @@ const AuthStateManager = React.memo(function AuthStateManager({
       <div className="order-3" data-site-footer>
         <Footer />
       </div>
+      {/* 모바일 하단 탭바 */}
+      <MobileFloatingTabBar />
 
       {/* 챗봇 - 모든 사용자에게 표시 (로그인/비로그인 자동 감지) */}
       <div className="order-4" data-site-chatbot>
