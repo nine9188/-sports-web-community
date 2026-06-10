@@ -6,7 +6,7 @@ import { House, Trophy, Activity, ClipboardList, SquarePen } from 'lucide-react'
 
 const items = [
   { href: '/livescore/football', icon: Activity, label: '경기' },
-  { href: '/boards/worldcup', icon: Trophy, label: '월드컵' },
+  { href: '/livescore/football/leagues/1/world-cup', icon: Trophy, label: '월드컵' },
   { href: '/', icon: House, label: '홈', center: true },
   { href: '/boards/all', icon: ClipboardList, label: '게시판' },
   { href: '/boards/all/create', icon: SquarePen, label: '글쓰기' },
