@@ -18,6 +18,12 @@ export const KAKAO = {
   // 모바일 페이지 배너
   MOBILE_BANNER: 'DAN-QHHDOL6PisGQW7b6',   // 320x100
 
+  // 하단 PC 배너
+  BOTTOM_PC_BANNER: 'DAN-BbqCVJjmXuiYyjuN', // 728x90
+
+  // 하단 모바일 배너
+  BOTTOM_MOBILE_BANNER: 'DAN-hSuzXUrsDy2Jl47P', // 320x100
+
   // 모바일 모달/슬림 배너
   MOBILE_SLIM_BANNER: 'DAN-xQCe8VgP6G8I1XtL', // 320x50
 } as const;

@@ -140,10 +140,10 @@ export default async function HomePage() {
         <BoardCollectionWidget data={boardCollectionData} />
         <AllPostsWidget posts={latestPosts} />
         <div className="hidden md:flex justify-center">
-          <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+          <KakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} />
         </div>
         <div className="md:hidden flex justify-center">
-          <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+          <KakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} />
         </div>
         <NewsWidget news={news} />
       </main>

@@ -11,7 +11,7 @@ const INITIAL_RENDER_TIME = 0;
 const WORLD_CUP_MATCHES = [
   {
     label: '멕시코 vs 남아공',
-    kickoffKst: '2026-06-12T04:00:00+09:00',
+    kickoffKst: '2026-06-12T11:00:00+09:00',
   },
   {
     label: '대한민국 vs 체코',
@@ -54,10 +54,18 @@ function getRemaining(targetTime: number, now: number): RemainingTime {
 
 function formatKickoff(kickoffKst: string) {
   const date = new Date(kickoffKst);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const month = parts.find((part) => part.type === 'month')?.value ?? '';
+  const day = parts.find((part) => part.type === 'day')?.value ?? '';
+  const hours = parts.find((part) => part.type === 'hour')?.value ?? '00';
+  const minutes = parts.find((part) => part.type === 'minute')?.value ?? '00';
 
   return `${month}.${day} ${hours}:${minutes}`;
 }

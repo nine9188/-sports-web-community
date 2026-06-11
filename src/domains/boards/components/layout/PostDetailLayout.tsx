@@ -447,13 +447,13 @@ export default async function PostDetailLayout({
       {/* adsense-placeholder: former mobile post-detail bottom banner slot, 320x100. */}
       {/* 모바일 전용 카카오 배너 광고 */}
       <div className="mb-4 md:hidden flex justify-center">
-        <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+        <KakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} />
       </div>
 
       {/* adsense-placeholder: former PC post-detail bottom banner slot, 728x90. */}
       {/* PC 전용 카카오 배너 광고 */}
       <div className="hidden md:flex justify-center mb-4">
-        <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+        <KakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} />
       </div>
 
       {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}

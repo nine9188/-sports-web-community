@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { House, Trophy, Activity, ClipboardList, SquarePen } from 'lucide-react';
 
@@ -14,15 +15,70 @@ const items = [
 
 export default function MobileFloatingTabBar() {
   const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (currentScrollY < 20) {
+        setIsVisible(true);
+      } else if (scrollDelta > 8) {
+        setIsVisible(false);
+      } else if (scrollDelta < -8) {
+        setIsVisible(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    lastScrollYRef.current = window.scrollY;
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(env(safe-area-inset-bottom)+12px)] md:hidden pointer-events-none">
+    <nav
+      className={`fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(env(safe-area-inset-bottom)+12px)] md:hidden pointer-events-none transition-all duration-300 ease-out ${
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0'
+      }`}
+    >
       <div className="relative flex h-[64px] w-[92%] max-w-[390px] items-center justify-between rounded-3xl border border-white/70 bg-white/95 px-3 shadow-[0_12px_35px_rgba(15,23,42,0.18)] backdrop-blur-xl pointer-events-auto dark:border-white/10 dark:bg-[#1D1D1D]/95">
         {items.map((item) => {
           const Icon = item.icon;
-          const active =
-            pathname === item.href ||
-            (item.href !== '/' && pathname?.startsWith(item.href + '/'));
+
+          const active = (() => {
+            if (item.label === '홈') {
+              return pathname === '/';
+            }
+
+            if (item.label === '경기') {
+              return (
+                pathname === '/livescore/football' ||
+                pathname === '/livescore/football/leagues'
+              );
+            }
+
+            if (item.label === '월드컵') {
+              return pathname?.startsWith('/livescore/football/leagues/1/world-cup');
+            }
+
+            if (item.label === '게시판') {
+              return pathname === '/boards/all';
+            }
+
+            if (item.label === '글쓰기') {
+              return pathname?.includes('/create');
+            }
+
+            return pathname === item.href;
+          })();
 
           if (item.center) {
             return (
