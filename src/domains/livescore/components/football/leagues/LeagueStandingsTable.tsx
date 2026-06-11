@@ -46,6 +46,7 @@ interface LeagueStandingsTableProps {
   leagueId: number;
   // 4590 표준: 이미지 Storage URL
   teamLogoUrls?: Record<number, string>;
+  showLegend?: boolean;
 }
 
 // 테이블 스타일 정의
@@ -134,7 +135,7 @@ const getLegendForLeague = (leagueId: number) => {
   }
 };
 
-const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: LeagueStandingsTableProps) => {  const { getTeamDisplayName } = useTeamLeague();
+const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {}, showLegend = true }: LeagueStandingsTableProps) => {  const { getTeamDisplayName } = useTeamLeague();
 
   // 4590 표준: URL 헬퍼 함수
   const getTeamLogo = useCallback((id: number) => teamLogoUrls[id] || TEAM_PLACEHOLDER, [teamLogoUrls]);
@@ -297,25 +298,26 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {} }: L
         </Container>
       ))}
 
-      {/* 범례 */}
-      <Container className="bg-white dark:bg-[#1D1D1D]">
-        <ContainerHeader>
-          <ContainerTitle>범례</ContainerTitle>
-        </ContainerHeader>
-        <ContainerContent>
-          <div className="flex flex-col space-y-2">
-            {(() => {
-              const legend = getLegendForLeague(leagueData.id || leagueId);
-              return legend.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
-                  <span className="text-[13px] text-gray-900 dark:text-gray-100">{item.label}</span>
-                </div>
-              ));
-            })()}
-          </div>
-        </ContainerContent>
-      </Container>
+      {showLegend && (
+        <Container className="bg-white dark:bg-[#1D1D1D]">
+          <ContainerHeader>
+            <ContainerTitle>범례</ContainerTitle>
+          </ContainerHeader>
+          <ContainerContent>
+            <div className="flex flex-col space-y-2">
+              {(() => {
+                const legend = getLegendForLeague(leagueData.id || leagueId);
+                return legend.items.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className={`w-4 h-4 ${item.color} rounded-sm`}></div>
+                    <span className="text-[13px] text-gray-900 dark:text-gray-100">{item.label}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+          </ContainerContent>
+        </Container>
+      )}
     </div>
   );
 });

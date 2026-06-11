@@ -5,7 +5,7 @@ import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
 import { fetchLeagueStandings } from '@/domains/livescore/actions/match/standingsData';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { fetchCachedLeagueRankings } from '@/domains/livescore/actions/match/leagueRankings';
-import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection, CupRoundsView } from '@/domains/livescore/components/football/leagues';
+import { LeagueHeader, LeagueStandingsTable, LeagueRankingsSection, CupRoundsView, WorldCupBracketView } from '@/domains/livescore/components/football/leagues';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
@@ -260,10 +260,21 @@ async function LeagueStandingsSection({
       standings={standingsResponse.success && standingsResponse.data ? standingsResponse.data : null}
       leagueId={leagueId}
       teamLogoUrls={teamLogoUrls}
+      showLegend={!isWorldCup}
     />
   );
 
   const cupRounds = <CupRoundsView rounds={cupRoundsResponse.rounds} />;
+
+  if (isWorldCup) {
+    return (
+      <div className="space-y-4">
+        <CupRoundsView rounds={cupRoundsResponse.rounds} defaultOpenMode="currentKstDate" />
+        <WorldCupBracketView rounds={cupRoundsResponse.rounds} />
+        {standingsTable}
+      </div>
+    );
+  }
 
   if (shouldShowStandings && shouldShowCupRounds) {
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { Container, ContainerTitle, ContainerContent } from '@/shared/components/ui';
@@ -44,36 +44,48 @@ interface FixtureRowProps {
   fixture: CupFixture;
   isLast: boolean;
   isCurrent?: boolean;  // 현재 보고있는 매치 → 하이라이트
+  highlightPosition?: 'single' | 'start' | 'middle' | 'end'; // 월드컵 리그 페이지의 오늘/다음 예정 경기 묶음
 }
 
-function FixtureRow({ fixture, isLast, isCurrent = false }: FixtureRowProps) {
+function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: FixtureRowProps) {
   const { home, away, status } = fixture;
   const isLive = LIVE_CODES.has(status.short);
   const isFinished = FINISHED_CODES.has(status.short);
   const showScore = isLive || isFinished;
   const statusLabel = STATUS_LABEL[status.short] || status.short || '';
   const dateTime = formatDateTime(fixture.date);
+  const isHighlighted = Boolean(highlightPosition);
 
   const href = getMatchHrefByTeams(fixture.id, home, away);
 
-  const rowHover = isCurrent ? '' : 'hover:bg-[#F5F5F5] dark:hover:bg-[#262626]';
+  const rowHover = isCurrent || isHighlighted ? '' : 'hover:bg-[#F5F5F5] dark:hover:bg-[#262626]';
   const borderClass = isLast
     ? ''
     : isCurrent
       ? 'border-b border-blue-100 dark:border-blue-900/50'
+      : isHighlighted
+        ? 'border-b border-[#002FA7]/20 dark:border-blue-900/60'
       : 'border-b border-gray-100 dark:border-gray-800';
 
   // 현재 매치는 행 전체를 부드러운 그라디언트(파랑→빨강)로 단일 처리
   // 셀별 배경 분리 시 발생하는 색 단차를 없앰
   const rowBaseBg = isCurrent
     ? 'bg-gradient-to-r from-blue-50 to-red-50 dark:from-blue-900/30 dark:to-red-900/30'
+    : isHighlighted
+      ? 'relative bg-blue-50/70 dark:bg-blue-950/30'
     : '';
+  const highlightFrameClass = {
+    single: 'border-2 border-[#002FA7] rounded-sm dark:border-blue-500',
+    start: 'border-x-2 border-t-2 border-[#002FA7] rounded-t-sm dark:border-blue-500',
+    middle: 'border-x-2 border-[#002FA7] dark:border-blue-500',
+    end: 'border-x-2 border-b-2 border-[#002FA7] rounded-b-sm dark:border-blue-500',
+  }[highlightPosition ?? 'middle'];
 
   return (
     <Link
       href={href}
       aria-current={isCurrent ? 'page' : undefined}
-      className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${rowBaseBg} ${rowHover} ${borderClass}`}
+      className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${rowBaseBg} ${rowHover} ${borderClass} ${isHighlighted ? highlightFrameClass : ''}`}
     prefetch={false}
     >
       {/* 날짜 + 상태 */}
@@ -164,32 +176,104 @@ interface CupRoundsViewProps {
    * - 없으면: 정렬상 상위 N개 라운드 기본 펼침 (리그 페이지용)
    */
   currentMatchId?: number;
+  defaultOpenMode?: 'topRounds' | 'currentKstDate';
 }
 
-export default function CupRoundsView({ rounds, currentMatchId }: CupRoundsViewProps) {
+function toKstDateKey(dateInput: Date | string) {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  if (Number.isNaN(date.getTime())) return '';
+
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const year = parts.find((part) => part.type === 'year')?.value ?? '';
+  const month = parts.find((part) => part.type === 'month')?.value ?? '';
+  const day = parts.find((part) => part.type === 'day')?.value ?? '';
+  return `${year}-${month}-${day}`;
+}
+
+export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode = 'topRounds' }: CupRoundsViewProps) {
   // 현재 매치가 속한 라운드 키 (있으면 접기 불가)
   const currentRoundKey = currentMatchId
     ? rounds.find(r => r.fixtures.some(f => f.id === currentMatchId))?.round
     : undefined;
+
+  const orderedRounds = useMemo(() => (
+    defaultOpenMode === 'currentKstDate'
+      ? [...rounds].sort((a, b) => (a.earliestDate || '').localeCompare(b.earliestDate || ''))
+      : rounds
+  ), [defaultOpenMode, rounds]);
+
+  const highlightedFixtureIds = useMemo(() => {
+    if (defaultOpenMode !== 'currentKstDate') return new Set<number>();
+
+    const todayKst = toKstDateKey(new Date());
+    const todayFixtures = orderedRounds
+      .flatMap((round) => round.fixtures)
+      .filter((fixture) => toKstDateKey(fixture.date) === todayKst);
+
+    if (todayFixtures.length > 0) {
+      return new Set(todayFixtures.map((fixture) => fixture.id));
+    }
+
+    const now = Date.now();
+    const upcomingFixtures = orderedRounds
+      .flatMap((round) => round.fixtures)
+      .filter((fixture) => new Date(fixture.date).getTime() >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const nextFixture = upcomingFixtures[0];
+    const nextDateKst = nextFixture ? toKstDateKey(nextFixture.date) : '';
+
+    return new Set(
+      upcomingFixtures
+        .filter((fixture) => toKstDateKey(fixture.date) === nextDateKst)
+        .map((fixture) => fixture.id)
+    );
+  }, [defaultOpenMode, orderedRounds]);
 
   // 기본 펼침 라운드 결정
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     const initial = new Set<string>();
 
     if (currentMatchId) {
-      const currentIdx = rounds.findIndex(r =>
+      const currentIdx = orderedRounds.findIndex(r =>
         r.fixtures.some(f => f.id === currentMatchId)
       );
       if (currentIdx >= 0) {
         // 현재 라운드 + 앞 1 + 뒤 1 (있는 것만)
         [currentIdx - 1, currentIdx, currentIdx + 1].forEach(i => {
-          if (i >= 0 && i < rounds.length) initial.add(rounds[i].round);
+          if (i >= 0 && i < orderedRounds.length) initial.add(orderedRounds[i].round);
         });
         return initial;
       }
     }
 
-    rounds.slice(0, DEFAULT_EXPANDED_COUNT).forEach(r => initial.add(r.round));
+    if (defaultOpenMode === 'currentKstDate') {
+      const todayKst = toKstDateKey(new Date());
+      const todayRound = orderedRounds.find((round) =>
+        round.fixtures.some((fixture) => toKstDateKey(fixture.date) === todayKst)
+      );
+      if (todayRound) {
+        initial.add(todayRound.round);
+        return initial;
+      }
+
+      const now = Date.now();
+      const nextRound = orderedRounds.find((round) =>
+        round.fixtures.some((fixture) => new Date(fixture.date).getTime() >= now)
+      );
+      if (nextRound) {
+        initial.add(nextRound.round);
+        return initial;
+      }
+    }
+
+    orderedRounds.slice(0, DEFAULT_EXPANDED_COUNT).forEach(r => initial.add(r.round));
     return initial;
   });
 
@@ -218,7 +302,7 @@ export default function CupRoundsView({ rounds, currentMatchId }: CupRoundsViewP
 
   return (
     <div className="space-y-4">
-      {rounds.map((round) => {
+      {orderedRounds.map((round) => {
         const isOpen = expanded.has(round.round);
         const isLocked = round.round === currentRoundKey;
         return (
@@ -259,14 +343,30 @@ export default function CupRoundsView({ rounds, currentMatchId }: CupRoundsViewP
               id={`round-${round.round}`}
               className={`border-t border-gray-100 dark:border-gray-800 ${isOpen ? '' : 'hidden'}`}
             >
-              {round.fixtures.map((fixture, idx) => (
-                <FixtureRow
-                  key={fixture.id}
-                  fixture={fixture}
-                  isLast={idx === round.fixtures.length - 1}
-                  isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
-                />
-              ))}
+              {round.fixtures.map((fixture, idx) => {
+                const isHighlighted = highlightedFixtureIds.has(fixture.id);
+                const isPreviousHighlighted = idx > 0 && highlightedFixtureIds.has(round.fixtures[idx - 1].id);
+                const isNextHighlighted = idx < round.fixtures.length - 1 && highlightedFixtureIds.has(round.fixtures[idx + 1].id);
+                const highlightPosition = !isHighlighted
+                  ? undefined
+                  : !isPreviousHighlighted && !isNextHighlighted
+                    ? 'single'
+                    : !isPreviousHighlighted
+                      ? 'start'
+                      : !isNextHighlighted
+                        ? 'end'
+                        : 'middle';
+
+                return (
+                  <FixtureRow
+                    key={fixture.id}
+                    fixture={fixture}
+                    isLast={idx === round.fixtures.length - 1}
+                    isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
+                    highlightPosition={highlightPosition}
+                  />
+                );
+              })}
             </div>
           </Container>
         );

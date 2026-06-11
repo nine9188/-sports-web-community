@@ -5,3 +5,4 @@ export { default as LeagueCard } from './LeagueCard';
 export { default as LeagueStandingsTable } from './LeagueStandingsTable';
 export { default as LeagueRankingsSection } from './LeagueRankingsSection';
 export { default as CupRoundsView } from './CupRoundsView';
+export { default as WorldCupBracketView } from './WorldCupBracketView';
