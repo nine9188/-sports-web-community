@@ -99,6 +99,7 @@ function getChannels(): ChannelConfig[] {
     KOREAN_CHANNELS.COUPANG_PLAY,
     KOREAN_CHANNELS.SPOTV,
     KOREAN_CHANNELS.UEFA,
+    KOREAN_CHANNELS.JTBC_SPORTS,
   ];
 
   const seen = new Set<string>();

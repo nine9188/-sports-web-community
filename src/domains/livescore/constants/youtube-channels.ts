@@ -26,6 +26,12 @@ export const KOREAN_CHANNELS = {
     name: 'UEFA',
     leagueIds: [2, 3] as const,
   },
+  JTBC_SPORTS: {
+    channelId: 'UCTdZyOFVzontd9MZOJDg8Qw',
+    uploadsPlaylistId: 'UUTdZyOFVzontd9MZOJDg8Qw',
+    name: 'JTBC Sports',
+    leagueIds: [1] as const,
+  },
 } as const;
 
 export type KoreanChannelKey = keyof typeof KOREAN_CHANNELS;
@@ -33,6 +39,7 @@ export type KoreanChannelKey = keyof typeof KOREAN_CHANNELS;
 // ── 리그 → 한국 채널 매핑 ──
 
 export const LEAGUE_TO_KOREAN_CHANNEL: Record<number, KoreanChannelKey> = {
+  1: 'JTBC_SPORTS', // 월드컵
   39: 'COUPANG_PLAY', // EPL
   140: 'COUPANG_PLAY', // 라리가
   78: 'COUPANG_PLAY', // 분데스리가
@@ -47,6 +54,7 @@ export const LEAGUE_TO_KOREAN_CHANNEL: Record<number, KoreanChannelKey> = {
 // ── 제목 매칭용 리그명 키워드 ──
 
 export const LEAGUE_TITLE_KEYWORDS: Record<number, string[]> = {
+  1: ['월드컵', 'FIFA 월드컵', '북중미 월드컵'],
   39: ['프리미어리그'],
   140: ['라리가'],
   78: ['분데스리가'],
@@ -61,7 +69,7 @@ export const LEAGUE_TITLE_KEYWORDS: Record<number, string[]> = {
 // ── 하이라이트 지원 리그 ID 목록 ──
 
 export const HIGHLIGHT_SUPPORTED_LEAGUE_IDS = [
-  39, 140, 78, 61, 292, 293, 135, 2, 3,
+  1, 39, 140, 78, 61, 292, 293, 135, 2, 3,
 ] as const;
 
 // ── 팀 공식 YouTube 채널 (2순위 fallback, 홈팀만 검색) ──
