@@ -196,6 +196,41 @@ function toKstDateKey(dateInput: Date | string) {
   return `${year}-${month}-${day}`;
 }
 
+function isFixtureActiveOrUpcoming(fixture: CupFixture, nowMs: number) {
+  if (LIVE_CODES.has(fixture.status.short)) return true;
+  if (FINISHED_CODES.has(fixture.status.short)) return false;
+
+  const fixtureTime = new Date(fixture.date).getTime();
+  return Number.isFinite(fixtureTime) && fixtureTime >= nowMs;
+}
+
+function getCurrentOrNextFixtureIds(rounds: CupRound[]) {
+  const now = new Date();
+  const nowMs = now.getTime();
+  const todayKst = toKstDateKey(now);
+  const fixtures = rounds.flatMap((round) => round.fixtures);
+  const todayActiveFixtures = fixtures.filter((fixture) =>
+    toKstDateKey(fixture.date) === todayKst && isFixtureActiveOrUpcoming(fixture, nowMs)
+  );
+
+  if (todayActiveFixtures.length > 0) {
+    return new Set(todayActiveFixtures.map((fixture) => fixture.id));
+  }
+
+  const upcomingFixtures = fixtures
+    .filter((fixture) => isFixtureActiveOrUpcoming(fixture, nowMs))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const nextFixture = upcomingFixtures[0];
+  const nextDateKst = nextFixture ? toKstDateKey(nextFixture.date) : '';
+
+  return new Set(
+    upcomingFixtures
+      .filter((fixture) => toKstDateKey(fixture.date) === nextDateKst)
+      .map((fixture) => fixture.id)
+  );
+}
+
 export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode = 'topRounds' }: CupRoundsViewProps) {
   // 현재 매치가 속한 라운드 키 (있으면 접기 불가)
   const currentRoundKey = currentMatchId
@@ -210,30 +245,7 @@ export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode 
 
   const highlightedFixtureIds = useMemo(() => {
     if (defaultOpenMode !== 'currentKstDate') return new Set<number>();
-
-    const todayKst = toKstDateKey(new Date());
-    const todayFixtures = orderedRounds
-      .flatMap((round) => round.fixtures)
-      .filter((fixture) => toKstDateKey(fixture.date) === todayKst);
-
-    if (todayFixtures.length > 0) {
-      return new Set(todayFixtures.map((fixture) => fixture.id));
-    }
-
-    const now = Date.now();
-    const upcomingFixtures = orderedRounds
-      .flatMap((round) => round.fixtures)
-      .filter((fixture) => new Date(fixture.date).getTime() >= now)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    const nextFixture = upcomingFixtures[0];
-    const nextDateKst = nextFixture ? toKstDateKey(nextFixture.date) : '';
-
-    return new Set(
-      upcomingFixtures
-        .filter((fixture) => toKstDateKey(fixture.date) === nextDateKst)
-        .map((fixture) => fixture.id)
-    );
+    return getCurrentOrNextFixtureIds(orderedRounds);
   }, [defaultOpenMode, orderedRounds]);
 
   // 기본 펼침 라운드 결정
@@ -254,21 +266,13 @@ export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode 
     }
 
     if (defaultOpenMode === 'currentKstDate') {
-      const todayKst = toKstDateKey(new Date());
-      const todayRound = orderedRounds.find((round) =>
-        round.fixtures.some((fixture) => toKstDateKey(fixture.date) === todayKst)
+      const targetFixtureIds = getCurrentOrNextFixtureIds(orderedRounds);
+      const targetRound = orderedRounds.find((round) =>
+        round.fixtures.some((fixture) => targetFixtureIds.has(fixture.id))
       );
-      if (todayRound) {
-        initial.add(todayRound.round);
-        return initial;
-      }
 
-      const now = Date.now();
-      const nextRound = orderedRounds.find((round) =>
-        round.fixtures.some((fixture) => new Date(fixture.date).getTime() >= now)
-      );
-      if (nextRound) {
-        initial.add(nextRound.round);
+      if (targetRound) {
+        initial.add(targetRound.round);
         return initial;
       }
     }
