@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { BubbleMenu, useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { Extension, type Content } from '@tiptap/core';
 import { NodeSelection, Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
@@ -27,21 +27,18 @@ import { useSelectionPosition } from './post-edit-form/hooks/useSelectionPositio
 import { HotdealFields } from './post-edit-form/components/HotdealFields';
 import { DraftControls } from './post-edit-form/components/DraftControls';
 import { RelatedConnectionsPanel } from './post-edit-form/components/RelatedConnectionsPanel';
+import { PostFormActions } from './post-edit-form/components/PostFormActions';
+import { EditorToolbarPopovers } from './post-edit-form/components/EditorToolbarPopovers';
+import { SelectionFloatingTools } from './post-edit-form/components/SelectionFloatingTools';
+import { TableFloatingMenu } from './post-edit-form/components/TableFloatingMenu';
+import { EditorBubbleMenus } from './post-edit-form/components/EditorBubbleMenus';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
 import { extractAutoTagsFromContent } from '../../utils/post/extractAutoTagsFromContent';
 import { extractRelatedCtasFromContent } from '../../utils/post/extractRelatedCtasFromContent';
 import type { RelatedPostCta } from '../../utils/post/extractRelatedCtasFromContent';
-import LinkForm from '@/domains/boards/components/form/LinkForm';
-import YoutubeForm from '@/domains/boards/components/form/YoutubeForm';
-import MatchResultForm from '@/domains/boards/components/form/MatchResultForm';
-import SocialEmbedForm from '@/domains/boards/components/form/SocialEmbedForm';
-import TablePickerForm from '@/domains/boards/components/form/TablePickerForm';
-import PollForm from '@/domains/boards/components/form/PollForm';
-import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPickerForm';
 import type { PostPollDraft } from '@/domains/boards/types/poll';
 import { PollBlockExtension } from '@/shared/components/editor/tiptap/PollBlockExtension';
-import { Bold, Heading2, Heading3, Italic, Link as LinkIcon, Trash2 } from 'lucide-react';
 
 // Hotdeal options
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
@@ -1437,417 +1434,88 @@ export default function PostEditForm({
               className="hidden"
               onChange={handleVideoFileChange}
             />
-            {showLinkModal && linkPopoverSource === 'toolbar' && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarLinkPopoverPosition?.top ?? 0,
-                  left: toolbarLinkPopoverPosition?.left ?? 12,
-                  width: toolbarLinkPopoverPosition?.width,
-                }}
-              >
-                <LinkForm
-                  onCancel={closeLinkPopover}
-                  onLinkAdd={handleAddLink}
-                  onLinkRemove={handleRemoveLink}
-                  isOpen={showLinkModal}
-                  currentUrl={linkState.currentUrl}
-                  selectedText={linkState.selectedText}
-                  canRemove={linkState.isActive}
-                />
-              </div>
-            )}
-            {/* ?몃씪???⑤꼸 ?곸뿭 - ?대컮? ?먮뵒???ъ씠???쒖떆 */}
-            {showYoutubeModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarYoutubePopoverPosition?.top ?? 0,
-                  left: toolbarYoutubePopoverPosition?.left ?? 12,
-                  width: toolbarYoutubePopoverPosition?.width,
-                }}
-              >
-                <YoutubeForm
-                  onCancel={closeYoutubePopover}
-                  onYoutubeAdd={handleAddYoutube}
-                  isOpen={showYoutubeModal}
-                />
-              </div>
-            )}
-            {showSocialModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarSocialPopoverPosition?.top ?? 0,
-                  left: toolbarSocialPopoverPosition?.left ?? 12,
-                  width: toolbarSocialPopoverPosition?.width,
-                }}
-              >
-                <SocialEmbedForm
-                  isOpen={showSocialModal}
-                  onCancel={closeSocialPopover}
-                  onSocialEmbedAdd={handleAddSocialEmbed}
-                />
-              </div>
-            )}
-            {showMatchModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarMatchPopoverPosition?.top ?? 0,
-                  left: toolbarMatchPopoverPosition?.left ?? 12,
-                  width: toolbarMatchPopoverPosition?.width,
-                }}
-              >
-                <MatchResultForm
-                  isOpen={showMatchModal}
-                  onCancel={closeMatchPopover}
-                  onMatchAdd={handleAddMatch}
-                />
-              </div>
-            )}
-            {showTableModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarTablePopoverPosition?.top ?? 0,
-                  left: toolbarTablePopoverPosition?.left ?? 12,
-                  width: toolbarTablePopoverPosition?.width,
-                }}
-              >
-                <TablePickerForm
-                  isOpen={showTableModal}
-                  onCancel={closeTablePopover}
-                  onTableAdd={(rows, cols) => handleAddTable(rows, cols, tableInsertionRangeRef.current ?? undefined)}
-                />
-              </div>
-            )}
-            {showPollModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarPollPopoverPosition?.top ?? 0,
-                  left: toolbarPollPopoverPosition?.left ?? 12,
-                  width: toolbarPollPopoverPosition?.width,
-                }}
-              >
-                <PollForm
-                  isOpen={showPollModal}
-                  initialPoll={pollDraft}
-                  onCancel={closePollPopover}
-                  onSave={handleSavePollDraft}
-                />
-              </div>
-            )}
-            {showTeamModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarTeamPopoverPosition?.top ?? 0,
-                  left: toolbarTeamPopoverPosition?.left ?? 12,
-                  width: toolbarTeamPopoverPosition?.width,
-                }}
-              >
-                <EntityPickerForm
-                  isOpen={showTeamModal}
-                  mode="team"
-                  onClose={closeTeamPopover}
-                  onSelectTeam={handleSelectTeam}
-                  onSelectPlayer={handleSelectPlayer}
-                />
-              </div>
-            )}
-            {showPlayerModal && (
-              <div
-                className="absolute z-[10000]"
-                style={{
-                  top: toolbarPlayerPopoverPosition?.top ?? 0,
-                  left: toolbarPlayerPopoverPosition?.left ?? 12,
-                  width: toolbarPlayerPopoverPosition?.width,
-                }}
-              >
-                <EntityPickerForm
-                  isOpen={showPlayerModal}
-                  mode="player"
-                  onClose={closePlayerPopover}
-                  onSelectTeam={handleSelectTeam}
-                  onSelectPlayer={handleSelectPlayer}
-                />
-              </div>
-            )}
-
-            {/* ?먮뵒??而⑦뀗痢??곸뿭 - ?ㅽ??쇱? globals.css?먯꽌 愿由?*/}
+            <EditorToolbarPopovers
+              linkPopoverSource={linkPopoverSource}
+              showLinkModal={showLinkModal}
+              showYoutubeModal={showYoutubeModal}
+              showSocialModal={showSocialModal}
+              showMatchModal={showMatchModal}
+              showTableModal={showTableModal}
+              showPollModal={showPollModal}
+              showTeamModal={showTeamModal}
+              showPlayerModal={showPlayerModal}
+              toolbarLinkPopoverPosition={toolbarLinkPopoverPosition}
+              toolbarYoutubePopoverPosition={toolbarYoutubePopoverPosition}
+              toolbarSocialPopoverPosition={toolbarSocialPopoverPosition}
+              toolbarMatchPopoverPosition={toolbarMatchPopoverPosition}
+              toolbarTablePopoverPosition={toolbarTablePopoverPosition}
+              toolbarPollPopoverPosition={toolbarPollPopoverPosition}
+              toolbarTeamPopoverPosition={toolbarTeamPopoverPosition}
+              toolbarPlayerPopoverPosition={toolbarPlayerPopoverPosition}
+              linkState={linkState}
+              pollDraft={pollDraft}
+              closeLinkPopover={closeLinkPopover}
+              closeYoutubePopover={closeYoutubePopover}
+              closeSocialPopover={closeSocialPopover}
+              closeMatchPopover={closeMatchPopover}
+              closeTablePopover={closeTablePopover}
+              closePollPopover={closePollPopover}
+              closeTeamPopover={closeTeamPopover}
+              closePlayerPopover={closePlayerPopover}
+              handleAddLink={handleAddLink}
+              handleRemoveLink={handleRemoveLink}
+              handleAddYoutube={handleAddYoutube}
+              handleAddSocialEmbed={handleAddSocialEmbed}
+              handleAddMatch={handleAddMatch}
+              handleAddTable={(rows, cols) => handleAddTable(rows, cols, tableInsertionRangeRef.current ?? undefined)}
+              handleSavePollDraft={handleSavePollDraft}
+              handleSelectTeam={handleSelectTeam}
+              handleSelectPlayer={handleSelectPlayer}
+            />
             <div
               ref={setEditorViewportElement}
               className="relative border border-black/7 dark:border-white/10 rounded-b-md h-[60vh] min-h-[420px] max-h-[680px] overflow-x-hidden overflow-y-auto overscroll-contain bg-white dark:bg-[#262626]"
             >
               {editor && (
-                <BubbleMenu
+                <EditorBubbleMenus
                   editor={editor}
-                  pluginKey="pollBubbleMenu"
-                  updateDelay={0}
-                  shouldShow={({ editor }) => isPollBlockSelected(editor) && !showPollModal}
-                  tippyOptions={{
-                    appendTo: () => editorViewportElement ?? document.body,
-                    duration: 0,
-                    maxWidth: 'none',
-                    zIndex: 30,
-                    popperOptions: {
-                      modifiers: [
-                        {
-                          name: 'preventOverflow',
-                          options: {
-                            boundary: editorViewportElement ?? 'clippingParents',
-                            padding: 8,
-                          },
-                        },
-                        {
-                          name: 'flip',
-                          options: {
-                            boundary: editorViewportElement ?? 'clippingParents',
-                            padding: 8,
-                          },
-                        },
-                      ],
-                    },
-                  }}
-                >
-                  <div
-                    className="flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={handleOpenSelectedPollEditor}
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                      title="투표 삭제"
-                      onClick={handleRemovePollDraft}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </BubbleMenu>
-              )}
-              {editor && (
-                <BubbleMenu
-                  editor={editor}
-                  pluginKey="entityCardBubbleMenu"
-                  updateDelay={0}
-                  shouldShow={({ editor }) => isEntityCardSelected(editor) && !showTeamModal && !showPlayerModal}
-                  tippyOptions={{
-                    appendTo: () => editorViewportElement ?? document.body,
-                    duration: 0,
-                    maxWidth: 'none',
-                    zIndex: 30,
-                    popperOptions: {
-                      modifiers: [
-                        {
-                          name: 'preventOverflow',
-                          options: {
-                            boundary: editorViewportElement ?? 'clippingParents',
-                            padding: 8,
-                          },
-                        },
-                        {
-                          name: 'flip',
-                          options: {
-                            boundary: editorViewportElement ?? 'clippingParents',
-                            padding: 8,
-                          },
-                        },
-                      ],
-                    },
-                  }}
-                >
-                  <div
-                    className="flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={handleOpenSelectedEntityEditor}
-                    >
-                      변경
-                    </button>
-                  </div>
-                </BubbleMenu>
+                  editorViewportElement={editorViewportElement}
+                  showPollModal={showPollModal}
+                  showTeamModal={showTeamModal}
+                  showPlayerModal={showPlayerModal}
+                  isPollBlockSelected={isPollBlockSelected}
+                  isEntityCardSelected={isEntityCardSelected}
+                  onOpenSelectedPollEditor={handleOpenSelectedPollEditor}
+                  onRemovePollDraft={handleRemovePollDraft}
+                  onOpenSelectedEntityEditor={handleOpenSelectedEntityEditor}
+                />
               )}
 
               <div className="sticky left-0 top-0 z-20 h-0 w-full overflow-visible">
                 {editor && tableMenuPosition && !showTableModal && (
-                  <div
-                    className="absolute z-20 flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
-                    style={{
-                      top: tableMenuPosition.top,
-                      left: tableMenuPosition.left,
+                  <TableFloatingMenu
+                    editor={editor}
+                    tableMenuPosition={tableMenuPosition}
+                    onUpdateAfterCommand={updateTableMenuAfterCommand}
+                    onDeleteTable={() => {
+                      editor.chain().focus().deleteTable().run();
+                      setTableMenuPosition(null);
                     }}
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={() => {
-                        const nearPosition = editor.state.selection.from;
-                        editor.chain().focus().addRowAfter().run();
-                        updateTableMenuAfterCommand(nearPosition);
-                      }}
-                    >
-                      행+
-                    </button>
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={() => {
-                        const nearPosition = editor.state.selection.from;
-                        editor.chain().focus().addColumnAfter().run();
-                        updateTableMenuAfterCommand(nearPosition);
-                      }}
-                    >
-                      열+
-                    </button>
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={() => {
-                        const nearPosition = editor.state.selection.from;
-                        editor.chain().focus().deleteRow().run();
-                        updateTableMenuAfterCommand(nearPosition, true);
-                      }}
-                    >
-                      행-
-                    </button>
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333]"
-                      onClick={() => {
-                        const nearPosition = editor.state.selection.from;
-                        editor.chain().focus().deleteColumn().run();
-                        updateTableMenuAfterCommand(nearPosition, true);
-                      }}
-                    >
-                      열-
-                    </button>
-                    <button
-                      type="button"
-                      className="h-8 rounded px-2 text-[12px] font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                      title="표 삭제"
-                      onClick={() => {
-                        editor.chain().focus().deleteTable().run();
-                        setTableMenuPosition(null);
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                )}
-                {editor && selectionMenuPosition && !showLinkModal && (
-                <div
-                  className="absolute z-20 flex items-center gap-1 rounded-md border border-black/10 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#1D1D1D]"
-                  style={{
-                    top: selectionMenuPosition.top,
-                    left: selectionMenuPosition.left,
-                  }}
-                  onMouseDown={(event) => event.stopPropagation()}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          editor.chain().focus().toggleHeading({ level: 2 }).run();
-                        }}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('heading', { level: 2 }) ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-                        aria-label="제목 2"
-                      >
-                        <Heading2 size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          editor.chain().focus().toggleHeading({ level: 3 }).run();
-                        }}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('heading', { level: 3 }) ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-                        aria-label="제목 3"
-                      >
-                        <Heading3 size={16} />
-                      </button>
-                      <span className="mx-1 h-5 w-px bg-black/10 dark:bg-white/10" />
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          editor.chain().focus().toggleBold().run();
-                        }}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('bold') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-                        aria-label="굵게"
-                      >
-                        <Bold size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          editor.chain().focus().toggleItalic().run();
-                        }}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('italic') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-                        aria-label="기울임"
-                      >
-                        <Italic size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          openLinkPopover();
-                        }}
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded text-gray-900 hover:bg-[#EAEAEA] dark:text-[#F0F0F0] dark:hover:bg-[#333333] ${editor.isActive('link') ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''}`}
-                        aria-label="링크"
-                      >
-                        <LinkIcon size={16} />
-                      </button>
-                    </div>
-                )}
-                {showLinkModal && linkPopoverSource === 'selection' && selectionLinkPopoverPosition && (
-                <div
-                  className="absolute z-20"
-                  style={{
-                    top: selectionLinkPopoverPosition.top,
-                    left: selectionLinkPopoverPosition.left,
-                  }}
-                >
-                  <LinkForm
-                    onCancel={closeLinkPopover}
-                    onLinkAdd={handleAddLink}
-                    onLinkRemove={handleRemoveLink}
-                    isOpen={showLinkModal}
-                    currentUrl={linkState.currentUrl}
-                    selectedText={linkState.selectedText}
-                    canRemove={linkState.isActive}
                   />
-                </div>
+                )}
+                {editor && (
+                  <SelectionFloatingTools
+                    editor={editor}
+                    selectionMenuPosition={selectionMenuPosition}
+                    selectionLinkPopoverPosition={selectionLinkPopoverPosition}
+                    showLinkModal={showLinkModal}
+                    linkPopoverSource={linkPopoverSource}
+                    linkState={linkState}
+                    openLinkPopover={openLinkPopover}
+                    closeLinkPopover={closeLinkPopover}
+                    handleAddLink={handleAddLink}
+                    handleRemoveLink={handleRemoveLink}
+                  />
                 )}
               </div>
               <EditorContent editor={editor} />
@@ -1861,23 +1529,12 @@ export default function PostEditForm({
           />
 
           {/* 踰꾪듉 ?곸뿭 */}
-          <div className="flex justify-end space-x-2 mt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void handleCancel()}
-              disabled={isSubmitting || draftStatus === 'saving'}
-            >
-              취소
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (isCreateMode ? '게시 중...' : '저장 중...') : (isCreateMode ? '게시하기' : '저장하기')}
-            </Button>
-          </div>
+          <PostFormActions
+            isSubmitting={isSubmitting}
+            isCreateMode={isCreateMode}
+            draftStatus={draftStatus}
+            onCancel={() => void handleCancel()}
+          />
 
         </form>
       </ContainerContent>
