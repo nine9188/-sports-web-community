@@ -4,6 +4,7 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 
 const WEBP_QUALITY = 0.85;
 const CONVERT_TIMEOUT_MS = 10_000;
+const SESSION_TIMEOUT_MS = 10_000;
 const UPLOAD_TIMEOUT_MS = 30_000;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_SYNC_CONVERT_SIZE_BYTES = 4 * 1024 * 1024;
@@ -207,9 +208,16 @@ export async function uploadPostImageFile(
 
     logImageDebug('session check start');
 
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
-
+    const sessionRequest = supabase.auth.getSession();
+    
+    const { data: sessionData, error: sessionError } = await withTimeout<
+      Awaited<typeof sessionRequest>
+    >(
+      sessionRequest,
+      SESSION_TIMEOUT_MS,
+      '로그인 세션 확인 시간이 초과되었습니다. 새로고침 후 다시 시도해주세요.'
+    );
+    
     const user = sessionData.session?.user;
 
     logImageDebug('session check result', {
