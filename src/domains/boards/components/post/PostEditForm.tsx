@@ -11,7 +11,6 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
 import { toast } from 'sonner';
 import {
   deletePostDraft,
@@ -34,11 +33,11 @@ import { usePostFormState } from './post-edit-form/hooks/usePostFormState';
 import { useEditorPopoverManager } from './post-edit-form/hooks/useEditorPopoverManager';
 import { useEditorSelectionEffects } from './post-edit-form/hooks/useEditorSelectionEffects';
 import { usePostNavigationActions } from './post-edit-form/hooks/usePostNavigationActions';
-import { HotdealFields } from './post-edit-form/components/HotdealFields';
 import { DraftControls } from './post-edit-form/components/DraftControls';
 import { RelatedConnectionsPanel } from './post-edit-form/components/RelatedConnectionsPanel';
 import { PostFormActions } from './post-edit-form/components/PostFormActions';
 import { PostEditorSection } from './post-edit-form/components/PostEditorSection';
+import { PostBasicFields } from './post-edit-form/components/PostBasicFields';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { extractAutoTagsFromContent } from '../../utils/post/extractAutoTagsFromContent';
 import { extractRelatedCtasFromContent } from '../../utils/post/extractRelatedCtasFromContent';
@@ -740,69 +739,30 @@ export default function PostEditForm({
             </div>
           )}
 
-          {isCreateMode && (
-            <DraftControls
-              categoryId={categoryId}
-              draftStatus={draftStatus}
-              draftSavedAt={draftSavedAt}
-              drafts={drafts}
-              showDraftList={showDraftList}
-              formatDraftTime={formatDraftTime}
-              onSaveDraft={() => void saveCurrentDraft()}
-              onOpenDraftList={handleOpenDraftList}
-              onRestoreDraft={restoreDraft}
-              onDeleteDraft={handleDeleteDraft}
-            />
-          )}
-
-          {isCreateMode && (
-            <div className="space-y-2">
-              <label htmlFor="categoryId" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                게시판 선택 <span className="text-red-500 dark:text-red-400">*</span>
-              </label>
-              <BoardSelector
-                boards={allBoardsFlat}
-                selectedId={categoryId}
-                onSelect={handleCategoryChange}
-                currentBoardId={boardId}
-              />
-            </div>
-          )}
-
-          {!isHotdeal && (
-            <div className="space-y-2">
-              <label htmlFor="title" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                placeholder="제목을 입력하세요"
-                maxLength={100}
-                required
-              />
-            </div>
-          )}
-
-          {isHotdeal && (
-            <HotdealFields
-              dealUrl={dealUrl}
-              store={store}
-              productName={productName}
-              price={price}
-              originalPrice={originalPrice}
-              shipping={shipping}
-              storeOptions={STORE_OPTIONS}
-              shippingOptions={SHIPPING_SELECT_OPTIONS}
-              setDealUrl={setDealUrl}
-              setStore={setStore}
-              setProductName={setProductName}
-              setPrice={setPrice}
-              setOriginalPrice={setOriginalPrice}
-              setShipping={setShipping}
-            />
-          )}
+          <PostBasicFields
+            isCreateMode={isCreateMode}
+            isHotdeal={isHotdeal}
+            allBoardsFlat={allBoardsFlat}
+            categoryId={categoryId}
+            boardId={boardId}
+            title={title}
+            dealUrl={dealUrl}
+            store={store}
+            productName={productName}
+            price={price}
+            originalPrice={originalPrice}
+            shipping={shipping}
+            storeOptions={STORE_OPTIONS}
+            shippingOptions={SHIPPING_SELECT_OPTIONS}
+            onCategoryChange={handleCategoryChange}
+            setTitle={setTitle}
+            setDealUrl={setDealUrl}
+            setStore={setStore}
+            setProductName={setProductName}
+            setPrice={setPrice}
+            setOriginalPrice={setOriginalPrice}
+            setShipping={setShipping}
+          />
 
           <PostEditorSection
             editor={editor}
