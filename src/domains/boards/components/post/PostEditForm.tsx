@@ -1,8 +1,10 @@
 ﻿'use client';
 
+import { findCurrentTableEnd, findPollBlock, isEntityCardSelected, isPollBlockSelected } from './post-edit-form/utils/editorNodeHelpers';
+import type { Editor } from '@tiptap/react';
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { Extension, type Content } from '@tiptap/core';
 import { NodeSelection, Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
@@ -10,7 +12,6 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import BoardSelector from '@/domains/boards/components/createnavigation/BoardSelector';
-import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
 import { toast } from 'sonner';
 import {
   deletePostDraft,
@@ -25,16 +26,20 @@ import { useMediaUpload } from './post-edit-form/hooks/useMediaUpload';
 import { useToolbarPopoverPosition } from './post-edit-form/hooks/useToolbarPopoverPosition';
 import { useSelectionPosition } from './post-edit-form/hooks/useSelectionPosition';
 import { usePollEditor } from './post-edit-form/hooks/usePollEditor';
+import { useAdditionalEditorExtensions } from './post-edit-form/hooks/useAdditionalEditorExtensions';
+import { useEntitySelectionEditor } from './post-edit-form/hooks/useEntitySelectionEditor';
+import { useTableEditorCommands } from './post-edit-form/hooks/useTableEditorCommands';
+import { usePostEditor } from './post-edit-form/hooks/usePostEditor';
+import { usePostFormState } from './post-edit-form/hooks/usePostFormState';
+import { useEditorPopoverManager } from './post-edit-form/hooks/useEditorPopoverManager';
+import { useEditorSelectionEffects } from './post-edit-form/hooks/useEditorSelectionEffects';
+import { usePostNavigationActions } from './post-edit-form/hooks/usePostNavigationActions';
 import { HotdealFields } from './post-edit-form/components/HotdealFields';
 import { DraftControls } from './post-edit-form/components/DraftControls';
 import { RelatedConnectionsPanel } from './post-edit-form/components/RelatedConnectionsPanel';
 import { PostFormActions } from './post-edit-form/components/PostFormActions';
-import { EditorToolbarPopovers } from './post-edit-form/components/EditorToolbarPopovers';
-import { SelectionFloatingTools } from './post-edit-form/components/SelectionFloatingTools';
-import { TableFloatingMenu } from './post-edit-form/components/TableFloatingMenu';
-import { EditorBubbleMenus } from './post-edit-form/components/EditorBubbleMenus';
+import { PostEditorSection } from './post-edit-form/components/PostEditorSection';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
-import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
 import { extractAutoTagsFromContent } from '../../utils/post/extractAutoTagsFromContent';
 import { extractRelatedCtasFromContent } from '../../utils/post/extractRelatedCtasFromContent';
 import type { RelatedPostCta } from '../../utils/post/extractRelatedCtasFromContent';
@@ -76,52 +81,8 @@ type PollBlockMatch = {
   draft: PostPollDraft;
 };
 
-function findPollBlock(editor: Editor): PollBlockMatch | null {
-  let match: PollBlockMatch | null = null;
 
-  editor.state.doc.descendants((node, pos) => {
-    if (node.type.name !== 'pollBlock') return true;
 
-    match = {
-      pos,
-      nodeSize: node.nodeSize,
-      draft: {
-        question: String(node.attrs.question || ''),
-        options: Array.isArray(node.attrs.options) ? node.attrs.options.filter((option): option is string => typeof option === 'string') : [],
-      },
-    };
-    return false;
-  });
-
-  return match;
-}
-
-function isPollBlockSelected(editor: Editor) {
-  const { selection } = editor.state;
-  return selection instanceof NodeSelection && selection.node.type.name === 'pollBlock';
-}
-
-function isEntityCardSelected(editor: Editor) {
-  const { selection } = editor.state;
-  if (!(selection instanceof NodeSelection)) return false;
-
-  return selection.node.type.name === 'teamCard' ||
-    selection.node.type.name === 'playerCard';
-}
-
-function getSelectedEntityPickerMode(editor: Editor): 'team' | 'player' {
-  const { selection } = editor.state;
-  if (!(selection instanceof NodeSelection)) return 'team';
-
-  if (selection.node.type.name === 'playerCard') return 'player';
-  if (selection.node.type.name === 'entityCardGroup') {
-    const items = selection.node.attrs.items;
-    const firstItem = Array.isArray(items) ? items[0] : null;
-    return firstItem?.type === 'player' ? 'player' : 'team';
-  }
-
-  return 'team';
-}
 
 function expandEntityCardGroupsInContent(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value;
@@ -166,9 +127,6 @@ function expandEntityCardGroupsInContent(value: unknown): unknown {
   return value;
 }
 
-
-
-
 function formatDraftTime(value: string | null) {
   if (!value) return '';
 
@@ -185,39 +143,6 @@ function formatDraftTime(value: string | null) {
 }
 
 
-function findCurrentTableEnd(editor: Editor) {
-  const { $from } = editor.state.selection;
-
-  for (let depth = $from.depth; depth > 0; depth -= 1) {
-    if ($from.node(depth).type.name === 'table') {
-      return $from.after(depth);
-    }
-  }
-
-  return null;
-}
-
-function findNearestTableCellTextPosition(editor: Editor, nearPosition: number) {
-  let nearestPosition: number | null = null;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-
-  editor.state.doc.descendants((node, pos) => {
-    if (node.type.name !== 'tableCell' && node.type.name !== 'tableHeader') return true;
-
-    const textPosition = Math.min(pos + 2, pos + node.nodeSize - 1);
-    const distance = Math.abs(pos - nearPosition);
-
-    if (distance < nearestDistance) {
-      nearestPosition = textPosition;
-      nearestDistance = distance;
-    }
-
-    return false;
-  });
-
-  return nearestPosition;
-}
-
 function createPersistentSelectionDecorations(state: EditorState) {
   const { selection } = state;
 
@@ -227,7 +152,7 @@ function createPersistentSelectionDecorations(state: EditorState) {
 
   return DecorationSet.create(state.doc, [
     Decoration.inline(selection.from, selection.to, {
-      class: 'editor-persistent-selection',
+      class: 'persistent-selection-highlight',
     }),
   ]);
 }
@@ -305,27 +230,6 @@ const EditorEmptyPlaceholder = Extension.create({
   },
 });
 
-// 紐⑤뱢 ?덈꺼?먯꽌 ?뺤옣 preload ?쒖옉 (而댄룷?뚰듃 留덉슫???꾩뿉 濡쒕뵫 ?쒖옉)
-// ?대젃寃??섎㈃ PostEditForm??dynamic import?????뺤옣?ㅻ룄 蹂묐젹濡?濡쒕뵫??
-function loadAdditionalEditorExtensions() {
-  return Promise.all([
-  import('@/shared/components/editor/tiptap/YoutubeExtension').then(mod => mod.YoutubeExtension),
-  import('@/shared/components/editor/tiptap/VideoExtension').then(mod => mod.Video),
-  import('@/shared/components/editor/tiptap/MatchCardExtension').then(mod => mod.MatchCardExtension),
-  import('@/shared/components/editor/tiptap/extensions/social-embeds'),
-  import('@/shared/components/editor/tiptap/EntityCardGroupExtension').then(mod => mod.EntityCardGroupExtension),
-  import('@/shared/components/editor/tiptap/TeamCardExtension').then(mod => mod.TeamCardExtension),
-  import('@/shared/components/editor/tiptap/PlayerCardExtension').then(mod => mod.PlayerCardExtension),
-  import('@tiptap/extension-table').then(mod => mod.default),
-  import('@tiptap/extension-table-row').then(mod => mod.default),
-  import('@tiptap/extension-table-cell').then(mod => mod.default),
-  import('@tiptap/extension-table-header').then(mod => mod.default)
-]).catch(error => {
-  console.error('?뺤옣 preload ?ㅽ뙣:', error);
-  return null;
-});
-}
-
 interface PostEditFormProps {
   postId?: string;
   boardId?: string;
@@ -351,8 +255,38 @@ export default function PostEditForm({
   isCreateMode = false,
   initialDealInfo = null
 }: PostEditFormProps) {
-  const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState(initialContent);
+  const {
+    title,
+    setTitle,
+    content,
+    setContent,
+    categoryId,
+    setCategoryIdInternal,
+    dealUrl,
+    setDealUrl,
+    store,
+    setStore,
+    productName,
+    setProductName,
+    price,
+    setPrice,
+    originalPrice,
+    setOriginalPrice,
+    shipping,
+    setShipping,
+    isHotdeal,
+    formStateRef,
+    hotdealStateRef,
+  } = usePostFormState({
+    initialTitle,
+    initialContent,
+    externalCategoryId: externalCategoryId || '',
+    boardId,
+    allBoardsFlat,
+    isCreateMode,
+    initialDealInfo,
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkPopoverSource, setLinkPopoverSource] = useState<'selection' | 'toolbar' | null>(null);
@@ -392,47 +326,16 @@ export default function PostEditForm({
   const entityReplacementRangeRef = useRef<{ from: number; to: number } | null>(null);
   const pollDraftRef = useRef<PostPollDraft | null>(null);
 
-  // 理쒖떊 ?곹깭瑜?ref濡?愿由?(useCallback ?섏〈??理쒖냼??
-  const formStateRef = useRef({ title, content, categoryId: externalCategoryId || '' });
-  const hotdealStateRef = useRef({ dealUrl: '', store: '', productName: '', price: '', originalPrice: '', shipping: '' });
-
-  // initialContent瑜??뚯떛?섏뿬 editor 珥덇린?붿슜 媛앹껜濡?蹂??
   const parsedInitialContent = useMemo(() => {
     if (!initialContent) return '';
     try {
-      // JSON string?대㈃ ?뚯떛
       const parsed = JSON.parse(initialContent);
       return expandEntityCardGroupsInContent(parsed);
     } catch {
-      // ?뚯떛 ?ㅽ뙣?섎㈃ HTML string?쇰줈 媛꾩＜
       return initialContent;
     }
   }, [initialContent]);
-  // ?대? ?곹깭濡?categoryId 愿由?
-  const [categoryId, setCategoryIdInternal] = useState(externalCategoryId || '');
 
-  // ?ル뵜 愿??state (?섏젙 紐⑤뱶??寃쎌슦 珥덇린媛??ㅼ젙)
-  const [dealUrl, setDealUrl] = useState(initialDealInfo?.deal_url || '');
-  const [store, setStore] = useState(initialDealInfo?.store || '');
-  const [productName, setProductName] = useState(initialDealInfo?.product_name || '');
-  const [price, setPrice] = useState(initialDealInfo?.price ? String(initialDealInfo.price) : '');
-  const [originalPrice, setOriginalPrice] = useState(initialDealInfo?.original_price ? String(initialDealInfo.original_price) : '');
-  const [shipping, setShipping] = useState(initialDealInfo?.shipping || '');
-
-  // ref ?숆린??(??댄븨????useCallback???ъ깮?깅릺吏 ?딅룄濡?
-  useEffect(() => {
-    formStateRef.current = { title, content, categoryId };
-  }, [title, content, categoryId]);
-
-  useEffect(() => {
-    hotdealStateRef.current = { dealUrl, store, productName, price, originalPrice, shipping };
-  }, [dealUrl, store, productName, price, originalPrice, shipping]);
-
-  useEffect(() => {
-    pollDraftRef.current = pollDraft;
-  }, [pollDraft]);
-
-  // 湲곕낯 ?뺤옣 (蹂寃쎈릺吏 ?딆쓬)
   const baseExtensions = useMemo(() => [
     StarterKit,
     PersistentSelectionHighlight,
@@ -448,227 +351,34 @@ export default function PostEditForm({
       HTMLAttributes: {
         target: '_blank',
         rel: 'noopener noreferrer',
-      }
+      },
     }),
   ], []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [additionalExtensions, setAdditionalExtensions] = useState<any[]>([]);
-  const [extensionsLoaded, setExtensionsLoaded] = useState(false);
-  const loadingExtensionsRef = useRef<Promise<boolean> | null>(null);
+  const {
+    loadedExtensions,
+    extensionsLoaded,
+    ensureAdditionalExtensions,
+  } = useAdditionalEditorExtensions(baseExtensions);
 
-  // ?꾩껜 ?뺤옣 紐⑸줉 (湲곕낯 + 異붽?)
-  const loadedExtensions = useMemo(() => [
-    ...baseExtensions,
-    ...additionalExtensions
-  ], [baseExtensions, additionalExtensions]);
-
-  // 珥덇린 濡쒕뵫 ??異붽? ?뺤옣 濡쒕뱶 (紐⑤뱢 ?덈꺼?먯꽌 ?대? preload ?쒖옉??
   useEffect(() => {
-    // ?대? 濡쒕뱶?섏뿀?쇰㈃ 以묐났 ?ㅽ뻾 諛⑹?
-    if (extensionsLoaded) return;
-
-    const loadAdditionalExtensions = async () => {
-      try {
-        // 紐⑤뱢 ?덈꺼?먯꽌 ?쒖옉??preload Promise ?ъ슜 (?뚰꽣??諛⑹?)
-        const result = await loadAdditionalEditorExtensions();
-
-        if (!result) {
-          setExtensionsLoaded(true);
-          return;
-        }
-
-        const [
-          YoutubeExtension,
-          VideoExtension,
-          MatchCardExt,
-          SocialEmbedsModule,
-          EntityCardGroupExt,
-          TeamCardExt,
-          PlayerCardExt,
-          TableExtension,
-          TableRow,
-          TableCell,
-          TableHeader
-        ] = result;
-
-        // 異붽? ?뺤옣 ?ㅼ젙 (以묐났 諛⑹?瑜??꾪빐 prev ?ъ슜 ????
-        setAdditionalExtensions([
-          YoutubeExtension,
-          VideoExtension,
-          MatchCardExt,
-          SocialEmbedsModule.SocialEmbedExtension,
-          SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
-          EntityCardGroupExt,
-          TeamCardExt,
-          PlayerCardExt,
-          TableExtension.configure({
-            resizable: false,
-            allowTableNodeSelection: true,
-          }),
-          TableRow,
-          TableHeader,
-          TableCell
-        ]);
-        setExtensionsLoaded(true);
-      } catch (error) {
-        console.error('異붽? ?뺤옣 濡쒕뵫 ?ㅽ뙣:', error);
-        setExtensionsLoaded(true);
-      }
-    };
-
-    void loadAdditionalExtensions();
-  }, [extensionsLoaded]);
-
-  const ensureAdditionalExtensions = useCallback(async () => {
-    if (extensionsLoaded) return true;
-    if (loadingExtensionsRef.current) return loadingExtensionsRef.current;
-
-    loadingExtensionsRef.current = loadAdditionalEditorExtensions()
-      .then((result) => {
-        if (!result) {
-          setExtensionsLoaded(true);
-          return false;
-        }
-
-        const [
-          YoutubeExtension,
-          VideoExtension,
-          MatchCardExt,
-          SocialEmbedsModule,
-          EntityCardGroupExt,
-          TeamCardExt,
-          PlayerCardExt,
-          TableExtension,
-          TableRow,
-          TableCell,
-          TableHeader
-        ] = result;
-
-        setAdditionalExtensions([
-          YoutubeExtension,
-          VideoExtension,
-          MatchCardExt,
-          SocialEmbedsModule.SocialEmbedExtension,
-          SocialEmbedsModule.AutoSocialEmbedExtension.configure({ enabled: true }),
-          EntityCardGroupExt,
-          TeamCardExt,
-          PlayerCardExt,
-          TableExtension.configure({
-            resizable: false,
-            allowTableNodeSelection: true,
-          }),
-          TableRow,
-          TableHeader,
-          TableCell
-        ]);
-        setExtensionsLoaded(true);
-        return true;
-      })
-      .catch((error) => {
-        console.error('異붽? ?먮뵒???뺤옣 濡쒕뱶 ?ㅽ뙣:', error);
-        setExtensionsLoaded(true);
-        return false;
-      })
-      .finally(() => {
-        loadingExtensionsRef.current = null;
-      });
-
-    return loadingExtensionsRef.current;
-  }, [extensionsLoaded]);
-
-  // ?ル뵜 URL ?낅젰 ???쇳븨紐??먮룞 媛먯?
-  useEffect(() => {
-    if (dealUrl && dealUrl.trim()) {
-      const detectedStore = detectStoreFromUrl(dealUrl);
-      setStore(detectedStore);
-    }
-  }, [dealUrl]);
-
-  // ?ル뵜 寃뚯떆??寃뚯떆湲 泥댄겕
-  const selectedBoard = useMemo(() => {
-    // ?섏젙 紐⑤뱶?먯꽌??boardId ?ъ슜
-    const boardIdToFind = isCreateMode ? categoryId : (boardId || categoryId);
-    return allBoardsFlat.find(b => b.id === boardIdToFind);
-  }, [allBoardsFlat, categoryId, boardId, isCreateMode]);
-
-  const isHotdeal = useMemo(() => {
-    // ?섏젙 紐⑤뱶?먯꽌 initialDealInfo媛 ?덉쑝硫??ル뵜 寃뚯떆湲
-    if (!isCreateMode && initialDealInfo) {
-      return true;
-    }
-    // ?앹꽦 紐⑤뱶?먯꽌??寃뚯떆??slug濡??먮떒
-    if (!selectedBoard?.slug) return false;
-    return isHotdealBoard(selectedBoard.slug);
-  }, [selectedBoard, isCreateMode, initialDealInfo]);
-
-  // ?ル뵜 寃뚯떆??寃뚯떆湲?먯꽌 ?쒕ぉ ?먮룞 ?앹꽦 (?앹꽦/?섏젙 紐⑤몢)
-  useEffect(() => {
-    if (isHotdeal && productName && store && price && shipping) {
-      const priceNum = parseFloat(price);
-      if (!isNaN(priceNum)) {
-        const formattedPrice = formatPrice(priceNum);
-        const generatedTitle = `[${store}] ${productName} [${formattedPrice}][${shipping}]`;
-        setTitle(generatedTitle);
-      }
-    }
-  }, [isHotdeal, productName, store, price, shipping]);
+    pollDraftRef.current = pollDraft;
+  }, [pollDraft]);
 
   const router = useRouter();
-  
-  // ?먮뵒??珥덇린??- 湲곕낯 ?뺤옣?쇰줈 癒쇱? ?앹꽦 ??異붽? ?뺤옣 濡쒕뱶 ???ъ깮??
-  const editor = useEditor({
-    extensions: loadedExtensions,
-    content: extensionsLoaded ? parsedInitialContent as Content : '',
-    onUpdate: ({ editor }) => {
-      const editorJson = editor.getJSON();
-      const jsonContent = JSON.stringify(editorJson);
-      setContent(jsonContent);
-      setAutoTags(extractAutoTagsFromContent(editorJson));
-      setRelatedConnections(extractRelatedCtasFromContent(editorJson));
 
-      const pollBlock = findPollBlock(editor);
-      const currentPoll = pollDraftRef.current;
-      if (!pollBlock && currentPoll) {
-        setPollDraft(null);
-      } else if (pollBlock) {
-        const nextPoll = pollBlock.draft;
-        const changed = !currentPoll
-          || currentPoll.question !== nextPoll.question
-          || currentPoll.options.length !== nextPoll.options.length
-          || currentPoll.options.some((option, index) => option !== nextPoll.options[index]);
+  const editor = usePostEditor({
+    loadedExtensions,
+    extensionsLoaded,
+    parsedInitialContent: parsedInitialContent as Content,
+    initialContentAppliedRef,
+    pollDraftRef,
+    setContent,
+    setAutoTags,
+    setRelatedConnections,
+    setPollDraft,
+  });
 
-        if (changed) {
-          setPollDraft(nextPoll);
-        }
-      }
-    },
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm sm:prose dark:prose-invert focus:outline-none max-w-none w-full min-h-[460px] p-4 text-gray-900 dark:text-[#F0F0F0] text-base',
-      },
-    },
-    immediatelyRender: false
-  }, [extensionsLoaded, loadedExtensions, parsedInitialContent]);
-
-  useEffect(() => {
-    if (!editor || !extensionsLoaded || !parsedInitialContent || initialContentAppliedRef.current) return;
-
-    if (!editor.isEmpty) {
-      initialContentAppliedRef.current = true;
-      return;
-    }
-
-    editor.commands.setContent(parsedInitialContent as Content, true);
-    const editorJson = editor.getJSON();
-    const jsonContent = JSON.stringify(editorJson);
-    setContent(jsonContent);
-    setAutoTags(extractAutoTagsFromContent(editorJson));
-    setRelatedConnections(extractRelatedCtasFromContent(editorJson));
-    initialContentAppliedRef.current = true;
-  }, [editor, extensionsLoaded, parsedInitialContent]);
-
-  // ?먮뵒???몃뱾????
   const {
     showYoutubeModal,
     showMatchModal,
@@ -774,39 +484,44 @@ export default function PostEditForm({
     return editor.state.selection.to;
   }, [editor]);
 
-  const handleEditorToolToggle = useCallback((dropdown: 'link' | 'youtube' | 'match' | 'social' | 'team' | 'player' | 'table' | 'poll') => {
-    moveCursorAfterSelectedNode();
-
-    if (dropdown === 'poll') {
-      setLinkPopoverSource(null);
-      setShowPollModal((value) => !value);
-      return;
-    }
-    setShowPollModal(false);
-    setToolbarPollPopoverPosition(null);
-    if (dropdown === 'youtube' || dropdown === 'match' || dropdown === 'social' || dropdown === 'team' || dropdown === 'player' || dropdown === 'table') {
-      if (dropdown === 'table' && editor) {
-        const { from, to } = editor.state.selection;
-        tableInsertionRangeRef.current = { from, to };
-      }
-      if (dropdown === 'table' && !extensionsLoaded) {
-        setLinkPopoverSource(null);
-        void ensureAdditionalExtensions().then(() => handleToggleDropdown('table'));
-        return;
-      }
-      void ensureAdditionalExtensions();
-    }
-    if (dropdown === 'link') {
-      if (editor?.isActive('link')) {
-        editor.chain().focus().extendMarkRange('link').run();
-      }
-      setLinkPopoverSource('toolbar');
-      setShowLinkModal(true);
-      return;
-    }
-    setLinkPopoverSource(null);
-    handleToggleDropdown(dropdown);
-  }, [editor, ensureAdditionalExtensions, extensionsLoaded, handleToggleDropdown, moveCursorAfterSelectedNode, setShowLinkModal]);
+  const {
+    handleEditorToolToggle,
+    closeLinkPopover,
+    closeYoutubePopover,
+    closeSocialPopover,
+    closeMatchPopover,
+    closeTeamPopover,
+    closePlayerPopover,
+    closeTablePopover,
+    closePollPopover,
+  } = useEditorPopoverManager({
+    editor,
+    extensionsLoaded,
+    tableInsertionRangeRef,
+    entityReplacementRangeRef,
+    linkPopoverAnchorRef,
+    moveCursorAfterSelectedNode,
+    ensureAdditionalExtensions,
+    handleToggleDropdown,
+    setLinkPopoverSource,
+    setSelectionLinkPopoverPosition,
+    setToolbarLinkPopoverPosition,
+    setToolbarYoutubePopoverPosition,
+    setToolbarSocialPopoverPosition,
+    setToolbarMatchPopoverPosition,
+    setToolbarTeamPopoverPosition,
+    setToolbarPlayerPopoverPosition,
+    setToolbarTablePopoverPosition,
+    setToolbarPollPopoverPosition,
+    setShowLinkModal,
+    setShowYoutubeModal,
+    setShowMatchModal,
+    setShowSocialModal,
+    setShowTeamModal,
+    setShowPlayerModal,
+    setShowTableModal,
+    setShowPollModal,
+  });
 
   const linkState = useMemo(() => {
     if (!editor) {
@@ -825,51 +540,6 @@ export default function PostEditForm({
     editor?.chain().focus().extendMarkRange('link').unsetLink().run();
   }, [editor]);
 
-  const closeLinkPopover = useCallback(() => {
-    linkPopoverAnchorRef.current = null;
-    setLinkPopoverSource(null);
-    setToolbarLinkPopoverPosition(null);
-    setSelectionLinkPopoverPosition(null);
-    setShowLinkModal(false);
-  }, [setShowLinkModal]);
-
-  const closeYoutubePopover = useCallback(() => {
-    setToolbarYoutubePopoverPosition(null);
-    setShowYoutubeModal(false);
-  }, [setShowYoutubeModal]);
-
-  const closeSocialPopover = useCallback(() => {
-    setToolbarSocialPopoverPosition(null);
-    setShowSocialModal(false);
-  }, [setShowSocialModal]);
-
-  const closeMatchPopover = useCallback(() => {
-    setToolbarMatchPopoverPosition(null);
-    setShowMatchModal(false);
-  }, [setShowMatchModal]);
-
-  const closeTeamPopover = useCallback(() => {
-    setToolbarTeamPopoverPosition(null);
-    setShowTeamModal(false);
-    entityReplacementRangeRef.current = null;
-  }, [setShowTeamModal]);
-
-  const closePlayerPopover = useCallback(() => {
-    setToolbarPlayerPopoverPosition(null);
-    setShowPlayerModal(false);
-    entityReplacementRangeRef.current = null;
-  }, [setShowPlayerModal]);
-
-  const closeTablePopover = useCallback(() => {
-    setToolbarTablePopoverPosition(null);
-    setShowTableModal(false);
-  }, [setShowTableModal]);
-
-  const closePollPopover = useCallback(() => {
-    setToolbarPollPopoverPosition(null);
-    setShowPollModal(false);
-  }, []);
-
   const {
     handleSavePollDraft,
     handleRemovePollDraft,
@@ -883,58 +553,21 @@ export default function PostEditForm({
     setShowPollModal,
   });
 
-  const handleOpenSelectedEntityEditor = useCallback(() => {
-    if (!editor || !(editor.state.selection instanceof NodeSelection)) return;
-
-    const { from, to } = editor.state.selection;
-    const mode = getSelectedEntityPickerMode(editor);
-    const shell = editorShellRef.current;
-    const selectionRect = editor.view.coordsAtPos(from);
-    const boundary = shell?.getBoundingClientRect();
-    const padding = 8;
-    const maxWidth = mode === 'player' ? PLAYER_POPOVER_WIDTH : TEAM_POPOVER_WIDTH;
-    const width = Math.min(maxWidth, Math.max(120, (boundary?.width ?? maxWidth) - padding * 2));
-
-    entityReplacementRangeRef.current = { from, to };
-    setToolbarTeamPopoverPosition(null);
-    setToolbarPlayerPopoverPosition(null);
-
-    const position = {
-      top: boundary ? selectionRect.bottom - boundary.top + 6 : 0,
-      left: boundary
-        ? Math.max(padding, Math.min(selectionRect.left - boundary.left, boundary.width - width - padding))
-        : 12,
-      width,
-    };
-
-    if (mode === 'player') {
-      setToolbarPlayerPopoverPosition(position);
-      setShowTeamModal(false);
-      setShowPlayerModal(true);
-    } else {
-      setToolbarTeamPopoverPosition(position);
-      setShowPlayerModal(false);
-      setShowTeamModal(true);
-    }
-  }, [editor, setShowPlayerModal, setShowTeamModal]);
-
-  const replaceSelectedEntityIfNeeded = useCallback(() => {
-    if (!editor || !entityReplacementRangeRef.current) return;
-
-    const { from, to } = entityReplacementRangeRef.current;
-    editor.chain().focus().deleteRange({ from, to }).setTextSelection(from).run();
-    entityReplacementRangeRef.current = null;
-  }, [editor]);
-
-  const handleSelectTeam = useCallback(async (...args: Parameters<typeof handleAddTeam>) => {
-    replaceSelectedEntityIfNeeded();
-    await handleAddTeam(...args);
-  }, [handleAddTeam, replaceSelectedEntityIfNeeded]);
-
-  const handleSelectPlayer = useCallback(async (...args: Parameters<typeof handleAddPlayer>) => {
-    replaceSelectedEntityIfNeeded();
-    await handleAddPlayer(...args);
-  }, [handleAddPlayer, replaceSelectedEntityIfNeeded]);
+  const {
+    handleOpenSelectedEntityEditor,
+    handleSelectTeam,
+    handleSelectPlayer,
+  } = useEntitySelectionEditor({
+    editor,
+    editorShellRef,
+    entityReplacementRangeRef,
+    handleAddTeam,
+    handleAddPlayer,
+    setToolbarTeamPopoverPosition,
+    setToolbarPlayerPopoverPosition,
+    setShowTeamModal,
+    setShowPlayerModal,
+  });
 
   const {
     handleImageToolbarClick,
@@ -977,20 +610,13 @@ export default function PostEditForm({
     linkPopoverAnchorRef,
   });
 
-  const updateTableMenuAfterCommand = useCallback((nearPosition: number, restoreSelection = false) => {
-    window.requestAnimationFrame(() => {
-      if (!editor) return;
-
-      if (restoreSelection && !editor.isActive('table')) {
-        const nextPosition = findNearestTableCellTextPosition(editor, nearPosition);
-        if (nextPosition !== null) {
-          editor.commands.setTextSelection(nextPosition);
-        }
-      }
-
-      setTableMenuPosition(calculateTableMenuPosition());
-    });
-  }, [calculateTableMenuPosition, editor]);
+  const {
+    updateTableMenuAfterCommand,
+  } = useTableEditorCommands({
+    editor,
+    calculateTableMenuPosition,
+    setTableMenuPosition,
+  });
 
   const openLinkPopover = useCallback(() => {
     if (editor?.isActive('link')) {
@@ -1051,166 +677,24 @@ export default function PostEditForm({
     },
   });
 
-  useEffect(() => {
-    if (!showLinkModal) return;
+  useEditorSelectionEffects({
+    editor,
+    editorViewportElement,
+    showLinkModal,
+    showYoutubeModal,
+    linkPopoverSource,
+    calculateSelectionLinkPopoverPosition,
+    calculateSelectionMenuPosition,
+    calculateTableMenuPosition,
+    closeLinkPopover,
+    closeYoutubePopover,
+    openLinkPopover,
+    isPollBlockSelected,
+    setSelectionLinkPopoverPosition,
+    setSelectionMenuPosition,
+    setTableMenuPosition,
+  });
 
-    const handlePointerOutside = (event: MouseEvent | TouchEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest('[data-editor-link-popover="true"]')) return;
-
-      closeLinkPopover();
-    };
-
-    document.addEventListener('mousedown', handlePointerOutside);
-    document.addEventListener('touchstart', handlePointerOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerOutside);
-      document.removeEventListener('touchstart', handlePointerOutside);
-    };
-  }, [closeLinkPopover, showLinkModal]);
-
-  useEffect(() => {
-    if (!showYoutubeModal) return;
-
-    const handlePointerOutside = (event: MouseEvent | TouchEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest('[data-editor-youtube-popover="true"]')) return;
-
-      closeYoutubePopover();
-    };
-
-    document.addEventListener('mousedown', handlePointerOutside);
-    document.addEventListener('touchstart', handlePointerOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerOutside);
-      document.removeEventListener('touchstart', handlePointerOutside);
-    };
-  }, [closeYoutubePopover, showYoutubeModal]);
-
-  useEffect(() => {
-    if (!showLinkModal || linkPopoverSource !== 'selection') return;
-
-    const updatePosition = (keepHorizontalPosition = false) => {
-      const position = calculateSelectionLinkPopoverPosition();
-      if (position) {
-        setSelectionLinkPopoverPosition((previousPosition) => {
-          if (!keepHorizontalPosition || !previousPosition) {
-            return position;
-          }
-
-          return {
-            top: position.top,
-            left: previousPosition.left,
-          };
-        });
-      } else {
-        closeLinkPopover();
-      }
-    };
-    const updateVerticalPositionOnEditorScroll = () => updatePosition(true);
-    const updateFullPositionOnResize = () => updatePosition(false);
-
-    editorViewportElement?.addEventListener('scroll', updateVerticalPositionOnEditorScroll, { passive: true });
-    window.addEventListener('resize', updateFullPositionOnResize);
-
-    return () => {
-      editorViewportElement?.removeEventListener('scroll', updateVerticalPositionOnEditorScroll);
-      window.removeEventListener('resize', updateFullPositionOnResize);
-    };
-  }, [calculateSelectionLinkPopoverPosition, closeLinkPopover, editorViewportElement, linkPopoverSource, showLinkModal]);
-
-  useEffect(() => {
-    if (!editor || !editorViewportElement) return;
-
-    const updateSelectionMenuPosition = () => {
-      if (showLinkModal) {
-        setSelectionMenuPosition(null);
-        setTableMenuPosition(null);
-        return;
-      }
-
-      if (editor.isActive('table')) {
-        setSelectionMenuPosition(null);
-        setTableMenuPosition(calculateTableMenuPosition());
-        return;
-      }
-
-      setTableMenuPosition(null);
-
-      if (isPollBlockSelected(editor)) {
-        setSelectionMenuPosition(null);
-        return;
-      }
-
-      if (editor.state.selection instanceof NodeSelection) {
-        setSelectionMenuPosition(null);
-        return;
-      }
-
-      if (editor.state.selection.empty && !editor.isActive('link')) {
-        setSelectionMenuPosition(null);
-        return;
-      }
-
-      setSelectionMenuPosition(calculateSelectionMenuPosition());
-    };
-
-    const hideOnPageScroll = () => {
-      setSelectionMenuPosition(null);
-      setTableMenuPosition(null);
-      closeLinkPopover();
-    };
-    const hideSelectionMenu = () => {
-      setSelectionMenuPosition(null);
-      setTableMenuPosition(null);
-    };
-
-    editor.on('selectionUpdate', updateSelectionMenuPosition);
-    editor.on('focus', updateSelectionMenuPosition);
-    editor.on('blur', hideSelectionMenu);
-    editorViewportElement.addEventListener('scroll', updateSelectionMenuPosition, { passive: true });
-    window.addEventListener('resize', updateSelectionMenuPosition);
-    window.addEventListener('scroll', hideOnPageScroll, { passive: true });
-
-    updateSelectionMenuPosition();
-
-    return () => {
-      editor.off('selectionUpdate', updateSelectionMenuPosition);
-      editor.off('focus', updateSelectionMenuPosition);
-      editor.off('blur', hideSelectionMenu);
-      editorViewportElement.removeEventListener('scroll', updateSelectionMenuPosition);
-      window.removeEventListener('resize', updateSelectionMenuPosition);
-      window.removeEventListener('scroll', hideOnPageScroll);
-    };
-  }, [calculateSelectionMenuPosition, calculateTableMenuPosition, closeLinkPopover, editor, editorViewportElement, showLinkModal]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!editor) return;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        openLinkPopover();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editor, openLinkPopover]);
-
-  
-  // 移댄뀒怨좊━ 蹂寃??몃뱾??
-  const handleCategoryChange = useCallback((id: string) => {
-    setCategoryIdInternal(id);
-    if (setCategoryId && typeof setCategoryId === 'function') {
-      setCategoryId(id);
-    }
-  }, [setCategoryId]);
-
-  // ?ル뵜 ?뺣낫 ?앹꽦 ?ы띁 (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
   const { handleSubmit } = usePostSubmit({
     editor,
     router,
@@ -1229,18 +713,16 @@ export default function PostEditForm({
     setIsSubmitting,
   });
 
-  const handleCancel = useCallback(async () => {
-    if (!isCreateMode) {
-      router.back();
-      return;
-    }
-
-    const saved = await saveCurrentDraft({ silent: true });
-    if (saved) {
-      toast.success('작성 중인 글을 임시저장했습니다.');
-    }
-    router.back();
-  }, [isCreateMode, router, saveCurrentDraft]);
+  const {
+    handleCategoryChange,
+    handleCancel,
+  } = usePostNavigationActions({
+    router,
+    isCreateMode,
+    setCategoryId,
+    setCategoryIdInternal,
+    saveCurrentDraft,
+  });
 
   return (
     <Container className="mt-0">
@@ -1250,7 +732,6 @@ export default function PostEditForm({
         </ContainerTitle>
       </ContainerHeader>
 
-      {/* 而⑦뀗痢?*/}
       <ContainerContent className="pt-4">
         <form id="post-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {error && (
@@ -1274,7 +755,6 @@ export default function PostEditForm({
             />
           )}
 
-          {/* 寃뚯떆???좏깮 ?꾨뱶 (?앹꽦 紐⑤뱶?먯꽌留??쒖떆) */}
           {isCreateMode && (
             <div className="space-y-2">
               <label htmlFor="categoryId" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
@@ -1289,7 +769,6 @@ export default function PostEditForm({
             </div>
           )}
 
-          {/* ?쒕ぉ ?꾨뱶 - ?ル뵜 寃뚯떆?먯씠 ?꾨땺 ?뚮쭔 ?쒖떆 (?ル뵜? ?쒕ぉ ?먮룞 ?앹꽦) */}
           {!isHotdeal && (
             <div className="space-y-2">
               <label htmlFor="title" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">제목</label>
@@ -1306,7 +785,6 @@ export default function PostEditForm({
             </div>
           )}
 
-          {/* ?ル뵜 ?뺣낫 ?꾨뱶 - ?ル뵜 寃뚯떆湲?????쒖떆 (?앹꽦/?섏젙 紐⑤몢) */}
           {isHotdeal && (
             <HotdealFields
               dealUrl={dealUrl}
@@ -1326,144 +804,84 @@ export default function PostEditForm({
             />
           )}
 
-          <div ref={editorShellRef} className="relative space-y-2">
-            <label htmlFor="content" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">내용</label>
-            
-            {/* ?먮뵒???대컮 而댄룷?뚰듃 (踰꾪듉留? */}
-            <EditorToolbar
-              editor={editor}
-              extensionsLoaded={extensionsLoaded}
-              isImageUploading={isImageUploading}
-              isVideoUploading={isVideoUploading}
-              showLinkModal={showLinkModal}
-              showYoutubeModal={showYoutubeModal}
-              showMatchModal={showMatchModal}
-              showSocialModal={showSocialModal}
-              showTeamModal={showTeamModal}
-              showPlayerModal={showPlayerModal}
-              showTableModal={showTableModal}
-              showPollModal={showPollModal}
-              handleToggleDropdown={handleEditorToolToggle}
-              onImageClick={handleImageToolbarClick}
-              onVideoClick={handleVideoToolbarClick}
-              onToolbarLinkButtonRect={handleToolbarLinkButtonRect}
-              onToolbarYoutubeButtonRect={handleToolbarYoutubeButtonRect}
-              onToolbarSocialButtonRect={handleToolbarSocialButtonRect}
-              onToolbarMatchButtonRect={handleToolbarMatchButtonRect}
-              onToolbarTeamButtonRect={handleToolbarTeamButtonRect}
-              onToolbarPlayerButtonRect={handleToolbarPlayerButtonRect}
-              onToolbarTableButtonRect={handleToolbarTableButtonRect}
-              onToolbarPollButtonRect={handleToolbarPollButtonRect}
-            />
-            <input
-              ref={imageFileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageFileChange}
-            />
-            <input
-              ref={videoFileInputRef}
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleVideoFileChange}
-            />
-            <EditorToolbarPopovers
-              linkPopoverSource={linkPopoverSource}
-              showLinkModal={showLinkModal}
-              showYoutubeModal={showYoutubeModal}
-              showSocialModal={showSocialModal}
-              showMatchModal={showMatchModal}
-              showTableModal={showTableModal}
-              showPollModal={showPollModal}
-              showTeamModal={showTeamModal}
-              showPlayerModal={showPlayerModal}
-              toolbarLinkPopoverPosition={toolbarLinkPopoverPosition}
-              toolbarYoutubePopoverPosition={toolbarYoutubePopoverPosition}
-              toolbarSocialPopoverPosition={toolbarSocialPopoverPosition}
-              toolbarMatchPopoverPosition={toolbarMatchPopoverPosition}
-              toolbarTablePopoverPosition={toolbarTablePopoverPosition}
-              toolbarPollPopoverPosition={toolbarPollPopoverPosition}
-              toolbarTeamPopoverPosition={toolbarTeamPopoverPosition}
-              toolbarPlayerPopoverPosition={toolbarPlayerPopoverPosition}
-              linkState={linkState}
-              pollDraft={pollDraft}
-              closeLinkPopover={closeLinkPopover}
-              closeYoutubePopover={closeYoutubePopover}
-              closeSocialPopover={closeSocialPopover}
-              closeMatchPopover={closeMatchPopover}
-              closeTablePopover={closeTablePopover}
-              closePollPopover={closePollPopover}
-              closeTeamPopover={closeTeamPopover}
-              closePlayerPopover={closePlayerPopover}
-              handleAddLink={handleAddLink}
-              handleRemoveLink={handleRemoveLink}
-              handleAddYoutube={handleAddYoutube}
-              handleAddSocialEmbed={handleAddSocialEmbed}
-              handleAddMatch={handleAddMatch}
-              handleAddTable={(rows, cols) => handleAddTable(rows, cols, tableInsertionRangeRef.current ?? undefined)}
-              handleSavePollDraft={handleSavePollDraft}
-              handleSelectTeam={handleSelectTeam}
-              handleSelectPlayer={handleSelectPlayer}
-            />
-            <div
-              ref={setEditorViewportElement}
-              className="relative border border-black/7 dark:border-white/10 rounded-b-md h-[60vh] min-h-[420px] max-h-[680px] overflow-x-hidden overflow-y-auto overscroll-contain bg-white dark:bg-[#262626]"
-            >
-              {editor && (
-                <EditorBubbleMenus
-                  editor={editor}
-                  editorViewportElement={editorViewportElement}
-                  showPollModal={showPollModal}
-                  showTeamModal={showTeamModal}
-                  showPlayerModal={showPlayerModal}
-                  isPollBlockSelected={isPollBlockSelected}
-                  isEntityCardSelected={isEntityCardSelected}
-                  onOpenSelectedPollEditor={handleOpenSelectedPollEditor}
-                  onRemovePollDraft={handleRemovePollDraft}
-                  onOpenSelectedEntityEditor={handleOpenSelectedEntityEditor}
-                />
-              )}
-
-              <div className="sticky left-0 top-0 z-20 h-0 w-full overflow-visible">
-                {editor && tableMenuPosition && !showTableModal && (
-                  <TableFloatingMenu
-                    editor={editor}
-                    tableMenuPosition={tableMenuPosition}
-                    onUpdateAfterCommand={updateTableMenuAfterCommand}
-                    onDeleteTable={() => {
-                      editor.chain().focus().deleteTable().run();
-                      setTableMenuPosition(null);
-                    }}
-                  />
-                )}
-                {editor && (
-                  <SelectionFloatingTools
-                    editor={editor}
-                    selectionMenuPosition={selectionMenuPosition}
-                    selectionLinkPopoverPosition={selectionLinkPopoverPosition}
-                    showLinkModal={showLinkModal}
-                    linkPopoverSource={linkPopoverSource}
-                    linkState={linkState}
-                    openLinkPopover={openLinkPopover}
-                    closeLinkPopover={closeLinkPopover}
-                    handleAddLink={handleAddLink}
-                    handleRemoveLink={handleRemoveLink}
-                  />
-                )}
-              </div>
-              <EditorContent editor={editor} />
-            </div>
-
-          </div>
+          <PostEditorSection
+            editor={editor}
+            editorShellRef={editorShellRef}
+            setEditorViewportElement={setEditorViewportElement}
+            editorViewportElement={editorViewportElement}
+            extensionsLoaded={extensionsLoaded}
+            isImageUploading={isImageUploading}
+            isVideoUploading={isVideoUploading}
+            imageFileInputRef={imageFileInputRef}
+            videoFileInputRef={videoFileInputRef}
+            showLinkModal={showLinkModal}
+            showYoutubeModal={showYoutubeModal}
+            showMatchModal={showMatchModal}
+            showSocialModal={showSocialModal}
+            showTeamModal={showTeamModal}
+            showPlayerModal={showPlayerModal}
+            showTableModal={showTableModal}
+            showPollModal={showPollModal}
+            linkPopoverSource={linkPopoverSource}
+            toolbarLinkPopoverPosition={toolbarLinkPopoverPosition}
+            toolbarYoutubePopoverPosition={toolbarYoutubePopoverPosition}
+            toolbarSocialPopoverPosition={toolbarSocialPopoverPosition}
+            toolbarMatchPopoverPosition={toolbarMatchPopoverPosition}
+            toolbarTablePopoverPosition={toolbarTablePopoverPosition}
+            toolbarPollPopoverPosition={toolbarPollPopoverPosition}
+            toolbarTeamPopoverPosition={toolbarTeamPopoverPosition}
+            toolbarPlayerPopoverPosition={toolbarPlayerPopoverPosition}
+            selectionMenuPosition={selectionMenuPosition}
+            selectionLinkPopoverPosition={selectionLinkPopoverPosition}
+            tableMenuPosition={tableMenuPosition}
+            linkState={linkState}
+            pollDraft={pollDraft}
+            tableInsertionRangeRef={tableInsertionRangeRef}
+            handleEditorToolToggle={handleEditorToolToggle}
+            handleImageToolbarClick={handleImageToolbarClick}
+            handleVideoToolbarClick={handleVideoToolbarClick}
+            handleImageFileChange={handleImageFileChange}
+            handleVideoFileChange={handleVideoFileChange}
+            handleToolbarLinkButtonRect={handleToolbarLinkButtonRect}
+            handleToolbarYoutubeButtonRect={handleToolbarYoutubeButtonRect}
+            handleToolbarSocialButtonRect={handleToolbarSocialButtonRect}
+            handleToolbarMatchButtonRect={handleToolbarMatchButtonRect}
+            handleToolbarTeamButtonRect={handleToolbarTeamButtonRect}
+            handleToolbarPlayerButtonRect={handleToolbarPlayerButtonRect}
+            handleToolbarTableButtonRect={handleToolbarTableButtonRect}
+            handleToolbarPollButtonRect={handleToolbarPollButtonRect}
+            closeLinkPopover={closeLinkPopover}
+            closeYoutubePopover={closeYoutubePopover}
+            closeSocialPopover={closeSocialPopover}
+            closeMatchPopover={closeMatchPopover}
+            closeTablePopover={closeTablePopover}
+            closePollPopover={closePollPopover}
+            closeTeamPopover={closeTeamPopover}
+            closePlayerPopover={closePlayerPopover}
+            handleAddLink={handleAddLink}
+            handleRemoveLink={handleRemoveLink}
+            handleAddYoutube={handleAddYoutube}
+            handleAddSocialEmbed={handleAddSocialEmbed}
+            handleAddMatch={handleAddMatch}
+            handleAddTable={handleAddTable}
+            handleSavePollDraft={handleSavePollDraft}
+            handleSelectTeam={handleSelectTeam}
+            handleSelectPlayer={handleSelectPlayer}
+            isPollBlockSelected={isPollBlockSelected}
+            isEntityCardSelected={isEntityCardSelected}
+            handleOpenSelectedPollEditor={handleOpenSelectedPollEditor}
+            handleRemovePollDraft={handleRemovePollDraft}
+            handleOpenSelectedEntityEditor={handleOpenSelectedEntityEditor}
+            updateTableMenuAfterCommand={updateTableMenuAfterCommand}
+            setTableMenuPosition={setTableMenuPosition}
+            openLinkPopover={openLinkPopover}
+          />
 
           <RelatedConnectionsPanel
             relatedConnections={relatedConnections}
             autoTags={autoTags}
           />
 
-          {/* 踰꾪듉 ?곸뿭 */}
           <PostFormActions
             isSubmitting={isSubmitting}
             isCreateMode={isCreateMode}
