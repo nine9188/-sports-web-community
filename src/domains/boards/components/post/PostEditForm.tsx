@@ -24,6 +24,7 @@ import { useDraftManager } from './post-edit-form/hooks/useDraftManager';
 import { useMediaUpload } from './post-edit-form/hooks/useMediaUpload';
 import { useToolbarPopoverPosition } from './post-edit-form/hooks/useToolbarPopoverPosition';
 import { useSelectionPosition } from './post-edit-form/hooks/useSelectionPosition';
+import { usePollEditor } from './post-edit-form/hooks/usePollEditor';
 import { HotdealFields } from './post-edit-form/components/HotdealFields';
 import { DraftControls } from './post-edit-form/components/DraftControls';
 import { RelatedConnectionsPanel } from './post-edit-form/components/RelatedConnectionsPanel';
@@ -869,84 +870,18 @@ export default function PostEditForm({
     setShowPollModal(false);
   }, []);
 
-  const handleSavePollDraft = useCallback((nextPoll: PostPollDraft) => {
-    if (!editor) {
-      toast.error('에디터가 준비되지 않았습니다.');
-      return;
-    }
-
-    const existingPoll = findPollBlock(editor);
-    const attrs = {
-      question: nextPoll.question,
-      options: nextPoll.options,
-    };
-
-    if (existingPoll) {
-      editor
-        .chain()
-        .focus()
-        .command(({ tr }) => {
-          tr.setNodeMarkup(existingPoll.pos, undefined, attrs);
-          return true;
-        })
-        .run();
-    } else {
-      const pollContent = [
-        { type: 'pollBlock', attrs },
-        { type: 'paragraph' },
-      ];
-      const tableEnd = findCurrentTableEnd(editor);
-
-      if (tableEnd !== null) {
-        editor.chain().focus().insertContentAt(tableEnd, pollContent).run();
-      } else {
-        editor.chain().focus().insertContent(pollContent).run();
-      }
-    }
-
-    setPollDraft(nextPoll);
-    toast.success(existingPoll || pollDraft ? '투표가 수정되었습니다.' : '투표가 추가되었습니다.');
-  }, [editor, pollDraft]);
-
-  const handleRemovePollDraft = useCallback(() => {
-    if (editor) {
-      const existingPoll = findPollBlock(editor);
-      if (existingPoll) {
-        editor
-          .chain()
-          .focus()
-          .deleteRange({ from: existingPoll.pos, to: existingPoll.pos + existingPoll.nodeSize })
-          .run();
-      }
-    }
-
-    setPollDraft(null);
-    toast.success('투표가 삭제되었습니다.');
-  }, [editor]);
-
-  const handleOpenSelectedPollEditor = useCallback(() => {
-    if (!editor) return;
-
-    const existingPoll = findPollBlock(editor);
-    if (existingPoll) {
-      setPollDraft(existingPoll.draft);
-    }
-
-    const shell = editorShellRef.current;
-    const selectionRect = editor.view.coordsAtPos(editor.state.selection.from);
-    const boundary = shell?.getBoundingClientRect();
-    const padding = 8;
-    const width = Math.min(POLL_POPOVER_WIDTH, Math.max(120, (boundary?.width ?? POLL_POPOVER_WIDTH) - padding * 2));
-
-    setToolbarPollPopoverPosition({
-      top: boundary ? selectionRect.bottom - boundary.top + 6 : 0,
-      left: boundary
-        ? Math.min(Math.max(selectionRect.left - boundary.left, padding), Math.max(padding, boundary.width - width - padding))
-        : 12,
-      width,
-    });
-    setShowPollModal(true);
-  }, [editor]);
+  const {
+    handleSavePollDraft,
+    handleRemovePollDraft,
+    handleOpenSelectedPollEditor,
+  } = usePollEditor({
+    editor,
+    pollDraft,
+    editorShellRef,
+    setPollDraft,
+    setToolbarPollPopoverPosition,
+    setShowPollModal,
+  });
 
   const handleOpenSelectedEntityEditor = useCallback(() => {
     if (!editor || !(editor.state.selection instanceof NodeSelection)) return;
