@@ -206,28 +206,27 @@ export async function uploadPostImageFile(
 
     const supabase = getSupabaseBrowser();
 
-    logImageDebug('session check start');
+    logImageDebug('user check start');
 
-    const sessionRequest = supabase.auth.getSession();
+    const userRequest = supabase.auth.getUser();
     
-    const { data: sessionData, error: sessionError } = await withTimeout<
-      Awaited<typeof sessionRequest>
+    const { data: userData, error: userError } = await withTimeout<
+      Awaited<typeof userRequest>
     >(
-      sessionRequest,
+      userRequest,
       SESSION_TIMEOUT_MS,
-      '로그인 세션 확인 시간이 초과되었습니다. 새로고침 후 다시 시도해주세요.'
+      '로그인 사용자 확인 시간이 초과되었습니다. 새로고침 후 다시 시도해주세요.'
     );
     
-    const user = sessionData.session?.user;
-
-    logImageDebug('session check result', {
-      hasSession: !!sessionData.session,
+    const user = userData.user;
+    
+    logImageDebug('user check result', {
       hasUser: !!user,
       userId: user?.id,
-      sessionError,
+      userError,
     });
-
-    if (sessionError || !user) {
+    
+    if (userError || !user) {
       throw new Error('로그인 상태를 확인해주세요.');
     }
 
