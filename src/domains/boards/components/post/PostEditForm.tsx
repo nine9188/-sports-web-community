@@ -13,19 +13,18 @@ import BoardSelector from '@/domains/boards/components/createnavigation/BoardSel
 import EditorToolbar from '@/domains/boards/components/createnavigation/EditorToolbar';
 import { toast } from 'sonner';
 import {
-  createPost,
   deletePostDraft,
-  listPostDrafts,
-  savePostDraft,
-  updatePost,
   type PostDraft,
-  type PostDraftDealInfo,
 } from '@/domains/boards/actions/posts/index';
 import { Board } from '@/domains/boards/types/board';
-import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button, NativeSelect } from '@/shared/components/ui';
+import { Container, ContainerHeader, ContainerTitle, ContainerContent, Button } from '@/shared/components/ui';
 import { useEditorHandlers } from './post-edit-form/hooks';
-import { uploadPostImageFile } from './post-edit-form/utils/uploadPostImageFile';
-import { uploadPostVideoFile } from './post-edit-form/utils/uploadPostVideoFile';
+import { usePostSubmit } from './post-edit-form/hooks/usePostSubmit';
+import { useDraftManager } from './post-edit-form/hooks/useDraftManager';
+import { useMediaUpload } from './post-edit-form/hooks/useMediaUpload';
+import { useToolbarPopoverPosition } from './post-edit-form/hooks/useToolbarPopoverPosition';
+import { useSelectionPosition } from './post-edit-form/hooks/useSelectionPosition';
+import { HotdealFields } from './post-edit-form/components/HotdealFields';
 import { POPULAR_STORES, SHIPPING_OPTIONS, DealInfo } from '../../types/hotdeal';
 import { detectStoreFromUrl, isHotdealBoard, formatPrice } from '../../utils/hotdeal';
 import { extractAutoTagsFromContent } from '../../utils/post/extractAutoTagsFromContent';
@@ -41,7 +40,6 @@ import { EntityPickerForm } from '@/domains/boards/components/entity/EntityPicke
 import type { PostPollDraft } from '@/domains/boards/types/poll';
 import { PollBlockExtension } from '@/shared/components/editor/tiptap/PollBlockExtension';
 import { Bold, CalendarDays, Heading2, Heading3, Italic, Link as LinkIcon, Shield, Trash2, UserRound } from 'lucide-react';
-import { trackEvent } from '@/shared/lib/gtag';
 
 // Hotdeal options
 const STORE_OPTIONS = POPULAR_STORES.map(storeName => ({ value: storeName, label: storeName }));
@@ -61,15 +59,6 @@ const POLL_POPOVER_WIDTH = 360;
 const TABLE_MENU_WIDTH = 274;
 const TABLE_MENU_HEIGHT = 42;
 const EDITOR_EMPTY_PLACEHOLDER = '자유롭게 팬들과 소통하세요!\n이미지, 링크, 경기, 팀/선수를 본문에 추가할 수 있습니다.\n도박, 불법 홍보 관련 내용은 작성할 수 없습니다.\n욕설, 도배, 허위 정보는 삭제될 수 있습니다.';
-const IMAGE_FILE_EXTENSIONS = /\.(avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i;
-const SOCIAL_IMAGE_PAGE_HOSTS = new Set([
-  'x.com',
-  'www.x.com',
-  'twitter.com',
-  'www.twitter.com',
-  'instagram.com',
-  'www.instagram.com',
-]);
 type SelectionPositionAnchor = {
   from: number;
   to: number;
@@ -177,39 +166,7 @@ function expandEntityCardGroupsInContent(value: unknown): unknown {
   return value;
 }
 
-function sanitizeDraftContent(value: unknown): unknown {
-  if (!value || typeof value !== 'object') return value;
 
-  if (Array.isArray(value)) {
-    return value
-      .map(sanitizeDraftContent)
-      .filter((item) => item !== null);
-  }
-
-  const node = value as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
-
-  if (node.type === 'teamCard' && !node.attrs?.teamData) return null;
-  if (node.type === 'playerCard' && !node.attrs?.playerData) return null;
-
-  if (Array.isArray(node.content)) {
-    const content = sanitizeDraftContent(node.content) as unknown[];
-
-    if (node.type === 'entityCardGroup' && content.length === 0) {
-      return null;
-    }
-
-    return {
-      ...node,
-      content,
-    };
-  }
-
-  return value;
-}
-
-function toPlainJson(value: unknown): unknown {
-  return JSON.parse(JSON.stringify(value));
-}
 
 function RelatedConnectionIcon({ type }: { type: RelatedPostCta['type'] }) {
   if (type === 'match') return <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />;
@@ -232,27 +189,6 @@ function formatDraftTime(value: string | null) {
   }
 }
 
-function hasDraftBody(title: string, editor: Editor | null, isHotdeal: boolean, hotdeal: {
-  dealUrl: string;
-  store: string;
-  productName: string;
-  price: string;
-  originalPrice: string;
-  shipping: string;
-}) {
-  return Boolean(
-    title.trim() ||
-    (editor && !editor.isEmpty) ||
-    (isHotdeal && (
-      hotdeal.dealUrl.trim() ||
-      hotdeal.store ||
-      hotdeal.productName.trim() ||
-      hotdeal.price ||
-      hotdeal.originalPrice ||
-      hotdeal.shipping
-    ))
-  );
-}
 
 function findCurrentTableEnd(editor: Editor) {
   const { $from } = editor.state.selection;
@@ -768,244 +704,50 @@ export default function PostEditForm({
     extensionsLoaded
   });
 
-  const applyDraftToEditor = useCallback((draft: PostDraft) => {
-    if (!editor) return;
-
-    const sanitizedContent = sanitizeDraftContent(draft.content);
-    setTitle(draft.title);
-    editor.commands.setContent(sanitizedContent as Content, true);
-
-    const draftDealInfo = draft.dealInfo;
-    if (draftDealInfo) {
-      setDealUrl(typeof draftDealInfo.deal_url === 'string' ? draftDealInfo.deal_url : '');
-      setStore(typeof draftDealInfo.store === 'string' ? draftDealInfo.store : '');
-      setProductName(typeof draftDealInfo.product_name === 'string' ? draftDealInfo.product_name : '');
-      setPrice(draftDealInfo.price !== undefined && draftDealInfo.price !== null ? String(draftDealInfo.price) : '');
-      setOriginalPrice(
-        draftDealInfo.original_price !== undefined && draftDealInfo.original_price !== null
-          ? String(draftDealInfo.original_price)
-          : ''
-      );
-      setShipping(typeof draftDealInfo.shipping === 'string' ? draftDealInfo.shipping : '');
-    }
-
-    setPollDraft(draft.poll);
-
-    const editorJson = editor.getJSON();
-    const jsonContent = JSON.stringify(editorJson);
-    setContent(jsonContent);
-    setAutoTags(extractAutoTagsFromContent(editorJson));
-    setRelatedConnections(extractRelatedCtasFromContent(editorJson));
-    setCurrentDraftId(draft.id);
-    setShowDraftList(false);
-    setDraftSavedAt(draft.updatedAt);
-    setDraftStatus('saved');
-    lastAutoSavedDraftPayloadRef.current = JSON.stringify({
-      draftId: draft.id,
-      boardId: draft.boardId,
-      title: draft.title,
-      content: sanitizedContent,
-      dealInfo: draft.dealInfo,
-      poll: draft.poll,
-    });
-    toast.success('임시저장을 불러왔습니다.');
-  }, [editor]);
-
-  const restoreDraft = useCallback((draft: PostDraft) => {
-    if (!editor) return;
-
-    if (!extensionsLoaded) {
-      pendingRestoreDraftRef.current = draft;
-      void ensureAdditionalExtensions();
-      return;
-    }
-
-    applyDraftToEditor(draft);
-  }, [applyDraftToEditor, editor, ensureAdditionalExtensions, extensionsLoaded]);
-
-  useEffect(() => {
-    if (!editor || !extensionsLoaded || !pendingRestoreDraftRef.current) return;
-
-    const draft = pendingRestoreDraftRef.current;
-    pendingRestoreDraftRef.current = null;
-    applyDraftToEditor(draft);
-  }, [applyDraftToEditor, editor, extensionsLoaded]);
-
-  const refreshDrafts = useCallback(async () => {
-    if (!categoryId) return;
-
-    const result = await listPostDrafts(categoryId);
-    if (!result.success) {
-      toast.error(result.error);
-      return;
-    }
-
-    setDrafts(result.drafts);
-  }, [categoryId]);
-
-  const buildCurrentDraftDealInfo = useCallback((): PostDraftDealInfo | null => {
-    if (!isHotdeal) return null;
-
-    return {
-      deal_url: dealUrl.trim(),
-      store,
-      product_name: productName.trim(),
-      price,
-      original_price: originalPrice,
-      shipping,
-    };
-  }, [dealUrl, isHotdeal, originalPrice, price, productName, shipping, store]);
-
-  const buildCurrentDraftPayload = useCallback(() => {
-    if (!editor || !categoryId) return null;
-
-    return {
-      draftId: currentDraftId,
-      boardId: categoryId,
-      title: title.trim(),
-      content: toPlainJson(editor.getJSON()),
-      dealInfo: buildCurrentDraftDealInfo(),
-      poll: pollDraft,
-    };
-  }, [buildCurrentDraftDealInfo, categoryId, currentDraftId, editor, pollDraft, title]);
-
-  const saveCurrentDraft = useCallback(async (options?: { silent?: boolean }) => {
-    if (!editor || !categoryId) return false;
-    const hotdealDraft = { dealUrl, store, productName, price, originalPrice, shipping };
-    if (!hasDraftBody(title, editor, isHotdeal, hotdealDraft)) {
-      if (!options?.silent) toast.error('저장할 내용이 없습니다.');
-      return false;
-    }
-
-    setDraftStatus('saving');
-    const payload = buildCurrentDraftPayload();
-    if (!payload) return false;
-
-    const result = await savePostDraft(payload);
-
-    if (!result.success) {
-      setDraftStatus('error');
-      if (!options?.silent) toast.error(result.error);
-      return false;
-    }
-
-    const savedAt = result.draft?.updatedAt || new Date().toISOString();
-    if (result.draft?.id) setCurrentDraftId(result.draft.id);
-    setDraftSavedAt(savedAt);
-    setDraftStatus('saved');
-    if (result.draft) {
-      setDrafts((items) => [result.draft!, ...items.filter((item) => item.id !== result.draft!.id)]);
-    }
-    lastAutoSavedDraftPayloadRef.current = JSON.stringify({
-      ...payload,
-      draftId: result.draft?.id || payload.draftId,
-    });
-    if (!options?.silent) toast.success('임시저장했습니다.');
-    return true;
-  }, [
-    categoryId,
-    buildCurrentDraftPayload,
-    dealUrl,
+  const {
+    restoreDraft,
+    saveCurrentDraft,
+    handleOpenDraftList,
+    handleDeleteDraft,
+  } = useDraftManager({
     editor,
-    isHotdeal,
-    originalPrice,
-    pollDraft,
-    price,
-    productName,
-    shipping,
-    store,
+    categoryId,
     title,
-  ]);
-
-  const handleOpenDraftList = useCallback(async () => {
-    if (!isCreateMode) return;
-    await refreshDrafts();
-    setShowDraftList((value) => !value);
-  }, [isCreateMode, refreshDrafts]);
-
-  const handleDeleteDraft = useCallback(async (draftId: string) => {
-    const result = await deletePostDraft(draftId);
-    if (!result.success) {
-      toast.error(result.error);
-      return;
-    }
-
-    setDrafts((items) => items.filter((item) => item.id !== draftId));
-    if (currentDraftId === draftId) {
-      setCurrentDraftId(null);
-      setDraftSavedAt(null);
-      setDraftStatus('idle');
-    }
-    toast.success('임시저장을 삭제했습니다.');
-  }, [currentDraftId]);
-
-  useEffect(() => {
-    if (!isCreateMode) return;
-    setCurrentDraftId(null);
-    setDraftSavedAt(null);
-    setDraftStatus('idle');
-    lastAutoSavedDraftPayloadRef.current = null;
-    setShowDraftList(false);
-    setDrafts([]);
-  }, [categoryId, isCreateMode]);
-
-  useEffect(() => {
-    if (!isCreateMode || !editor || !categoryId || isSubmitting) return;
-
-    const hotdealDraft = { dealUrl, store, productName, price, originalPrice, shipping };
-    if (!hasDraftBody(title, editor, isHotdeal, hotdealDraft)) return;
-
-    const payload = buildCurrentDraftPayload();
-    if (!payload) return;
-
-    const serializedPayload = JSON.stringify(payload);
-    if (serializedPayload === lastAutoSavedDraftPayloadRef.current) return;
-
-    const timeoutId = window.setTimeout(() => {
-      void saveCurrentDraft({ silent: true });
-    }, 4000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [
-    buildCurrentDraftPayload,
-    categoryId,
     content,
-    dealUrl,
-    editor,
     isCreateMode,
     isHotdeal,
     isSubmitting,
-    originalPrice,
-    price,
-    productName,
-    saveCurrentDraft,
-    shipping,
-    store,
-    title,
-  ]);
-
-  useEffect(() => {
-    if (!isCreateMode) return;
-
-    const saveBeforeLeaving = () => {
-      void saveCurrentDraft({ silent: true });
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        saveBeforeLeaving();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', saveBeforeLeaving);
-    window.addEventListener('beforeunload', saveBeforeLeaving);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', saveBeforeLeaving);
-      window.removeEventListener('beforeunload', saveBeforeLeaving);
-    };
-  }, [isCreateMode, saveCurrentDraft]);
+    extensionsLoaded,
+    currentDraftId,
+    pollDraft,
+    hotdeal: {
+      dealUrl,
+      store,
+      productName,
+      price,
+      originalPrice,
+      shipping,
+    },
+    pendingRestoreDraftRef,
+    lastAutoSavedDraftPayloadRef,
+    ensureAdditionalExtensions,
+    setTitle,
+    setContent,
+    setDealUrl,
+    setStore,
+    setProductName,
+    setPrice,
+    setOriginalPrice,
+    setShipping,
+    setPollDraft,
+    setAutoTags,
+    setRelatedConnections,
+    setDrafts,
+    setShowDraftList,
+    setCurrentDraftId,
+    setDraftStatus,
+    setDraftSavedAt,
+  });
 
   useEffect(() => {
     if (!editor || pollDraftRef.current) return;
@@ -1265,284 +1007,46 @@ export default function PostEditForm({
     await handleAddPlayer(...args);
   }, [handleAddPlayer, replaceSelectedEntityIfNeeded]);
 
-  const handleImageToolbarClick = useCallback((options?: { fromUrlPrompt?: boolean }) => {
-    if (isImageUploading) return;
-
-    moveCursorAfterSelectedNode();
-    imageInsertionPositionRef.current = getCurrentInsertionPosition();
-    closeLinkPopover();
-    closeYoutubePopover();
-    closeSocialPopover();
-    closeMatchPopover();
-    closeTeamPopover();
-    closePlayerPopover();
-    closeTablePopover();
-    closePollPopover();
-    if (options?.fromUrlPrompt) {
-      const imageUrl = window.prompt('삽입할 이미지 URL을 입력하세요.');
-      const trimmedImageUrl = imageUrl?.trim();
-
-      if (!trimmedImageUrl) {
-        imageInsertionPositionRef.current = null;
-        return;
-      }
-
-      try {
-        const parsedUrl = new URL(trimmedImageUrl);
-        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-          toast.error('http 또는 https 이미지 URL만 삽입할 수 있습니다.');
-          imageInsertionPositionRef.current = null;
-          return;
-        }
-
-        if (SOCIAL_IMAGE_PAGE_HOSTS.has(parsedUrl.hostname.toLowerCase())) {
-          toast.error('X/인스타 링크는 이미지 파일 URL이 아닙니다. 소셜 버튼을 쓰거나 이미지를 저장해서 업로드해주세요.');
-          imageInsertionPositionRef.current = null;
-          return;
-        }
-
-        if (!IMAGE_FILE_EXTENSIONS.test(parsedUrl.pathname)) {
-          toast.error('이미지 URL은 jpg, png, gif, webp 같은 직접 파일 주소만 삽입할 수 있습니다.');
-          imageInsertionPositionRef.current = null;
-          return;
-        }
-      } catch {
-        toast.error('올바른 이미지 URL을 입력해주세요.');
-        imageInsertionPositionRef.current = null;
-        return;
-      }
-
-      handleAddImage(trimmedImageUrl, undefined, imageInsertionPositionRef.current);
-      imageInsertionPositionRef.current = null;
-      return;
-    }
-
-    imageFileInputRef.current?.click();
-  }, [
-    closeLinkPopover,
-    closeMatchPopover,
-    closePlayerPopover,
-    closePollPopover,
-    closeSocialPopover,
-    closeTablePopover,
-    closeTeamPopover,
-    closeYoutubePopover,
-    getCurrentInsertionPosition,
-    handleAddImage,
+  const {
+    handleImageToolbarClick,
+    handleImageFileChange,
+    handleVideoToolbarClick,
+    handleVideoFileChange,
+  } = useMediaUpload({
+    editor,
     isImageUploading,
-    moveCursorAfterSelectedNode,
-  ]);
-
-  const handleImageFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = '';
-
-    if (!file) return;
-    if (!editor) {
-      toast.error('에디터가 준비되지 않았습니다.');
-      return;
-    }
-
-    setIsImageUploading(true);
-
-    try {
-      const { publicUrl, altText } = await uploadPostImageFile(file);
-      handleAddImage(publicUrl, altText, imageInsertionPositionRef.current);
-    } catch (error) {
-      console.error('이미지 업로드 오류:', error);
-      toast.error(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.');
-    } finally {
-      imageInsertionPositionRef.current = null;
-      setIsImageUploading(false);
-    }
-  }, [editor, handleAddImage]);
-
-  const handleVideoToolbarClick = useCallback(() => {
-    if (isVideoUploading) return;
-
-    moveCursorAfterSelectedNode();
-    videoInsertionPositionRef.current = getCurrentInsertionPosition();
-    closeLinkPopover();
-    closeYoutubePopover();
-    closeSocialPopover();
-    closeMatchPopover();
-    closeTeamPopover();
-    closePlayerPopover();
-    closeTablePopover();
-    closePollPopover();
-    void ensureAdditionalExtensions();
-    videoFileInputRef.current?.click();
-  }, [
-    closeLinkPopover,
-    closeMatchPopover,
-    closePlayerPopover,
-    closePollPopover,
-    closeSocialPopover,
-    closeTablePopover,
-    closeTeamPopover,
-    closeYoutubePopover,
-    ensureAdditionalExtensions,
-    getCurrentInsertionPosition,
     isVideoUploading,
+    imageFileInputRef,
+    videoFileInputRef,
+    imageInsertionPositionRef,
+    videoInsertionPositionRef,
     moveCursorAfterSelectedNode,
-  ]);
+    getCurrentInsertionPosition,
+    closeLinkPopover,
+    closeYoutubePopover,
+    closeSocialPopover,
+    closeMatchPopover,
+    closeTeamPopover,
+    closePlayerPopover,
+    closeTablePopover,
+    closePollPopover,
+    ensureAdditionalExtensions,
+    handleAddImage,
+    handleAddVideo,
+    setIsImageUploading,
+    setIsVideoUploading,
+  });
 
-  const handleVideoFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = '';
-
-    if (!file) return;
-    if (!editor) {
-      toast.error('에디터가 준비되지 않았습니다.');
-      return;
-    }
-
-    setIsVideoUploading(true);
-
-    try {
-      const [{ publicUrl, caption }] = await Promise.all([
-        uploadPostVideoFile(file),
-        ensureAdditionalExtensions(),
-      ]);
-      await handleAddVideo(publicUrl, caption, videoInsertionPositionRef.current);
-    } catch (error) {
-      console.error('동영상 업로드 오류:', error);
-      toast.error(error instanceof Error ? error.message : '동영상 업로드에 실패했습니다.');
-    } finally {
-      videoInsertionPositionRef.current = null;
-      setIsVideoUploading(false);
-    }
-  }, [editor, ensureAdditionalExtensions, handleAddVideo]);
-
-  const calculateSelectionPopoverPosition = useCallback((
-    preferredWidth: number,
-    estimatedHeight: number,
-    options: { anchor?: SelectionPositionAnchor | null; useDomSelection?: boolean; horizontalAlign?: 'center' | 'end' } = {}
-  ) => {
-    if (!editor || !editorViewportElement) return null;
-
-    const docSize = editor.state.doc.content.size;
-    const anchor = options.anchor ?? editor.state.selection;
-    const from = Math.min(Math.max(anchor.from, 0), docSize);
-    const to = Math.min(Math.max(anchor.to, from), docSize);
-    const boundary = editorViewportElement.getBoundingClientRect();
-    const padding = 8;
-    const scrollbarWidth = Math.max(0, editorViewportElement.offsetWidth - editorViewportElement.clientWidth);
-    const contentRight = boundary.right - scrollbarWidth;
-    const contentBottom = boundary.bottom;
-    const contentWidth = editorViewportElement.clientWidth;
-    const width = Math.min(preferredWidth, Math.max(120, contentWidth - padding * 2));
-    const start = editor.view.coordsAtPos(from);
-    const end = editor.view.coordsAtPos(to);
-    const domSelection = options.useDomSelection === false ? null : window.getSelection();
-    const rects = domSelection && domSelection.rangeCount > 0
-      ? Array.from(domSelection.getRangeAt(0).getClientRects()).filter((rect) => {
-          return rect.width > 0
-            && rect.height > 0
-            && rect.bottom >= boundary.top
-            && rect.top <= boundary.bottom
-            && rect.right >= boundary.left
-            && rect.left <= contentRight;
-        })
-      : [];
-    const anchorRect = rects.length > 0
-      ? rects[rects.length - 1]
-      : {
-          left: Math.min(start.left, end.left),
-          right: Math.max(start.right, end.right),
-          top: Math.min(start.top, end.top),
-          bottom: Math.max(start.bottom, end.bottom),
-        };
-    const selectionRect = {
-      left: Math.max(anchorRect.left, boundary.left + padding),
-      right: Math.min(anchorRect.right, contentRight - padding),
-      top: anchorRect.top,
-      bottom: anchorRect.bottom,
-    };
-
-    if (selectionRect.bottom < boundary.top || selectionRect.top > contentBottom) {
-      return null;
-    }
-
-    const selectionCenterX = selectionRect.left + (selectionRect.right - selectionRect.left) / 2;
-    const preferredLeft = options.horizontalAlign === 'end'
-      ? selectionRect.right - boundary.left - width
-      : selectionCenterX - boundary.left - width / 2;
-    const minLeft = padding;
-    const maxLeft = contentWidth - width - padding;
-    const left = Math.min(Math.max(preferredLeft, minLeft), Math.max(minLeft, maxLeft));
-    const aboveTop = selectionRect.top - boundary.top - estimatedHeight - padding;
-    const belowTop = selectionRect.bottom - boundary.top + padding;
-    const minTop = padding;
-    const maxTop = editorViewportElement.clientHeight - estimatedHeight - padding;
-    const top = aboveTop >= minTop
-      ? aboveTop
-      : Math.min(Math.max(belowTop, minTop), Math.max(minTop, maxTop));
-
-    return { top, left };
-  }, [editor, editorViewportElement]);
-
-  const calculateSelectionLinkPopoverPosition = useCallback(() => {
-    const anchor = linkPopoverAnchorRef.current;
-    if (anchor?.popoverContentTop !== undefined && anchor.popoverLeft !== undefined && editorViewportElement) {
-      const padding = 8;
-      const contentWidth = editorViewportElement.clientWidth;
-      const width = Math.min(LINK_POPOVER_WIDTH, Math.max(120, contentWidth - padding * 2));
-      const maxLeft = contentWidth - width - padding;
-      const top = anchor.popoverContentTop - editorViewportElement.scrollTop;
-
-      if (top + LINK_POPOVER_HEIGHT < 0 || top > editorViewportElement.clientHeight) {
-        return null;
-      }
-
-      return {
-        top,
-        left: Math.min(Math.max(anchor.popoverLeft, padding), Math.max(padding, maxLeft)),
-      };
-    }
-
-    return calculateSelectionPopoverPosition(LINK_POPOVER_WIDTH, LINK_POPOVER_HEIGHT, {
-      anchor,
-      useDomSelection: false,
-      horizontalAlign: 'end',
-    });
-  }, [calculateSelectionPopoverPosition, editorViewportElement]);
-
-  const calculateSelectionMenuPosition = useCallback(() => {
-    return calculateSelectionPopoverPosition(SELECTION_MENU_WIDTH, SELECTION_MENU_HEIGHT, {
-      useDomSelection: true,
-      horizontalAlign: 'end',
-    });
-  }, [calculateSelectionPopoverPosition]);
-
-  const calculateTableMenuPosition = useCallback(() => {
-    if (!editor || !editorViewportElement || !editor.isActive('table')) return null;
-
-    const boundary = editorViewportElement.getBoundingClientRect();
-    const padding = 8;
-    const width = Math.min(TABLE_MENU_WIDTH, Math.max(160, editorViewportElement.clientWidth - padding * 2));
-    const domAtPos = editor.view.domAtPos(editor.state.selection.from);
-    const sourceNode = domAtPos.node.nodeType === Node.ELEMENT_NODE
-      ? domAtPos.node as Element
-      : domAtPos.node.parentElement;
-    const tableElement = sourceNode?.closest('table');
-
-    if (!tableElement) return null;
-
-    const rect = tableElement.getBoundingClientRect();
-    const contentWidth = editorViewportElement.clientWidth;
-    const preferredLeft = rect.left - boundary.left;
-    const maxLeft = contentWidth - width - padding;
-    const left = Math.min(Math.max(preferredLeft, padding), Math.max(padding, maxLeft));
-    const aboveTop = rect.top - boundary.top - TABLE_MENU_HEIGHT - padding;
-    const belowTop = rect.bottom - boundary.top + padding;
-    const maxTop = editorViewportElement.clientHeight - TABLE_MENU_HEIGHT - padding;
-    const top = aboveTop >= padding
-      ? aboveTop
-      : Math.min(Math.max(belowTop, padding), Math.max(padding, maxTop));
-
-    return { top, left };
-  }, [editor, editorViewportElement]);
+  const {
+    calculateSelectionPopoverPosition,
+    calculateSelectionLinkPopoverPosition,
+    calculateSelectionMenuPosition,
+    calculateTableMenuPosition,
+  } = useSelectionPosition({
+    editor,
+    editorViewportElement,
+    linkPopoverAnchorRef,
+  });
 
   const updateTableMenuAfterCommand = useCallback((nearPosition: number, restoreSelection = false) => {
     window.requestAnimationFrame(() => {
@@ -1591,57 +1095,32 @@ export default function PostEditForm({
     setShowLinkModal(true);
   }, [calculateSelectionPopoverPosition, editor, editorViewportElement, setShowLinkModal]);
 
-  const calculateToolbarPopoverPosition = useCallback((rect: DOMRect, preferredWidth: number) => {
-    const shell = editorShellRef.current;
-    if (!shell) return null;
-
-    const boundary = shell.getBoundingClientRect();
-    const padding = 8;
-    const width = Math.min(preferredWidth, Math.max(120, boundary.width - padding * 2));
-    const left = Math.min(
-      Math.max(rect.left - boundary.left, padding),
-      Math.max(padding, boundary.width - width - padding)
-    );
-    const top = rect.bottom - boundary.top + 6;
-
-    return { top, left, width };
-  }, []);
-
-  const handleToolbarLinkButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarLinkPopoverPosition(calculateToolbarPopoverPosition(rect, LINK_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarYoutubeButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarYoutubePopoverPosition(calculateToolbarPopoverPosition(rect, YOUTUBE_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarSocialButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarSocialPopoverPosition(calculateToolbarPopoverPosition(rect, SOCIAL_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarMatchButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarMatchPopoverPosition(calculateToolbarPopoverPosition(rect, MATCH_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarTeamButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarTeamPopoverPosition(calculateToolbarPopoverPosition(rect, TEAM_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarPlayerButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarPlayerPopoverPosition(calculateToolbarPopoverPosition(rect, PLAYER_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
-
-  const handleToolbarTableButtonRect = useCallback((rect: DOMRect) => {
-    if (editor) {
-      const { from, to } = editor.state.selection;
-      tableInsertionRangeRef.current = { from, to };
-    }
-    setToolbarTablePopoverPosition(calculateToolbarPopoverPosition(rect, TABLE_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition, editor]);
-
-  const handleToolbarPollButtonRect = useCallback((rect: DOMRect) => {
-    setToolbarPollPopoverPosition(calculateToolbarPopoverPosition(rect, POLL_POPOVER_WIDTH));
-  }, [calculateToolbarPopoverPosition]);
+  const {
+    handleToolbarLinkButtonRect,
+    handleToolbarYoutubeButtonRect,
+    handleToolbarSocialButtonRect,
+    handleToolbarMatchButtonRect,
+    handleToolbarTeamButtonRect,
+    handleToolbarPlayerButtonRect,
+    handleToolbarTableButtonRect,
+    handleToolbarPollButtonRect,
+  } = useToolbarPopoverPosition({
+    editorShellRef,
+    setToolbarLinkPopoverPosition,
+    setToolbarYoutubePopoverPosition,
+    setToolbarSocialPopoverPosition,
+    setToolbarMatchPopoverPosition,
+    setToolbarTeamPopoverPosition,
+    setToolbarPlayerPopoverPosition,
+    setToolbarTablePopoverPosition,
+    setToolbarPollPopoverPosition,
+    onTableButtonRect: () => {
+      if (editor) {
+        const { from, to } = editor.state.selection;
+        tableInsertionRangeRef.current = { from, to };
+      }
+    },
+  });
 
   useEffect(() => {
     if (!showLinkModal) return;
@@ -1803,195 +1282,23 @@ export default function PostEditForm({
   }, [setCategoryId]);
 
   // ?ル뵜 ?뺣낫 ?앹꽦 ?ы띁 (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
-  const buildDealInfo = useCallback((forUpdate = false): DealInfo => {
-    const { store, productName, price, originalPrice, shipping, dealUrl } = hotdealStateRef.current;
-    return {
-      store,
-      product_name: productName.trim(),
-      price: parseFloat(price),
-      original_price: originalPrice ? parseFloat(originalPrice) : undefined,
-      shipping,
-      deal_url: dealUrl.trim(),
-      is_ended: forUpdate ? (initialDealInfo?.is_ended || false) : false,
-      ...(forUpdate && initialDealInfo?.ended_reason && { ended_reason: initialDealInfo.ended_reason }),
-      ...(forUpdate && initialDealInfo?.ended_at && { ended_at: initialDealInfo.ended_at }),
-    };
-  }, [initialDealInfo]);
-
-  // ???좏슚??寃??(refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
-  const validateForm = useCallback((): boolean => {
-    const { title, content, categoryId } = formStateRef.current;
-    const { dealUrl, store, productName, price, shipping } = hotdealStateRef.current;
-
-    // ?쒕ぉ 寃利?(?ル뵜 寃뚯떆?먯? ?쒕ぉ ?먮룞 ?앹꽦)
-    if (!title.trim() && !(isCreateMode && isHotdeal)) {
-      toast.error('제목을 입력해주세요.');
-      return false;
-    }
-
-    if (!content || content === '<p></p>') {
-      toast.error('내용을 입력해주세요.');
-      return false;
-    }
-
-    // ?앹꽦 紐⑤뱶 ?꾩슜 寃利?
-    if (isCreateMode) {
-      if (!categoryId) {
-        toast.error('게시판을 선택해주세요.');
-        return false;
-      }
-
-      // 理쒖긽??寃뚯떆?먯뿉 ?섏쐞媛 ?덉쑝硫??섏쐞 ?좏깮 ?꾩닔
-      const board = allBoardsFlat.find(b => b.id === categoryId);
-      if (board && board.parent_id === null) {
-        const hasChildren = allBoardsFlat.some(b => b.parent_id === categoryId);
-        if (hasChildren) {
-          toast.error('하위 게시판을 선택해주세요.');
-          return false;
-        }
-      }
-    }
-
-    // ?ル뵜 寃뚯떆湲 寃利?
-    if (isHotdeal) {
-      if (!dealUrl.trim()) {
-        toast.error('상품 링크를 입력해주세요.');
-        return false;
-      }
-      if (!store) {
-        toast.error('쇼핑몰을 선택해주세요.');
-        return false;
-      }
-      if (!productName.trim()) {
-        toast.error('상품명을 입력해주세요.');
-        return false;
-      }
-      if (!price || parseFloat(price) < 0) {
-        toast.error('올바른 가격을 입력해주세요.');
-        return false;
-      }
-      if (!shipping) {
-        toast.error('배송비를 선택해주세요.');
-        return false;
-      }
-    }
-
-    return true;
-  }, [isCreateMode, isHotdeal, allBoardsFlat]);
-
-  // ?먮윭 ?묐떟 泥섎━ ?ы띁
-  const handleErrorResponse = useCallback((errorMsg: string, defaultMessage: string) => {
-    // 濡쒓렇???꾩슂 ?먮윭??寃쎌슦 濡쒓렇???섏씠吏濡??대룞
-    if (errorMsg.includes('로그인') || errorMsg.includes('인증')) {
-      toast.error('로그인이 필요합니다.');
-      router.push('/signin');
-      return;
-    }
-    setError(errorMsg || defaultMessage);
-    toast.error(errorMsg || defaultMessage);
-    setIsSubmitting(false);
-  }, [router]);
-
-  // 寃뚯떆湲 ?앹꽦 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
-  const handleCreatePost = useCallback(async () => {
-    const { title, content, categoryId } = formStateRef.current;
-    const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
-
-    const formData = new FormData();
-    formData.append('title', title.trim());
-    formData.append('content', currentContent);
-    formData.append('boardId', categoryId);
-
-    if (isHotdeal) {
-      formData.append('deal_info', JSON.stringify(buildDealInfo(false)));
-    }
-
-    if (pollDraft) {
-      formData.append('poll', JSON.stringify(pollDraft));
-    }
-
-    if (autoTags.length > 0) {
-      formData.append('tags', JSON.stringify(autoTags));
-    }
-
-    const result = await createPost(formData);
-
-    if (!result.success) {
-      handleErrorResponse(result.error || '', '寃뚯떆湲 ?묒꽦???ㅽ뙣?덉뒿?덈떎.');
-      return;
-    }
-
-    if (!result.post) {
-      throw new Error('寃뚯떆湲 ?곗씠?곕? 諛쏆븘?ㅼ? 紐삵뻽?듬땲??');
-    }
-
-    const { post } = result;
-    const boardSlug = post.board?.slug || allBoardsFlat.find(b => b.id === categoryId)?.slug || categoryId;
-
-    trackEvent('post_create', {
-      board: boardSlug,
-      post_number: post.post_number,
-      is_hotdeal: isHotdeal,
-      has_poll: Boolean(pollDraft),
-    });
-
-    toast.success('게시글이 작성되었습니다.');
-    if (currentDraftId) {
-      void deletePostDraft(currentDraftId);
-    }
-    router.push(`/boards/${boardSlug}/${post.post_number}`);
-  }, [autoTags, editor, isHotdeal, pollDraft, buildDealInfo, handleErrorResponse, allBoardsFlat, router, categoryId, currentDraftId]);
-
-  // 寃뚯떆湲 ?섏젙 泥섎━ (refs ?ъ슜?쇰줈 ?섏〈??理쒖냼??
-  const handleUpdatePost = useCallback(async () => {
-    if (!postId) {
-      throw new Error('寃뚯떆湲 ID媛 ?쒓났?섏? ?딆븯?듬땲??');
-    }
-
-    const { title, content } = formStateRef.current;
-    const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
-    const dealInfoToUpdate = isHotdeal ? buildDealInfo(true) : null;
-
-    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate, autoTags);
-
-    if (!result.success) {
-      handleErrorResponse(result.error || '', '寃뚯떆湲 ?섏젙???ㅽ뙣?덉뒿?덈떎.');
-      return;
-    }
-
-    if (!result.boardSlug || !result.postNumber) {
-      throw new Error('寃뚯떆湲 ?뺣낫瑜?諛쏆븘?ㅼ? 紐삵뻽?듬땲??');
-    }
-
-    toast.success('게시글이 수정되었습니다.');
-    router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
-  }, [autoTags, editor, postId, isHotdeal, buildDealInfo, handleErrorResponse, router]);
-
-  // ???쒖텧 ?몃뱾??
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isSubmitting) return;
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      if (isCreateMode) {
-        await handleCreatePost();
-      } else {
-        await handleUpdatePost();
-      }
-    } catch (err) {
-      const errorMsg = err instanceof Error
-        ? err.message
-        : `게시글 ${isCreateMode ? '작성' : '수정'} 중 오류가 발생했습니다.`;
-      setError(errorMsg);
-      toast.error(errorMsg);
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, validateForm, isCreateMode, handleCreatePost, handleUpdatePost]);
+  const { handleSubmit } = usePostSubmit({
+    editor,
+    router,
+    postId,
+    isCreateMode,
+    isHotdeal,
+    isSubmitting,
+    currentDraftId,
+    initialDealInfo,
+    allBoardsFlat,
+    autoTags,
+    pollDraft,
+    formStateRef,
+    hotdealStateRef,
+    setError,
+    setIsSubmitting,
+  });
 
   const handleCancel = useCallback(async () => {
     if (!isCreateMode) {
@@ -2140,120 +1447,22 @@ export default function PostEditForm({
 
           {/* ?ル뵜 ?뺣낫 ?꾨뱶 - ?ル뵜 寃뚯떆湲?????쒖떆 (?앹꽦/?섏젙 紐⑤몢) */}
           {isHotdeal && (
-            <div className="space-y-4 border-t border-black/7 dark:border-white/10 pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-[#F0F0F0]">
-                  ?ル뵜 ?뺣낫
-                </h3>
-              </div>
-
-              {/* ?곹뭹 留곹겕 */}
-              <div className="space-y-2">
-                <label htmlFor="deal_url" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  ?곹뭹 留곹겕 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  id="deal_url"
-                  value={dealUrl}
-                  onChange={(e) => setDealUrl(e.target.value)}
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                  placeholder="https://www.coupang.com/..."
-                />
-              </div>
-
-              {/* ?쇳븨紐?*/}
-              <div className="space-y-2">
-                <label htmlFor="store" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  ?쇳븨紐?<span className="text-red-500">*</span>
-                </label>
-                <NativeSelect
-                  value={store || ''}
-                  onValueChange={setStore}
-                  options={STORE_OPTIONS}
-                  placeholder="선택하세요"
-                />
-              </div>
-
-              {/* ?곹뭹紐?*/}
-              <div className="space-y-2">
-                <label htmlFor="product_name" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  ?곹뭹紐?<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="product_name"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  className="w-full px-3 py-2 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                  placeholder="LG ?듬룎???명긽湲?19kg"
-                />
-              </div>
-
-              {/* 媛寃?*/}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                    ?먮ℓ媛 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      id="price"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                      placeholder="11160"
-                      min="0"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
-                      ??
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="original_price" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                    ?뺢? <span className="text-gray-400 text-xs">(?좏깮)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      id="original_price"
-                      value={originalPrice}
-                      onChange={(e) => setOriginalPrice(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border border-black/7 dark:border-white/10 rounded-md bg-white dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none text-base"
-                      placeholder="15000"
-                      min="0"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-gray-500">
-                      ??
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">할인율 표시용</p>
-                </div>
-              </div>
-
-              {/* 諛곗넚鍮?*/}
-              <div className="space-y-2">
-                <label htmlFor="shipping" className="block text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
-                  諛곗넚鍮?<span className="text-red-500">*</span>
-                </label>
-                <NativeSelect
-                  value={shipping || ''}
-                  onValueChange={setShipping}
-                  options={SHIPPING_SELECT_OPTIONS}
-                  placeholder="선택하세요"
-                />
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <p className="text-[13px] text-blue-800 dark:text-blue-300">
-                  ?뮕 <strong>??</strong> ?곹뭹 留곹겕瑜??낅젰?섎㈃ ?쇳븨紐곗씠 ?먮룞?쇰줈 ?좏깮?⑸땲??
-                </p>
-              </div>
-            </div>
+            <HotdealFields
+              dealUrl={dealUrl}
+              store={store}
+              productName={productName}
+              price={price}
+              originalPrice={originalPrice}
+              shipping={shipping}
+              storeOptions={STORE_OPTIONS}
+              shippingOptions={SHIPPING_SELECT_OPTIONS}
+              setDealUrl={setDealUrl}
+              setStore={setStore}
+              setProductName={setProductName}
+              setPrice={setPrice}
+              setOriginalPrice={setOriginalPrice}
+              setShipping={setShipping}
+            />
           )}
 
           <div ref={editorShellRef} className="relative space-y-2">
