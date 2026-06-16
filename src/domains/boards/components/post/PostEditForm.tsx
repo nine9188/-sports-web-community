@@ -2288,7 +2288,7 @@ export default function PostEditForm({
             <input
               ref={imageFileInputRef}
               type="file"
-              accept="image/avif,image/png,image/jpeg,image/jpg,image/gif,image/webp"
+              accept="image/*"
               className="hidden"
               onChange={handleImageFileChange}
             />
