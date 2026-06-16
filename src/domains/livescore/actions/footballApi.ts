@@ -62,6 +62,11 @@ export interface MatchData {
   displayDate?: string; // 표시용 날짜 (오늘/내일/어제)
 }
 
+export interface WorldCupSidebarMatch {
+  label: string;
+  kickoffKst: string;
+}
+
 // API 응답 관련 타입 정의
 interface ApiMatch {
   fixture?: {
@@ -635,6 +640,39 @@ export const fetchWorldCupWidgetMatches = cache(async (limit = 8): Promise<Match
   const resolved = await resolveMatchImages([{ key: 'worldcup', matches: selectedMatches }]);
   const localized = await applyLocalizedNames(resolved.get('worldcup') || []);
   return JSON.parse(JSON.stringify(localized));
+});
+
+const WORLD_CUP_SIDEBAR_DISPLAY_AFTER_MS = 2.5 * 60 * 60 * 1000;
+
+export const fetchWorldCupSidebarMatches = cache(async (limit = 8): Promise<WorldCupSidebarMatch[]> => {
+  const rawMatches = await fetchWorldCupMatchesRaw();
+  if (rawMatches.length === 0) return [];
+
+  const now = Date.now();
+  const playableMatches = rawMatches
+    .filter((match) => !NON_PLAYABLE_STATUS_CODES.has(match.status.code))
+    .filter((match) => Number.isFinite(new Date(match.time.date).getTime()))
+    .sort((a, b) => new Date(a.time.date).getTime() - new Date(b.time.date).getTime());
+
+  const selectedMatches = playableMatches
+    .filter((match) => new Date(match.time.date).getTime() + WORLD_CUP_SIDEBAR_DISPLAY_AFTER_MS > now)
+    .slice(0, limit);
+
+  const fallbackMatches = selectedMatches.length > 0
+    ? selectedMatches
+    : playableMatches.slice(-Math.max(1, limit));
+
+  const localized = await applyLocalizedNames(fallbackMatches);
+
+  return localized.map((match) => {
+    const homeName = match.teams.home.name_ko || match.teams.home.name;
+    const awayName = match.teams.away.name_ko || match.teams.away.name;
+
+    return {
+      label: `${homeName} vs ${awayName}`,
+      kickoffKst: match.time.date,
+    };
+  });
 });
 
 // 어제, 오늘, 내일 경기 데이터를 한 번에 가져오기 - cache 적용

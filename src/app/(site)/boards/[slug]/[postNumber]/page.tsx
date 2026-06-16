@@ -56,7 +56,6 @@ function buildPostImageCandidates(primaryImage?: string | null, contentImage?: s
     primaryImage || undefined,
     contentImage || undefined,
     siteConfig.defaultOgImage,
-    siteConfig.defaultOgImageSquare,
   ].filter((url): url is string => Boolean(url))));
 }
 

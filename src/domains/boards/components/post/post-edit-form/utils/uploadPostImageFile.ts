@@ -8,6 +8,7 @@ const UPLOAD_TIMEOUT_MS = 30_000;
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_SYNC_CONVERT_SIZE_BYTES = 4 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = new Set([
+  'image/avif',
   'image/png',
   'image/jpeg',
   'image/jpg',
@@ -93,7 +94,7 @@ export async function uploadPostImageFile(file: File): Promise<{ publicUrl: stri
   }
 
   if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
-    throw new Error('png, jpg, jpeg, gif, webp 이미지만 업로드할 수 있습니다.');
+    throw new Error('avif, png, jpg, jpeg, gif, webp 이미지만 업로드할 수 있습니다. 아이폰 HEIC 사진은 사진 앱에서 호환 형식으로 저장한 뒤 업로드해주세요.');
   }
 
   if (file.size > MAX_IMAGE_SIZE_BYTES) {

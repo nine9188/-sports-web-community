@@ -1,10 +1,10 @@
 import React from 'react';
 import { AllPostsWidget, BoardCollectionWidget, HomeActionWidget, HomeLinkWidget, NewsWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
-import KakaoAd from '@/shared/components/KakaoAd';
+import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
-import { fetchTodayMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
+import { fetchTodayMatches, fetchWorldCupSidebarMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
 import { getCurrentUser } from '@/domains/auth/actions';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
@@ -104,11 +104,12 @@ const HOME_SECONDARY_LINKS = [
 ];
 
 export default async function HomePage() {
-  const [liveScoreData, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
+  const [liveScoreData, worldCupSidebarMatches, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
     Promise.all([
       fetchTodayMatches(),
       fetchWorldCupWidgetMatches(),
     ]).then(([todayMatches, worldCupMatches]) => transformToWidgetLeagues(todayMatches, worldCupMatches)),
+    fetchWorldCupSidebarMatches(),
     fetchBoardCollectionData(),
     fetchAllPostsWidgetData(),
     fetchNewsData(),
@@ -131,7 +132,7 @@ export default async function HomePage() {
         </div>
         <div className="flex flex-col gap-4 md:hidden">
           <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
-          <WorldCupSidebarCard />
+          <WorldCupSidebarCard matches={worldCupSidebarMatches} />
         </div>
         <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>
         <AdBanner />
@@ -140,10 +141,10 @@ export default async function HomePage() {
         <BoardCollectionWidget data={boardCollectionData} />
         <AllPostsWidget posts={latestPosts} />
         <div className="hidden md:flex justify-center">
-          <KakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} />
+          <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
         </div>
         <div className="md:hidden flex justify-center">
-          <KakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} />
+          <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
         </div>
         <NewsWidget news={news} />
       </main>

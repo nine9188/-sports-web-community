@@ -17,7 +17,7 @@ import type { DealInfo } from "../../types/hotdeal";
 import HoverMenu from "../common/HoverMenu";
 import BoardSearchBar from "../board/BoardSearchBar";
 import PostDetailRelatedList from "./PostDetailRelatedList";
-import KakaoAd from "@/shared/components/KakaoAd";
+import ResponsiveKakaoAd from "@/shared/components/ResponsiveKakaoAd";
 import { KAKAO } from "@/shared/constants/ad-constants";
 import PostHashScroller from "./PostHashScroller";
 import PostPollCard from "../post/PostPollCard";
@@ -381,7 +381,7 @@ export default async function PostDetailLayout({
         {/* adsense-placeholder: former PC post-detail in-feed slot, keep this location for future AdSense restore. */}
         {/* PC 전용 카카오 본문 하단 광고 */}
         <div className="hidden md:flex justify-center py-4 border-t border-black/5 dark:border-white/10">
-          <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+          <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
         </div>
 
         {/* 첨부파일 섹션 (있는 경우) */}
@@ -447,13 +447,13 @@ export default async function PostDetailLayout({
       {/* adsense-placeholder: former mobile post-detail bottom banner slot, 320x100. */}
       {/* 모바일 전용 카카오 배너 광고 */}
       <div className="mb-4 md:hidden flex justify-center">
-        <KakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} />
+        <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
       </div>
 
       {/* adsense-placeholder: former PC post-detail bottom banner slot, 728x90. */}
       {/* PC 전용 카카오 배너 광고 */}
       <div className="hidden md:flex justify-center mb-4">
-        <KakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} />
+        <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
       </div>
 
       {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
-import KakaoAd from '@/shared/components/KakaoAd';
+import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
 export default function Sidebar({
@@ -67,7 +67,7 @@ export default function Sidebar({
 
           {/* 사이드바 광고 - 카카오 */}
           <div className="mb-4">
-            <KakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
+            <ResponsiveKakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} minWidth={1024} />
           </div>
 
           {/* 게시판 이동 섹션 */}

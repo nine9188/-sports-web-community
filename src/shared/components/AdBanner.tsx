@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import KakaoAd from './KakaoAd';
+import ResponsiveKakaoAd from './ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
 /**
@@ -12,7 +12,7 @@ import { KAKAO } from '@/shared/constants/ad-constants';
  * - LCP 이후: requestIdleCallback으로 실제 광고 마운트
  * → 광고가 LCP 후보에서 제외됨
  *
- * CSS로 PC/모바일 분기:
+ * matchMedia로 PC/모바일 중 실제 화면에 맞는 광고만 mount:
  * - PC (md 이상): 728x90
  * - 모바일 (md 미만): 320x100
  */
@@ -35,14 +35,14 @@ export default function AdBanner() {
       {/* PC 배너 - 728x90 */}
       <div className="hidden md:flex justify-center">
         <div style={{ width: 728, height: 90 }}>
-          {ready && <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />}
+          {ready && <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />}
         </div>
       </div>
       {/* adsense-placeholder: former shared mobile page banner slot, 320x100. */}
       {/* 모바일 배너 - 320x100 */}
       <div className="md:hidden flex justify-center">
         <div style={{ width: 320, height: 100, maxWidth: '100%' }}>
-          {ready && <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />}
+          {ready && <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />}
         </div>
       </div>
     </>

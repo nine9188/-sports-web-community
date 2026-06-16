@@ -40,6 +40,19 @@ function teamDisplayName(f: CupFixture['home']): string {
   return f.name_ko || f.name || '';
 }
 
+function getFixtureStatusLabel(status: CupFixture['status']) {
+  const liveElapsedCodes = new Set(['LIVE', '1H', '2H', 'ET', 'P']);
+  if (
+    liveElapsedCodes.has(status.short)
+    && typeof status.elapsed === 'number'
+    && status.elapsed > 0
+  ) {
+    return `${status.elapsed}'`;
+  }
+
+  return STATUS_LABEL[status.short] || status.short || '';
+}
+
 interface FixtureRowProps {
   fixture: CupFixture;
   isLast: boolean;
@@ -52,7 +65,7 @@ function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: F
   const isLive = LIVE_CODES.has(status.short);
   const isFinished = FINISHED_CODES.has(status.short);
   const showScore = isLive || isFinished;
-  const statusLabel = STATUS_LABEL[status.short] || status.short || '';
+  const statusLabel = getFixtureStatusLabel(status);
   const dateTime = formatDateTime(fixture.date);
   const isHighlighted = Boolean(highlightPosition);
 
@@ -90,12 +103,20 @@ function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: F
     >
       {/* 날짜 + 상태 */}
       <div className="w-[56px] flex-shrink-0 text-[11px] leading-tight">
-        <div className="whitespace-nowrap text-gray-700 dark:text-gray-300">
-          {dateTime.date} {dateTime.time}
-        </div>
-        <div className={isLive ? 'text-red-500 font-medium' : 'text-gray-400 dark:text-gray-500'}>
-          {statusLabel}
-        </div>
+        {isLive ? (
+          <span className="inline-flex items-center rounded bg-red-500 px-1.5 py-1 text-[10px] font-bold leading-none text-white animate-pulse">
+            {statusLabel}
+          </span>
+        ) : (
+          <>
+            <div className="whitespace-nowrap text-gray-700 dark:text-gray-300">
+              {dateTime.date} {dateTime.time}
+            </div>
+            <div className="text-gray-400 dark:text-gray-500">
+              {statusLabel}
+            </div>
+          </>
+        )}
       </div>
 
       {/* 홈팀 */}

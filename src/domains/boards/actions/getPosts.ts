@@ -2,7 +2,7 @@
 
 import { cache } from 'react';
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { getCachedBoardById } from './getCachedBoards';
+import { getCachedAllBoards, getCachedBoardById } from './getCachedBoards';
 import {
   createFallbackPost,
   createEmptyResponse,
@@ -16,6 +16,26 @@ import {
 
 import type { DealInfo } from '../types/hotdeal';
 import { HOTDEAL_BOARD_SLUGS } from '../types/hotdeal';
+
+const FOREIGN_ANALYSIS_BOARD_SLUGS = [
+  'foreign-analysis',
+  'foreign-analysis-premier',
+  'foreign-analysis-laliga',
+  'foreign-analysis-ligue1',
+  'foreign-analysis-bundesliga',
+  'foreign-analysis-serie-a',
+];
+
+const DOMESTIC_ANALYSIS_BOARD_SLUGS = [
+  'domestic-analysis',
+  'domestic-analysis-k-league-1',
+  'domestic-analysis-k-league-2',
+];
+
+const ANALYSIS_BOARD_SLUGS = [
+  ...FOREIGN_ANALYSIS_BOARD_SLUGS,
+  ...DOMESTIC_ANALYSIS_BOARD_SLUGS,
+];
 
 /**
  * 핫딜 게시판 ID 목록을 가져오는 캐시된 함수
@@ -34,6 +54,31 @@ const getHotdealBoardIds = cache(async (): Promise<string[]> => {
     return [];
   }
 });
+
+const getAnalysisBoardIds = cache(async (region: 'foreign' | 'domestic' | 'all'): Promise<string[]> => {
+  const slugs = region === 'foreign'
+    ? FOREIGN_ANALYSIS_BOARD_SLUGS
+    : region === 'domestic'
+      ? DOMESTIC_ANALYSIS_BOARD_SLUGS
+      : ANALYSIS_BOARD_SLUGS;
+  const boards = await getCachedAllBoards();
+  return boards
+    .filter((board) => board.slug && slugs.includes(board.slug))
+    .map((board) => board.id);
+});
+
+function applyAnalysisFilter<T extends { eq: (column: string, value: string) => T; or: (filters: string) => T }>(
+  query: T,
+  region: 'foreign' | 'domestic' | 'all',
+  boardIds: string[]
+): T {
+  const boardIdFilter = boardIds.length > 0 ? `,board_id.in.(${boardIds.join(',')})` : '';
+  if (region === 'all') {
+    return query.or(`meta->>prediction_type.eq.league_analysis${boardIdFilter}`);
+  }
+
+  return query.or(`and(meta->>prediction_type.eq.league_analysis,meta->>analysis_region.eq.${region})${boardIdFilter}`);
+}
 
 // Supabase 쿼리 결과 타입 (raw)
 interface RawPostData {
@@ -147,6 +192,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
         analysisRegion = 'domestic';
       }
     }
+    const analysisBoardIds = analysisRegion ? await getAnalysisBoardIds(analysisRegion) : [];
 
     // 게시판 필터링 설정
     let targetBoardIds = ['all'];
@@ -198,13 +244,10 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       postsQuery = postsQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
     } else if (analysisRegion === 'all') {
       // 데이터분석 게시판: 해외+국내 전체 분석글 조회
-      postsQuery = postsQuery
-        .eq('meta->>prediction_type', 'league_analysis');
+      postsQuery = applyAnalysisFilter(postsQuery, 'all', analysisBoardIds);
     } else if (analysisRegion) {
       // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 직접 조회
-      postsQuery = postsQuery
-        .eq('meta->>prediction_type', 'league_analysis')
-        .eq('meta->>analysis_region', analysisRegion);
+      postsQuery = applyAnalysisFilter(postsQuery, analysisRegion, analysisBoardIds);
     } else if (currentBoardFilter) {
       postsQuery = postsQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {
@@ -238,13 +281,10 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
     } else if (analysisRegion === 'all') {
       // 데이터분석 게시판: 해외+국내 전체 분석글 카운트
-      countQuery = countQuery
-        .eq('meta->>prediction_type', 'league_analysis');
+      countQuery = applyAnalysisFilter(countQuery, 'all', analysisBoardIds);
     } else if (analysisRegion) {
       // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 카운트
-      countQuery = countQuery
-        .eq('meta->>prediction_type', 'league_analysis')
-        .eq('meta->>analysis_region', analysisRegion);
+      countQuery = applyAnalysisFilter(countQuery, analysisRegion, analysisBoardIds);
     } else if (currentBoardFilter) {
       countQuery = countQuery.eq('board_id', currentBoardFilter);
     } else if (targetBoardsFilter?.length) {

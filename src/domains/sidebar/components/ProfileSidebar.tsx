@@ -9,7 +9,7 @@ import { useCallback, useMemo } from 'react';
 import { useLogout } from '@/shared/hooks/useLogout';
 import { FullUserDataWithSession } from '@/shared/types/user';
 import { Button } from '@/shared/components/ui';
-import KakaoAd from '@/shared/components/KakaoAd';
+import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
 interface ProfileSidebarProps {
@@ -143,10 +143,10 @@ export default function ProfileSidebar({
                   <span className="text-[13px] font-medium text-red-600 dark:text-red-400">로그아웃</span>
                 </Button>
 
-                {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
-                {isOpen && (
-                  <div className="flex justify-center pt-2">
-                    <KakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} />
+                  {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
+                  {isOpen && (
+                    <div className="flex justify-center pt-2">
+                    <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} maxWidth={767} />
                   </div>
                 )}
               </div>
@@ -185,7 +185,7 @@ export default function ProfileSidebar({
                   {/* 카카오 광고 - 모달 열릴 때만 렌더링 */}
                   {isOpen && (
                     <div className="flex justify-center pt-2">
-                      <KakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} />
+                      <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_SLIM_BANNER} adWidth={320} adHeight={50} maxWidth={767} />
                     </div>
                   )}
                 </div>

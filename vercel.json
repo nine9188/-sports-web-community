@@ -3,6 +3,10 @@
     {
       "path": "/api/sync-fixtures",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/sync-highlights",
+      "schedule": "0 2 * * *"
     }
   ],
   "routes": [

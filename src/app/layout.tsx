@@ -32,12 +32,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [
       siteConfig.getDefaultOgImageObject(),
-      {
-        url: siteConfig.defaultOgImageSquare,
-        width: 1200,
-        height: 1200,
-        alt: siteConfig.name,
-      },
     ],
   },
   twitter: {
@@ -49,6 +43,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico?v=20260613', type: 'image/x-icon', sizes: '48x48' },
+      { url: '/favicon.svg?v=20260613', type: 'image/svg+xml' },
+    ],
+    shortcut: ['/favicon.ico?v=20260613'],
   },
   manifest: '/site.webmanifest',
   other: {

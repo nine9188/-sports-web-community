@@ -15,7 +15,7 @@ import BoardSearchBar from "../board/BoardSearchBar";
 import { isHotdealBoard } from "../../utils/hotdeal";
 import { Breadcrumb } from "../../types/board/data";
 import { Board } from "../../types/board";
-import KakaoAd from "@/shared/components/KakaoAd";
+import ResponsiveKakaoAd from "@/shared/components/ResponsiveKakaoAd";
 import { KAKAO } from "@/shared/constants/ad-constants";
 import type { LayoutPost, PopularPost } from "@/domains/boards/types/post";
 import RecentlyVisitedBoardEffect from "./RecentlyVisitedBoardEffect";
@@ -149,10 +149,10 @@ export default function BoardDetailLayout({
   const kakaoAdBanner = (
     <>
       <div className="hidden md:flex justify-center mb-4">
-        <KakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} />
+        <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
       </div>
       <div className="md:hidden flex justify-center mb-4">
-        <KakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} />
+        <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
       </div>
     </>
   );

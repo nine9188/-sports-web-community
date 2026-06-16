@@ -270,6 +270,54 @@ function insertContent(
         .run();
 }
 
+function escapeHtmlAttribute(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function insertImageContent(
+  editor: Editor,
+  url: string,
+  altText: string,
+  insertAt?: number | null
+) {
+  const imageNode = { type: 'image', attrs: { src: url, alt: altText } };
+  const content = [imageNode, { type: 'paragraph' }];
+  const inserted = insertContent(editor, content, insertAt);
+
+  if (inserted) return true;
+
+  const safeUrl = escapeHtmlAttribute(url);
+  const safeAlt = escapeHtmlAttribute(altText);
+  const fallbackHtml = `<img src="${safeUrl}" alt="${safeAlt}"><p></p>`;
+
+  if (typeof insertAt === 'number') {
+    return editor.chain()
+      .focus()
+      .insertContentAt(Math.min(Math.max(insertAt, 0), editor.state.doc.content.size), fallbackHtml)
+      .focus()
+      .run();
+  }
+
+  if ('setImage' in editor.commands) {
+    return editor.chain()
+      .focus()
+      .setImage({ src: url, alt: altText })
+      .insertContent({ type: 'paragraph' })
+      .focus()
+      .run();
+  }
+
+  return editor.chain()
+    .focus()
+    .insertContent(fallbackHtml)
+    .focus()
+    .run();
+}
+
 function toYoutubeEmbedUrl(url: string) {
   if (url.includes('youtube.com/watch?v=')) {
     const videoId = url.split('v=')[1]?.split('&')[0];
@@ -331,10 +379,7 @@ export function useEditorHandlers({
     }
 
     try {
-      const success = insertContent(editor, [
-        { type: 'image', attrs: { src: url, alt: caption || '' } },
-        { type: 'paragraph' },
-      ], insertAt);
+      const success = insertImageContent(editor, url, caption || '', insertAt);
 
       if (!success) {
         toast.error('이미지를 에디터에 삽입하지 못했습니다.');

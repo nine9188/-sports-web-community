@@ -14,6 +14,8 @@ const FINISHED_STATUSES = ['FT', 'AET', 'PEN'];
 const DEFAULT_FIXTURE_DAYS = 7;
 const MAX_FIXTURE_DAYS = 30;
 const VIDEO_RETENTION_DAYS = 14;
+const PLAYLIST_PAGE_SIZE = 50;
+const PLAYLIST_PAGE_LIMIT = 4;
 
 type ChannelConfig = {
   channelId: string;
@@ -112,45 +114,57 @@ function getChannels(): ChannelConfig[] {
 }
 
 async function fetchUploadPlaylist(channel: ChannelConfig): Promise<IndexedVideo[]> {
-  const params = new URLSearchParams({
-    part: 'snippet',
-    playlistId: channel.uploadsPlaylistId,
-    maxResults: '50',
-    key: YOUTUBE_API_KEY,
-  });
+  const videos: IndexedVideo[] = [];
+  let pageToken: string | undefined;
 
-  const res = await fetch(`${YOUTUBE_API_BASE}/playlistItems?${params}`, {
-    cache: 'no-store',
-  });
+  for (let page = 0; page < PLAYLIST_PAGE_LIMIT; page += 1) {
+    const params = new URLSearchParams({
+      part: 'snippet',
+      playlistId: channel.uploadsPlaylistId,
+      maxResults: String(PLAYLIST_PAGE_SIZE),
+      key: YOUTUBE_API_KEY,
+    });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.warn(`[sync-highlights] YouTube playlistItems failed channel=${channel.name} status=${res.status}`, body);
-    return [];
-  }
+    if (pageToken) params.set('pageToken', pageToken);
 
-  const data = (await res.json()) as YouTubePlaylistResponse;
-  if (!Array.isArray(data.items)) return [];
+    const res = await fetch(`${YOUTUBE_API_BASE}/playlistItems?${params}`, {
+      cache: 'no-store',
+    });
 
-  return data.items.flatMap(item => {
-    const videoId = item.snippet.resourceId?.videoId;
-    const title = item.snippet.title;
-
-    if (!videoId || !title || !isHighlightTitle(title)) {
-      return [];
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn(`[sync-highlights] YouTube playlistItems failed channel=${channel.name} status=${res.status}`, body);
+      return videos;
     }
 
-    return [{
-      video_id: videoId,
-      channel_id: channel.channelId,
-      channel_name: channel.name,
-      title,
-      normalized_title: normalizeTitle(title),
-      thumbnail_url: getThumbnailUrl(item),
-      published_at: item.snippet.publishedAt || null,
-      duration: null,
-    }];
-  });
+    const data = (await res.json()) as YouTubePlaylistResponse;
+    if (!Array.isArray(data.items)) return videos;
+
+    videos.push(...data.items.flatMap(item => {
+      const videoId = item.snippet.resourceId?.videoId;
+      const title = item.snippet.title;
+
+      if (!videoId || !title || !isHighlightTitle(title)) {
+        return [];
+      }
+
+      return [{
+        video_id: videoId,
+        channel_id: channel.channelId,
+        channel_name: channel.name,
+        title,
+        normalized_title: normalizeTitle(title),
+        thumbnail_url: getThumbnailUrl(item),
+        published_at: item.snippet.publishedAt || null,
+        duration: null,
+      }];
+    }));
+
+    pageToken = data.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return videos;
 }
 
 async function fetchVideoDurations(videoIds: string[]): Promise<Record<string, string>> {

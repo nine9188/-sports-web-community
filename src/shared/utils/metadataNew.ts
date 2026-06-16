@@ -158,7 +158,8 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
   // URL
   const canonicalUrl = `${config.siteUrl}${params.path}`;
 
-  // 이미지: 대표 썸네일 > 기본 가로형 > 기본 정사각형 순서
+  // 이미지: 대표 썸네일 > 기본 가로형 순서.
+  // iOS/Safari suggestions can pick square fallback images over the intended wide OG preview.
   const primaryOgImage = params.image
     ? (params.image.startsWith('http') ? params.image : `${config.siteUrl}${params.image}`)
     : config.defaultOgImage;
@@ -166,7 +167,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     primaryImage: primaryOgImage,
     fallbackImages: params.includeDefaultOgFallbacks === false
       ? []
-      : [config.defaultOgImage, config.defaultOgImageSquare],
+      : [config.defaultOgImage],
     title: params.title,
     imageWidth: params.imageWidth,
     imageHeight: params.imageHeight,
