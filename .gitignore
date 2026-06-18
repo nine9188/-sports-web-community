@@ -54,3 +54,7 @@ next-env.d.ts
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Local MCP and Gemini config files (secrets)
+.mcp.json
+.gemini/settings.json

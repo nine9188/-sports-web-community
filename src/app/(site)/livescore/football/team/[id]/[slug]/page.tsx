@@ -23,6 +23,7 @@ import {
   jsonLdScriptProps,
 } from '@/shared/utils/jsonLd';
 import { getTeamById, getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
+import { resolveTeamIndexability } from '@/domains/livescore/actions/seoIndexability';
 import { getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import { getLeagueSlug, slugify } from '@/domains/livescore/utils/slugs';
 import { getTeamLogoUrl } from '@/domains/livescore/actions/images';
@@ -65,9 +66,10 @@ export async function generateMetadata({
 
   const team = teamData.team;
   const mappedTeam = await getTeamById(Number(id));
+  const resolvedLeagueId = mappedTeam?.league_id || team.league?.id || null;
   const league = mappedTeam?.league_id ? await getLeagueById(mappedTeam.league_id) : null;
   const teamName = mappedTeam?.name_ko || team.name;
-  const leagueName = league?.name_ko || league?.name || '';
+  const leagueName = league?.name_ko || league?.name || team.league?.name_ko || team.league?.name || '';
   const countryName = mappedTeam?.country_ko || mappedTeam?.country_en || team.country || '';
   const canonicalSlug = await resolveTeamCanonicalSlug(id);
   const teamSlug = canonicalSlug || (isUsableTeamSlug(id, slug) ? slug : '') || slugify(teamName);
@@ -82,6 +84,12 @@ export async function generateMetadata({
     subtitle: [leagueName, countryName, team.founded ? `${team.founded}년 창단` : ''].filter(Boolean).join(' · '),
     label: '팀 정보',
     leftImage: teamLogoImage,
+  });
+
+  const { shouldNoindex } = await resolveTeamIndexability({
+    teamId: id,
+    leagueId: resolvedLeagueId,
+    hasQueryState: hasTabState,
   });
 
   return buildMetadata({
@@ -120,7 +128,7 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasTabState ? { robots: { index: false, follow: true } } : {}),
+    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

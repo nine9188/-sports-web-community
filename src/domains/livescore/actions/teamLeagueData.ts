@@ -241,6 +241,11 @@ export async function getMajorLeagueIds(): Promise<number[]> {
   return all.filter((l) => l.is_major).map((l) => l.id);
 }
 
+/** SEO 색인 허용 리그 ID 목록 (leagues.is_major = true) */
+export async function getIndexableLeagueIds(): Promise<number[]> {
+  return getMajorLeagueIds();
+}
+
 /** 리그에 맞는 현재 시즌 계산 (캘린더 시즌 vs 유럽식 7월 기준) */
 export async function getCurrentSeasonForLeague(leagueId: number | string): Promise<number> {
   const now = new Date();

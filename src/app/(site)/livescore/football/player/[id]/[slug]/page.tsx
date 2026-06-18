@@ -17,6 +17,7 @@ import {
   jsonLdScriptProps,
 } from '@/shared/utils/jsonLd';
 import { getTeamById } from '@/domains/livescore/actions/teamLeagueData';
+import { resolveTeamIndexability } from '@/domains/livescore/actions/seoIndexability';
 import { getPlayerKoreanName, getPlayersKoreanNames } from '@/domains/livescore/actions/player/getKoreanName';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import { slugify } from '@/domains/livescore/utils/slugs';
@@ -83,6 +84,11 @@ export async function generateMetadata({
     label: '선수 정보',
     leftImage: playerImage,
   });
+  const { shouldNoindex } = await resolveTeamIndexability({
+    teamId: player.team?.id || null,
+    leagueId: mappedTeam?.league_id || player.league?.id || null,
+    hasQueryState,
+  });
 
   return buildMetadata({
     title: `${playerName} 통계·기록·순위·부상·트로피·이적${currentTeam ? ` - ${currentTeam}` : ''}`,
@@ -126,7 +132,7 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
+    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

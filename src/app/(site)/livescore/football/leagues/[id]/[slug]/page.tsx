@@ -21,6 +21,7 @@ import {
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 import { getBoardSlugByLeagueId } from '@/domains/boards/actions/getBoards';
 import AdBanner from '@/shared/components/AdBanner';
+import { resolveFootballIndexability } from '@/domains/livescore/actions/seoIndexability';
 import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 
 interface LeaguePageProps {
@@ -107,11 +108,16 @@ export async function generateMetadata({ params }: LeaguePageProps) {
       '4590football',
     ];
 
+  const { shouldNoindex } = await resolveFootballIndexability({
+    leagueId: id,
+  });
+
   return buildMetadata({
     title,
     description,
     path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10), league.name)}`,
     keywords,
+    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
   });
 }
 async function LeaguePageContent({ id }: { id: string }) {
@@ -321,4 +327,3 @@ export default async function LeaguePage({ params }: LeaguePageProps) {
 
   return await LeaguePageContent({ id });
 }
-

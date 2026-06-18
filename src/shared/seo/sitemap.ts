@@ -10,6 +10,7 @@ import { isWorthlessSitemapPlayer } from '@/domains/livescore/utils/playerSeoQua
 import { siteConfig } from '@/shared/config';
 import { MATCH_LEAGUE_IDS } from '@/shared/constants/leagueIds';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
+import { ExtendedSitemapEntry } from '@/shared/seo/sitemapXml';
 
 export const SITEMAP_PAGE_SIZE = 50000;
 export const CORE_SITEMAP_LEAGUE_IDS = [39, 140, 78, 135, 61, 292, 293] as const;
@@ -274,8 +275,10 @@ export async function getLeagueSitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 }
 
-export function getCoreLeagueSitemap(): MetadataRoute.Sitemap {
-  return CORE_SITEMAP_LEAGUE_IDS.map((leagueId): SitemapEntry => ({
+export async function getCoreLeagueSitemap(): Promise<MetadataRoute.Sitemap> {
+  const leagueIds = await getMajorLeagueIds();
+
+  return leagueIds.map((leagueId): SitemapEntry => ({
     url: siteUrl(`/livescore/football/leagues/${leagueId}/${getLeagueSlug(leagueId)}`),
     changeFrequency: 'daily',
     priority: 0.7,
@@ -286,9 +289,10 @@ export async function getPostSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
   const { count, error } = await runSitemapQuery('posts count query', () => supabase
     .from('posts')
-    .select('id', { count: 'exact', head: true })
+    .select('id, boards!inner(slug)', { count: 'exact', head: true })
     .eq('is_deleted', false)
-    .eq('is_hidden', false));
+    .eq('is_hidden', false)
+    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")'));
 
   if (error) {
     console.error('[sitemap] posts count query failed:', error);
@@ -306,6 +310,7 @@ export async function getPostSitemap(id: string | number): Promise<MetadataRoute
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
+    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")')
     .order('created_at', { ascending: false })
     .range(from, to));
 
@@ -336,6 +341,7 @@ export async function getRecentPostSitemap(): Promise<MetadataRoute.Sitemap> {
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
+    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")')
     .order('created_at', { ascending: false })
     .limit(1000));
 
@@ -358,6 +364,7 @@ export async function getRecentPostSitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .filter((entry): entry is SitemapEntry => Boolean(entry));
 }
+
 
 export async function getTeamSitemapCount(): Promise<number> {
   const supabase = getSupabaseAdmin();
@@ -407,23 +414,18 @@ export async function getTeamSitemap(id: string | number): Promise<MetadataRoute
 }
 
 export async function getCoreTeamSitemap(): Promise<MetadataRoute.Sitemap> {
-  const groups = await getTransferLeagueTeamGroups();
-
-  return groups.flatMap((group) => group.teams.map((team): SitemapEntry => ({
-    url: siteUrl(`/livescore/football/team/${team.id}/${team.slug}`),
-    changeFrequency: 'weekly',
-    priority: 0.6,
-  })));
+  return getCoreLeagueTeamSitemap();
 }
 
 export async function getCoreLeagueTeamSitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = getSupabaseAdmin();
+  const leagueIds = await getMajorLeagueIds();
   const { data, error } = await runSitemapQuery('football_teams core query', () => supabase
     .from('football_teams')
-    .select('team_id, league_id, slug, updated_at, name, name_ko, display_name, short_name')
+    .select('team_id, league_id, slug, updated_at, name, name_ko, display_name, short_name, logo_url, logo_cached_url')
     .eq('is_active', true)
     .not('name', 'is', null)
-    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS])
+    .in('league_id', leagueIds)
     .order('team_id', { ascending: true }));
 
   if (error) {
@@ -431,29 +433,32 @@ export async function getCoreLeagueTeamSitemap(): Promise<MetadataRoute.Sitemap>
     return [];
   }
 
-  return ((data || []) as TeamRow[])
-    .map((team): SitemapEntry | null => {
+  return ((data || []) as (TeamRow & { logo_url: string | null; logo_cached_url: string | null })[])
+    .map((team): ExtendedSitemapEntry | null => {
       const slug = canonicalTeamSlugFromRow(team);
       if (!slug) return null;
 
+      const logo = team.logo_cached_url || team.logo_url;
       return {
         url: siteUrl(`/livescore/football/team/${team.team_id}/${slug}`),
         lastModified: team.updated_at || undefined,
         changeFrequency: 'weekly',
         priority: 0.6,
+        images: logo ? [logo] : undefined,
       };
     })
-    .filter((entry): entry is SitemapEntry => Boolean(entry));
+    .filter((entry): entry is ExtendedSitemapEntry => Boolean(entry));
 }
 
 async function getCoreSitemapTeamIds(): Promise<Set<number>> {
   const supabase = getSupabaseAdmin();
+  const leagueIds = await getMajorLeagueIds();
   const { data, error } = await runSitemapQuery('football_teams core ids query', () => supabase
     .from('football_teams')
     .select('team_id')
     .eq('is_active', true)
     .not('name', 'is', null)
-    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS]));
+    .in('league_id', leagueIds));
 
   if (error) {
     console.error('[sitemap] football_teams core ids query failed:', error);
@@ -569,7 +574,7 @@ export async function getCorePlayerSitemap(): Promise<MetadataRoute.Sitemap> {
   if (!teamIds.size) return [];
 
   const supabase = getSupabaseAdmin();
-  const entries: SitemapEntry[] = [];
+  const entries: ExtendedSitemapEntry[] = [];
 
   for (const teamIdChunk of chunks([...teamIds], 500)) {
     const { data, error } = await runSitemapQuery('football_players core query', () => supabase
@@ -587,7 +592,7 @@ export async function getCorePlayerSitemap(): Promise<MetadataRoute.Sitemap> {
 
     entries.push(...((data || []) as PlayerRow[])
       .filter((player) => player.player_id > 0 && !isWorthlessSitemapPlayer(player))
-      .map((player): SitemapEntry | null => {
+      .map((player): ExtendedSitemapEntry | null => {
         const slug = canonicalPlayerSlugFromRow(player);
         if (!slug) return null;
 
@@ -596,9 +601,10 @@ export async function getCorePlayerSitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: player.updated_at || undefined,
           changeFrequency: 'monthly',
           priority: 0.4,
+          images: player.photo_url ? [player.photo_url] : undefined,
         };
       })
-      .filter((entry): entry is SitemapEntry => Boolean(entry)));
+      .filter((entry): entry is ExtendedSitemapEntry => Boolean(entry)));
   }
 
   return entries;
@@ -758,10 +764,11 @@ export async function getMatchSitemap(id: string | number): Promise<MetadataRout
 export async function getCoreMatchSitemap(): Promise<MetadataRoute.Sitemap> {
   const { fromDate, toDate } = matchDateWindow();
   const supabase = getSupabaseAdmin();
+  const leagueIds = await getMajorLeagueIds();
   const { data: fixtures, error } = await runSitemapQuery('fixtures core query', () => supabase
     .from('fixtures')
     .select('fixture_id, home_team_id, away_team_id, league_id, match_date, updated_at')
-    .in('league_id', [...CORE_SITEMAP_LEAGUE_IDS])
+    .in('league_id', leagueIds)
     .gte('match_date', fromDate)
     .lte('match_date', toDate)
     .order('match_date', { ascending: false }));

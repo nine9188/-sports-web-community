@@ -11,6 +11,7 @@ import { buildBreadcrumbJsonLd, jsonLdScriptProps } from '@/shared/utils/jsonLd'
 import { resolveCanonicalMatchSlug } from '@/domains/livescore/actions/match/matchSlug';
 import { fetchCachedMatchShell } from '@/domains/livescore/actions/match/matchShell';
 import { getTeamsByIds, getLeagueById, isCupLeague } from '@/domains/livescore/actions/teamLeagueData';
+import { resolveFootballIndexability } from '@/domains/livescore/actions/seoIndexability';
 import { fetchCupFixturesByRound } from '@/domains/livescore/actions/match/cupFixtures';
 import { getMatchHighlight } from '@/domains/livescore/actions/highlights/getMatchHighlight';
 import { getCachedPowerData } from '@/domains/livescore/actions/match/headtohead';
@@ -142,6 +143,12 @@ export async function generateMetadata({
 
   const canonicalSlug = await resolveCanonicalMatchSlug(id);
 
+  const { shouldNoindex } = await resolveFootballIndexability({
+    leagueId: match.league.id,
+    hasQueryState: hasTabState,
+    matchStatusCode: match.status.code,
+  });
+
   return buildMetadata({
     title,
     description,
@@ -183,7 +190,7 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasTabState ? { robots: { index: false, follow: true } } : {}),
+    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
   });
 }
 
@@ -506,4 +513,3 @@ export default async function MatchPage({
 
   return await MatchPageContent({ matchId, slug, tab });
 }
-

@@ -123,6 +123,11 @@ export interface TeamSeoDataResponse {
     country?: string | null;
     founded?: number;
     logo?: string;
+    league?: {
+      id: number;
+      name?: string | null;
+      name_ko?: string | null;
+    } | null;
   };
 }
 
@@ -467,6 +472,11 @@ export const fetchTeamSeoData = cache(
           country: team.country_ko || team.country,
           founded: team.founded || undefined,
           logo: team.logo || undefined,
+          league: team.league ? {
+            id: team.league.id,
+            name: team.league.name,
+            name_ko: team.league.name_ko,
+          } : null,
         },
       };
     }

@@ -109,13 +109,17 @@ export async function generateMetadata({
   }
 
   const seo = getBoardSeoData(slug, board.name, parentBoardName);
+  const isRssBoard = ['foreign-news', 'domestic-news', 'news'].includes(slug);
+  const robots = isRssBoard
+    ? { index: false, follow: true }
+    : metadataState.robots;
 
   return buildMetadata({
     title: seo.title,
     description: board.description ? `${board.description} 축구 커뮤니티 4590 Football.` : seo.desc,
     path: metadataState.path,
     keywords: seo.keywords,
-    ...(metadataState.robots && { robots: metadataState.robots }),
+    ...(robots && { robots }),
   });
 }
 

@@ -35,18 +35,28 @@ export function sitemapIndexXml(entries: SitemapIndexEntry[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemaps}\n</sitemapindex>\n`;
 }
 
-export function sitemapUrlsetXml(entries: MetadataRoute.Sitemap): string {
+export type ExtendedSitemapEntry = SitemapEntry & {
+  images?: string[];
+};
+
+export function sitemapUrlsetXml(entries: ExtendedSitemapEntry[]): string {
   const urls = entries
-    .map((entry: SitemapEntry) => {
+    .map((entry: ExtendedSitemapEntry) => {
       const lastmod = entry.lastModified
         ? `\n    <lastmod>${escapeXml(formatDate(entry.lastModified))}</lastmod>`
         : '';
 
-      return `  <url>\n    <loc>${escapeXml(entry.url)}</loc>${lastmod}\n  </url>`;
+      const images = entry.images && entry.images.length > 0
+        ? entry.images
+            .map((img) => `\n    <image:image>\n      <image:loc>${escapeXml(img)}</image:loc>\n    </image:image>`)
+            .join('')
+        : '';
+
+      return `  <url>\n    <loc>${escapeXml(entry.url)}</loc>${lastmod}${images}\n  </url>`;
     })
     .join('\n');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${urls}\n</urlset>\n`;
 }
 
 export function sitemapXmlResponse(xml: string): Response {
@@ -57,3 +67,4 @@ export function sitemapXmlResponse(xml: string): Response {
     },
   });
 }
+

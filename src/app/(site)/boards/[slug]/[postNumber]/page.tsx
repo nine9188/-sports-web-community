@@ -235,6 +235,11 @@ export async function generateMetadata({
     seoEntities,
   });
 
+  const isRssBoard = ['foreign-news', 'domestic-news', 'news'].includes(slug);
+  const robots = isRssBoard
+    ? { index: false, follow: true }
+    : (hasListState ? { index: false, follow: true } : undefined);
+
   return buildMetadata({
     title: displayTitle,
     titleOnly: true,
@@ -247,7 +252,7 @@ export async function generateMetadata({
     keywords,
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasListState && { robots: { index: false, follow: true } }),
+    ...(robots && { robots }),
   });
 }
 
