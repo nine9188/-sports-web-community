@@ -50,6 +50,9 @@ export const metadata: Metadata = {
       { url: '/favicon.svg?v=20260613', type: 'image/svg+xml' },
     ],
     shortcut: ['/favicon.ico?v=20260613'],
+    apple: [
+      { url: '/apple-icon.png?v=20260613', sizes: '180x180', type: 'image/png' },
+    ],
   },
   manifest: '/site.webmanifest',
   other: {

@@ -163,11 +163,16 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
   const primaryOgImage = params.image
     ? (params.image.startsWith('http') ? params.image : `${config.siteUrl}${params.image}`)
     : config.defaultOgImage;
+
+  // 개별 페이지 전용 이미지(params.image)가 지정된 경우, 메신저/기기 스크래퍼가 사이트 기본 로고(fallback)를
+  // 대신 띄우는 오작동을 방지하기 위해 기본 폴백 목록을 제외합니다.
+  const includeFallbacks = params.includeDefaultOgFallbacks ?? (params.image ? false : true);
+
   const ogImages = buildOgImages({
     primaryImage: primaryOgImage,
-    fallbackImages: params.includeDefaultOgFallbacks === false
-      ? []
-      : [config.defaultOgImage, config.defaultOgImageSquare],
+    fallbackImages: includeFallbacks
+      ? [config.defaultOgImage, config.defaultOgImageSquare]
+      : [],
     title: params.title,
     imageWidth: params.imageWidth,
     imageHeight: params.imageHeight,
