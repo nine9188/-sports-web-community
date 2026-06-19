@@ -167,7 +167,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     primaryImage: primaryOgImage,
     fallbackImages: params.includeDefaultOgFallbacks === false
       ? []
-      : [config.defaultOgImage],
+      : [config.defaultOgImage, config.defaultOgImageSquare],
     title: params.title,
     imageWidth: params.imageWidth,
     imageHeight: params.imageHeight,
