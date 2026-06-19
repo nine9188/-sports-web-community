@@ -18,6 +18,11 @@ function isEmptyParagraphNode(node: TipTapNode | undefined): boolean {
   return !Array.isArray(node.content) || node.content.length === 0;
 }
 
+function renderTipTapChildren(node: TipTapNode): string {
+  if (!Array.isArray(node.content)) return '';
+  return node.content.map((child) => renderTipTapNode(child)).join('');
+}
+
 /**
  * Render a TipTap node to HTML.
  */
@@ -283,31 +288,29 @@ export function renderTipTapNode(node: TipTapNode): string {
   }
 
   if (node.type === 'bulletList' && Array.isArray(node.content)) {
-    let listContent = '<ul class="list-disc list-inside mb-4">';
-    node.content.forEach((listItem) => {
-      if (listItem.type === 'listItem' && Array.isArray(listItem.content)) {
-        listContent += '<li>';
-        listItem.content.forEach((para) => {
-          if (para.type === 'paragraph' && Array.isArray(para.content)) {
-            para.content.forEach((textNode) => {
-              if (textNode.type === 'text') {
-                listContent += textNode.text || '';
-              }
-            });
-          }
-        });
-        listContent += '</li>';
-      }
-    });
-    listContent += '</ul>';
-    return listContent;
+    const listItems = node.content
+      .filter((listItem) => listItem.type === 'listItem')
+      .map((listItem) => renderTipTapNode(listItem))
+      .join('');
+
+    return `<ul class="list-disc list-inside mb-4">${listItems}</ul>`;
+  }
+
+  if (node.type === 'orderedList' && Array.isArray(node.content)) {
+    const listItems = node.content
+      .filter((listItem) => listItem.type === 'listItem')
+      .map((listItem) => renderTipTapNode(listItem))
+      .join('');
+
+    return `<ol class="list-decimal list-inside mb-4">${listItems}</ol>`;
+  }
+
+  if (node.type === 'listItem') {
+    return `<li>${renderTipTapChildren(node)}</li>`;
   }
 
   if (node.type === 'blockquote' && Array.isArray(node.content)) {
-    let quoteContent = '';
-    node.content.forEach((childNode) => {
-      quoteContent += renderTipTapNode(childNode);
-    });
+    const quoteContent = renderTipTapChildren(node);
     return `<blockquote class="border-l-4 border-blue-500 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-900/20 rounded-r-lg italic text-gray-700 dark:text-gray-300">${quoteContent}</blockquote>`;
   }
 
