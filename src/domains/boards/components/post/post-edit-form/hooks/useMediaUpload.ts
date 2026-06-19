@@ -3,6 +3,7 @@ import type { ChangeEvent, Dispatch, MutableRefObject, SetStateAction } from 're
 import type { Editor } from '@tiptap/react';
 import { toast } from 'sonner';
 
+import { useAuth } from '@/shared/context/AuthContext';
 import { uploadPostImageFile } from '../utils/uploadPostImageFile';
 import { uploadPostVideoFile } from '../utils/uploadPostVideoFile';
 
@@ -66,6 +67,8 @@ export function useMediaUpload({
   setIsImageUploading,
   setIsVideoUploading,
 }: UseMediaUploadParams) {
+  const { user } = useAuth();
+
   const closeEditorPopovers = useCallback(() => {
     closeLinkPopover();
     closeYoutubePopover();
@@ -156,7 +159,7 @@ export function useMediaUpload({
     setIsImageUploading(true);
 
     try {
-      const { publicUrl, altText } = await uploadPostImageFile(file);
+      const { publicUrl, altText } = await uploadPostImageFile(file, { userId: user?.id });
       handleAddImage(publicUrl, altText, imageInsertionPositionRef.current);
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
@@ -165,7 +168,7 @@ export function useMediaUpload({
       imageInsertionPositionRef.current = null;
       setIsImageUploading(false);
     }
-  }, [editor, handleAddImage, imageInsertionPositionRef, setIsImageUploading]);
+  }, [editor, handleAddImage, imageInsertionPositionRef, setIsImageUploading, user?.id]);
 
   const handleVideoToolbarClick = useCallback(() => {
     if (isVideoUploading) return;
@@ -199,7 +202,7 @@ export function useMediaUpload({
 
     try {
       const [{ publicUrl, caption }] = await Promise.all([
-        uploadPostVideoFile(file),
+        uploadPostVideoFile(file, { userId: user?.id }),
         ensureAdditionalExtensions(),
       ]);
 
@@ -216,6 +219,7 @@ export function useMediaUpload({
     ensureAdditionalExtensions,
     handleAddVideo,
     setIsVideoUploading,
+    user?.id,
     videoInsertionPositionRef,
   ]);
 

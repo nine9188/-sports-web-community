@@ -163,8 +163,13 @@ async function convertToWebP(file: File): Promise<File> {
   });
 }
 
+type UploadPostImageFileOptions = {
+  userId?: string | null;
+};
+
 export async function uploadPostImageFile(
-  file: File
+  file: File,
+  options: UploadPostImageFileOptions = {}
 ): Promise<{ publicUrl: string; altText: string }> {
   try {
     logImageDebug('upload start', {
@@ -206,28 +211,34 @@ export async function uploadPostImageFile(
 
     const supabase = getSupabaseBrowser();
 
-    logImageDebug('user check start');
+    let userId = options.userId ?? null;
 
-    const userRequest = supabase.auth.getUser();
-    
-    const { data: userData, error: userError } = await withTimeout<
-      Awaited<typeof userRequest>
-    >(
-      userRequest,
-      SESSION_TIMEOUT_MS,
-      '로그인 사용자 확인 시간이 초과되었습니다. 새로고침 후 다시 시도해주세요.'
-    );
-    
-    const user = userData.user;
-    
-    logImageDebug('user check result', {
-      hasUser: !!user,
-      userId: user?.id,
-      userError,
-    });
-    
-    if (userError || !user) {
-      throw new Error('로그인 상태를 확인해주세요.');
+    if (!userId) {
+      logImageDebug('user check start');
+
+      const userRequest = supabase.auth.getUser();
+
+      const { data: userData, error: userError } = await withTimeout<
+        Awaited<typeof userRequest>
+      >(
+        userRequest,
+        SESSION_TIMEOUT_MS,
+        '로그인 사용자 확인 시간이 초과되었습니다. 새로고침 후 다시 시도해주세요.'
+      );
+
+      const user = userData.user;
+
+      logImageDebug('user check result', {
+        hasUser: !!user,
+        userId: user?.id,
+        userError,
+      });
+
+      if (userError || !user) {
+        throw new Error('로그인 상태를 확인해주세요.');
+      }
+
+      userId = user.id;
     }
 
     const fileToUpload =
@@ -247,7 +258,7 @@ export async function uploadPostImageFile(
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
     const safeFileName = fileToUpload.name.replace(/[^a-zA-Z0-9.]/g, '_');
-    const fileName = `${user.id}/images/${timestamp}_${randomString}_${safeFileName}`;
+    const fileName = `${userId}/images/${timestamp}_${randomString}_${safeFileName}`;
 
     logImageDebug('supabase upload start', {
       bucket: 'post-images',

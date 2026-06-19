@@ -5,7 +5,14 @@ import { getSupabaseBrowser } from '@/shared/lib/supabase';
 const MAX_VIDEO_SIZE_BYTES = 30 * 1024 * 1024;
 const ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
 
-export async function uploadPostVideoFile(file: File): Promise<{ publicUrl: string; caption: string }> {
+type UploadPostVideoFileOptions = {
+  userId?: string | null;
+};
+
+export async function uploadPostVideoFile(
+  file: File,
+  options: UploadPostVideoFileOptions = {}
+): Promise<{ publicUrl: string; caption: string }> {
   if (!file.type.startsWith('video/')) {
     throw new Error('동영상 파일만 업로드할 수 있습니다.');
   }
@@ -22,15 +29,21 @@ export async function uploadPostVideoFile(file: File): Promise<{ publicUrl: stri
   }
 
   const supabase = getSupabaseBrowser();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+  let userId = options.userId ?? null;
 
-  if (userError || !userData?.user) {
-    throw new Error('로그인 상태를 확인해주세요.');
+  if (!userId) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      throw new Error('로그인 상태를 확인해주세요.');
+    }
+
+    userId = userData.user.id;
   }
 
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 8);
-  const fileName = `${userData.user.id}/videos/${timestamp}_${randomString}_${safeFileName}`;
+  const fileName = `${userId}/videos/${timestamp}_${randomString}_${safeFileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from('post-videos')
