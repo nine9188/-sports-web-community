@@ -82,10 +82,10 @@ export default async function NewsWidget({ news }: NewsWidgetServerProps) {
         )}
       </div>
 
-      {/* 추가 뉴스 2열 그리드 (5~14번째) */}
+      {/* 추가 뉴스 2열 그리드 (5~24번째) */}
       {news.length > 4 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {news.slice(4, 14).map((item) => (
+          {news.slice(4, 24).map((item) => (
             <SideCard key={item.id} item={item} />
           ))}
         </div>

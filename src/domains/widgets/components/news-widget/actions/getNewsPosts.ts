@@ -7,7 +7,7 @@ import { validateImageUrl } from '../utils';
 import { getCachedBoardBySlug } from '@/domains/boards/actions/getCachedBoards';
 
 /** 게시판당 가져올 게시글 수 */
-const POSTS_LIMIT = 15;
+const POSTS_LIMIT = 24;
 
 /**
  * 단일 게시판 뉴스 조회 DB 로직 (캐시 래퍼 내부)

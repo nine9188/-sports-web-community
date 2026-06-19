@@ -17,6 +17,7 @@ import { getTransferLeagueTeamGroups } from '@/domains/livescore/actions/transfe
 import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 import { siteConfig } from '@/shared/config';
+import { resolveTeamIndexability } from '@/domains/livescore/actions/seoIndexability';
 
 interface TeamTransfersPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -107,6 +108,12 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
     label: '팀 이적시장',
   });
 
+  const { shouldNoindex } = await resolveTeamIndexability({
+    teamId: context.teamId,
+    leagueId: context.team.league_id,
+    hasQueryState,
+  });
+
   return buildMetadata({
     title: `${teamName} 이적시장`,
     description,
@@ -117,7 +124,7 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
     keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, ...playerNames, '축구 이적시장', '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
+    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
   });
 }
 
