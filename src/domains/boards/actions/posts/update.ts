@@ -9,6 +9,7 @@ import { extractFirstImageUrl } from '@/domains/boards/utils/post/extractFirstIm
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { submitIndexNowUrl } from '@/shared/seo/indexnow';
 import { revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { incrementUserEmoticonUsage } from '../emoticonUsage';
 import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
@@ -179,8 +180,9 @@ export async function updatePost(
     }
     revalidatePostListCaches(boardSlug);
 
-    // 후처리 작업 (병렬 실행 - 응답 차단하지 않음)
-    Promise.all([
+    // 후처리 작업 (응답 이후 실행)
+    after(() => {
+      void Promise.all([
       // 카드 링크 갱신
       (async () => {
         try {
@@ -216,8 +218,9 @@ export async function updatePost(
             if (!result.ok) console.error('[IndexNow] post update submit failed:', result);
           })
         : Promise.resolve()
-    ]).catch(err => {
-      console.error('게시글 수정 후처리 실패 (무시됨):', err);
+      ]).catch(err => {
+        console.error('게시글 수정 후처리 실패 (무시됨):', err);
+      });
     });
 
     return {

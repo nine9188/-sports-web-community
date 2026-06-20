@@ -64,6 +64,18 @@ export function usePostSubmit({
   setError,
   setIsSubmitting,
 }: UsePostSubmitParams) {
+  const navigateToPost = useCallback((href: string) => {
+    router.push(href);
+
+    if (typeof window === 'undefined') return;
+
+    window.setTimeout(() => {
+      if (window.location.pathname !== href) {
+        window.location.assign(href);
+      }
+    }, 2500);
+  }, [router]);
+
   const buildDealInfo = useCallback((forUpdate = false): DealInfo => {
     const { store, productName, price, originalPrice, shipping, dealUrl } = hotdealStateRef.current;
 
@@ -199,7 +211,7 @@ export function usePostSubmit({
       void deletePostDraft(currentDraftId);
     }
 
-    router.push(`/boards/${boardSlug}/${post.post_number}`);
+    navigateToPost(`/boards/${boardSlug}/${post.post_number}`);
   }, [
     allBoardsFlat,
     autoTags,
@@ -209,8 +221,8 @@ export function usePostSubmit({
     formStateRef,
     handleErrorResponse,
     isHotdeal,
+    navigateToPost,
     pollDraft,
-    router,
   ]);
 
   const handleUpdatePost = useCallback(async () => {
@@ -234,7 +246,7 @@ export function usePostSubmit({
     }
 
     toast.success('게시글이 수정되었습니다.');
-    router.push(`/boards/${result.boardSlug}/${result.postNumber}`);
+    navigateToPost(`/boards/${result.boardSlug}/${result.postNumber}`);
   }, [
     autoTags,
     buildDealInfo,
@@ -242,8 +254,8 @@ export function usePostSubmit({
     formStateRef,
     handleErrorResponse,
     isHotdeal,
+    navigateToPost,
     postId,
-    router,
   ]);
 
   const handleSubmit = useCallback(async (event: FormEvent) => {

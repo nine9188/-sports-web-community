@@ -23,6 +23,98 @@ function renderTipTapChildren(node: TipTapNode): string {
   return node.content.map((child) => renderTipTapNode(child)).join('');
 }
 
+function isStandaloneListNode(node: TipTapNode): boolean {
+  return [
+    'image',
+    'video',
+    'youtube',
+    'socialEmbed',
+    'matchCard',
+    'teamCard',
+    'playerCard',
+    'entityCardGroup',
+    'predictionChart',
+    'pollBlock',
+    'table',
+    'horizontalRule',
+  ].includes(node.type);
+}
+
+function renderParagraphContent(node: TipTapNode): string {
+  if (node.type !== 'paragraph' || !Array.isArray(node.content)) return '';
+
+  let paragraphContent = '';
+
+  node.content.forEach((textNode) => {
+    if (textNode.type === 'text' && textNode.text) {
+      let text = textNode.text;
+
+      const chartMarkerRegex = /\[MATCH_STATS_CHART:(.*?)\]/g;
+      text = text.replace(chartMarkerRegex, '경기 통계 차트');
+
+      if (textNode.marks && Array.isArray(textNode.marks)) {
+        textNode.marks.forEach((mark) => {
+          if (mark.type === 'bold') {
+            text = `<strong>${text}</strong>`;
+          } else if (mark.type === 'italic') {
+            text = `<em>${text}</em>`;
+          } else if (mark.type === 'link' && mark.attrs?.href) {
+            const href = mark.attrs.href;
+            const target = mark.attrs.target || '_blank';
+            const rel = mark.attrs.rel || 'noopener noreferrer';
+            text = `<a href="${href}" target="${target}" rel="${rel}">${text}</a>`;
+          }
+        });
+      }
+
+      paragraphContent += text;
+    }
+  });
+
+  return paragraphContent;
+}
+
+function renderListNode(node: TipTapNode, tag: 'ul' | 'ol', className: string): string {
+  if (!Array.isArray(node.content)) return '';
+
+  const parts: string[] = [];
+  let listItems: string[] = [];
+
+  const flushListItems = () => {
+    if (listItems.length === 0) return;
+    parts.push(`<${tag} class="${className}">${listItems.join('')}</${tag}>`);
+    listItems = [];
+  };
+
+  node.content
+    .filter((listItem) => listItem.type === 'listItem')
+    .forEach((listItem) => {
+      const children = Array.isArray(listItem.content)
+        ? listItem.content.filter((child) => !isEmptyParagraphNode(child))
+        : [];
+
+      children.forEach((child) => {
+        if (isStandaloneListNode(child)) {
+          flushListItems();
+          parts.push(renderTipTapNode(child));
+          return;
+        }
+
+        const rendered = child.type === 'paragraph'
+          ? renderParagraphContent(child)
+          : renderTipTapNode(child);
+
+        if (rendered.trim()) {
+          listItems.push(`<li>${rendered}</li>`);
+        }
+      });
+    });
+
+  flushListItems();
+
+  return parts.join('');
+}
+
 /**
  * Render a TipTap node to HTML.
  */
@@ -242,33 +334,7 @@ export function renderTipTapNode(node: TipTapNode): string {
   }
 
   if (node.type === 'paragraph' && node.content && Array.isArray(node.content)) {
-    let paragraphContent = '';
-
-    node.content.forEach((textNode) => {
-      if (textNode.type === 'text' && textNode.text) {
-        let text = textNode.text;
-
-        const chartMarkerRegex = /\[MATCH_STATS_CHART:(.*?)\]/g;
-        text = text.replace(chartMarkerRegex, '경기 통계 차트');
-
-        if (textNode.marks && Array.isArray(textNode.marks)) {
-          textNode.marks.forEach((mark) => {
-            if (mark.type === 'bold') {
-              text = `<strong>${text}</strong>`;
-            } else if (mark.type === 'italic') {
-              text = `<em>${text}</em>`;
-            } else if (mark.type === 'link' && mark.attrs?.href) {
-              const href = mark.attrs.href;
-              const target = mark.attrs.target || '_blank';
-              const rel = mark.attrs.rel || 'noopener noreferrer';
-              text = `<a href="${href}" target="${target}" rel="${rel}">${text}</a>`;
-            }
-          });
-        }
-
-        paragraphContent += text;
-      }
-    });
+    const paragraphContent = renderParagraphContent(node);
 
     if (paragraphContent.trim()) {
       return `<p>${paragraphContent}</p>`;
@@ -288,21 +354,11 @@ export function renderTipTapNode(node: TipTapNode): string {
   }
 
   if (node.type === 'bulletList' && Array.isArray(node.content)) {
-    const listItems = node.content
-      .filter((listItem) => listItem.type === 'listItem')
-      .map((listItem) => renderTipTapNode(listItem))
-      .join('');
-
-    return `<ul class="list-disc list-inside mb-4">${listItems}</ul>`;
+    return renderListNode(node, 'ul', 'list-disc list-inside mb-4');
   }
 
   if (node.type === 'orderedList' && Array.isArray(node.content)) {
-    const listItems = node.content
-      .filter((listItem) => listItem.type === 'listItem')
-      .map((listItem) => renderTipTapNode(listItem))
-      .join('');
-
-    return `<ol class="list-decimal list-inside mb-4">${listItems}</ol>`;
+    return renderListNode(node, 'ol', 'list-decimal list-inside mb-4');
   }
 
   if (node.type === 'listItem') {

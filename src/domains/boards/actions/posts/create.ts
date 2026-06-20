@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { after } from 'next/server';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkReferralMilestone } from '@/shared/actions/referral-actions';
 import { logUserAction, logError } from '@/shared/actions/log-actions';
@@ -221,8 +222,7 @@ async function createPostInternal(params: {
     revalidateTag(`user-stats-${userId}`, 'default');
     revalidatePostListCaches(boardSlug);
 
-    // 후처리: 본문 분리 저장, 카드 링크, 로그, 보상 (전부 fire-and-forget)
-    // 게시글 INSERT 이미 성공 → 사용자 응답 차단하지 않음
+    // 게시글 상세 페이지가 작성 직후 바로 조회하므로 본문 저장은 응답 전에 보장한다.
     const postId = data.id;
     const postNumber = data.post_number;
 
@@ -238,22 +238,24 @@ async function createPostInternal(params: {
       }
     }
 
-    Promise.all([
-      // posts_content 분리 저장
-      (async () => {
-        try {
-          const contentText = extractSummary(content, 10000);
-          const supabaseAny = supabase as unknown as {
-            from: (table: string) => {
-              insert: (data: unknown) => Promise<{ error: { message: string } | null }>;
-            };
-          };
-          const { error: contentError } = await supabaseAny
-            .from('posts_content')
-            .insert({ post_id: postId, content: parsedContent, content_text: contentText });
-          if (contentError) console.error('[posts_content INSERT 실패]', contentError.message);
-        } catch (e) { console.error('[posts_content INSERT 예외]', e); }
-      })(),
+    try {
+      const contentText = extractSummary(content, 10000);
+      const supabaseAny = supabase as unknown as {
+        from: (table: string) => {
+          insert: (data: unknown) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+      const { error: contentError } = await supabaseAny
+        .from('posts_content')
+        .insert({ post_id: postId, content: parsedContent, content_text: contentText });
+      if (contentError) console.error('[posts_content INSERT 실패]', contentError.message);
+    } catch (e) {
+      console.error('[posts_content INSERT 예외]', e);
+    }
+
+    // 후처리: 카드 링크, 로그, 보상, 외부 ping 등은 응답 이후로 미룬다.
+    after(() => {
+      void Promise.all([
       // 카드 링크 저장
       (async () => {
         try {
@@ -283,7 +285,8 @@ async function createPostInternal(params: {
       // 첫 게시글 마일스톤
       supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
         .then(({ count }) => { if (count === 1) return checkReferralMilestone(userId, 'first_post'); }),
-    ]).catch(err => console.error('게시글 후처리 실패 (무시됨):', err));
+      ]).catch(err => console.error('게시글 후처리 실패 (무시됨):', err));
+    });
 
     return { success: true, post: data as unknown as CreatedPost };
   } catch (error) {
