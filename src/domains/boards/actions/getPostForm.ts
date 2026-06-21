@@ -38,12 +38,19 @@ export async function getPostEditData(slug: string, postNumber: string) {
       };
     }
 
-    const { data: postRaw, error: postError } = await supabase
+    const [{ data: postRaw, error: postError }, { data: viewerProfile }] = await Promise.all([
+      supabase
       .from('posts')
-      .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name)')
+      .select('id, title, user_id, board_id, post_number, views, likes, dislikes, tags, category, status, created_at, updated_at, source_url, meta, is_hidden, is_deleted, is_notice, is_event, event_type, event_boards, event_created_at, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, thumbnail_url, summary, profiles(nickname), board:board_id(name)')
       .eq('board_id', board.id)
       .eq('post_number', parseInt(postNumber, 10))
-      .single();
+      .single(),
+      supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .maybeSingle(),
+    ]);
 
     if (postError || !postRaw) {
       return {
@@ -72,6 +79,7 @@ export async function getPostEditData(slug: string, postNumber: string) {
         content: contentRow?.content ?? null,
       },
       board,
+      isAdmin: Boolean(viewerProfile?.is_admin),
     };
   } catch (error) {
     console.error('게시글 수정 데이터 로드 오류:', error);
@@ -118,6 +126,7 @@ export async function getCreatePostData(slug: string, viewerProfile?: ViewerProf
       success: true,
       board,
       allBoards: writableBoards,
+      isAdmin: permissions.isAdmin,
     };
   } catch (error) {
     console.error('게시글 작성 데이터 로드 오류:', error instanceof Error ? error.message : String(error));

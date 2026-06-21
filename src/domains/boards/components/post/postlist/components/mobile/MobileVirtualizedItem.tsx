@@ -13,6 +13,7 @@ import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTit
 import { renderAuthor, renderContentTypeIcons } from '../shared/PostRenderers';
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
+import { PostLabelBadge } from '../shared/PostLabelBadge';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -71,6 +72,7 @@ export const MobileVirtualizedItem = React.memo(function MobileVirtualizedItem({
     >
       <Link href={href} prefetch={false} className="block w-full overflow-hidden" onClick={handleClick}>
         <div className="flex items-center gap-1 mb-1.5">
+          <PostLabelBadge post={post} size="sm" />
           <PostTitleWithCommentCount
             title={titleText}
             commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}

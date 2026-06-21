@@ -114,6 +114,7 @@ export default async function CreatePostPage({
             views: (board as unknown as Record<string, unknown>).views as number || 0,
           }))}
           isCreateMode={true}
+          isAdmin={Boolean(result.isAdmin)}
         />
       </div>
     );

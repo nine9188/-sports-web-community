@@ -18,6 +18,7 @@ import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl, SITE_ICON_URL } fro
 import { AuthorLink } from '@/domains/user/components';
 import { formatPrice, getDiscountRate } from '@/domains/boards/utils/hotdeal';
 import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
+import { hasPostLabel, PostLabelBadge } from '../shared/PostLabelBadge';
 
 /**
  * 데스크톱 게시글 아이템 (비가상화)
@@ -117,15 +118,7 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
           {/* 제목 + 아이콘 + 댓글 수 */}
           <Link href={href} prefetch={false} className="block overflow-hidden" onClick={handleClick}>
             <div className="flex items-center gap-1 mb-1">
-              {post.is_notice && (
-                <span className={`inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none flex-shrink-0 whitespace-nowrap ${
-                  post.is_must_read
-                    ? 'bg-red-600 dark:bg-red-700 text-white'
-                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-                }`}>
-                  {post.is_must_read ? '필독' : '공지'}
-                </span>
-              )}
+              <PostLabelBadge post={post} />
               <PostTitleWithCommentCount
                 title={titleText}
                 commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}
@@ -156,15 +149,9 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
 
           {/* 메타 정보 */}
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            {post.is_notice ? (
-              <Link href="/boards/notice" prefetch={false} className="inline-flex items-center">
-                <span className={`inline-flex items-center h-4 px-1.5 py-0 rounded text-[10px] font-semibold leading-none whitespace-nowrap ${
-                  post.is_must_read
-                    ? 'bg-red-600 dark:bg-red-700 text-white'
-                    : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-                }`}>
-                  {post.is_must_read ? '필독' : '공지'}
-                </span>
+            {hasPostLabel(post) ? (
+              <Link href={post.is_notice ? '/boards/notice' : `/boards/${post.board_slug}`} prefetch={false} className="inline-flex items-center">
+                <PostLabelBadge post={post} size="sm" />
               </Link>
             ) : (
               <Link href={`/boards/${post.board_slug}`} prefetch={false} className="hover:underline text-gray-700 dark:text-gray-300">
@@ -210,20 +197,16 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
     >
       {/* 게시판 컬럼 */}
       {showBoard && (
-        <td className="py-2 pl-3 pr-1 align-middle">
-          {post.is_notice ? (
-            <Link href="/boards/notice" prefetch={false} className="flex items-center ml-6">
-              <span className={`inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none whitespace-nowrap ${
-                post.is_must_read
-                  ? 'bg-red-600 dark:bg-red-700 text-white'
-                  : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200'
-              }`}>
-                {post.is_must_read ? '필독' : '공지'}
-              </span>
-            </Link>
-          ) : (
-            renderBoardLogo(post)
-          )}
+        <td className="py-2 px-1 align-middle">
+          <div className="flex justify-center items-center w-full">
+            {hasPostLabel(post) ? (
+              <Link href={post.is_notice ? '/boards/notice' : `/boards/${post.board_slug}`} prefetch={false} className="inline-flex items-center">
+                <PostLabelBadge post={post} />
+              </Link>
+            ) : (
+              renderBoardLogo(post)
+            )}
+          </div>
         </td>
       )}
 

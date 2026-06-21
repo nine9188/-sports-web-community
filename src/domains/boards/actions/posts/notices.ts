@@ -3,7 +3,7 @@
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
-import type { Post, NoticeType } from '@/domains/boards/types/post';
+import type { EventType, Post, NoticeType } from '@/domains/boards/types/post';
 
 /**
  * 공지사항 조회 (전체 공지 + 게시판별 공지)
@@ -19,7 +19,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       return [];
     }
 
-    // 공지사항 쿼리 시작
+    // 공지사항 및 이벤트 쿼리 시작 (OR 필터 적용)
     let query = supabase
       .from('posts')
       .select(`
@@ -35,6 +35,9 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         likes,
         dislikes,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         is_must_read,
         notice_type,
         notice_boards,
@@ -58,13 +61,13 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         ),
         comments!post_id(count)
       `)
-      .eq('is_notice', true);
+      .or('is_notice.eq.true,is_event.eq.true')
+      .eq('is_deleted', false)
+      .eq('is_hidden', false);
 
-    // 게시판 필터링
+    // 게시판 필터링 (공지 및 이벤트 대응)
     if (boardId) {
-      // 특정 게시판: 전체 공지 + 해당 게시판 공지
-      // notice_boards 배열에 boardId가 포함되어 있는지 확인
-      query = query.or(`notice_type.eq.global,and(notice_type.eq.board,notice_boards.cs.{${boardId}})`);
+      query = query.or(`notice_type.eq.global,and(notice_type.eq.board,notice_boards.cs.{${boardId}}),event_type.eq.global,and(event_type.eq.board,event_boards.cs.{${boardId}})`);
     }
     // boardId가 없으면 모든 공지 조회 (공지 게시판용)
 
@@ -97,6 +100,9 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       likes?: number;
       dislikes?: number;
       is_notice?: boolean;
+      is_event?: boolean;
+      event_type?: EventType | null;
+      event_boards?: string[] | null;
       is_must_read?: boolean;
       notice_type?: NoticeType;
       notice_boards?: string[] | null;
@@ -233,6 +239,9 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         likes: notice.likes || 0,
         dislikes: notice.dislikes || 0,
         is_notice: notice.is_notice || false,
+        is_event: notice.is_event || false,
+        event_type: notice.event_type || 'global',
+        event_boards: notice.event_boards || null,
         is_must_read: notice.is_must_read || false,
         notice_type: notice.notice_type || null,
         notice_boards: notice.notice_boards || null,
@@ -321,8 +330,9 @@ export async function getGlobalNotices(): Promise<Post[]> {
         ),
         comments!post_id(count)
       `)
-      .eq('is_notice', true)
-      .eq('notice_type', 'global')
+      .or('and(is_notice.eq.true,notice_type.eq.global),and(is_event.eq.true,event_type.eq.global)')
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .order('is_must_read', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -428,9 +438,9 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
         ),
         comments!post_id(count)
       `)
-      .eq('is_notice', true)
-      .eq('notice_type', 'board')
-      .contains('notice_boards', [boardId])
+      .or(`and(is_notice.eq.true,notice_type.eq.board,notice_boards.cs.{${boardId}}),and(is_event.eq.true,event_type.eq.board,event_boards.cs.{${boardId}})`)
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
       .order('is_must_read', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -446,4 +456,3 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
     return [];
   }
 }
-

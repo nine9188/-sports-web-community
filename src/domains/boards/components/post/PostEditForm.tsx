@@ -240,6 +240,8 @@ interface PostEditFormProps {
   allBoardsFlat?: Board[];
   isCreateMode?: boolean;
   initialDealInfo?: DealInfo | null;
+  initialIsEvent?: boolean;
+  isAdmin?: boolean;
 }
 
 export default function PostEditForm({
@@ -252,7 +254,9 @@ export default function PostEditForm({
   setCategoryId,
   allBoardsFlat = [],
   isCreateMode = false,
-  initialDealInfo = null
+  initialDealInfo = null,
+  initialIsEvent = false,
+  isAdmin = false,
 }: PostEditFormProps) {
   const {
     title,
@@ -299,6 +303,7 @@ export default function PostEditForm({
   const [toolbarPollPopoverPosition, setToolbarPollPopoverPosition] = useState<LocalPopoverPosition | null>(null);
   const [showPollModal, setShowPollModal] = useState(false);
   const [pollDraft, setPollDraft] = useState<PostPollDraft | null>(null);
+  const [isEvent, setIsEvent] = useState(initialIsEvent);
   const [autoTags, setAutoTags] = useState<string[]>([]);
   const [relatedConnections, setRelatedConnections] = useState<RelatedPostCta[]>([]);
   const [selectionLinkPopoverPosition, setSelectionLinkPopoverPosition] = useState<{ top: number; left: number } | null>(null);
@@ -706,6 +711,7 @@ export default function PostEditForm({
     allBoardsFlat,
     autoTags,
     pollDraft,
+    isEvent: isAdmin ? isEvent : undefined,
     formStateRef,
     hotdealStateRef,
     setError,
@@ -763,6 +769,21 @@ export default function PostEditForm({
             setOriginalPrice={setOriginalPrice}
             setShipping={setShipping}
           />
+
+          {isAdmin && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/70 dark:bg-amber-900/20">
+              <input
+                id="isEvent"
+                type="checkbox"
+                checked={isEvent}
+                onChange={(event) => setIsEvent(event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 bg-white text-amber-600 focus:ring-amber-500 dark:border-gray-600 dark:bg-[#333333]"
+              />
+              <label htmlFor="isEvent" className="text-[13px] font-medium text-gray-900 dark:text-[#F0F0F0]">
+                이벤트 라벨 표시
+              </label>
+            </div>
+          )}
 
           <PostEditorSection
             editor={editor}

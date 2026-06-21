@@ -22,6 +22,9 @@ type HomePostRow = {
   thumbnail_url?: string | null;
   deal_info?: unknown;
   is_notice?: boolean | null;
+  is_event?: boolean | null;
+  event_type?: 'global' | 'board' | null;
+  event_boards?: string[] | null;
   is_must_read?: boolean | null;
   notice_type?: 'global' | 'board' | null;
   show_in_widget?: boolean | null;
@@ -174,6 +177,9 @@ function mapHomePost(row: HomePostRow, logoMaps: LogoMaps = {}): Post {
     league_logo_dark: leagueId ? logoMaps.leagueLogoDarkMap?.[leagueId] || null : null,
     formattedDate: createdAt ? formatDate(createdAt) : '-',
     is_notice: row.is_notice || false,
+    is_event: Boolean(row.is_event && (row.event_type || 'global') === 'global'),
+    event_type: row.event_type || 'global',
+    event_boards: row.event_boards || null,
     notice_type: row.notice_type || null,
     is_must_read: row.is_must_read || false,
     is_hidden: row.is_hidden || false,
@@ -200,6 +206,9 @@ const getHomeLatestPosts = unstable_cache(
         thumbnail_url,
         deal_info,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         is_must_read,
         notice_type,
         is_hidden,
@@ -257,6 +266,9 @@ const getHomeWidgetNotices = unstable_cache(
         user_id,
         thumbnail_url,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         is_must_read,
         notice_type,
         show_in_widget,
@@ -277,7 +289,7 @@ const getHomeWidgetNotices = unstable_cache(
         ),
         comments!post_id(count)
       `)
-      .eq('is_notice', true)
+      .or('is_notice.eq.true,is_event.eq.true')
       .eq('show_in_widget', true)
       .order('is_must_read', { ascending: false })
       .order('created_at', { ascending: false })

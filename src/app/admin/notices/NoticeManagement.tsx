@@ -3,37 +3,48 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import type { Post, NoticeType } from '@/domains/boards/types/post';
+import type { EventType, Post, NoticeType } from '@/domains/boards/types/post';
 import { NoticeBadge } from '@/domains/boards/components/notice';
 import Spinner from '@/shared/components/Spinner';
 import { inputBaseStyles, focusStyles } from '@/shared/styles';
 import { cn } from '@/shared/utils/cn';
 import {
   useAdminNotices,
+  useAdminEventPosts,
   useBoardsForNotice,
   useSetNoticeByNumberMutation,
   useRemoveNoticeMutation,
   useUpdateNoticeTypeMutation,
   useToggleWidgetMutation,
+  useSetPostEventByNumberMutation,
+  useTogglePostEventMutation,
 } from '@/domains/admin/hooks/useAdminNotices';
 import HierarchicalBoardPicker from './HierarchicalBoardPicker';
 
 export default function NoticeManagement() {
   const { data: notices = [], isLoading: noticesLoading } = useAdminNotices();
+  const { data: eventPosts = [], isLoading: eventPostsLoading } = useAdminEventPosts();
   const { data: boards = [], isLoading: boardsLoading } = useBoardsForNotice();
 
   const setNoticeMutation = useSetNoticeByNumberMutation();
   const removeNoticeMutation = useRemoveNoticeMutation();
   const updateNoticeTypeMutation = useUpdateNoticeTypeMutation();
   const toggleWidgetMutation = useToggleWidgetMutation();
+  const setPostEventByNumberMutation = useSetPostEventByNumberMutation();
+  const togglePostEventMutation = useTogglePostEventMutation();
 
   const [selectedPostNumber, setSelectedPostNumber] = useState<string>('');
+  const [selectedEventPostNumber, setSelectedEventPostNumber] = useState<string>('');
+  const [selectedEventType, setSelectedEventType] = useState<EventType>('global');
+  const [selectedEventBoardIds, setSelectedEventBoardIds] = useState<string[]>([]);
   const [selectedNoticeType, setSelectedNoticeType] = useState<NoticeType>('global');
   const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
   const [isMustRead, setIsMustRead] = useState<boolean>(false);
   const [showInWidget, setShowInWidget] = useState<boolean>(false);
   const [boardPickerNoticeId, setBoardPickerNoticeId] = useState<string | null>(null);
   const [boardPickerBoardIds, setBoardPickerBoardIds] = useState<string[]>([]);
+  const [eventBoardPickerPostId, setEventBoardPickerPostId] = useState<string | null>(null);
+  const [eventBoardPickerBoardIds, setEventBoardPickerBoardIds] = useState<string[]>([]);
 
   const orderedNotices = useMemo(() => {
     const noticeCreatedAtTs = (value?: string | null) => {
@@ -63,8 +74,24 @@ export default function NoticeManagement() {
     );
   };
 
+  const toggleEventBoard = (boardId: string) => {
+    setSelectedEventBoardIds((prev) =>
+      prev.includes(boardId)
+        ? prev.filter((id) => id !== boardId)
+        : [...prev, boardId]
+    );
+  };
+
   const toggleBoardForPicker = (boardId: string) => {
     setBoardPickerBoardIds((prev) =>
+      prev.includes(boardId)
+        ? prev.filter((id) => id !== boardId)
+        : [...prev, boardId]
+    );
+  };
+
+  const toggleEventBoardForPicker = (boardId: string) => {
+    setEventBoardPickerBoardIds((prev) =>
       prev.includes(boardId)
         ? prev.filter((id) => id !== boardId)
         : [...prev, boardId]
@@ -74,6 +101,11 @@ export default function NoticeManagement() {
   const cancelBoardPicker = () => {
     setBoardPickerNoticeId(null);
     setBoardPickerBoardIds([]);
+  };
+
+  const cancelEventBoardPicker = () => {
+    setEventBoardPickerPostId(null);
+    setEventBoardPickerBoardIds([]);
   };
 
   const handleSetNotice = async () => {
@@ -146,6 +178,120 @@ export default function NoticeManagement() {
     }
   };
 
+  const handleSetEventLabel = async () => {
+    if (!selectedEventPostNumber) {
+      toast.warning('게시글 번호를 입력하세요.');
+      return;
+    }
+
+    if (selectedEventType === 'board' && selectedEventBoardIds.length === 0) {
+      toast.warning('게시판을 하나 이상 선택하세요.');
+      return;
+    }
+
+    try {
+      const result = await setPostEventByNumberMutation.mutateAsync({
+        postNumber: parseInt(selectedEventPostNumber, 10),
+        isEvent: true,
+        eventType: selectedEventType,
+        boardIds: selectedEventType === 'board' ? selectedEventBoardIds : undefined,
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+        setSelectedEventPostNumber('');
+        setSelectedEventBoardIds([]);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('이벤트 라벨 설정 실패:', error);
+      toast.error('이벤트 라벨 설정 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleToggleEventLabel = async (
+    postId: string,
+    currentValue: boolean,
+    eventType: EventType = 'global',
+    boardIds?: string[] | null
+  ) => {
+    if (!currentValue && eventType === 'board' && (!boardIds || boardIds.length === 0)) {
+      toast.warning('게시판을 하나 이상 선택하세요.');
+      return;
+    }
+
+    try {
+      const result = await togglePostEventMutation.mutateAsync({
+        postId,
+        isEvent: !currentValue,
+        eventType,
+        boardIds: eventType === 'board' ? boardIds || undefined : undefined,
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('이벤트 라벨 변경 실패:', error);
+      toast.error('이벤트 라벨 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleChangeEventType = async (
+    post: { id: string; event_boards?: string[] | null },
+    newType: EventType
+  ) => {
+    if (newType === 'board') {
+      setEventBoardPickerPostId(post.id);
+      setEventBoardPickerBoardIds(post.event_boards ?? []);
+      return;
+    }
+
+    try {
+      const result = await togglePostEventMutation.mutateAsync({
+        postId: post.id,
+        isEvent: true,
+        eventType: newType,
+      });
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('이벤트 타입 변경 실패:', error);
+      toast.error('이벤트 타입 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleApplyEventBoardTypeChange = async (postId: string) => {
+    if (eventBoardPickerBoardIds.length === 0) {
+      toast.warning('게시판을 하나 이상 선택하세요.');
+      return;
+    }
+
+    try {
+      const result = await togglePostEventMutation.mutateAsync({
+        postId,
+        isEvent: true,
+        eventType: 'board',
+        boardIds: eventBoardPickerBoardIds,
+      });
+      if (result.success) {
+        toast.success(result.message);
+        cancelEventBoardPicker();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('이벤트 타입 변경 실패:', error);
+      toast.error('이벤트 타입 변경 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleChangeType = async (postId: string, newType: NoticeType, currentNotice: Post) => {
     if (newType === 'board') {
       setBoardPickerNoticeId(postId);
@@ -203,9 +349,9 @@ export default function NoticeManagement() {
 
   return (
     <div className="space-y-8">
-      {/* 공지 시스템 가이드 */}
+      {/* 공지/이벤트 시스템 가이드 */}
       <div className="bg-[#F5F5F5] dark:bg-[#262626] rounded-lg p-5 border border-black/7 dark:border-white/10">
-        <h2 className="text-[15px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">공지 시스템 가이드</h2>
+        <h2 className="text-[15px] font-semibold text-gray-900 dark:text-[#F0F0F0] mb-3">공지/이벤트 시스템 가이드</h2>
         <div className="space-y-3 text-[13px] text-gray-700 dark:text-gray-300">
           <div>
             <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">공지 타입 (우선순위순)</p>
@@ -217,12 +363,94 @@ export default function NoticeManagement() {
           </div>
           <div>
             <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">표시 순서</p>
-            <p>필독 (최신순) &rarr; 전체공지 (최신순) &rarr; 게시판공지 (최신순) &rarr; 일반 게시글</p>
+            <p>목록 라벨은 필독 &rarr; 공지 &rarr; 이벤트 순서로 하나만 표시됩니다.</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">이벤트 라벨</p>
+            <p>전체 이벤트는 모든 게시판 목록에 표시되고, 게시판 이벤트는 선택한 게시판 목록에서만 표시됩니다.</p>
           </div>
           <div>
             <p className="font-medium text-gray-900 dark:text-[#F0F0F0] mb-1">위젯 표시</p>
             <p>&ldquo;전체 게시글 위젯에 표시&rdquo;를 켜면 홈 페이지 전체글 위젯 상단에 노출됩니다.</p>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg p-6 border border-black/7 dark:border-white/10">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">
+          이벤트 라벨 설정
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
+              게시글 번호 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={selectedEventPostNumber}
+              onChange={(e) => setSelectedEventPostNumber(e.target.value)}
+              placeholder="게시글 번호 (예: 123)"
+              className={cn('w-full px-4 py-2 rounded-lg', inputBaseStyles, focusStyles)}
+              min="1"
+            />
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
+              공지 글에도 설정할 수 있지만 목록에서는 필독/공지 라벨이 우선 표시됩니다.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
+              이벤트 타입
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="global"
+                  checked={selectedEventType === 'global'}
+                  onChange={(e) => {
+                    setSelectedEventType(e.target.value as EventType);
+                    setSelectedEventBoardIds([]);
+                  }}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">전체 이벤트</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="board"
+                  checked={selectedEventType === 'board'}
+                  onChange={(e) => setSelectedEventType(e.target.value as EventType)}
+                  className="mr-2"
+                />
+                <span className="text-gray-700 dark:text-gray-300">게시판 이벤트</span>
+              </label>
+            </div>
+          </div>
+
+          {selectedEventType === 'board' && (
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
+                이벤트 라벨을 표시할 게시판 선택
+              </label>
+              <HierarchicalBoardPicker
+                boards={boards}
+                boardsLoading={boardsLoading}
+                selectedBoardIds={selectedEventBoardIds}
+                onToggleBoard={toggleEventBoard}
+              />
+            </div>
+          )}
+
+          <button
+            onClick={handleSetEventLabel}
+            disabled={setPostEventByNumberMutation.isPending}
+            className="w-full px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+          >
+            {setPostEventByNumberMutation.isPending ? '저장 중...' : '이벤트 라벨 표시'}
+          </button>
         </div>
       </div>
 
@@ -361,7 +589,7 @@ export default function NoticeManagement() {
 
                   <div className="flex-1">
                     <Link
-                      href={`/boards/${notice.board?.slug || 'unknown'}/${notice.id}`}
+                      href={`/boards/${notice.board_slug || notice.board?.slug || 'unknown'}/${notice.post_number}`}
                       className="group"
                     prefetch={false}
                     >
@@ -372,6 +600,12 @@ export default function NoticeManagement() {
                     <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                       {notice.is_must_read && <span className="text-red-600 dark:text-red-400 font-semibold">필독 | </span>}
                       게시판 {notice.board?.name || '알 수 없음'} | ID: {notice.id}
+                      {notice.is_event && (
+                        <span className="text-amber-600 dark:text-amber-300 font-semibold">
+                          {' | '}
+                          {notice.event_type === 'board' ? '게시판 이벤트' : '전체 이벤트'}
+                        </span>
+                      )}
                       {notice.notice_type === 'board' && notice.notice_boards && (
                         <>
                           <br />
@@ -392,6 +626,17 @@ export default function NoticeManagement() {
                       }`}
                     >
                       위젯 {(notice as any).show_in_widget ? 'ON' : 'OFF'}
+                    </button>
+                    <button
+                      onClick={() => handleToggleEventLabel(notice.id, Boolean(notice.is_event), notice.event_type || 'global', notice.event_boards)}
+                      disabled={togglePostEventMutation.isPending}
+                      className={`px-3 py-1 text-[13px] rounded transition-colors disabled:opacity-50 ${
+                        notice.is_event
+                          ? 'bg-amber-100 hover:bg-amber-200 dark:bg-amber-900 dark:hover:bg-amber-800 text-amber-700 dark:text-amber-200'
+                          : 'bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      이벤트 {notice.is_event ? 'ON' : 'OFF'}
                     </button>
                     <select
                       value={notice.notice_type || 'global'}
@@ -436,6 +681,98 @@ export default function NoticeManagement() {
                       </button>
                       <button
                         onClick={cancelBoardPicker}
+                        className="px-3 py-1 text-[13px] bg-gray-100 hover:bg-gray-200 dark:bg-[#1F1F1F] dark:hover:bg-[#2A2A2A] text-gray-700 dark:text-gray-300 rounded transition-colors"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-[#1D1D1D] rounded-lg p-6 border border-black/7 dark:border-white/10">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-[#F0F0F0]">
+          현재 이벤트 라벨 게시글 ({eventPosts.length}개)
+        </h2>
+
+        {eventPostsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        ) : eventPosts.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">이벤트 라벨이 설정된 게시글이 없습니다.</p>
+        ) : (
+          <div className="space-y-3">
+            {eventPosts.map((post) => (
+              <div
+                key={post.id}
+                className="border border-black/7 dark:border-white/10 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#2D2D2D] transition-colors"
+              >
+                <div className="flex items-center gap-4 p-4">
+                  <span className="inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none flex-shrink-0 whitespace-nowrap bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-200">
+                    이벤트
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/boards/${post.board_slug || 'unknown'}/${post.post_number}`}
+                      className="group"
+                      prefetch={false}
+                    >
+                      <h3 className="font-medium text-gray-900 dark:text-[#F0F0F0] group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors truncate">
+                        {post.title}
+                      </h3>
+                    </Link>
+                    <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
+                      {post.board_name} | #{post.post_number}
+                      {' | '}
+                      {post.event_type === 'board' ? `게시판 이벤트 (${post.event_boards?.length || 0}개)` : '전체 이벤트'}
+                      {post.is_must_read ? ' | 필독 우선 표시' : post.is_notice ? ' | 공지 우선 표시' : ''}
+                    </div>
+                  </div>
+
+                  <select
+                    value={post.event_type || 'global'}
+                    onChange={(e) => handleChangeEventType(post, e.target.value as EventType)}
+                    disabled={togglePostEventMutation.isPending}
+                    className="px-2 py-1 text-[13px] bg-gray-200 dark:bg-[#262626] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50 border-none cursor-pointer"
+                  >
+                    <option value="global">전체 이벤트</option>
+                    <option value="board">게시판 이벤트</option>
+                  </select>
+                  <button
+                    onClick={() => handleToggleEventLabel(post.id, true)}
+                    disabled={togglePostEventMutation.isPending}
+                    className="px-3 py-1 text-[13px] bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded transition-colors disabled:opacity-50"
+                  >
+                    해제
+                  </button>
+                </div>
+                {eventBoardPickerPostId === post.id && (
+                  <div className="px-4 pb-4">
+                    <div className="text-[13px] text-gray-700 dark:text-gray-300 mb-2">
+                      이벤트 라벨을 표시할 게시판 선택
+                    </div>
+                    <HierarchicalBoardPicker
+                      boards={boards}
+                      boardsLoading={boardsLoading}
+                      selectedBoardIds={eventBoardPickerBoardIds}
+                      onToggleBoard={toggleEventBoardForPicker}
+                    />
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={() => handleApplyEventBoardTypeChange(post.id)}
+                        disabled={togglePostEventMutation.isPending}
+                        className="px-3 py-1 text-[13px] bg-gray-200 hover:bg-gray-300 dark:bg-[#262626] dark:hover:bg-[#333333] text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-50"
+                      >
+                        적용
+                      </button>
+                      <button
+                        onClick={cancelEventBoardPicker}
                         className="px-3 py-1 text-[13px] bg-gray-100 hover:bg-gray-200 dark:bg-[#1F1F1F] dark:hover:bg-[#2A2A2A] text-gray-700 dark:text-gray-300 rounded transition-colors"
                       >
                         취소

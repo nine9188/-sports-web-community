@@ -1,8 +1,8 @@
 'use server';
 
 import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
-import type { NoticeType } from '@/domains/boards/types/post';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import type { EventType, NoticeType } from '@/domains/boards/types/post';
 import { checkAdmin } from '@/shared/utils/checkAdmin';
 
 interface SetNoticeResult {
@@ -13,13 +13,28 @@ interface SetNoticeResult {
 
 type PostData = { id: string; board_id: string | null; is_notice?: boolean; notice_type?: NoticeType | null };
 
+export type AdminEventPost = {
+  id: string;
+  title: string;
+  post_number: number;
+  board_id: string | null;
+  board_name: string;
+  board_slug: string;
+  created_at: string | null;
+  is_event: boolean;
+  event_type?: EventType | null;
+  event_boards?: string[] | null;
+  is_notice: boolean;
+  is_must_read: boolean;
+};
+
 const ERROR_MESSAGES = {
   UNAUTHORIZED: '관리자 권한이 필요합니다.',
   SUPABASE_ERROR: 'Supabase 연결 실패',
   POST_NOT_FOUND: '게시글을 찾을 수 없습니다.',
   NOT_NOTICE: '공지사항이 아닙니다.',
   NOT_BOARD_NOTICE: '게시판 공지사항만 대상 게시판을 변경할 수 있습니다.',
-  BOARD_IDS_REQUIRED: '게시판 공지는 최소 하나 이상의 게시판을 선택해야 합니다.',
+  BOARD_IDS_REQUIRED: '게시판 공지/이벤트는 최소 하나 이상의 게시판을 선택해야 합니다.',
   UPDATE_ERROR: (action: string) => `${action} 중 오류가 발생했습니다.`,
   UNKNOWN_ERROR: (action: string) => `${action} 중 오류가 발생했습니다.`
 } as const;
@@ -76,6 +91,9 @@ async function validateNoticeAction(
  */
 function revalidateNoticePaths(boardId: string | null, additionalBoardIds?: string[]): void {
   revalidatePath('/boards/notices');
+  revalidatePath('/');
+  revalidateTag('home-widgets', 'default');
+  revalidateTag('posts', 'default');
   if (boardId) {
     revalidatePath(`/boards/${boardId}`);
   }
@@ -312,6 +330,114 @@ export async function toggleWidgetVisibility(postId: string, showInWidget: boole
   } catch (error) {
     console.error('위젯 표시 변경 중 오류:', error);
     return createError('UNKNOWN_ERROR', ERROR_MESSAGES.UNKNOWN_ERROR('위젯 표시 변경'));
+  }
+}
+
+export async function togglePostEventLabel(
+  postId: string,
+  isEvent: boolean,
+  eventType: EventType = 'global',
+  boardIds?: string[]
+): Promise<SetNoticeResult> {
+  try {
+    if (isEvent && eventType === 'board' && (!boardIds || boardIds.length === 0)) {
+      return createError('BOARD_IDS_REQUIRED', ERROR_MESSAGES.BOARD_IDS_REQUIRED);
+    }
+
+    const validation = await validateNoticeAction(postId, 'id, board_id');
+    if (!('supabase' in validation)) return validation;
+
+    const { supabase, post } = validation;
+    const updateData = isEvent
+      ? {
+          is_event: true,
+          event_type: eventType,
+          event_boards: eventType === 'board' ? boardIds : null,
+          event_created_at: new Date().toISOString(),
+        }
+      : {
+          is_event: false,
+          event_type: null,
+          event_boards: null,
+          event_created_at: null,
+        };
+
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update(updateData as Record<string, unknown>)
+      .eq('id', postId);
+
+    if (updateError) {
+      console.error('이벤트 라벨 변경 오류:', updateError);
+      return createError('UPDATE_ERROR', ERROR_MESSAGES.UPDATE_ERROR('이벤트 라벨 변경'));
+    }
+
+    revalidateNoticePaths(post.board_id);
+    revalidatePath('/boards');
+    return createSuccess(isEvent ? '이벤트 라벨이 표시됩니다.' : '이벤트 라벨이 해제되었습니다.');
+  } catch (error) {
+    console.error('이벤트 라벨 변경 중 오류:', error);
+    return createError('UNKNOWN_ERROR', ERROR_MESSAGES.UNKNOWN_ERROR('이벤트 라벨 변경'));
+  }
+}
+
+export async function getEventLabelPosts(): Promise<AdminEventPost[]> {
+  try {
+    const isAdmin = await checkAdminPermission();
+    if (!isAdmin) return [];
+
+    const supabase = await getSupabaseServer();
+    if (!supabase) return [];
+
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        id,
+        title,
+        post_number,
+        board_id,
+        created_at,
+        is_event,
+        event_type,
+        event_boards,
+        is_notice,
+        is_must_read,
+        boards (
+          name,
+          slug
+        )
+      `)
+      .eq('is_event', true)
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error || !data) {
+      console.error('이벤트 라벨 게시글 조회 오류:', error);
+      return [];
+    }
+
+    return data.map((post) => {
+      const board = Array.isArray(post.boards) ? post.boards[0] : post.boards;
+      return {
+        id: post.id,
+        title: post.title || '',
+        post_number: post.post_number || 0,
+        board_id: post.board_id || null,
+        board_name: board?.name || '알 수 없는 게시판',
+        board_slug: board?.slug || '',
+        created_at: post.created_at || null,
+        is_event: Boolean(post.is_event),
+        event_type: (post.event_type as EventType | null) || 'global',
+        event_boards: post.event_boards || null,
+        is_notice: Boolean(post.is_notice),
+        is_must_read: Boolean(post.is_must_read),
+      };
+    });
+  } catch (error) {
+    console.error('이벤트 라벨 게시글 조회 중 오류:', error);
+    return [];
   }
 }
 

@@ -84,7 +84,10 @@ export function convertNoticesToLayoutPosts(notices: Post[]): LayoutPost[] {
       comment_count: notice.comment_count ?? 0,
       content,
       team_id: teamId,
-      league_id: leagueId
+      league_id: leagueId,
+      is_notice: notice.is_notice,
+      is_event: notice.is_event,
+      is_must_read: notice.is_must_read
     };
   });
 }
@@ -105,6 +108,13 @@ export function processNoticesForLayout(
   if (isNoticeBoard) {
     // 공지사항 게시판: 모든 공지를 게시글 목록으로 표시
     const noticePosts = convertNoticesToLayoutPosts(noticesData.allNotices);
+
+    // 하단 목록은 필독 구분 없이 작성 시간 역순(최신순)으로 정렬
+    noticePosts.sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
 
     return {
       posts: noticePosts,

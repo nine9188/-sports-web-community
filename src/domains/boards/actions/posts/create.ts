@@ -18,6 +18,11 @@ import type { PostActionResponse } from './utils';
 import { calculateBoardViewerPermissions } from '../permissions';
 import type { PostPollDraft } from '@/domains/boards/types/poll';
 import { revalidatePostListCaches } from './cacheInvalidation';
+import {
+  extractPostPollDraftFromContent,
+  normalizePostPollDraft,
+  syncPostPoll,
+} from './pollSync';
 
 // 생성된 게시글 타입
 interface CreatedPost {
@@ -43,70 +48,6 @@ type CreatePostResult = {
   error: string;
 }
 
-function normalizePostPollDraft(value: unknown): PostPollDraft | null {
-  if (!value || typeof value !== 'object') return null;
-
-  const draft = value as { question?: unknown; options?: unknown };
-  const question = typeof draft.question === 'string' ? draft.question.trim() : '';
-  const options = Array.isArray(draft.options)
-    ? draft.options
-        .map((option) => typeof option === 'string' ? option.trim() : '')
-        .filter(Boolean)
-        .slice(0, 5)
-    : [];
-
-  if (!question || options.length < 2) return null;
-
-  return {
-    question: question.slice(0, 120),
-    options: options.map((option) => option.slice(0, 80)),
-  };
-}
-
-async function insertPostPoll(params: {
-  supabase: unknown;
-  postId: string;
-  userId: string;
-  poll: PostPollDraft;
-}) {
-  const { supabase, postId, userId, poll } = params;
-  const supabaseAny = supabase as {
-    from: (table: string) => {
-      insert: (row: unknown) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
-        };
-      } | Promise<{ error: { message: string } | null }>;
-    };
-  };
-
-  const pollInsert = supabaseAny.from('post_polls').insert({
-    post_id: postId,
-    question: poll.question,
-    created_by: userId,
-  }) as {
-    select: (columns: string) => {
-      single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }>;
-    };
-  };
-
-  const { data: pollRow, error: pollError } = await pollInsert.select('id').single();
-  if (pollError || !pollRow) {
-    throw new Error(pollError?.message || '투표 생성에 실패했습니다.');
-  }
-
-  const optionRows = poll.options.map((optionText, index) => ({
-    poll_id: pollRow.id,
-    option_text: optionText,
-    display_order: index,
-  }));
-
-  const { error: optionError } = await supabaseAny.from('post_poll_options').insert(optionRows) as { error: { message: string } | null };
-  if (optionError) {
-    throw new Error(optionError.message);
-  }
-}
-
 /**
  * 게시글 생성 공통 로직
  */
@@ -119,10 +60,11 @@ async function createPostInternal(params: {
   noticeType?: 'global' | 'board' | null;
   noticeBoards?: string[] | null;
   noticeOrder?: number;
+  isEvent?: boolean;
   dealInfo?: Record<string, unknown> | null;
   poll?: PostPollDraft | null;
 }): Promise<CreatePostResult> {
-  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, dealInfo, poll } = params;
+  const { title, content, boardId, userId, isNotice, noticeType, noticeBoards, noticeOrder, isEvent, dealInfo, poll } = params;
 
   try {
     const supabase = await getSupabaseAction();
@@ -166,6 +108,13 @@ async function createPostInternal(params: {
       };
     }
 
+    if (isEvent && !profile?.is_admin) {
+      return {
+        success: false,
+        error: '이벤트 라벨은 관리자만 설정할 수 있습니다.',
+      };
+    }
+
     // content JSON 파싱 (posts_content에 저장하기 위해 변수로 추출)
     const parsedContent = typeof content === 'string' && content.startsWith('{')
       ? JSON.parse(content)
@@ -181,7 +130,13 @@ async function createPostInternal(params: {
       thumbnail_url: thumbnailUrl,
       summary: extractSummary(content),
       tags: autoTags,
+      is_event: Boolean(isEvent && profile?.is_admin),
     };
+    if (isEvent && profile?.is_admin) {
+      insertData.event_type = 'global';
+      insertData.event_boards = null;
+      insertData.event_created_at = new Date().toISOString();
+    }
 
     // 핫딜 정보 추가
     if (dealInfo) {
@@ -189,7 +144,8 @@ async function createPostInternal(params: {
     }
 
     // 공지 정보 추가
-    if (isNotice) {
+    const shouldBeNotice = isNotice || boardData.slug === 'notice' || boardData.slug === 'notices';
+    if (shouldBeNotice) {
       insertData.is_notice = true;
       insertData.notice_type = noticeType || 'global';
       insertData.notice_order = noticeOrder || 0;
@@ -226,9 +182,10 @@ async function createPostInternal(params: {
     const postId = data.id;
     const postNumber = data.post_number;
 
-    if (poll) {
+    const contentPoll = poll ?? extractPostPollDraftFromContent(parsedContent);
+    if (contentPoll) {
       try {
-        await insertPostPoll({ supabase, postId, userId, poll });
+        await syncPostPoll({ supabase, postId, userId, poll: contentPoll });
       } catch (pollError) {
         console.error('[post_poll INSERT 실패]', pollError);
         return {
@@ -351,6 +308,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
 
     // 공지 정보 추출
     const isNotice = formData.get('isNotice') === 'true';
+    const isEvent = formData.get('isEvent') === 'true';
     const noticeType = formData.get('noticeType') as 'global' | 'board' | null;
     const noticeBoardsStr = formData.get('noticeBoards') as string | null;
     const noticeOrderStr = formData.get('noticeOrder') as string | null;
@@ -398,6 +356,7 @@ export async function createPost(formData: FormData): Promise<CreatePostResult> 
       noticeType,
       noticeBoards,
       noticeOrder: noticeOrderStr ? parseInt(noticeOrderStr, 10) : 0,
+      isEvent,
       dealInfo,
       poll
     });

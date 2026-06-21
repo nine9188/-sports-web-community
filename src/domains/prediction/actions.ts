@@ -25,6 +25,10 @@ function truncatePollText(value: string, maxLength: number) {
   return value.trim().slice(0, maxLength)
 }
 
+function createPollOptionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+}
+
 function createMatchPredictionPoll(homeName: string, awayName: string): PredictionPostPollDraft {
   const home = truncatePollText(homeName, 58)
   const away = truncatePollText(awayName, 58)
@@ -110,6 +114,7 @@ async function insertPredictionPostPoll(params: {
   }
 
   const optionRows = poll.options.map((optionText, index) => ({
+    id: createPollOptionId(),
     poll_id: pollRow.id,
     option_text: optionText,
     display_order: index,

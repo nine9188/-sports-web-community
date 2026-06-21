@@ -93,6 +93,9 @@ interface RawPostData {
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
+  is_event?: boolean;
+  event_type?: 'global' | 'board' | null;
+  event_boards?: string[] | null;
   profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null };
   thumbnail_url?: string | null;
   deal_info?: DealInfo | null;
@@ -132,6 +135,9 @@ export interface Post {
   is_hidden?: boolean;
   is_deleted?: boolean;
   is_notice?: boolean;
+  is_event?: boolean;
+  event_type?: 'global' | 'board' | null;
+  event_boards?: string[] | null;
   deal_info?: DealInfo | null;
 }
 
@@ -231,7 +237,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .from('posts')
       .select(`
         id, title, created_at, updated_at, board_id, views, likes,
-        post_number, user_id, is_hidden, is_deleted, is_notice,
+        post_number, user_id, is_hidden, is_deleted, is_notice, is_event, event_type, event_boards,
         profiles (id, nickname, level, exp, icon_id, public_id),
         thumbnail_url, deal_info
       `)
@@ -352,8 +358,21 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     ]);
 
     // 최종 데이터 포맷팅
+    const eventBoardContextId =
+      currentBoardFilter ||
+      (targetBoardsFilter?.length === 1 ? targetBoardsFilter[0] : null);
     const formattedPosts = typedPostsData.map(post =>
-      formatPostData(post, boardsData, teamLogoMap, leagueLogoMap, profileMap, iconMap, commentCountMap, leagueLogoDarkMap)
+      formatPostData(
+        post,
+        boardsData,
+        teamLogoMap,
+        leagueLogoMap,
+        profileMap,
+        iconMap,
+        commentCountMap,
+        leagueLogoDarkMap,
+        eventBoardContextId
+      )
     );
 
     return {

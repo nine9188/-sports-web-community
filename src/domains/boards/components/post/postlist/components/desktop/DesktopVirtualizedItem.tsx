@@ -13,6 +13,7 @@ import { buildPostDetailHref, extractFirstImageUrl, getPostTitleText, getPostTit
 import { renderContentTypeIcons, renderAuthor, renderBoardLogo } from '../shared/PostRenderers';
 import { normalizeDisplayImageUrl, shouldUnoptimizeImageUrl } from '@/shared/images/urls';
 import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
+import { hasPostLabel, PostLabelBadge } from '../shared/PostLabelBadge';
 
 interface VirtualizedItemData {
   posts: Post[];
@@ -83,7 +84,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
       {/* 게시판 컬럼 */}
       {showBoard && (
         <div className="py-2 px-3 flex items-center" style={{ width: '120px' }}>
-          {renderBoardLogo(post)}
+          {hasPostLabel(post) ? <PostLabelBadge post={post} /> : renderBoardLogo(post)}
         </div>
       )}
 
@@ -91,6 +92,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
       <div className="py-2 px-4 flex-1 min-w-0">
         <Link href={href} prefetch={false} onClick={handleClick}>
           <div className="flex items-center gap-1 min-w-0">
+            {!showBoard && <PostLabelBadge post={post} />}
             <PostTitleWithCommentCount
               title={titleText}
               commentCount={!post.is_deleted && !post.is_hidden ? post.comment_count : 0}

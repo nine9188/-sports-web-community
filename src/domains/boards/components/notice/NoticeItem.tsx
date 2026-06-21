@@ -29,6 +29,8 @@ export interface NoticeListPost {
   formattedDate?: string;
   notice_type?: NoticeType | null;
   is_must_read?: boolean;
+  is_notice?: boolean;
+  is_event?: boolean;
   team_id?: string | number | null;
   league_id?: string | number | null;
   comment_count?: number;
@@ -61,13 +63,29 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     return notice.formattedDate || '-';
   }, [notice.formattedDate]);
 
+  // 배지 공통 렌더러
+  const renderBadge = useMemo(() => {
+    if (notice.is_must_read) {
+      return <NoticeBadge type={notice.notice_type || 'global'} isMustRead={true} />;
+    }
+    if (notice.is_event) {
+      return (
+        <span className="inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none flex-shrink-0 whitespace-nowrap bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-200">
+          이벤트
+        </span>
+      );
+    }
+    if (notice.notice_type) {
+      return <NoticeBadge type={notice.notice_type} isMustRead={false} />;
+    }
+    return null;
+  }, [notice.is_must_read, notice.is_event, notice.notice_type]);
+
   // 게시판 로고 렌더링 함수 (PostList와 동일) - hooks는 항상 같은 순서로 호출되어야 함
   const renderBoardLogo = useMemo(() => {
     if (!showBoardName) {
-      // 공지 배지 표시
-      return notice.notice_type && (
-        <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
-      );
+      // 공지/이벤트 배지 표시
+      return renderBadge;
     }
 
     // 게시판 이름 표시 (로고 포함)
@@ -124,9 +142,9 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       <div className={`py-2 px-3 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}>
         <div className="space-y-1">
           <Link href={postUrl} prefetch={false} className="flex items-center gap-1">
-            {notice.notice_type && (
+            {renderBadge && (
               <div className="flex-shrink-0">
-                <NoticeBadge type={notice.notice_type} isMustRead={notice.is_must_read} />
+                {renderBadge}
               </div>
             )}
             <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">

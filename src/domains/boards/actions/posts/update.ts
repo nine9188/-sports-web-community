@@ -15,6 +15,7 @@ import type { PostActionResponse } from './utils';
 import type { DealInfo } from '../../types/hotdeal';
 import { oneOrNull } from '@/shared/utils/supabaseRelations';
 import { revalidatePostListCaches } from './cacheInvalidation';
+import { extractPostPollDraftFromContent, syncPostPoll } from './pollSync';
 
 /**
  * 게시글 수정 서버 액션
@@ -25,7 +26,8 @@ export async function updatePost(
   title: string,
   content: string,
   dealInfo?: DealInfo | null,
-  _clientTags?: string[]
+  _clientTags?: string[],
+  isEvent?: boolean
 ): Promise<PostActionResponse> {
   if (!postId || !title || !content) {
     return {
@@ -53,6 +55,11 @@ export async function updatePost(
       };
     }
     const userId = user.id;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .maybeSingle();
 
     // 계정 정지 상태 확인
     const suspensionCheck = await checkSuspensionGuard(userId);
@@ -90,6 +97,13 @@ export async function updatePost(
         error: '본인이 작성한 게시글만 수정할 수 있습니다.'
       };
     }
+
+    if (isEvent !== undefined && !profile?.is_admin) {
+      return {
+        success: false,
+        error: '이벤트 라벨은 관리자만 설정할 수 있습니다.'
+      };
+    }
     
     // 매치카드는 TipTap JSON 그대로 저장 (HTML 변환 없음)
     // PostContent.tsx에서 matchCard 노드 감지하여 렌더링
@@ -106,6 +120,10 @@ export async function updatePost(
       thumbnail_url: string | null;
       summary: string;
       tags: string[];
+      is_event?: boolean;
+      event_type?: 'global' | null;
+      event_boards?: null;
+      event_created_at?: string | null;
       deal_info?: DealInfo | null;
     } = {
       title: title.trim(),
@@ -114,6 +132,13 @@ export async function updatePost(
       summary: extractSummary(content),
       tags: autoTags,
     };
+
+    if (isEvent !== undefined) {
+      updateData.is_event = Boolean(isEvent);
+      updateData.event_type = isEvent ? 'global' : null;
+      updateData.event_boards = null;
+      updateData.event_created_at = isEvent ? new Date().toISOString() : null;
+    }
 
     // 핫딜 정보가 제공된 경우 추가
     if (dealInfo !== undefined) {
@@ -156,6 +181,21 @@ export async function updatePost(
       }
     } catch (contentErr) {
       console.error('[posts_content UPSERT 예외]', contentErr);
+    }
+
+    try {
+      await syncPostPoll({
+        supabase,
+        postId,
+        userId,
+        poll: extractPostPollDraftFromContent(parsedContentForTags),
+      });
+    } catch (pollErr) {
+      console.error('[post_poll SYNC 실패]', pollErr);
+      return {
+        success: false,
+        error: pollErr instanceof Error ? `투표 저장 실패: ${pollErr.message}` : '투표 저장에 실패했습니다.',
+      };
     }
 
     // 수정된 게시글 정보 가져오기

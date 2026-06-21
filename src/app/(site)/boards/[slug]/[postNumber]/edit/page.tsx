@@ -65,6 +65,8 @@ export default async function EditPostPage({
           boardName={result.board.name}
           isCreateMode={false}
           initialDealInfo={(result.post.deal_info as unknown as DealInfo) || null}
+          initialIsEvent={Boolean(result.post.is_event)}
+          isAdmin={Boolean(result.isAdmin)}
         />
       </div>
     );

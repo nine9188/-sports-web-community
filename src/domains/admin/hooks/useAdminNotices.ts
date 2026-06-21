@@ -8,9 +8,11 @@ import {
   updateNoticeType,
   getPostIdByNumber,
   toggleWidgetVisibility,
+  togglePostEventLabel,
+  getEventLabelPosts,
 } from '@/domains/boards/actions/posts';
 import { getBoards } from '@/domains/boards/actions/getBoards';
-import type { NoticeType } from '@/domains/boards/types/post';
+import type { EventType, NoticeType } from '@/domains/boards/types/post';
 import { useAsyncData, useAsyncMutation } from './useLocalAsync';
 
 const listeners = new Set<() => void>();
@@ -21,6 +23,19 @@ function notifyNoticesChanged() {
 
 export function useAdminNotices() {
   const query = useAsyncData(() => getNotices());
+
+  useEffect(() => {
+    listeners.add(query.refetch);
+    return () => {
+      listeners.delete(query.refetch);
+    };
+  }, [query.refetch]);
+
+  return query;
+}
+
+export function useAdminEventPosts() {
+  const query = useAsyncData(() => getEventLabelPosts());
 
   useEffect(() => {
     listeners.add(query.refetch);
@@ -108,6 +123,47 @@ export function useToggleWidgetMutation() {
   return useAsyncMutation(
     async ({ postId, showInWidget }: { postId: string; showInWidget: boolean }) =>
       toggleWidgetVisibility(postId, showInWidget),
+    notifyNoticesChanged
+  );
+}
+
+export function useTogglePostEventMutation() {
+  return useAsyncMutation(
+    async ({
+      postId,
+      isEvent,
+      eventType,
+      boardIds,
+    }: {
+      postId: string;
+      isEvent: boolean;
+      eventType?: EventType;
+      boardIds?: string[];
+    }) => togglePostEventLabel(postId, isEvent, eventType, boardIds),
+    notifyNoticesChanged
+  );
+}
+
+export function useSetPostEventByNumberMutation() {
+  return useAsyncMutation(
+    async ({
+      postNumber,
+      isEvent,
+      eventType,
+      boardIds,
+    }: {
+      postNumber: number;
+      isEvent: boolean;
+      eventType?: EventType;
+      boardIds?: string[];
+    }) => {
+      const lookupResult = await getPostIdByNumber(postNumber);
+      if (!lookupResult.success) {
+        return { success: false, message: lookupResult.error };
+      }
+
+      return togglePostEventLabel(lookupResult.postId, isEvent, eventType, boardIds);
+    },
     notifyNoticesChanged
   );
 }

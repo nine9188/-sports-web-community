@@ -5,6 +5,7 @@ import { FormattedPost } from './formatted';
 
 // 공지사항 타입
 export type NoticeType = 'global' | 'board';
+export type EventType = 'global' | 'board';
 
 export interface Post {
   id: string;
@@ -29,6 +30,10 @@ export interface Post {
   // 공지사항 관련 필드
   is_notice?: boolean;
   is_must_read?: boolean; // 필독 공지 여부
+  is_event?: boolean; // 이벤트 라벨 표시 여부
+  event_type?: EventType | null;
+  event_boards?: string[] | null; // 이벤트 라벨을 표시할 게시판 ID 배열 (다중 선택)
+  event_created_at?: string | null;
   notice_type?: NoticeType | null;
   notice_boards?: string[] | null; // 공지를 표시할 게시판 ID 배열 (다중 선택)
   notice_order?: number | null;

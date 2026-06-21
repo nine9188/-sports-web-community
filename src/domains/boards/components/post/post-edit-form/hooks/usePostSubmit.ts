@@ -41,6 +41,7 @@ type UsePostSubmitParams = {
   allBoardsFlat: Board[];
   autoTags: string[];
   pollDraft: PostPollDraft | null;
+  isEvent?: boolean;
   formStateRef: MutableRefObject<FormState>;
   hotdealStateRef: MutableRefObject<HotdealState>;
   setError: (error: string | null) => void;
@@ -59,6 +60,7 @@ export function usePostSubmit({
   allBoardsFlat,
   autoTags,
   pollDraft,
+  isEvent,
   formStateRef,
   hotdealStateRef,
   setError,
@@ -181,6 +183,10 @@ export function usePostSubmit({
       formData.append('tags', JSON.stringify(autoTags));
     }
 
+    if (isEvent !== undefined) {
+      formData.append('isEvent', String(isEvent));
+    }
+
     const result = await createPost(formData);
 
     if (!result.success) {
@@ -220,6 +226,7 @@ export function usePostSubmit({
     editor,
     formStateRef,
     handleErrorResponse,
+    isEvent,
     isHotdeal,
     navigateToPost,
     pollDraft,
@@ -234,7 +241,7 @@ export function usePostSubmit({
     const currentContent = editor ? JSON.stringify(editor.getJSON()) : content;
     const dealInfoToUpdate = isHotdeal ? buildDealInfo(true) : null;
 
-    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate, autoTags);
+    const result = await updatePost(postId, title.trim(), currentContent, dealInfoToUpdate, autoTags, isEvent);
 
     if (!result.success) {
       handleErrorResponse(result.error || '', '게시글 수정에 실패했습니다.');
@@ -254,6 +261,7 @@ export function usePostSubmit({
     formStateRef,
     handleErrorResponse,
     isHotdeal,
+    isEvent,
     navigateToPost,
     postId,
   ]);

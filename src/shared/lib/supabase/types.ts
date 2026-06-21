@@ -1549,6 +1549,10 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           is_hidden: boolean | null
+          is_event: boolean | null
+          event_boards: string[] | null
+          event_created_at: string | null
+          event_type: string | null
           is_must_read: boolean | null
           is_notice: boolean | null
           is_published: boolean | null
@@ -1581,6 +1585,10 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_hidden?: boolean | null
+          is_event?: boolean | null
+          event_boards?: string[] | null
+          event_created_at?: string | null
+          event_type?: string | null
           is_must_read?: boolean | null
           is_notice?: boolean | null
           is_published?: boolean | null
@@ -1613,6 +1621,10 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           is_hidden?: boolean | null
+          is_event?: boolean | null
+          event_boards?: string[] | null
+          event_created_at?: string | null
+          event_type?: string | null
           is_must_read?: boolean | null
           is_notice?: boolean | null
           is_published?: boolean | null

@@ -232,6 +232,9 @@ export function formatPostData(
     is_hidden?: boolean;
     is_deleted?: boolean;
     is_notice?: boolean;
+    is_event?: boolean;
+    event_type?: 'global' | 'board' | null;
+    event_boards?: string[] | null;
     profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
     thumbnail_url?: string | null;
@@ -243,7 +246,8 @@ export function formatPostData(
   userProfileMap: Record<string, { level: number; exp: number; icon_id: number | null }>,
   userIconMap: Record<number, string>,
   commentCountMap: Record<string, number>,
-  leagueLogoDarkMap: Record<string, string> = {}
+  leagueLogoDarkMap: Record<string, string> = {},
+  eventBoardContextId: string | null = null
 ): Post {
   const boardInfo = post.board_id ? boardsData[post.board_id] : null;
   const safeBoardInfo = boardInfo || {
@@ -290,6 +294,14 @@ export function formatPostData(
   const userExp = userId && userProfileMap[userId]
     ? userProfileMap[userId].exp
     : (profile?.exp || 0);
+  const eventType = post.event_type || 'global';
+  const eventBoards = post.event_boards || null;
+  const isEventVisible = Boolean(
+    post.is_event && (
+      eventType === 'global' ||
+      (eventType === 'board' && eventBoardContextId && eventBoards?.includes(eventBoardContextId))
+    )
+  );
 
   return {
     id: post.id,
@@ -321,6 +333,9 @@ export function formatPostData(
     is_hidden: post.is_hidden || false,
     is_deleted: post.is_deleted || false,
     is_notice: post.is_notice || false,
+    is_event: isEventVisible,
+    event_type: eventType,
+    event_boards: eventBoards,
     deal_info: post.deal_info || null
   };
 }

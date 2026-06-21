@@ -51,7 +51,20 @@ interface SearchPostResult {
   is_hidden: boolean;
   is_deleted: boolean;
   is_notice: boolean;
+  is_event: boolean;
+  event_type?: 'global' | 'board' | null;
+  event_boards?: string[] | null;
   thumbnail_url: string | null;
+}
+
+function shouldShowEventLabel(
+  post: { is_event?: boolean; event_type?: 'global' | 'board' | null; event_boards?: string[] | null },
+  boardContextId: string | null
+): boolean {
+  if (!post.is_event) return false;
+  const eventType = post.event_type || 'global';
+  if (eventType === 'global') return true;
+  return Boolean(boardContextId && post.event_boards?.includes(boardContextId));
 }
 
 // Supabase 클라이언트 타입 단언용
@@ -167,6 +180,9 @@ export async function searchBoardPosts({
         is_hidden,
         is_deleted,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
@@ -249,6 +265,7 @@ export async function searchBoardPosts({
     });
 
     // 포맷팅
+    const eventBoardContextId = boardIds.length === 1 ? boardIds[0] : null;
     const formattedPosts: Post[] = posts.map((post: any) => {
       const profile = post.profiles;
       const board = post.boards;
@@ -290,6 +307,9 @@ export async function searchBoardPosts({
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,
+        is_event: shouldShowEventLabel(post, eventBoardContextId),
+        event_type: post.event_type || 'global',
+        event_boards: post.event_boards || null,
       };
     });
 
@@ -380,6 +400,9 @@ async function searchByComment({
         is_hidden,
         is_deleted,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
@@ -457,6 +480,7 @@ async function searchByComment({
     const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
     // 6. 포맷팅 (댓글 검색은 post 본문 snippet 불필요, content 빈값)
+    const eventBoardContextId = boardIds.length === 1 ? boardIds[0] : null;
     const formattedPosts: Post[] = posts.map((post: any) => {
       const profile = post.profiles;
       const board = post.boards;
@@ -497,6 +521,9 @@ async function searchByComment({
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,
+        is_event: shouldShowEventLabel(post, eventBoardContextId),
+        event_type: post.event_type || 'global',
+        event_boards: post.event_boards || null,
       };
     });
 
@@ -585,6 +612,9 @@ async function searchByNickname({
         is_hidden,
         is_deleted,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
         thumbnail_url,
         profiles!posts_user_id_fkey(
           id,
@@ -662,6 +692,7 @@ async function searchByNickname({
     const { teamLogoMap, leagueLogoMap, leagueLogoDarkMap } = logos;
 
     // 6. 포맷팅
+    const eventBoardContextId = boardIds.length === 1 ? boardIds[0] : null;
     const formattedPosts: Post[] = posts.map((post: any) => {
       const profile = post.profiles;
       const board = post.boards;
@@ -702,6 +733,9 @@ async function searchByNickname({
         is_hidden: post.is_hidden || false,
         is_deleted: post.is_deleted || false,
         is_notice: post.is_notice || false,
+        is_event: shouldShowEventLabel(post, eventBoardContextId),
+        event_type: post.event_type || 'global',
+        event_boards: post.event_boards || null,
       };
     });
 

@@ -93,10 +93,18 @@ function renderListNode(node: TipTapNode, tag: 'ul' | 'ol', className: string): 
         ? listItem.content.filter((child) => !isEmptyParagraphNode(child))
         : [];
 
+      let listItemContent = '';
+      let hasStandalone = false;
+
       children.forEach((child) => {
         if (isStandaloneListNode(child)) {
+          if (listItemContent.trim()) {
+            listItems.push(`<li>${listItemContent}</li>`);
+            listItemContent = '';
+          }
           flushListItems();
           parts.push(renderTipTapNode(child));
+          hasStandalone = true;
           return;
         }
 
@@ -105,9 +113,15 @@ function renderListNode(node: TipTapNode, tag: 'ul' | 'ol', className: string): 
           : renderTipTapNode(child);
 
         if (rendered.trim()) {
-          listItems.push(`<li>${rendered}</li>`);
+          listItemContent += rendered;
         }
       });
+
+      if (!hasStandalone && listItemContent.trim()) {
+        listItems.push(`<li>${listItemContent}</li>`);
+      } else if (hasStandalone && listItemContent.trim()) {
+        listItems.push(`<li>${listItemContent}</li>`);
+      }
     });
 
   flushListItems();
