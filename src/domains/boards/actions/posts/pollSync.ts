@@ -131,6 +131,34 @@ function sameOptions(
   );
 }
 
+function buildOptionRowsByText(
+  existingOptions: Array<Record<string, unknown>>,
+  pollId: string,
+  nextOptions: string[],
+) {
+  const unusedExistingOptions = [...existingOptions];
+
+  return nextOptions.map((optionText, index) => {
+    const matchIndex = unusedExistingOptions.findIndex((option) => option.option_text === optionText);
+    if (matchIndex < 0) {
+      return {
+        id: createUuid(),
+        poll_id: pollId,
+        option_text: optionText,
+        display_order: index,
+      };
+    }
+
+    const [matchedOption] = unusedExistingOptions.splice(matchIndex, 1);
+    return {
+      id: matchedOption.id,
+      poll_id: pollId,
+      option_text: optionText,
+      display_order: index,
+    };
+  });
+}
+
 export async function syncPostPoll(params: {
   supabase: unknown;
   postId: string;
@@ -184,25 +212,27 @@ export async function syncPostPoll(params: {
   const options = existingOptions || [];
   if (sameOptions(options, poll.options)) return;
 
-  const upsertRows = [];
-  const minLength = Math.min(options.length, poll.options.length);
+  const upsertRows = buildOptionRowsByText(options, String(existingPoll.id), poll.options);
+  const nextOptionIds = new Set(upsertRows.map((row) => String(row.id)));
+  const idsToDelete = options
+    .filter((option) => !nextOptionIds.has(String(option.id)))
+    .map((option) => String(option.id));
 
-  for (let i = 0; i < minLength; i++) {
-    upsertRows.push({
-      id: options[i].id,
-      poll_id: String(existingPoll.id),
-      option_text: poll.options[i],
-      display_order: i,
-    });
+  for (let index = 0; index < options.length; index += 1) {
+    const optionId = String(options[index].id);
+    const { error: reorderError } = await adminClient
+      .from('post_poll_options')
+      .update({ display_order: index + 5 })
+      .eq('id', optionId);
+    if (reorderError) throw new Error(reorderError.message);
   }
 
-  for (let i = minLength; i < poll.options.length; i++) {
-    upsertRows.push({
-      id: createUuid(),
-      poll_id: String(existingPoll.id),
-      option_text: poll.options[i],
-      display_order: i,
-    });
+  if (idsToDelete.length > 0) {
+    const { error: deleteError } = await adminClient
+      .from('post_poll_options')
+      .delete()
+      .in('id', idsToDelete);
+    if (deleteError) throw new Error(deleteError.message);
   }
 
   if (upsertRows.length > 0) {
@@ -210,17 +240,5 @@ export async function syncPostPoll(params: {
       .from('post_poll_options')
       .upsert(upsertRows);
     if (upsertError) throw new Error(upsertError.message);
-  }
-
-  if (options.length > poll.options.length) {
-    const idsToDelete = options
-      .slice(poll.options.length)
-      .map(opt => String(opt.id));
-
-    const { error: deleteError } = await adminClient
-      .from('post_poll_options')
-      .delete()
-      .in('id', idsToDelete);
-    if (deleteError) throw new Error(deleteError.message);
   }
 }

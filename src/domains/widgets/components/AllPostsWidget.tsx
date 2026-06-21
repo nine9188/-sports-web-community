@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache';
 import { ChevronRight } from 'lucide-react';
 import PostList, { type Post } from '@/domains/boards/components/post/PostList';
 import { HOTDEAL_BOARD_SLUGS } from '@/domains/boards/types/hotdeal';
+import { getCachedShopItemIconMap } from '@/domains/boards/actions/getCachedShopItems';
 import { getTeamLogoUrls, getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { formatDate } from '@/shared/utils/dateUtils';
@@ -54,6 +55,11 @@ type LogoMaps = {
   teamLogoMap?: Record<number, string>;
   leagueLogoMap?: Record<number, string>;
   leagueLogoDarkMap?: Record<number, string>;
+};
+
+type HomePostEnrichment = LogoMaps & {
+  userIconMap?: Record<number, string>;
+  contentMap?: Record<string, string>;
 };
 
 type SupabaseQueryResult = {
@@ -142,13 +148,64 @@ async function getBoardLogoMaps(rows: HomePostRow[]): Promise<Required<LogoMaps>
   return { teamLogoMap, leagueLogoMap, leagueLogoDarkMap };
 }
 
-function mapHomePost(row: HomePostRow, logoMaps: LogoMaps = {}): Post {
+async function getUserIconMap(rows: HomePostRow[]): Promise<Record<number, string>> {
+  const iconIds = [...new Set(rows.map((row) => row.profiles?.icon_id).filter(Boolean))] as number[];
+  if (iconIds.length === 0) return {};
+
+  const cachedIconMap = await getCachedShopItemIconMap();
+  return iconIds.reduce<Record<number, string>>((acc, iconId) => {
+    if (cachedIconMap[iconId]) {
+      acc[iconId] = cachedIconMap[iconId];
+    }
+    return acc;
+  }, {});
+}
+
+async function getPostContentMap(rows: HomePostRow[]): Promise<Record<string, string>> {
+  const postIds = rows.map((row) => row.id).filter(Boolean);
+  if (postIds.length === 0) return {};
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('posts_content')
+    .select('post_id, content')
+    .in('post_id', postIds);
+
+  if (error || !data) {
+    if (error) console.error('[AllPostsWidget] content query failed:', error);
+    return {};
+  }
+
+  const contentRows = data as Array<{ post_id: string | null; content: unknown }>;
+
+  return contentRows.reduce<Record<string, string>>((acc, row) => {
+    if (row.post_id) {
+      acc[row.post_id] = typeof row.content === 'string'
+        ? row.content
+        : JSON.stringify(row.content || '');
+    }
+    return acc;
+  }, {});
+}
+
+async function getHomePostEnrichment(rows: HomePostRow[]): Promise<HomePostEnrichment> {
+  const [logoMaps, userIconMap, contentMap] = await Promise.all([
+    getBoardLogoMaps(rows),
+    getUserIconMap(rows),
+    getPostContentMap(rows),
+  ]);
+
+  return { ...logoMaps, userIconMap, contentMap };
+}
+
+function mapHomePost(row: HomePostRow, enrichment: HomePostEnrichment = {}): Post {
   const board = row.boards;
   const profile = row.profiles;
   const level = profile?.level || 1;
   const createdAt = row.created_at || '';
   const teamId = board?.team_id || null;
   const leagueId = board?.league_id || null;
+  const iconId = profile?.icon_id || null;
 
   return {
     id: row.id,
@@ -165,16 +222,18 @@ function mapHomePost(row: HomePostRow, logoMaps: LogoMaps = {}): Post {
     author_public_id: profile?.public_id || null,
     author_level: level,
     author_exp: profile?.exp || 0,
-    author_icon_id: profile?.icon_id || null,
-    author_icon_url: getLevelIconUrl(level),
+    author_icon_id: iconId,
+    author_icon_url: iconId && enrichment.userIconMap?.[iconId]
+      ? enrichment.userIconMap[iconId]
+      : getLevelIconUrl(level),
     comment_count: row.comments?.[0]?.count || 0,
-    content: '',
+    content: enrichment.contentMap?.[row.id] || '',
     thumbnail_url: row.thumbnail_url || null,
     team_id: teamId,
     league_id: leagueId,
-    team_logo: teamId ? logoMaps.teamLogoMap?.[teamId] || null : null,
-    league_logo: leagueId ? logoMaps.leagueLogoMap?.[leagueId] || null : null,
-    league_logo_dark: leagueId ? logoMaps.leagueLogoDarkMap?.[leagueId] || null : null,
+    team_logo: teamId ? enrichment.teamLogoMap?.[teamId] || null : null,
+    league_logo: leagueId ? enrichment.leagueLogoMap?.[leagueId] || null : null,
+    league_logo_dark: leagueId ? enrichment.leagueLogoDarkMap?.[leagueId] || null : null,
     formattedDate: createdAt ? formatDate(createdAt) : '-',
     is_notice: row.is_notice || false,
     is_event: Boolean(row.is_event && (row.event_type || 'global') === 'global'),
@@ -241,9 +300,9 @@ const getHomeLatestPosts = unstable_cache(
     const rows = (data as unknown as HomePostRow[])
       .filter((row) => !HOTDEAL_SLUGS.has(row.boards?.slug || ''))
       .slice(0, 10);
-    const logoMaps = await getBoardLogoMaps(rows);
+    const enrichment = await getHomePostEnrichment(rows);
 
-    return rows.map((row) => mapHomePost(row, logoMaps));
+    return rows.map((row) => mapHomePost(row, enrichment));
   },
   ['home-latest-posts-widget'],
   { revalidate: 60, tags: ['posts', 'home-widgets'] }
@@ -301,9 +360,9 @@ const getHomeWidgetNotices = unstable_cache(
     }
 
     const rows = data as unknown as HomePostRow[];
-    const logoMaps = await getBoardLogoMaps(rows);
+    const enrichment = await getHomePostEnrichment(rows);
 
-    return rows.map((row) => mapHomePost(row, logoMaps));
+    return rows.map((row) => mapHomePost(row, enrichment));
   },
   ['home-widget-notices'],
   { revalidate: 300, tags: ['posts', 'notices', 'home-widgets'] }

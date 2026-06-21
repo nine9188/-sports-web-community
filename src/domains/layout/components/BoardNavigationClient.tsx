@@ -42,6 +42,7 @@ const createNavBoards = (boards: Board[]): Board[] => {
         { id: 'nav-popular', name: '인기글', slug: 'popular', parent_id: 'nav-posts', display_order: 1, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] }
       ]
     },
+    { id: 'nav-notice', name: '공지사항', slug: 'notice', parent_id: null, display_order: -1, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
     {
       id: 'nav-sports',
       name: '스포츠',
@@ -81,6 +82,7 @@ const createNavBoards = (boards: Board[]): Board[] => {
         ...(creativeBoard ? [{ ...creativeBoard, name: '창작', parent_id: 'nav-community', display_order: 4 }] : [])
       ]
     },
+    { id: 'nav-worldcup', name: '월드컵', slug: 'livescore/football/leagues/1/world-cup', parent_id: null, display_order: 99, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
     // 개별 링크들 (드롭다운 없음)
     { id: 'nav-livescore', name: '라이브스코어', slug: 'livescore/football', parent_id: null, display_order: 100, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
     { id: 'nav-transfers', name: '이적시장', slug: 'transfers', parent_id: null, display_order: 101, team_id: null, league_id: null, description: null, access_level: null, logo: null, views: null, children: [] },
@@ -89,10 +91,10 @@ const createNavBoards = (boards: Board[]): Board[] => {
 };
 
 // 네비에서 제외할 보드 slug 목록 (가상 그룹으로 묶이거나 제외됨)
-const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'youtube', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
+const EXCLUDED_BOARD_SLUGS = ['notice', 'soccer', 'k-league', 'news', 'data-analysis', 'youtube', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
 
 // 가상 보드 중 /boards/ 경로를 사용하는 보드 ID 목록
-const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular', 'nav-sports', 'nav-community'];
+const BOARD_PATH_NAV_IDS = ['nav-posts', 'nav-all', 'nav-popular', 'nav-notice', 'nav-sports', 'nav-community'];
 
 // Props 타입 정의
 interface BoardNavigationClientProps {
@@ -113,8 +115,10 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
   // 전체 보드 (가상 그룹 + 나머지 실제 게시판 + 개별 링크)
   const allBoards = useMemo(() => {
     const postsBoard = navBoards.find(b => b.id === 'nav-posts');
+    const noticeLink = navBoards.find(b => b.id === 'nav-notice');
     const sportsBoard = navBoards.find(b => b.id === 'nav-sports');
     const communityBoard = navBoards.find(b => b.id === 'nav-community');
+    const worldcupLink = navBoards.find(b => b.id === 'nav-worldcup');
     const livescoreLink = navBoards.find(b => b.id === 'nav-livescore');
     const transfersLink = navBoards.find(b => b.id === 'nav-transfers');
     const datacenterLink = navBoards.find(b => b.id === 'nav-datacenter');
@@ -124,8 +128,10 @@ function BoardNavigationClient({ boards, isAdmin = false }: BoardNavigationClien
 
     return [
       ...(postsBoard ? [postsBoard] : []),
+      ...(noticeLink ? [noticeLink] : []),
       ...(sportsBoard ? [sportsBoard] : []),
       ...(communityBoard ? [communityBoard] : []),
+      ...(worldcupLink ? [worldcupLink] : []),
       ...filteredBoards,
       ...(livescoreLink ? [livescoreLink] : []),
       ...(transfersLink ? [transfersLink] : []),

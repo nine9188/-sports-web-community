@@ -83,7 +83,7 @@ export const DesktopVirtualizedItem = React.memo(function DesktopVirtualizedItem
     >
       {/* 게시판 컬럼 */}
       {showBoard && (
-        <div className="py-2 px-3 flex items-center" style={{ width: '120px' }}>
+        <div className={`py-2 px-3 flex items-center ${hasPostLabel(post) ? 'justify-center' : 'justify-start'}`} style={{ width: '120px' }}>
           {hasPostLabel(post) ? <PostLabelBadge post={post} /> : renderBoardLogo(post)}
         </div>
       )}

@@ -198,15 +198,17 @@ export const DesktopPostItem = React.memo(function DesktopPostItem({
       {/* 게시판 컬럼 */}
       {showBoard && (
         <td className="py-2 px-1 align-middle">
-          <div className="flex justify-center items-center w-full">
-            {hasPostLabel(post) ? (
+          {hasPostLabel(post) ? (
+            <div className="flex justify-center items-center w-full">
               <Link href={post.is_notice ? '/boards/notice' : `/boards/${post.board_slug}`} prefetch={false} className="inline-flex items-center">
                 <PostLabelBadge post={post} />
               </Link>
-            ) : (
-              renderBoardLogo(post)
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex justify-start items-center w-full min-w-0">
+              {renderBoardLogo(post)}
+            </div>
+          )}
         </td>
       )}
 

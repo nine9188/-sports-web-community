@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight, Flame, Timer, ArrowLeftRight, Database, ShoppingBag, FileText, Settings } from 'lucide-react';
+import { ChevronDown, ChevronRight, Flame, Megaphone, Trophy, Timer, ArrowLeftRight, Database, ShoppingBag, FileText, Settings } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { BoardNavigationData, HierarchicalBoard } from '../../types';
 import { Board } from '@/domains/layout/types/board';
@@ -11,6 +11,8 @@ import { Board } from '@/domains/layout/types/board';
 // 빠른 이동 메뉴 항목 (전체글 제외 - 별도 처리)
 const quickMenuItems = [
   { href: '/boards/popular', label: '인기글', icon: Flame },
+  { href: '/boards/notice', label: '공지사항', icon: Megaphone },
+  { href: '/livescore/football/leagues/1/world-cup', label: '월드컵', icon: Trophy, featured: true },
   { href: '/livescore/football', label: '라이브스코어', icon: Timer },
   { href: '/transfers', label: '이적시장', icon: ArrowLeftRight },
   { href: '/livescore/football/leagues', label: '리그·팀', icon: Database },
@@ -18,7 +20,7 @@ const quickMenuItems = [
 ];
 
 // 네비에서 제외할 보드 slug 목록 (가상 그룹으로 묶임)
-const EXCLUDED_BOARD_SLUGS = ['soccer', 'k-league', 'news', 'data-analysis', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
+const EXCLUDED_BOARD_SLUGS = ['notice', 'soccer', 'k-league', 'news', 'data-analysis', 'free', 'hotdeal', 'market', 'review', 'creative', 'nav-sports', 'nav-community'];
 
 // 가상 네비게이션 Board 데이터 생성 (헤더와 동일한 구조)
 const createNavBoards = (boards: Board[]): Board[] => {
@@ -265,6 +267,7 @@ export default function ClientBoardNavigation({
       {/* 빠른 이동 메뉴 */}
       {quickMenuItems.map((item) => {
         const isActive = pathname === item.href;
+        const isFeatured = 'featured' in item && item.featured;
         return (
           <Link
             key={item.href}
@@ -272,13 +275,22 @@ export default function ClientBoardNavigation({
             prefetch={false}
             onClick={onNavigate}
             className={`flex items-center gap-3 ${itemText} ${itemPy} px-4 transition-colors ${
-              isActive
-                ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
-                : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
+              isFeatured
+                ? isActive
+                  ? 'bg-yellow-300 text-yellow-950 font-semibold dark:bg-yellow-500/35 dark:text-yellow-50'
+                  : 'bg-yellow-100 text-yellow-950 hover:bg-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-100 dark:hover:bg-yellow-500/25'
+                : isActive
+                  ? 'bg-[#EAEAEA] dark:bg-[#333333] text-gray-900 dark:text-[#F0F0F0] font-medium'
+                  : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333] text-gray-900 dark:text-[#F0F0F0]'
             }`}
           >
-            <item.icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            <span>{item.label}</span>
+            <item.icon className={`w-4 h-4 ${isFeatured ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-500 dark:text-gray-400'}`} />
+            <span className="flex-1">{item.label}</span>
+            {isFeatured && (
+              <span className="rounded-full border border-yellow-400 bg-yellow-200 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-yellow-900 dark:border-yellow-300/40 dark:bg-yellow-300/15 dark:text-yellow-100">
+                2026
+              </span>
+            )}
           </Link>
         );
       })}
