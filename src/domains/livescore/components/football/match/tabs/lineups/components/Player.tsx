@@ -70,6 +70,7 @@ interface PlayerProps {
   matchStatus?: string; // 경기 상태 (예: 'FT', 'LIVE', 'NS')
   playersRatings?: Record<number, number>; // 선수 ID별 평점 (예: { 123: 8.5, 456: 7.2 })
   playerKoreanNames?: PlayerKoreanNames;
+  disableAnimation?: boolean;
 }
 
 // SVG 내부에서 사용할 선수 이미지 컴포넌트
@@ -139,7 +140,14 @@ const SVGPlayerImage = memo(function SVGPlayerImage({ playerId, teamId, photoUrl
   );
 });
 
-const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, awayTeamData, playersRatings, playerKoreanNames = {} }: PlayerProps) {
+const Player = memo(function Player({
+  isMobile: isMobileProp,
+  homeTeamData,
+  awayTeamData,
+  playersRatings,
+  playerKoreanNames = {},
+  disableAnimation = false,
+}: PlayerProps) {
   const textRefs = useRef<{[key: string]: SVGTextElement | null}>({});
   const rectRefs = useRef<{[key: string]: SVGRectElement | null}>({});
   const isMobileCalculated = useMediaQuery('(max-width: 768px)');
@@ -296,15 +304,17 @@ const Player = memo(function Player({ isMobile: isMobileProp, homeTeamData, away
           transform={`translate(${position.x},${position.y})`}
         >
           <motion.g
-            initial={{ opacity: 0, x: initialOffset.x, y: initialOffset.y, scale: 0.9 }}
+            initial={disableAnimation ? false : { opacity: 0, x: initialOffset.x, y: initialOffset.y, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            transition={{ 
-              delay: parseFloat(animationDelay), 
-              type: 'spring', 
-              stiffness: 80, 
-              damping: 16, 
-              mass: 0.8 
-            }}
+            transition={disableAnimation
+              ? { duration: 0 }
+              : {
+                delay: parseFloat(animationDelay),
+                type: 'spring',
+                stiffness: 80,
+                damping: 16,
+                mass: 0.8,
+              }}
           >
           {/* 배경 원 - 회색으로 통일 */}
           <circle

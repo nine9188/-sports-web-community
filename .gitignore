@@ -58,3 +58,12 @@ next-env.d.ts
 # Local MCP and Gemini config files (secrets)
 .mcp.json
 .gemini/settings.json
+
+# Local Netlify folder
+.netlify
+
+# Build outputs and deployment archives
+web2-build.tar.gz
+web2-build*.tar.gz
+/dist/
+

@@ -1,0 +1,58 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "4590fb-settings",
+  "main": "dist/settings-worker.mjs",
+  "compatibility_date": "2026-04-14",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "next-cache"
+    }
+  ],
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "4590fb-settings"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "routes": [
+    {
+      "pattern": "4590fb.com/settings/*",
+      "zone_name": "4590fb.com"
+    }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://4590fb.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://vnjjfhsuzoxcljqqwwvx.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuampmaHN1em94Y2xqcXF3d3Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzNTMwNzksImV4cCI6MjA1NzkyOTA3OX0.oX_VCRyol_gMIFC2PVBPnw392d7nzGf6QCvUD3BU55o",
+    "NEXT_PUBLIC_STORAGE_CDN_URL": "https://cdn.4590fb.com",
+    "NEXT_PUBLIC_KAKAO_CLIENT_ID": "1698fb8dc236580b0d1189a0bee9935d",
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAB46F7svtC67H11P",
+    "NEXT_PUBLIC_ADSENSE_CLIENT_ID": "ca-pub-8892057636180546",
+    "NEXT_PUBLIC_SENTRY_DSN": "https://c04eaf806aa67ab80680dbda5adbf8b0@o4510737930387456.ingest.us.sentry.io/4510737931829248",
+    "NEXT_PUBLIC_RAPIDAPI_KEY": "f108315be795a1205774c9c920148b8e",
+    "NEXT_PUBLIC_API_URL": "https://4590fb.com",
+    "SUPABASE_URL": "https://vnjjfhsuzoxcljqqwwvx.supabase.co",
+    "MATCH_CACHE_URL": "https://match-cache-prod.4590football.workers.dev",
+    "SMTP_HOST": "smtp-relay.brevo.com",
+    "SMTP_PORT": "587",
+    "SMTP_SENDER_EMAIL": "support@4590fb.com",
+    "SMTP_SENDER_NAME": "4590 football",
+    "SOLAPI_SENDER_NUMBER": "01023841601",
+    "NAVER_CLIENT_ID": "pDZ6duXxo1AGIwLFpU73"
+  }
+}

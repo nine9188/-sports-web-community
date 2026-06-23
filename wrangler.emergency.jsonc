@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "4590fb-emergency",
+  "main": "cloudflare-emergency-worker.mjs",
+  "compatibility_date": "2026-04-14",
+  "routes": [
+    {
+      "pattern": "4590fb.com/*",
+      "zone_name": "4590fb.com"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

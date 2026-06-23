@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { BoardPost } from './types';
-import BoardPostTitle from './BoardPostTitle';
+import PostTitleWithCommentCount from '@/domains/boards/components/post/PostTitleWithCommentCount';
 
 interface BoardPostItemProps {
   post: BoardPost;
@@ -49,7 +49,15 @@ export default function BoardPostItem({ post, isLast }: BoardPostItemProps) {
         isLast ? '' : 'border-b border-black/5 dark:border-white/10'
       }`}
     >
-      <BoardPostTitle title={post.title} commentCount={post.comment_count} />
+      <div className="flex items-center gap-1 w-fit max-w-full self-start min-w-0">
+        <PostTitleWithCommentCount
+          title={post.title}
+          commentCount={post.comment_count}
+          inlineComment={true}
+          clampClassName="truncate"
+          titleClassName="text-[13px] font-normal text-gray-900 dark:text-[#F0F0F0]"
+        />
+      </div>
       <PostMeta post={post} />
     </Link>
   );

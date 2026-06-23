@@ -6,6 +6,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   // X-Powered-By 헤더 제거 (프레임워크 정보 노출 방지)
   poweredByHeader: false,
+  outputFileTracingExcludes: {
+    '/*': ['.env', '.env.*', './.env', './.env.*'],
+  },
   // CSS 최적화: critical CSS 인라인
   experimental: {
     optimizeCss: true,
@@ -219,6 +222,8 @@ const nextConfig = {
       net: false,
       tls: false,
     };
+    // sharp는 네이티브 바이너리 모듈 — Cloudflare Workers에서 실행 불가하므로 번들 제외
+    config.externals = [...(config.externals || []), 'sharp'];
     return config;
   },
 };

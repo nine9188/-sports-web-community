@@ -253,7 +253,7 @@ export default function WelcomePageClient() {
               />
 
               <Image
-                src="/logo/2.png"
+                src="/logo/2.webp"
                 alt="회원가입을 진심으로 환영합니다"
                 width={800}
                 height={400}
@@ -261,7 +261,7 @@ export default function WelcomePageClient() {
                 className="w-full h-auto dark:hidden"
               />
               <Image
-                src="/logo/1.png"
+                src="/logo/1.webp"
                 alt="회원가입을 진심으로 환영합니다"
                 width={800}
                 height={400}

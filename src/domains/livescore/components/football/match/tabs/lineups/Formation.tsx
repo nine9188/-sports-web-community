@@ -13,6 +13,36 @@ import Field from './components/Field';
 import Player from './components/Player';
 import { PlayerKoreanNames } from '../../MatchPageClient';
 
+type CaptureStage =
+  | null
+  | 'stabilizing'
+  | 'preparing-images'
+  | 'rendering-formation'
+  | 'loading-assets'
+  | 'compositing'
+  | 'sharing'
+  | 'downloading'
+  | 'uploading'
+  | 'navigating';
+
+const CAPTURE_STAGE_MESSAGE: Record<Exclude<CaptureStage, null>, string> = {
+  stabilizing: '라인업 배치를 고정하는 중입니다...',
+  'preparing-images': '선수 이미지를 저장 중입니다. 잠시만 기다려주세요.',
+  'rendering-formation': '포메이션 이미지를 생성 중입니다. 잠시만 기다려주세요.',
+  'loading-assets': '팀 로고를 불러오는 중입니다...',
+  compositing: '라인업 카드를 합성 중입니다...',
+  sharing: '공유 화면을 여는 중입니다...',
+  downloading: '이미지를 저장 중입니다...',
+  uploading: '이미지를 업로드 중입니다...',
+  navigating: '게시글 작성 화면으로 이동 중입니다...',
+};
+
+function waitForNextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
   useEffect(() => {
@@ -62,12 +92,23 @@ interface FormationProps {
 }
 
 // 이미지 로드 헬퍼
-function loadImg(src: string, crossOrigin = false): Promise<HTMLImageElement> {
+function loadImg(src: string, crossOrigin = false, timeoutMs = 10000): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const timeoutId = window.setTimeout(() => {
+      img.onload = null;
+      img.onerror = null;
+      reject(new Error(`Image load timeout: ${src}`));
+    }, timeoutMs);
     if (crossOrigin) img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onload = () => {
+      window.clearTimeout(timeoutId);
+      resolve(img);
+    };
+    img.onerror = () => {
+      window.clearTimeout(timeoutId);
+      reject(new Error(`Image load failed: ${src}`));
+    };
     img.src = src;
   });
 }
@@ -153,6 +194,9 @@ export default function Formation({
   const captureRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [captureMode, setCaptureMode] = useState(false);
+  const [captureStage, setCaptureStage] = useState<CaptureStage>(null);
+  const captureStartedAtRef = useRef<number>(0);
   const router = useRouter();
 
   const handleRefresh = () => {
@@ -189,66 +233,109 @@ export default function Formation({
 
   const homeName = homeTeamDisplayName || processedHomeTeam.team.name;
   const awayName = awayTeamDisplayName || processedAwayTeam.team.name;
+  const captureMessage = captureStage ? CAPTURE_STAGE_MESSAGE[captureStage] : null;
+
+  const logCapture = useCallback((stage: string, details?: Record<string, unknown>) => {
+    const elapsedMs = captureStartedAtRef.current
+      ? Math.round(performance.now() - captureStartedAtRef.current)
+      : 0;
+    console.info('[LineupCapture]', stage, {
+      elapsedMs,
+      home: homeName,
+      away: awayName,
+      isMobile,
+      ...details,
+    });
+  }, [awayName, homeName, isMobile]);
+
+  const setStage = useCallback((stage: Exclude<CaptureStage, null>, details?: Record<string, unknown>) => {
+    setCaptureStage(stage);
+    logCapture(stage, details);
+  }, [logCapture]);
 
   const composeCard = useCallback(async (): Promise<string> => {
     if (!captureRef.current) throw new Error('ref 없음');
+    const root = captureRef.current;
+    captureStartedAtRef.current = performance.now();
 
-    // 1. 캡처 무시 요소 숨기기 + SVG <image> base64 주입 (XHR hang 방지)
-    const ignoreEls = captureRef.current.querySelectorAll<SVGElement>('[data-capture-ignore="true"]');
-    ignoreEls.forEach(el => el.setAttribute('visibility', 'hidden'));
-    const restoreImages = await inlineImages(captureRef.current);
-
-    let formationDataUrl: string;
     try {
-      const pixelRatio = isMobile ? 2 : 3;
-      const TIMEOUT_MS = 15000;
-      formationDataUrl = await Promise.race([
-        toPng(captureRef.current, {
-          pixelRatio,
-          cacheBust: false,
-          skipFonts: true,
-          backgroundColor: '#3d9735',
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('이미지 생성 시간 초과. 다시 시도해주세요.')), TIMEOUT_MS)
-        ),
-      ]);
-    } finally {
-      restoreImages();
-      ignoreEls.forEach(el => el.removeAttribute('visibility'));
-    }
+      setStage('stabilizing');
+      setCaptureMode(true);
+      await waitForNextPaint();
 
-    // 2. 이미지 병렬 로드
-    const [formationResult, logoResult, homeLogoResult, awayLogoResult] =
-      await Promise.allSettled([
-        loadImg(formationDataUrl),
-        loadImg('/logo/4590football-logo.png'),  // 검은색 로고
-        homeTeamLogoUrl ? loadImg(homeTeamLogoUrl, true) : Promise.reject(),
-        awayTeamLogoUrl ? loadImg(awayTeamLogoUrl, true) : Promise.reject(),
-      ]);
+      // 1. 캡처 무시 요소 숨기기 + SVG <image> base64 주입 (XHR hang 방지)
+      const ignoreEls = root.querySelectorAll<SVGElement>('[data-capture-ignore="true"]');
+      ignoreEls.forEach(el => el.setAttribute('visibility', 'hidden'));
 
-    if (formationResult.status === 'rejected') throw new Error('포메이션 이미지 로드 실패');
-    const formationImg = formationResult.value;
+      const imageCount = root.querySelectorAll<SVGImageElement>('image').length;
+      setStage('preparing-images', { svgImageCount: imageCount });
+      const restoreImages = await inlineImages(root);
 
-    // 3. 공통 상수
-    const S = 3;
-    const PAD = 20 * S;
-    const HEADER_H = 52 * S;
-    const LOGO_SIZE = 36 * S;
-    const fw = formationImg.naturalWidth;
-    const fh = formationImg.naturalHeight;
+      let formationDataUrl: string;
+      try {
+        setStage('rendering-formation');
+        const pixelRatio = isMobile ? 2 : 3;
+        const TIMEOUT_MS = 15000;
+        formationDataUrl = await Promise.race([
+          toPng(root, {
+            pixelRatio,
+            cacheBust: false,
+            skipFonts: true,
+            backgroundColor: '#3d9735',
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('이미지 생성 시간 초과. 다시 시도해주세요.')), TIMEOUT_MS)
+          ),
+        ]);
+      } finally {
+        restoreImages();
+        ignoreEls.forEach(el => el.removeAttribute('visibility'));
+      }
 
-    // 팀 바 그리기 헬퍼
-    const drawTeamBar = (
-      ctx: CanvasRenderingContext2D,
-      y: number,
-      barH: number,
-      cardW: number,
-      logoImg: HTMLImageElement | null,
-      name: string,
-      formation: string,
-      dividerTop: boolean,
-    ) => {
+      // 2. 이미지 병렬 로드
+      setStage('loading-assets');
+      const [formationResult, logoResult, homeLogoResult, awayLogoResult] =
+        await Promise.allSettled([
+          loadImg(formationDataUrl),
+          loadImg('/logo/4590football-logo.png'),  // 검은색 로고
+          homeTeamLogoUrl ? loadImg(homeTeamLogoUrl, true) : Promise.reject(new Error('home logo missing')),
+          awayTeamLogoUrl ? loadImg(awayTeamLogoUrl, true) : Promise.reject(new Error('away logo missing')),
+        ]);
+
+      logCapture('asset-load-result', {
+        formation: formationResult.status,
+        siteLogo: logoResult.status,
+        homeLogo: homeLogoResult.status,
+        awayLogo: awayLogoResult.status,
+      });
+
+      if (formationResult.status === 'rejected') throw new Error('포메이션 이미지 로드 실패');
+      const formationImg = formationResult.value;
+
+      setStage('compositing', {
+        width: formationImg.naturalWidth,
+        height: formationImg.naturalHeight,
+      });
+
+      // 3. 공통 상수
+      const S = 3;
+      const PAD = 20 * S;
+      const HEADER_H = 52 * S;
+      const LOGO_SIZE = 36 * S;
+      const fw = formationImg.naturalWidth;
+      const fh = formationImg.naturalHeight;
+
+      // 팀 바 그리기 헬퍼
+      const drawTeamBar = (
+        ctx: CanvasRenderingContext2D,
+        y: number,
+        barH: number,
+        cardW: number,
+        logoImg: HTMLImageElement | null,
+        name: string,
+        formation: string,
+        dividerTop: boolean,
+      ) => {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, y, cardW, barH);
 
@@ -270,9 +357,9 @@ export default function Formation({
       ctx.font = `${12 * S}px sans-serif`;
       ctx.fillStyle = '#1a5f35';
       ctx.fillText(formation, tx, cy + 13 * S);
-    };
+      };
 
-    const drawHeader = (ctx: CanvasRenderingContext2D, cardW: number) => {
+      const drawHeader = (ctx: CanvasRenderingContext2D, cardW: number) => {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, cardW, HEADER_H);
       ctx.fillStyle = '#e5e7eb';
@@ -289,13 +376,13 @@ export default function Formation({
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       ctx.fillText('4590fb.com', cardW - PAD, HEADER_H / 2);
-    };
+      };
 
-    const homeLogo = homeLogoResult.status === 'fulfilled' ? homeLogoResult.value : null;
-    const awayLogo = awayLogoResult.status === 'fulfilled' ? awayLogoResult.value : null;
+      const homeLogo = homeLogoResult.status === 'fulfilled' ? homeLogoResult.value : null;
+      const awayLogo = awayLogoResult.status === 'fulfilled' ? awayLogoResult.value : null;
 
-    // 4. 레이아웃 분기
-    if (isMobile) {
+      // 4. 레이아웃 분기
+      if (isMobile) {
       // ── 모바일 (9:16): 홈 바(위) → 포메이션 → 어웨이 바(아래) ──
       const TEAM_BAR_H = 68 * S;
       const cardH = HEADER_H + TEAM_BAR_H + fh + TEAM_BAR_H;
@@ -318,9 +405,10 @@ export default function Formation({
       // 어웨이팀 바 (포메이션 아래)
       drawTeamBar(ctx, HEADER_H + TEAM_BAR_H + fh, TEAM_BAR_H, fw, awayLogo, awayName, processedAwayTeam.formation, true);
 
+      logCapture('compose-complete', { output: 'mobile-card' });
       return canvas.toDataURL('image/png');
 
-    } else {
+      } else {
       // ── 데스크탑 (16:9): 헤더 → 좌우 팀 바 → 포메이션 ──
       const TEAM_H = 60 * S;
       const cardH = HEADER_H + TEAM_H + fh;
@@ -372,7 +460,11 @@ export default function Formation({
 
       ctx.drawImage(formationImg, 0, HEADER_H + TEAM_H, fw, fh);
 
+      logCapture('compose-complete', { output: 'desktop-card' });
       return canvas.toDataURL('image/png');
+      }
+    } finally {
+      setCaptureMode(false);
     }
   }, [
     isMobile,
@@ -382,6 +474,8 @@ export default function Formation({
     awayTeamLogoUrl,
     processedHomeTeam.formation,
     processedAwayTeam.formation,
+    logCapture,
+    setStage,
   ]);
 
   const handleShare = useCallback(async () => {
@@ -404,6 +498,7 @@ export default function Formation({
         navigator.canShare({ files: [file] });
 
       if (isMobileShare) {
+        setStage('sharing');
         await navigator.share({
           title: `${homeName} vs ${awayName} 라인업`,
           text: '4590football 라인업',
@@ -411,6 +506,7 @@ export default function Formation({
         });
         toast.success('라인업 이미지를 공유했습니다.');
       } else {
+        setStage('downloading');
         const link = document.createElement('a');
         link.href = dataUrl;
         link.download = `${safeFileName}.png`;
@@ -424,8 +520,9 @@ export default function Formation({
       }
     } finally {
       setCapturing(false);
+      setCaptureStage(null);
     }
-  }, [isMobile, capturing, composeCard, homeName, awayName]);
+  }, [isMobile, capturing, composeCard, homeName, awayName, setStage]);
 
   const handlePost = useCallback(async () => {
     if (!captureRef.current || posting) return;
@@ -446,6 +543,7 @@ export default function Formation({
       const timestamp = Date.now();
       const fileName = `${user.id}/images/${timestamp}_lineup.png`;
 
+      setStage('uploading', { fileName, bytes: blob.size });
       const { error: uploadError } = await supabase.storage
         .from('post-images')
         .upload(fileName, blob, { contentType: 'image/png', upsert: true });
@@ -464,14 +562,16 @@ export default function Formation({
       const firstSlug = targetBoard?.slug ?? targetBoard?.id;
       if (!firstSlug) throw new Error('게시판 정보를 불러올 수 없습니다');
 
+      setStage('navigating', { boardSlug: firstSlug });
       router.push(`/boards/${firstSlug}/create?imageUrl=${encodeURIComponent(urlData.publicUrl)}`);
     } catch (err) {
       console.error('게시글 작성 이동 실패:', err);
       alert(err instanceof Error ? err.message : '게시글 작성 이동에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setPosting(false);
+      setCaptureStage(null);
     }
-  }, [posting, composeCard, router]);
+  }, [posting, composeCard, router, setStage]);
 
   return (
     <Container>
@@ -497,7 +597,7 @@ export default function Formation({
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {!capturing && <Camera className="w-3.5 h-3.5" />}
-            {capturing ? '생성 중...' : '저장/공유'}
+            {capturing ? '처리 중...' : '저장/공유'}
           </button>
           <div className="w-px h-3.5 bg-black/10 dark:bg-white/10" />
           <button
@@ -509,10 +609,15 @@ export default function Formation({
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {!posting && <PenSquare className="w-3.5 h-3.5" />}
-            {posting ? '업로드 중...' : '게시글 작성'}
+            {posting ? '처리 중...' : '게시글 작성'}
           </button>
         </div>
       </ContainerHeader>
+      {captureMessage && (
+        <div className="border-b border-black/5 bg-amber-50/80 px-3 py-2 text-center text-[12px] font-medium text-amber-800 dark:border-white/10 dark:bg-amber-500/10 dark:text-amber-200">
+          {captureMessage}
+        </div>
+      )}
 
       {/* 경기장 */}
       <ContainerContent className="p-0">
@@ -528,10 +633,11 @@ export default function Formation({
             margin: '0 auto',
             position: 'relative',
           }}
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={captureMode ? false : { opacity: 0, scale: 0.95 }}
+          animate={captureMode ? { opacity: 1, scale: 1 } : undefined}
+          whileInView={captureMode ? undefined : { opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={captureMode ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
         >
           <Field isMobile={isMobile} captureRef={captureRef}>
             <Player
@@ -541,6 +647,7 @@ export default function Formation({
               matchStatus={matchStatus}
               playersRatings={playersRatings}
               playerKoreanNames={playerKoreanNames}
+              disableAnimation={captureMode}
             />
           </Field>
           {(isLoading || !hasFormationPlayers) && (
