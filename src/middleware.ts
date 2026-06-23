@@ -20,15 +20,17 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
   '/terms',
 ])
 
+// 검색엔진 등 허용된 크롤러 (AI 데이터 수집 봇 제외)
 const PUBLIC_CRAWLER_USER_AGENT_PATTERN =
-  /(googlebot|google-inspectiontool|googleother|storebot-google|adsbot-google|mediapartners-google|bingbot|yeti|daum|daumoa|duckduckbot|baiduspider|yandexbot|yandex|gptbot|chatgpt-user|oai-searchbot|claudebot|claude-searchbot|perplexitybot|perplexity-user|google-extended|ccbot|applebot-extended|bytespider|amazonbot|facebookbot|meta-externalagent)/i
+  /(googlebot|google-inspectiontool|googleother|storebot-google|adsbot-google|mediapartners-google|bingbot|yeti|daum|daumoa|kakaotalk|duckduckbot|baiduspider|facebookbot|meta-externalagent)/i
 
 function isPublicCrawlerUserAgent(userAgent: string | null) {
   return Boolean(userAgent && PUBLIC_CRAWLER_USER_AGENT_PATTERN.test(userAgent))
 }
 
+// 차단할 봇 목록 (AI 학습 봇, SEO 스크래퍼, 악성 크롤러)
 const DISALLOWED_BOT_PATTERN =
-  /(semrushbot|mj12bot|claudebot|gptbot|chatgpt-user|oai-searchbot|ahrefsbot|dotbot|rogerbot|petalbot|megaindex|blexbot|ccbot|amazonbot|perplexitybot|perplexity-user|google-extended|applebot-extended)/i
+  /(semrushbot|mj12bot|claudebot|claude-searchbot|gptbot|chatgpt-user|oai-searchbot|ahrefsbot|dotbot|rogerbot|petalbot|megaindex|blexbot|ccbot|amazonbot|perplexitybot|perplexity-user|google-extended|applebot-extended|bytespider|byte-spider|dataforseabot|seranking|barkrowler|anthropic-ai|cohere-ai|diffbot|img2dataset|omgili|webzio-extended|scrapy|yandexbot|yandex)/i
 
 function isDisallowedBot(userAgent: string | null) {
   return Boolean(userAgent && DISALLOWED_BOT_PATTERN.test(userAgent))

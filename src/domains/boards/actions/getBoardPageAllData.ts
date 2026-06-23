@@ -1,6 +1,5 @@
 'use server';
 
-import { unstable_cache } from 'next/cache';
 import { getBoardPageData } from './getBoards';
 import { fetchPosts } from './getPosts';
 import { getBoardPopularPosts } from './getPopularPosts';
@@ -109,17 +108,15 @@ export async function getBoardPageAllData(
   fromParam?: string,
   store?: string
 ): Promise<BoardPageAllData | BoardPageError> {
-  const cached = await unstable_cache(
-    () => _getBoardPageAllDataImpl(slug, currentPage, fromParam, store),
-    ['board-page', slug, String(currentPage), fromParam || '', store || ''],
-    { revalidate: 30, tags: ['board-page', `board-${slug}`] }
-  )();
+  // force-dynamic 페이지이므로 unstable_cache 불필요
+  // 하위 함수들(getCachedAllBoards 등)이 각자 캐시를 처리함
+  const result = await _getBoardPageAllDataImpl(slug, currentPage, fromParam, store);
 
-  if ('error' in cached) return cached;
+  if ('error' in result) return result;
 
-  const viewer = await getBoardViewerPermissions(cached.boardData);
+  const viewer = await getBoardViewerPermissions(result.boardData);
 
-  return { ...cached, ...viewer };
+  return { ...result, ...viewer };
 }
 
 async function _getBoardPageAllDataImpl(

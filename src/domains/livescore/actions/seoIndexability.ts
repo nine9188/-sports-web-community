@@ -42,23 +42,39 @@ export async function resolveFootballIndexability({
   return { shouldNoindex: false, reason: null };
 }
 
+// 메모리 캐시 (컨테이너 내부 재사용)
+const teamIndexableCache: Record<number, boolean> = {};
+
 export async function hasIndexableTeamCompetition(teamId?: number | string | null): Promise<boolean> {
   const numericTeamId = typeof teamId === 'string' ? Number(teamId) : teamId;
   if (!numericTeamId || !Number.isFinite(numericTeamId)) return false;
 
-  const supabase = await getSupabaseServer();
-  const { data, error } = await supabase
-    .from('team_indexable_competitions')
-    .select('team_id')
-    .eq('team_id', numericTeamId)
-    .limit(1);
-
-  if (error) {
-    console.error('[seoIndexability] team_indexable_competitions lookup failed:', error);
-    return false;
+  // 1. 메모리 캐시 확인
+  if (teamIndexableCache[numericTeamId] !== undefined) {
+    return teamIndexableCache[numericTeamId];
   }
 
-  return Array.isArray(data) && data.length > 0;
+  try {
+    const supabase = await getSupabaseServer();
+    const { data, error } = await supabase
+      .from('team_indexable_competitions')
+      .select('team_id')
+      .eq('team_id', numericTeamId)
+      .limit(1);
+
+    if (error) {
+      console.error('[seoIndexability] team_indexable_competitions lookup failed:', error);
+      return false;
+    }
+
+    const isIndexable = Array.isArray(data) && data.length > 0;
+    // 2. 결과 메모리에 저장
+    teamIndexableCache[numericTeamId] = isIndexable;
+    return isIndexable;
+  } catch (err) {
+    console.error('[seoIndexability] 에러:', err);
+    return false;
+  }
 }
 
 export async function resolveTeamIndexability({
