@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getCachedChildBoardIds } from './getCachedBoards';
 import type { PopularPost } from '../types/post';
 import type { DealInfo } from '../types/hotdeal/deal-info';
@@ -34,7 +34,7 @@ function calculateHotScore(
  * 사이드바 인기글과 동일한 공식 사용
  */
 export async function getBoardPopularPosts(boardId: string) {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseClientNoCookies();
   const now = new Date();
   const nowMs = now.getTime();
 

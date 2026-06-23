@@ -749,7 +749,7 @@ export async function getNotificationLogs(limit: number = 50): Promise<{
       return { success: false, error: error.message };
     }
 
-    return { success: true, logs: data as Array<{
+    return { success: true, logs: (data as any) as Array<{
       id: string;
       admin: { nickname: string; email: string };
       send_mode: string;

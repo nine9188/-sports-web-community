@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import type { EventType, Post, NoticeType } from '@/domains/boards/types/post';
@@ -12,7 +12,7 @@ import type { EventType, Post, NoticeType } from '@/domains/boards/types/post';
  */
 export async function getNotices(boardId?: string): Promise<Post[]> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
 
     if (!supabase) {
       console.error('Supabase 클라이언트 생성 실패');
@@ -287,7 +287,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
  */
 export async function getGlobalNotices(): Promise<Post[]> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
 
     if (!supabase) {
       return [];
@@ -394,7 +394,7 @@ export async function getNoticesForBoard(boardData: { id: string; slug: string }
  */
 export async function getBoardNotices(boardId: string): Promise<Post[]> {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
 
     if (!supabase) {
       return [];

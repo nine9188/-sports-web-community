@@ -1739,7 +1739,7 @@ async function createPredictionPost(
     revalidateTag('board-collection', 'default')
     revalidateTag('analysis-posts', 'default')
 
-    const boardSlug = (post.boards as { slug: string } | null)?.slug
+    const boardSlug = (post.boards as any)?.slug
     if (boardSlug && post.post_number) {
       submitIndexNowUrl(`/boards/${boardSlug}/${post.post_number}`).then((result) => {
         if (!result.ok) console.error('[IndexNow] prediction post submit failed:', result)

@@ -33,6 +33,7 @@ export {
   getSupabaseAction,
   getSupabaseRouteHandler,
   getSupabaseAdmin,
+  getSupabaseClientNoCookies,
 } from './client.server'
 
 // 타입

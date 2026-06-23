@@ -8,6 +8,7 @@ import { StandingsData, League } from '../../types';
 import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
+import { motion } from 'framer-motion';
 
 const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
 const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
@@ -57,6 +58,16 @@ export default function LeagueStandings({
   });
   const [loadingLeagueId, setLoadingLeagueId] = useState<string | null>(null);
   const isWorldCupActive = activeLeagueId === WORLD_CUP_LEAGUE.id;
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({
+    0: true, // Group A (index 0) is open by default
+  });
+
+  const toggleGroup = (index: number) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
   const currentLeague = isWorldCupActive
     ? WORLD_CUP_LEAGUE
     : LEAGUES.find(league => league.id === activeLeagueId) ?? LEAGUES[0];
@@ -222,13 +233,42 @@ export default function LeagueStandings({
               {currentStandings.standings.map((group, index) => {
                 if (!group.length) return null;
                 const groupName = group[0]?.group || `${String.fromCharCode(65 + index)}조`;
+                const cleanGroupName = groupName.replace(/^Group\s+/i, '');
+                const displayName = cleanGroupName.endsWith('조') ? cleanGroupName : `${cleanGroupName}조`;
+                const isExpanded = !!expandedGroups[index];
 
                 return (
                   <div key={`${groupName}-${index}`} className={index > 0 ? 'border-t border-black/5 dark:border-white/10' : ''}>
-                    <div className="px-3 py-1.5 bg-[#FAFAFA] dark:bg-[#232323] text-xs font-bold text-gray-700 dark:text-gray-300">
-                      {groupName.replace(/^Group\s+/i, '')}
-                    </div>
-                    {renderStandingsTable(group, { compact: index > 0 })}
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(index)}
+                      className="w-full text-left px-3 py-1.5 bg-[#FAFAFA] dark:bg-[#232323] text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-black/5 dark:border-white/10"
+                    >
+                      <span>{displayName}</span>
+                      <motion.svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        animate={{ rotate: isExpanded ? 0 : -90 }}
+                        transition={{ duration: 0.15 }}
+                        className="text-gray-500 dark:text-gray-400"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </motion.svg>
+                    </button>
+                    <motion.div
+                      initial={index === 0 ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
+                      animate={isExpanded ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      {renderStandingsTable(group, { compact: index > 0 })}
+                    </motion.div>
                   </div>
                 );
               })}

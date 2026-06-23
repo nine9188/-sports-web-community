@@ -16,6 +16,7 @@ import { buildPostSeoDescription, buildPostSeoKeywords } from '@/domains/boards/
 import { extractPostSeoEntities, type PostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
 import { buildPostDisplayTitle } from '@/domains/boards/utils/post/buildPostDisplayTitle';
 import { isNextNotFoundError, isNextRedirectError } from '@/shared/utils/nextNavigationErrors';
+import type { DealInfo } from '@/domains/boards/types/hotdeal/deal-info';
 import '@/styles/post-content.css';
 
 // 동적 렌더링 강제 설정 추가
@@ -224,7 +225,7 @@ export async function generateMetadata({
     title: displayTitle,
     boardName: board.name,
     contentType,
-    dealInfo: post.deal_info ?? null,
+    dealInfo: (post.deal_info as unknown as DealInfo) ?? null,
     seoEntities,
     postMeta: (post.meta as Record<string, unknown> | null) ?? null,
   });

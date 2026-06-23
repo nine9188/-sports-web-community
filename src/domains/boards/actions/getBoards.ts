@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { BoardMap, ChildBoardsMap } from '../types/board';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, generateBoardBreadcrumbs } from '../utils/board/boardHierarchy';
 import { BoardsResponse, Board, HierarchicalBoard } from '@/domains/boards/types';
@@ -39,7 +39,7 @@ export const getBoardBySlugOrId = cache(async (slugOrId: string) => {
  */
 export async function getBoardPageData(slug: string, currentPage: number, fromParam?: string) {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
     const cachedMaps = await getCachedBoardMaps();
     const { boardsMap: rawBoardsMap, childBoardsMap: rawChildBoardsMap, allBoards } = cachedMaps;
     const boardsMap = rawBoardsMap as unknown as BoardMap;

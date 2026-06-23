@@ -346,7 +346,7 @@ export async function ensureAssetsCached(
       .in('entity_id', unknownIds);
 
     const cacheMap = new Map<number, AssetCacheRow>();
-    (caches || []).forEach((c: AssetCacheRow) => {
+    (caches || []).forEach((c: any) => {
       cacheMap.set(c.entity_id, c);
     });
 

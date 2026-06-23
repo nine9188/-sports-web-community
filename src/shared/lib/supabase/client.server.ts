@@ -12,6 +12,7 @@ import 'server-only'
 import { cache } from 'react'
 import { createServerClient } from '@supabase/ssr'
 import type { SetAllCookies } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
 
@@ -184,6 +185,7 @@ export async function getSupabaseRouteHandler(request: Request) {
  * - Row Level Security(RLS) 정책을 우회
  * - 관리자 기능에서만 사용
  * - ⚠️ 주의: 매우 강력한 권한이므로 신중하게 사용
+ * - 일부 관리용 테이블(예: match_cache)이 Database 타입 정의에 존재하지 않을 수 있으므로 generic Database 타입을 생략합니다.
  *
  * @example
  * ```tsx
@@ -211,9 +213,6 @@ export function getSupabaseAdmin() {
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
-  const { createClient } = require('@supabase/supabase-js') as any
-
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -225,3 +224,23 @@ export function getSupabaseAdmin() {
     }
   )
 }
+
+/**
+ * 쿠키를 사용하지 않는 Supabase 클라이언트
+ *
+ * @description
+ * - unstable_cache() 내부 등 쿠키(Dynamic data sources)에 접근할 수 없는 곳에서 사용
+ * - 세션 정보나 RLS 권한이 필요 없는 단순 읽기 쿼리에 적합
+ */
+export const getSupabaseClientNoCookies = cache(() => {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  )
+})

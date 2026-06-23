@@ -1,7 +1,7 @@
 'use server';
 
 import { cache } from 'react';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getCachedAllBoards, getCachedBoardById } from './getCachedBoards';
 import {
   createFallbackPost,
@@ -43,7 +43,7 @@ const ANALYSIS_BOARD_SLUGS = [
  */
 const getHotdealBoardIds = cache(async (): Promise<string[]> => {
   try {
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
     const { data: hotdealBoards } = await supabase
       .from('boards')
       .select('id')
@@ -168,7 +168,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
     const { boardId, boardIds, currentBoardId, limit, page = 1, fromParam, store, excludeHotdeal = true } = params;
     const offset = (page - 1) * limit;
 
-    const supabase = await getSupabaseServer();
+    const supabase = getSupabaseClientNoCookies();
 
     if (!supabase) {
       return {

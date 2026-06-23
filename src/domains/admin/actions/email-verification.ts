@@ -141,9 +141,9 @@ export async function getAllUsersEmailStatus() {
     // email_confirmed_at 정보를 맵으로 변환
     const emailStatusMap: Record<string, { emailConfirmed: boolean; emailConfirmedAt: string | null }> = {}
 
-    authUsers.users.forEach((authUser: { id: string; email_confirmed_at: string | null }) => {
+    authUsers.users.forEach((authUser: any) => {
       emailStatusMap[authUser.id] = {
-        emailConfirmed: authUser.email_confirmed_at !== null,
+        emailConfirmed: authUser.email_confirmed_at !== null && authUser.email_confirmed_at !== undefined,
         emailConfirmedAt: authUser.email_confirmed_at || null
       }
     })
