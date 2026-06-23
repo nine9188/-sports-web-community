@@ -254,7 +254,7 @@ export default function LeagueStandings({
                         strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        animate={{ rotate: isExpanded ? 0 : -90 }}
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ duration: 0.15 }}
                         className="text-gray-500 dark:text-gray-400"
                       >
