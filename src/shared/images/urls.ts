@@ -97,6 +97,27 @@ export function isExternalImageUrl(url: string | null | undefined): boolean {
   }
 }
 
+export function convertSupabaseToCdnUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  const trimmedUrl = url.trim();
+  
+  if (isSupabaseStorageUrl(trimmedUrl)) {
+    try {
+      const parsedUrl = new URL(trimmedUrl);
+      const pathname = parsedUrl.pathname;
+      const publicPrefix = '/storage/v1/object/public/';
+      
+      if (pathname.startsWith(publicPrefix)) {
+        const relativePath = pathname.substring(publicPrefix.length);
+        return `${STORAGE_CDN_BASE_URL}/${relativePath}`;
+      }
+    } catch (e) {
+      console.error('Failed to convert Supabase URL to CDN URL:', e);
+    }
+  }
+  return trimmedUrl;
+}
+
 export function normalizeDisplayImageUrl(
   url: string | null | undefined,
   options: {
@@ -107,6 +128,10 @@ export function normalizeDisplayImageUrl(
   const fallback = options.fallback ?? SITE_ICON_URL;
   const trimmedUrl = url?.trim();
   if (!trimmedUrl) return fallback;
+
+  if (isSupabaseStorageUrl(trimmedUrl)) {
+    return convertSupabaseToCdnUrl(trimmedUrl);
+  }
 
   if (options.proxyExternal && isExternalImageUrl(trimmedUrl)) {
     return externalImageProxyUrl(trimmedUrl) || fallback;

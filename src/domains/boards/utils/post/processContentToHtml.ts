@@ -8,6 +8,7 @@
  */
 
 import sanitizeHtml from 'sanitize-html';
+import { STORAGE_CDN_BASE_URL } from '@/shared/images/urls';
 import {
   renderTipTapDoc,
   renderRssHeader,
@@ -185,6 +186,13 @@ export function processContentToHtml(content: ContentInput): string {
   } else if (typeof content === 'object') {
     // 객체인 경우
     rawHtml = processObjectContentUnsafe(content as TipTapDoc | RssPost | Record<string, unknown>);
+  }
+
+  // Supabase Storage Public URL -> CDN URL 치환으로 Egress 절감
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vnjjfhsuzoxcljqqwwvx.supabase.co';
+  const supabasePrefix = `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public`;
+  if (rawHtml.includes(supabasePrefix)) {
+    rawHtml = rawHtml.replaceAll(supabasePrefix, STORAGE_CDN_BASE_URL);
   }
 
   // sanitize-html로 정화 (XSS 방지)
