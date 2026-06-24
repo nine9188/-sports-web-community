@@ -222,7 +222,7 @@ const nextConfig = {
       net: false,
       tls: false,
     };
-    // sharp는 네이티브 바이너리 모듈 — Cloudflare Workers에서 실행 불가하므로 번들 제외
+    // sharp는 네이티브 바이너리 모듈로 번들에서 제외
     config.externals = [...(config.externals || []), 'sharp'];
     return config;
   },
