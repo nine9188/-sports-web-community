@@ -215,16 +215,18 @@ export async function searchBoardPosts({
     const commentCountMap: Record<string, number> = {};
 
     if (postIds.length > 0) {
-      const { data: commentData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', postIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: postIds });
+
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
 
       if (commentData) {
-        commentData.forEach((c: any) => {
-          commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+        (commentData as any[]).forEach((c: any) => {
+          if (c.post_id) {
+            commentCountMap[c.post_id] = Number(c.comment_count);
+          }
         });
       }
     }
@@ -436,16 +438,18 @@ async function searchByComment({
     const commentCountMap: Record<string, number> = {};
 
     if (fetchedPostIds.length > 0) {
-      const { data: commentData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', fetchedPostIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: fetchedPostIds });
+
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
 
       if (commentData) {
-        commentData.forEach((c: any) => {
-          commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+        (commentData as any[]).forEach((c: any) => {
+          if (c.post_id) {
+            commentCountMap[c.post_id] = Number(c.comment_count);
+          }
         });
       }
     }
@@ -648,16 +652,18 @@ async function searchByNickname({
     const commentCountMap: Record<string, number> = {};
 
     if (postIds.length > 0) {
-      const { data: commentData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', postIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: postIds });
+
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
 
       if (commentData) {
-        commentData.forEach((c: any) => {
-          commentCountMap[c.post_id] = (commentCountMap[c.post_id] || 0) + 1;
+        (commentData as any[]).forEach((c: any) => {
+          if (c.post_id) {
+            commentCountMap[c.post_id] = Number(c.comment_count);
+          }
         });
       }
     }

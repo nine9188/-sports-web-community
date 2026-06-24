@@ -169,17 +169,17 @@ async function getAllPopularPostsImpl({
     const commentCounts: Record<string, number> = {};
 
     if (postIds.length > 0) {
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', postIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentsData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: postIds });
+
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
 
       if (commentsData) {
-        commentsData.forEach((comment: { post_id: string | null }) => {
-          if (comment.post_id) {
-            commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+        (commentsData as any[]).forEach((row: any) => {
+          if (row.post_id) {
+            commentCounts[row.post_id] = Number(row.comment_count);
           }
         });
       }

@@ -387,17 +387,16 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const commentCounts: Record<string, number> = {};
 
     if (postIds.length > 0) {
-      // RPC가 없으면 기존 방식 사용하되, 한 번에 집계
-      const { data: commentCountsData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', postIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentCountsData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: postIds });
 
-      (commentCountsData || []).forEach((comment) => {
-        if (comment.post_id) {
-          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
+
+      ((commentCountsData as any[]) || []).forEach((row: any) => {
+        if (row.post_id) {
+          commentCounts[row.post_id] = Number(row.comment_count);
         }
       });
     }
@@ -616,16 +615,16 @@ export async function getPostDetailListPageData(
     const commentCounts: Record<string, number> = {};
 
     if (postIds.length > 0) {
-      const { data: commentCountsData } = await supabase
-        .from('comments')
-        .select('post_id')
-        .in('post_id', postIds)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false);
+      const { data: commentCountsData, error } = await (supabase as any)
+        .rpc('get_comment_counts', { p_post_ids: postIds });
 
-      (commentCountsData || []).forEach((comment) => {
-        if (comment.post_id) {
-          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
+      if (error) {
+        console.error('get_comment_counts error:', error);
+      }
+
+      ((commentCountsData as any[]) || []).forEach((row: any) => {
+        if (row.post_id) {
+          commentCounts[row.post_id] = Number(row.comment_count);
         }
       });
     }

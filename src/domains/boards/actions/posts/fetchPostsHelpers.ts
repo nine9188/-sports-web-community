@@ -195,17 +195,17 @@ export async function fetchCommentCounts(
   if (postIds.length === 0) return countMap;
 
   try {
-    const { data: commentCounts } = await supabase
-      .from('comments')
-      .select('post_id')
-      .in('post_id', postIds)
-      .eq('is_hidden', false)
-      .eq('is_deleted', false);
+    const { data: commentCounts, error } = await (supabase as any)
+      .rpc('get_comment_counts', { p_post_ids: postIds });
+
+    if (error) {
+      console.error('get_comment_counts error:', error);
+    }
 
     if (commentCounts) {
-      commentCounts.forEach((comment) => {
-        if (comment.post_id) {
-          countMap[comment.post_id] = (countMap[comment.post_id] || 0) + 1;
+      (commentCounts as any[]).forEach((row: any) => {
+        if (row.post_id) {
+          countMap[row.post_id] = Number(row.comment_count);
         }
       });
     }
