@@ -1,10 +1,8 @@
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
-import { getSeoSettings } from '@/domains/seo/actions/seoSettings';
+import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { siteConfig } from '@/shared/config';
 import { buildPostDisplayTitle } from '@/domains/boards/utils/post/buildPostDisplayTitle';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 900; // 15분 정적 캐싱 (ISR) 적용
 
 type RssPost = {
   id: string;
@@ -38,8 +36,14 @@ function stripHtml(html: string): string {
 
 export async function GET() {
   try {
-    const supabase = await getSupabaseServer();
-    const seoSettings = await getSeoSettings();
+    const supabase = getSupabaseClientNoCookies();
+    
+    // cookies() 호출을 우회하여 정적 캐싱(ISR)이 가능하도록 direct hit로 조회
+    const { data: seoSettings } = await supabase
+      .from('seo_settings')
+      .select('site_url, site_name, default_description')
+      .single();
+
     const baseUrl = seoSettings?.site_url || siteConfig.url;
     const siteName = seoSettings?.site_name || siteConfig.name;
     const siteDescription = seoSettings?.default_description || siteConfig.description;
