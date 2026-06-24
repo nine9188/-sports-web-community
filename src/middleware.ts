@@ -170,22 +170,6 @@ function normalizeRouteSlug(slug?: string | null) {
   }
 }
 
-async function fetchCanonicalPlayerSlug(playerId: string) {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const res = await fetch(`${supabaseUrl}/rest/v1/football_players?player_id=eq.${playerId}&select=slug&limit=1`, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
-    })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any[] = await res.json()
-    const slug = data?.[0]?.slug
-    return isUsablePlayerSlug(playerId, slug) ? slug : null
-  } catch {
-    return null
-  }
-}
-
 function shouldSkipSiteLayout(pathname: string) {
   return SITE_LAYOUT_SKIP_PATHS.has(pathname)
 }
@@ -299,12 +283,6 @@ export async function middleware(request: NextRequest) {
       return plainNotFoundResponse()
     }
     if (request.method === 'GET') {
-      const canonicalSlug = await fetchCanonicalPlayerSlug(playerId)
-      if (canonicalSlug && normalizeRouteSlug(playerSlug) !== normalizeRouteSlug(canonicalSlug)) {
-        const url = request.nextUrl.clone()
-        url.pathname = `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}`
-        return NextResponse.redirect(url, 301)
-      }
       if (isFallbackPlayerSlug) {
         const requestHeaders = new Headers(request.headers)
         requestHeaders.set('x-skip-site-layout', '1')
@@ -317,17 +295,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const playerIdOnlyMatch = pathname.match(/^\/livescore\/football\/player\/(\d+)$/)
-  if (request.method === 'GET' && playerIdOnlyMatch) {
-    const playerId = playerIdOnlyMatch[1]
-    const canonicalSlug = await fetchCanonicalPlayerSlug(playerId)
-    if (canonicalSlug) {
-      const url = request.nextUrl.clone()
-      url.pathname = `/livescore/football/player/${playerId}/${encodeURIComponent(canonicalSlug)}`
-      return NextResponse.redirect(url, 301)
-    }
-  }
-
   if (request.method === 'GET' && shouldSkipSiteLayout(pathname)) {
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-skip-site-layout', '1')
@@ -336,29 +303,6 @@ export async function middleware(request: NextRequest) {
         headers: requestHeaders,
       },
     })
-  }
-
-  // Redirect legacy team URLs without a slug to the canonical slug URL.
-  const teamMatch = pathname.match(/^\/livescore\/football\/team\/(\d+)$/)
-  if (teamMatch) {
-    const teamId = teamMatch[1]
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      const res = await fetch(`${supabaseUrl}/rest/v1/football_teams?team_id=eq.${teamId}&select=slug&limit=1`, {
-        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-      })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data: any[] = await res.json()
-      const slug = data?.[0]?.slug
-      if (isUsableTeamSlug(teamId, slug)) {
-        const url = request.nextUrl.clone()
-        url.pathname = `/livescore/football/team/${teamId}/${encodeURIComponent(slug)}`
-        return NextResponse.redirect(url, 301)
-      }
-    } catch {
-      // Let the App Router resolver try API/name fallbacks.
-    }
   }
 
   // Route classification

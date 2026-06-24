@@ -1,7 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getSupabaseServer, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { AdjacentPosts } from '../types/post';
 import { getBoardLevel, getFilteredBoardIds, findRootBoard, createBreadcrumbs } from '../utils/board/boardHierarchy';
 import { formatPosts } from '../utils/post/postUtils';
@@ -32,6 +33,79 @@ type BoardStructureRow = {
 /**
  * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
  */
+interface PostDetailCacheData {
+  postRaw: any;
+  contentRow: any;
+  prevPostData: any;
+  nextPostData: any;
+}
+
+/**
+ * DB에서 게시글 상세 및 본문, 이전/다음글을 한 번에 조회합니다.
+ */
+async function fetchPostDetailFromDb(boardId: string, postNum: number): Promise<PostDetailCacheData | null> {
+  const supabase = getSupabaseAdmin();
+  
+  // 게시글 상세 정보 — posts 메타만 조회 (content는 아래에서 별도 조회)
+  const { data: postRaw, error: postError } = await supabase
+    .from('posts')
+    .select('id, title, user_id, views, likes, dislikes, tags, created_at, updated_at, board_id, post_number, source_url, meta, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, is_hidden, is_deleted, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
+    .eq('board_id', boardId)
+    .eq('post_number', postNum)
+    .single();
+
+  if (postError || !postRaw) return null;
+
+  // 본문 정보 및 이전/다음글 병렬 조회
+  const [contentResult, prevResult, nextResult] = await Promise.all([
+    supabase
+      .from('posts_content')
+      .select('content')
+      .eq('post_id', postRaw.id)
+      .maybeSingle(),
+    supabase
+      .from('posts')
+      .select('id, title, post_number')
+      .eq('board_id', boardId)
+      .lt('post_number', postNum)
+      .order('post_number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('posts')
+      .select('id, title, post_number')
+      .eq('board_id', boardId)
+      .gt('post_number', postNum)
+      .order('post_number', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+  ]);
+
+  return {
+    postRaw,
+    contentRow: contentResult.data || null,
+    prevPostData: prevResult.data || null,
+    nextPostData: nextResult.data || null
+  };
+}
+
+/**
+ * 게시글 상세 정보 및 본문, 이전/다음글 캐싱 조회 (1시간 캐싱)
+ */
+export async function getCachedPostDetail(boardId: string, postNum: number) {
+  return unstable_cache(
+    () => fetchPostDetailFromDb(boardId, postNum),
+    ['post-detail-v3', boardId, String(postNum)],
+    {
+      revalidate: 3600, // 1시간 캐싱
+      tags: [`post-${boardId}-${postNum}`, 'posts-detail']
+    }
+  )();
+}
+
+/**
+ * 게시글 상세 페이지에 필요한 모든 데이터를 가져옵니다.
+ */
 export async function getPostPageData(slug: string, postNumber: string, fromBoardId?: string, pageParam?: number) {
   try {
     const postNum = parseInt(postNumber, 10);
@@ -56,51 +130,16 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       };
     }
     
-    // 2. 병렬로 데이터 가져오기 - 성능 최적화
-    // boardStructure는 unstable_cache 기반 getCachedAllBoards() 사용 (7일 캐시)
+    // 2. 캐시를 활용해 게시글 정보 및 구조 가져오기 (PostgREST direct hit 방지)
     const [
-      postResult,
-      cachedBoardStructure,
-      prevPostResult,
-      nextPostResult
-    ] = await (async () => {
-      const result = await Promise.all([
-      // 게시글 상세 정보 — posts 메타만 조회 (content는 아래에서 별도 조회)
-      supabase
-        .from('posts')
-        .select('id, title, user_id, views, likes, dislikes, tags, created_at, updated_at, board_id, post_number, source_url, meta, is_notice, notice_type, notice_order, notice_created_at, notice_boards, is_must_read, deal_info, show_in_widget, is_hidden, is_deleted, profiles(id, nickname, icon_id, level, exp, public_id), board:board_id(name)')
-        .eq('board_id', board.id)
-        .eq('post_number', postNum)
-        .single(),
+      cachedDetail,
+      cachedBoardStructure
+    ] = await Promise.all([
+      getCachedPostDetail(board.id, postNum),
+      getCachedAllBoards()
+    ]);
 
-      // 게시판 구조 데이터 (캐시)
-      getCachedAllBoards(),
-
-      // 이전 게시글
-      supabase
-        .from('posts')
-        .select('id, title, post_number')
-        .eq('board_id', board.id)
-        .lt('post_number', postNum)
-        .order('post_number', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-
-      // 다음 게시글
-      supabase
-        .from('posts')
-        .select('id, title, post_number')
-        .eq('board_id', board.id)
-        .gt('post_number', postNum)
-        .order('post_number', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      ]);
-      return result;
-    })();
-    
-    const { data: postRaw, error: postError } = postResult;
-    if (postError || !postRaw) {
+    if (!cachedDetail) {
       return {
         success: false,
         notFoundType: 'POST' as const,
@@ -108,12 +147,7 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       };
     }
 
-    // posts_content 별도 쿼리로 content 가져오기 (PostgREST JOIN 안 씀 — 관계 추론 실패 방지)
-    const { data: contentRow } = await supabase
-      .from('posts_content')
-      .select('content')
-      .eq('post_id', postRaw.id)
-      .maybeSingle();
+    const { postRaw, contentRow, prevPostData, nextPostData } = cachedDetail;
 
     const post = {
       ...postRaw,
@@ -130,8 +164,6 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     });
 
     const boardStructure = (cachedBoardStructure ?? []) as BoardStructureRow[];
-    const { data: prevPostData } = prevPostResult;
-    const { data: nextPostData } = nextPostResult;
     
     // 이전/다음 게시글 구성
     const adjacentPosts: AdjacentPosts = {
