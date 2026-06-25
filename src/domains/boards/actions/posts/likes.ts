@@ -1,5 +1,7 @@
 'use server';
 
+import { revalidateTag } from 'next/cache';
+import { revalidatePostListCaches } from './cacheInvalidation';
 import { rewardUserActivity, getActivityTypeValues } from '@/shared/actions/activity-actions';
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard';
 import { logUserAction } from '@/shared/actions/log-actions';
@@ -45,7 +47,7 @@ async function togglePostReaction(
     // 게시글 정보 조회
     const { data: currentPost, error: fetchError } = await supabase
       .from('posts')
-      .select('likes, dislikes, user_id')
+      .select('likes, dislikes, user_id, board_id, post_number, board:boards(slug)')
       .eq('id', postId)
       .single();
 
@@ -166,6 +168,13 @@ async function togglePostReaction(
         // HOT 게시글 진입 체크 (비동기, fire-and-forget)
         checkHotPostEntry(postId).catch(() => {});
       }
+    }
+
+    // 캐시 무효화
+    if (currentPost.board_id && currentPost.post_number) {
+      revalidateTag(`post-${currentPost.board_id}-${currentPost.post_number}`, 'default');
+      const boardSlug = oneOrNull(currentPost.board)?.slug;
+      revalidatePostListCaches(boardSlug);
     }
 
     return {
