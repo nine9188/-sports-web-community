@@ -5,9 +5,6 @@ import { revalidatePostListCaches } from '@/domains/boards/actions/posts/cacheIn
 import { oneOrNull } from '@/shared/utils/supabaseRelations';
 import { getSupabaseAdmin, getSupabaseRouteHandler } from '@/shared/lib/supabase/server';
 
-const POST_REACTION_VISITOR_COOKIE = 'post_reaction_visitor_id';
-const POST_REACTION_VISITOR_MAX_AGE = 60 * 60 * 24 * 180;
-
 type ReactionType = 'like' | 'dislike';
 
 interface ReactionResponse {
@@ -52,8 +49,10 @@ export async function POST(
   const { supabase } = await getSupabaseRouteHandler(request);
   const { data: { user } } = await supabase.auth.getUser();
 
-  const existingVisitorId = request.cookies.get(POST_REACTION_VISITOR_COOKIE)?.value;
-  const visitorId = existingVisitorId || crypto.randomUUID();
+  if (!user) {
+    return NextResponse.json({ success: false, error: '로그인이 필요한 서비스입니다.' }, { status: 401 });
+  }
+
   const ipHash = hashValue(getClientIp(request));
   const userAgentHash = hashValue(request.headers.get('user-agent'));
 
@@ -68,8 +67,8 @@ export async function POST(
   const { data, error } = await supabaseRpc.rpc('toggle_post_reaction', {
     p_post_id: postId,
     p_reaction_type: reactionType,
-    p_user_id: user?.id ?? null,
-    p_visitor_id: user ? null : visitorId,
+    p_user_id: user.id,
+    p_visitor_id: null,
     p_ip_hash: ipHash,
     p_user_agent_hash: userAgentHash,
   });
@@ -101,16 +100,6 @@ export async function POST(
     dislikes: data.dislikes ?? 0,
     userAction: data.userAction ?? null,
   });
-
-  if (!user && !existingVisitorId) {
-    response.cookies.set(POST_REACTION_VISITOR_COOKIE, visitorId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: POST_REACTION_VISITOR_MAX_AGE,
-    });
-  }
 
   return response;
 }

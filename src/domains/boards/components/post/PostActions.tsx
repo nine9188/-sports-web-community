@@ -72,6 +72,18 @@ export default function PostActions({
   }, [postId]);
   
   const handleReaction = async (type: ReactionType) => {
+    if (!isLoggedIn) {
+      toast.error('로그인이 필요한 서비스입니다.', {
+        description: '추천 기능은 회원만 이용할 수 있습니다. 로그인하시겠습니까?',
+        action: {
+          label: '로그인',
+          onClick: () => window.location.href = '/signin',
+        },
+        duration: 5000,
+      });
+      return;
+    }
+
     if (isLiking || isDisliking) return;
 
     const previousAction = userAction;
@@ -101,18 +113,7 @@ export default function PostActions({
         dislikes: result.dislikes ?? 0,
         userAction: nextAction,
       });
-      if (!isLoggedIn && nextAction !== null) {
-        toast.success(getReactionSuccessMessage(type, previousAction, nextAction), {
-          description: '로그인하시면 포인트 획득 등 더 많은 혜택을 받으실 수 있습니다.',
-          action: {
-            label: '로그인',
-            onClick: () => window.location.href = '/signin',
-          },
-          duration: 6000,
-        });
-      } else {
-        toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
-      }
+      toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
     } catch {
       toast.error(`${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);
     } finally {
