@@ -276,7 +276,7 @@ async function LeagueStandingsSection({
     return (
       <div className="space-y-4">
         <CupRoundsView rounds={cupRoundsResponse.rounds} defaultOpenMode="currentKstDate" />
-        <WorldCupBracketView rounds={cupRoundsResponse.rounds} />
+        <WorldCupBracketView rounds={cupRoundsResponse.rounds} standings={standingsResponse.success ? standingsResponse.data : null} />
         {standingsTable}
       </div>
     );

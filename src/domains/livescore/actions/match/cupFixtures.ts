@@ -3,7 +3,7 @@
 import { cache } from 'react';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
-import { getTeamsByIds } from '@/domains/livescore/actions/teamLeagueData';
+import { getTeamsByIds, type TeamData } from '@/domains/livescore/actions/teamLeagueData';
 import { getTeamLogoUrls, getLeagueLogoUrl } from '@/domains/livescore/actions/images';
 
 // --- 타입 ---
@@ -17,6 +17,7 @@ export interface CupFixture {
     id: number;
     name: string;             // 원문 (영문)
     name_ko?: string;         // 한글 매핑 있으면
+    code?: string | null;     // 국가 코드 (FIFA 3글자)
     logo: string;             // Storage URL
     score: number | null;
     winner: boolean | null;
@@ -25,6 +26,7 @@ export interface CupFixture {
     id: number;
     name: string;
     name_ko?: string;
+    code?: string | null;     // 국가 코드 (FIFA 3글자)
     logo: string;
     score: number | null;
     winner: boolean | null;
@@ -136,7 +138,7 @@ export const fetchCupFixturesByRound = cache(async (
     });
     const [teamLogos, teamMap] = await Promise.all([
       teamIds.size > 0 ? getTeamLogoUrls([...teamIds]) : Promise.resolve({} as Record<number, string>),
-      teamIds.size > 0 ? getTeamsByIds([...teamIds]) : Promise.resolve({} as Record<number, { name_ko: string }>),
+      teamIds.size > 0 ? getTeamsByIds([...teamIds]) : Promise.resolve({} as Record<number, TeamData>),
     ]);
 
     // 라운드별 그룹핑
@@ -156,6 +158,7 @@ export const fetchCupFixturesByRound = cache(async (
           id: f?.teams?.home?.id,
           name: f?.teams?.home?.name ?? '',
           name_ko: teamMap[f?.teams?.home?.id]?.name_ko,
+          code: teamMap[f?.teams?.home?.id]?.code,
           logo: teamLogos[f?.teams?.home?.id] || '',
           score: f?.goals?.home ?? null,
           winner: f?.teams?.home?.winner ?? null,
@@ -164,6 +167,7 @@ export const fetchCupFixturesByRound = cache(async (
           id: f?.teams?.away?.id,
           name: f?.teams?.away?.name ?? '',
           name_ko: teamMap[f?.teams?.away?.id]?.name_ko,
+          code: teamMap[f?.teams?.away?.id]?.code,
           logo: teamLogos[f?.teams?.away?.id] || '',
           score: f?.goals?.away ?? null,
           winner: f?.teams?.away?.winner ?? null,

@@ -78,6 +78,124 @@ function teamDisplayName(team: CupFixture['home']) {
   return team.name_ko || team.name || '미정';
 }
 
+function getTeamCode(team: CupFixture['home'] | undefined) {
+  if (!team) return '';
+  const c = team.code || team.name_ko?.substring(0, 3) || team.name?.substring(0, 3) || '';
+  return c.toUpperCase();
+}
+
+function TeamLogoMark({ logo, name }: { logo: string; name: string }) {
+  return (
+    <div className="flex min-w-0 items-center justify-center">
+      <UnifiedSportsImageClient
+        src={logo || TEAM_PLACEHOLDER}
+        alt={`${name} 로고`}
+        width={24}
+        height={24}
+        className="h-[18px] w-[18px] flex-shrink-0 object-contain opacity-75"
+      />
+    </div>
+  );
+}
+
+function normalizeDateLabel(label: string): string {
+  const match = label.match(/(\d+)\D+(\d+)/);
+  if (match) {
+    return `${match[1]}-${match[2]}`;
+  }
+  return label;
+}
+
+function matchSeed(seed: string, label: string) {
+  if (seed === label) return true;
+  if (seed.startsWith('3') && label.startsWith('3')) {
+    const groupLetter = seed.charAt(1);
+    const allowedGroups = label.substring(1);
+    return allowedGroups.includes(groupLetter);
+  }
+  return false;
+}
+
+function getMergedRoundItems(
+  roundKey: string,
+  actualItems: BracketCardData[],
+  standings: any
+): BracketCardData[] {
+  const fallbackItems = FALLBACK_BRACKET[roundKey];
+  if (!fallbackItems) return [];
+  if (actualItems.length === 0) return fallbackItems;
+
+  const teamSeedMap = new Map<number, string>();
+  if (standings?.league?.standings) {
+    const groups = standings.league.standings;
+    for (const group of groups) {
+      const firstItem = group[0];
+      if (!firstItem || !firstItem.group) continue;
+      const groupName = firstItem.group;
+      if (groupName.startsWith('Group ')) {
+        const groupLetter = groupName.replace('Group ', '').trim();
+        for (const item of group) {
+          if (item.team?.id) {
+            teamSeedMap.set(item.team.id, `${item.rank}${groupLetter}`);
+          }
+        }
+      }
+    }
+  }
+
+  const merged = [...fallbackItems];
+  const matchedActualIds = new Set<string>();
+
+  for (const actual of actualItems) {
+    const fixture = actual.fixture;
+    if (!fixture) continue;
+
+    const homeId = fixture.home.id;
+    const awayId = fixture.away.id;
+
+    const homeSeed = teamSeedMap.get(homeId);
+    const awaySeed = teamSeedMap.get(awayId);
+
+    if (homeSeed && awaySeed) {
+      const slotIndex = merged.findIndex((slot) => {
+        if (slot.fixture) return false;
+        return (
+          (matchSeed(homeSeed, slot.homeLabel) && matchSeed(awaySeed, slot.awayLabel)) ||
+          (matchSeed(awaySeed, slot.homeLabel) && matchSeed(homeSeed, slot.awayLabel))
+        );
+      });
+
+      if (slotIndex !== -1) {
+        merged[slotIndex] = actual;
+        matchedActualIds.add(actual.id);
+      }
+    }
+  }
+
+  for (const actual of actualItems) {
+    if (matchedActualIds.has(actual.id)) continue;
+
+    const actualDateLabel = actual.dateLabel;
+    const normalizedActualDate = normalizeDateLabel(actualDateLabel);
+
+    let slotIndex = merged.findIndex((slot) => {
+      if (slot.fixture) return false;
+      return normalizeDateLabel(slot.dateLabel) === normalizedActualDate;
+    });
+
+    if (slotIndex === -1) {
+      slotIndex = merged.findIndex((slot) => !slot.fixture);
+    }
+
+    if (slotIndex !== -1) {
+      merged[slotIndex] = actual;
+      matchedActualIds.add(actual.id);
+    }
+  }
+
+  return merged;
+}
+
 function formatKstDate(iso: string | undefined) {
   if (!iso) return '';
   const date = new Date(iso);
@@ -168,10 +286,20 @@ function MatchCard({ item, isFinal = false }: { item?: BracketCardData; isFinal?
           </div>
         </div>
       ) : (
-        <div className="grid min-w-0 grid-cols-[1fr_4px_1fr] items-center gap-0">
-          <TeamInline team={fixture.home} />
+        <div className="grid min-w-0 grid-cols-[max-content_4px_max-content] items-start justify-center gap-0">
+          <div className="flex min-w-[19px] flex-col items-center gap-0.5">
+            <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
+            <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
+              {getTeamCode(fixture.home)}
+            </span>
+          </div>
           <span aria-hidden />
-          <TeamInline team={fixture.away} align="right" />
+          <div className="flex min-w-[19px] flex-col items-center gap-0.5">
+            <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
+            <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
+              {getTeamCode(fixture.away)}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -224,10 +352,20 @@ function MobileBracketCard({ item, isFinal = false }: { item?: BracketCardData; 
           </div>
         </div>
       ) : (
-        <div className="grid min-w-0 grid-cols-[1fr_5px_1fr] items-center gap-0 text-[10px] font-bold text-gray-900 dark:text-[#F0F0F0]">
-          <TeamInline team={fixture.home} />
+        <div className="grid min-w-0 grid-cols-[max-content_5px_max-content] items-start justify-center gap-0">
+          <div className="flex min-w-[18px] flex-col items-center gap-0.5">
+            <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
+            <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
+              {getTeamCode(fixture.home)}
+            </span>
+          </div>
           <span aria-hidden />
-          <TeamInline team={fixture.away} align="right" />
+          <div className="flex min-w-[18px] flex-col items-center gap-0.5">
+            <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
+            <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
+              {getTeamCode(fixture.away)}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -484,6 +622,7 @@ function MobileVerticalBracket({
 
 interface WorldCupBracketViewProps {
   rounds: CupRound[];
+  standings?: any;
 }
 
 function splitBracketSide(items: BracketCardData[]) {
@@ -816,16 +955,17 @@ function DesktopBracketBoard({
   );
 }
 
-export default function WorldCupBracketView({ rounds }: WorldCupBracketViewProps) {
+export default function WorldCupBracketView({ rounds, standings }: WorldCupBracketViewProps) {
   const columns = KNOCKOUT_ROUNDS.map((round) => {
     const actualItems = (rounds.find((item) => item.round === round.key)?.fixtures ?? []).map(fixtureToBracketCard);
+    const mergedItems = getMergedRoundItems(round.key, actualItems, standings);
     return {
       ...round,
-      items: actualItems.length > 0 ? actualItems : FALLBACK_BRACKET[round.key],
+      items: mergedItems,
     };
   });
   const actualThirdPlaceItems = (rounds.find((round) => round.round === '3rd Place Final')?.fixtures ?? []).map(fixtureToBracketCard);
-  const thirdPlaceItems = actualThirdPlaceItems.length > 0 ? actualThirdPlaceItems : FALLBACK_BRACKET['3rd Place Final'];
+  const thirdPlaceItems = getMergedRoundItems('3rd Place Final', actualThirdPlaceItems, standings);
   const roundOf32 = splitBracketSide(columns.find((round) => round.key === 'Round of 32')?.items ?? []);
   const roundOf16 = splitBracketSide(columns.find((round) => round.key === 'Round of 16')?.items ?? []);
   const quarterFinals = splitBracketSide(columns.find((round) => round.key === 'Quarter-finals')?.items ?? []);
