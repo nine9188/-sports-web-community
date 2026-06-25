@@ -1,5 +1,8 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
+import { revalidatePostListCaches } from '@/domains/boards/actions/posts/cacheInvalidation';
+import { oneOrNull } from '@/shared/utils/supabaseRelations';
 import { getSupabaseAdmin, getSupabaseRouteHandler } from '@/shared/lib/supabase/server';
 
 const POST_REACTION_VISITOR_COOKIE = 'post_reaction_visitor_id';
@@ -77,6 +80,19 @@ export async function POST(
 
   if (!data?.success) {
     return NextResponse.json({ success: false, error: data?.error || '추천 처리에 실패했습니다.' }, { status: 400 });
+  }
+
+  // 캐시 무효화 (상세 페이지 캐시 + 목록/인기글 캐시)
+  const { data: postInfo } = await supabaseAdmin
+    .from('posts')
+    .select('board_id, post_number, board:boards(slug)')
+    .eq('id', postId)
+    .single();
+
+  if (postInfo) {
+    revalidateTag(`post-${postInfo.board_id}-${postInfo.post_number}`, 'default');
+    const boardSlug = oneOrNull(postInfo.board)?.slug;
+    revalidatePostListCaches(boardSlug);
   }
 
   const response = NextResponse.json({

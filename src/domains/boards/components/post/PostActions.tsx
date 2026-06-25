@@ -17,6 +17,7 @@ interface PostActionsProps {
   initialLikes: number;
   initialDislikes: number;
   initialUserAction: 'like' | 'dislike' | null;
+  isLoggedIn?: boolean;
 }
 
 type ReactionType = 'like' | 'dislike';
@@ -42,6 +43,7 @@ export default function PostActions({
   initialLikes = 0, 
   initialDislikes = 0,
   initialUserAction = null,
+  isLoggedIn = false,
 }: PostActionsProps) {
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
@@ -99,7 +101,18 @@ export default function PostActions({
         dislikes: result.dislikes ?? 0,
         userAction: nextAction,
       });
-      toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
+      if (!isLoggedIn && nextAction !== null) {
+        toast.success(getReactionSuccessMessage(type, previousAction, nextAction), {
+          description: '로그인하시면 포인트 획득 등 더 많은 혜택을 받으실 수 있습니다.',
+          action: {
+            label: '로그인',
+            onClick: () => window.location.href = '/signin',
+          },
+          duration: 6000,
+        });
+      } else {
+        toast.success(getReactionSuccessMessage(type, previousAction, nextAction));
+      }
     } catch {
       toast.error(`${type === 'like' ? '추천' : '비추천'} 처리 중 오류가 발생했습니다.`);
     } finally {

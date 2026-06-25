@@ -374,6 +374,7 @@ export default async function PostDetailLayout({
               initialLikes={post.likes || 0}
               initialDislikes={post.dislikes || 0}
               initialUserAction={postUserAction}
+              isLoggedIn={isLoggedIn}
             />
           </div>
         </div>
