@@ -142,11 +142,11 @@ function PlaceholderMark({ align = 'left' }: { align?: 'left' | 'right' }) {
   );
 }
 
-function MatchCard({ item, isFinal = false }: { item: BracketCardData; isFinal?: boolean }) {
-  const fixture = item.fixture;
+function MatchCard({ item, isFinal = false }: { item?: BracketCardData; isFinal?: boolean }) {
+  const fixture = item?.fixture;
   const content = (
     <div className="min-w-0">
-      {item.dateLabel && (
+      {item?.dateLabel && (
         <div className="mb-0.5 text-center text-[7.5px] font-medium leading-none text-gray-400 dark:text-gray-500 lg:text-[8.5px]">
           {item.dateLabel}
         </div>
@@ -156,14 +156,14 @@ function MatchCard({ item, isFinal = false }: { item: BracketCardData; isFinal?:
           <div className="flex min-w-[19px] flex-col items-center gap-0.5">
             <PlaceholderMark />
             <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-700 dark:text-gray-300 lg:text-[8.5px]">
-              {item.homeLabel}
+              {item?.homeLabel || '미정'}
             </span>
           </div>
           <span aria-hidden />
           <div className="flex min-w-[19px] flex-col items-center gap-0.5">
             <PlaceholderMark />
             <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-700 dark:text-gray-300 lg:text-[8.5px]">
-              {item.awayLabel}
+              {item?.awayLabel || '미정'}
             </span>
           </div>
         </div>
@@ -193,8 +193,8 @@ function MatchCard({ item, isFinal = false }: { item: BracketCardData; isFinal?:
   );
 }
 
-function MobileBracketCard({ item, isFinal = false }: { item: BracketCardData; isFinal?: boolean }) {
-  const fixture = item.fixture;
+function MobileBracketCard({ item, isFinal = false }: { item?: BracketCardData; isFinal?: boolean }) {
+  const fixture = item?.fixture;
   const className = `block rounded-md border bg-white px-1 py-1 shadow-sm transition-colors dark:bg-[#1D1D1D] ${
     isFinal
       ? 'border-[#002FA7]/35 bg-blue-50/70 dark:border-blue-500/40 dark:bg-blue-950/20'
@@ -202,7 +202,7 @@ function MobileBracketCard({ item, isFinal = false }: { item: BracketCardData; i
   } ${fixture ? 'hover:bg-[#F6F7F9] dark:hover:bg-[#262626]' : 'cursor-default'}`;
   const content = (
     <div className="min-w-0">
-      {item.dateLabel && (
+      {item?.dateLabel && (
         <div className="mb-0.5 text-center text-[8px] font-medium leading-none text-gray-400 dark:text-gray-500">
           {item.dateLabel}
         </div>
@@ -212,14 +212,14 @@ function MobileBracketCard({ item, isFinal = false }: { item: BracketCardData; i
           <div className="flex min-w-[18px] flex-col items-center gap-0.5">
             <PlaceholderMark />
             <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-700 dark:text-gray-300">
-              {item.homeLabel}
+              {item?.homeLabel || '미정'}
             </span>
           </div>
           <span aria-hidden />
           <div className="flex min-w-[18px] flex-col items-center gap-0.5">
             <PlaceholderMark />
             <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-700 dark:text-gray-300">
-              {item.awayLabel}
+              {item?.awayLabel || '미정'}
             </span>
           </div>
         </div>
