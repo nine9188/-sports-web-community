@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseServer, getSupabaseAction } from '@/shared/lib/supabase/server';
+import { getSupabaseServer, getSupabaseAction, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { SolapiMessageService } from 'solapi';
 import { createNotification, createLevelUpNotification } from '@/domains/notifications/actions/create';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
@@ -245,7 +245,8 @@ export async function verifyPhoneCode(phoneNumber: string, code: string): Promis
       .eq('id', verification.id);
 
     // 현재 프로필 조회
-    const { data: profile } = await supabase
+    const adminSupabase = getSupabaseAdmin();
+    const { data: profile } = await adminSupabase
       .from('profiles')
       .select('exp, points, level')
       .eq('id', user.id)
@@ -260,7 +261,7 @@ export async function verifyPhoneCode(phoneNumber: string, code: string): Promis
     const newPoints = currentPoints + VERIFICATION_REWARD_POINTS;
     const newLevel = calculateLevelFromExp(newExp);
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await adminSupabase
       .from('profiles')
       .update({
         phone_number: normalizedPhone,
@@ -278,14 +279,14 @@ export async function verifyPhoneCode(phoneNumber: string, code: string): Promis
     }
 
     // 경험치 히스토리 기록
-    await supabase.from('exp_history').insert({
+    await adminSupabase.from('exp_history').insert({
       user_id: user.id,
       exp: VERIFICATION_REWARD_EXP,
       reason: '전화번호 인증 완료 보상',
     });
 
     // 포인트 히스토리 기록
-    await supabase.from('point_history').insert({
+    await adminSupabase.from('point_history').insert({
       user_id: user.id,
       points: VERIFICATION_REWARD_POINTS,
       reason: '전화번호 인증 완료 보상',

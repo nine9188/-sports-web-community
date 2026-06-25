@@ -68,17 +68,58 @@ export async function createComment({
       return { success: false, error: '댓글 내용을 입력해주세요.' };
     }
 
-    // 5. 댓글 작성
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({
-        post_id: postId,
-        user_id: user.id,
-        content: sanitizedContent,
-        parent_id: parentId || null
-      } as never)
-      .select('*, profiles(nickname, icon_id, level, exp, public_id)')
-      .single();
+    // 5. 댓글 작성 (트리거 미사용에 대응하는 순번 할당 및 동시성 재시도 로직)
+    let data = null;
+    let error = null;
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while (attempts < maxAttempts) {
+      // 기존 가장 높은 순번을 조회
+      const { data: maxRow, error: maxError } = await supabase
+        .from('comments')
+        .select('comment_number')
+        .eq('post_id', postId)
+        .order('comment_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (maxError) {
+        return { success: false, error: maxError.message };
+      }
+
+      const nextCommentNumber = (maxRow?.comment_number ?? 0) + 1;
+
+      // 직접 comment_number를 밀어넣어 삽입 시도
+      const { data: insertData, error: insertError } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: sanitizedContent,
+          parent_id: parentId || null,
+          comment_number: nextCommentNumber
+        } as never)
+        .select('*, profiles(nickname, icon_id, level, exp, public_id)')
+        .single();
+
+      if (insertError) {
+        // Unique Constraint 위배 (PostgreSQL 23505 에러)인 경우 재시도
+        if (insertError.code === '23505') {
+          attempts++;
+          continue;
+        }
+        error = insertError;
+        break;
+      }
+
+      data = insertData;
+      break;
+    }
+
+    if (attempts >= maxAttempts) {
+      return { success: false, error: '동시 요청이 많아 댓글 순번 할당에 실패했습니다. 다시 시도해 주세요.' };
+    }
       
     if (error) {
       return { success: false, error: error.message };

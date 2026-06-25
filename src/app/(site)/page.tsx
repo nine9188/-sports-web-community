@@ -5,7 +5,7 @@ import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
 import { fetchTodayMatches, fetchWorldCupSidebarMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
-import { getCurrentUser } from '@/domains/auth/actions';
+import { getAuthenticatedUser } from '@/shared/actions/auth';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
@@ -28,72 +28,27 @@ export async function generateMetadata() {
       '4590',
       '4590football',
       '4590 Football',
-      '라이브스코어',
       '해외축구',
       '국내축구',
-      '실시간 스코어',
-      '축구 경기결과',
-      '오늘 축구 경기',
-      'EPL 순위',
-      '프리미어리그',
-      '라리가',
-      '세리에A',
-      'K리그',
+      '라이브스코어',
+      '경기 일정',
+      '축구 뉴스',
+      'EPL',
       '챔피언스리그',
-      '해외축구 게시판',
-      '국내축구 게시판',
-      '축구 분석',
-      '축구 이적',
-      '축구 승부예측',
+      'K리그',
     ],
   });
 }
 
 const homeJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: '4590 Football',
+  '@type': 'WebSite',
+  name: siteConfig.name,
   url: siteConfig.url,
-  description:
-    '축구 팬을 위한 커뮤니티. 실시간 라이브스코어, 경기 분석, AI 예측, 팀·선수 데이터, 축구 소식을 한곳에서 제공합니다.',
-  applicationCategory: 'SportsApplication',
-  operatingSystem: 'Web',
-  offers: {
-    '@type': 'Offer',
-    name: '4590 Football 무료 이용',
-    price: '0',
-    priceCurrency: 'KRW',
-  },
-  inLanguage: 'ko',
-  audience: {
-    '@type': 'Audience',
-    name: '축구 팬',
-    audienceType: '축구 팬',
-  },
-  featureList: [
-    '실시간 라이브스코어와 경기 일정',
-    '해외축구, 국내축구, 자유게시판, 유머, 이슈 커뮤니티',
-    '팀별 전용 게시판과 리그별 게시판',
-    'AI 기반 경기 분석과 승부 예측',
-    '선수·팀 통계와 데이터',
-    '축구 이적 시장 소식',
-    '축구 뉴스와 팬 커뮤니티 콘텐츠',
-  ],
-  mainEntity: {
-    '@type': 'ItemList',
-    name: '주요 섹션',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '해외축구', url: `${siteConfig.url}/boards/soccer` },
-      { '@type': 'ListItem', position: 2, name: '국내축구', url: `${siteConfig.url}/boards/k-league` },
-      { '@type': 'ListItem', position: 3, name: '프리미어리그', url: `${siteConfig.url}/boards/premier` },
-      { '@type': 'ListItem', position: 4, name: '라리가', url: `${siteConfig.url}/boards/laliga` },
-      { '@type': 'ListItem', position: 5, name: '세리에A', url: `${siteConfig.url}/boards/serie-a` },
-      { '@type': 'ListItem', position: 6, name: '분데스리가', url: `${siteConfig.url}/boards/bundesliga` },
-      { '@type': 'ListItem', position: 7, name: '축구 소식', url: `${siteConfig.url}/boards/news` },
-      { '@type': 'ListItem', position: 8, name: '경기 데이터분석', url: `${siteConfig.url}/boards/data-analysis` },
-      { '@type': 'ListItem', position: 9, name: '자유게시판', url: `${siteConfig.url}/boards/free` },
-      { '@type': 'ListItem', position: 10, name: '라이브스코어', url: `${siteConfig.url}/livescore/football` },
-    ],
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${siteConfig.url}/search?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
   },
 };
 
@@ -113,7 +68,7 @@ export default async function HomePage() {
     fetchBoardCollectionData(),
     fetchAllPostsWidgetData(),
     fetchNewsData(),
-    getCurrentUser(),
+    getAuthenticatedUser(),
   ]);
 
   return (
@@ -128,10 +83,10 @@ export default async function HomePage() {
       />
       <main className="flex flex-col gap-4 bg-transparent overflow-visible">
         <div className="hidden md:block">
-          <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+          <HomeActionWidget isLoggedIn={Boolean(currentUser.data?.user)} />
         </div>
         <div className="flex flex-col gap-4 md:hidden">
-          <HomeActionWidget isLoggedIn={Boolean(currentUser.user)} />
+          <HomeActionWidget isLoggedIn={Boolean(currentUser.data?.user)} />
           <WorldCupSidebarCard matches={worldCupSidebarMatches} />
         </div>
         <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>

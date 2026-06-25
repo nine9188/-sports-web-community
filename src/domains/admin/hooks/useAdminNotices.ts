@@ -134,12 +134,14 @@ export function useTogglePostEventMutation() {
       isEvent,
       eventType,
       boardIds,
+      eventEndsAt,
     }: {
       postId: string;
       isEvent: boolean;
       eventType?: EventType;
       boardIds?: string[];
-    }) => togglePostEventLabel(postId, isEvent, eventType, boardIds),
+      eventEndsAt?: string | null;
+    }) => togglePostEventLabel(postId, isEvent, eventType, boardIds, eventEndsAt),
     notifyNoticesChanged
   );
 }
@@ -151,18 +153,20 @@ export function useSetPostEventByNumberMutation() {
       isEvent,
       eventType,
       boardIds,
+      eventEndsAt,
     }: {
       postNumber: number;
       isEvent: boolean;
       eventType?: EventType;
       boardIds?: string[];
+      eventEndsAt?: string | null;
     }) => {
       const lookupResult = await getPostIdByNumber(postNumber);
       if (!lookupResult.success) {
         return { success: false, message: lookupResult.error };
       }
 
-      return togglePostEventLabel(lookupResult.postId, isEvent, eventType, boardIds);
+      return togglePostEventLabel(lookupResult.postId, isEvent, eventType, boardIds, eventEndsAt);
     },
     notifyNoticesChanged
   );

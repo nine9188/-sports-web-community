@@ -222,7 +222,7 @@ export default function BoardDetailLayout({
       {!teamData && !leagueData && (
         <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
           {/* 게시판 헤더 */}
-          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626]">
+          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
             <h1 className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
               {boardData.name}
             </h1>
@@ -267,8 +267,8 @@ export default function BoardDetailLayout({
       {isHotdealBoard(slug) && <StoreFilterMenu />}
 
       {/* 게시글 목록 - listVariant에 따라 다른 컴포넌트 렌더링 */}
-      {/* 공지사항 게시판은 NoticeList 사용 */}
-      {slug === "notice" || slug === "notices" ? (
+      {/* 공지사항 게시판 및 하부 게시판은 NoticeList 사용 */}
+      {slug === "notice" || slug === "notices" || rootBoardSlug === "notice" || rootBoardSlug === "notices" ? (
         <MemoizedNoticeList
           notices={posts}
           showBoardName={true}

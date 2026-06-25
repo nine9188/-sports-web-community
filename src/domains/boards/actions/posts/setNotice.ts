@@ -24,6 +24,7 @@ export type AdminEventPost = {
   is_event: boolean;
   event_type?: EventType | null;
   event_boards?: string[] | null;
+  event_ends_at?: string | null;
   is_notice: boolean;
   is_must_read: boolean;
 };
@@ -337,7 +338,8 @@ export async function togglePostEventLabel(
   postId: string,
   isEvent: boolean,
   eventType: EventType = 'global',
-  boardIds?: string[]
+  boardIds?: string[],
+  eventEndsAt?: string | null
 ): Promise<SetNoticeResult> {
   try {
     if (isEvent && eventType === 'board' && (!boardIds || boardIds.length === 0)) {
@@ -354,12 +356,14 @@ export async function togglePostEventLabel(
           event_type: eventType,
           event_boards: eventType === 'board' ? boardIds : null,
           event_created_at: new Date().toISOString(),
+          event_ends_at: eventEndsAt || null,
         }
       : {
           is_event: false,
           event_type: null,
           event_boards: null,
           event_created_at: null,
+          event_ends_at: null,
         };
 
     const { error: updateError } = await supabase
@@ -400,6 +404,7 @@ export async function getEventLabelPosts(): Promise<AdminEventPost[]> {
         is_event,
         event_type,
         event_boards,
+        event_ends_at,
         is_notice,
         is_must_read,
         boards (
@@ -431,6 +436,7 @@ export async function getEventLabelPosts(): Promise<AdminEventPost[]> {
         is_event: Boolean(post.is_event),
         event_type: (post.event_type as EventType | null) || 'global',
         event_boards: post.event_boards || null,
+        event_ends_at: post.event_ends_at || null,
         is_notice: Boolean(post.is_notice),
         is_must_read: Boolean(post.is_must_read),
       };

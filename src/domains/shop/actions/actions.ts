@@ -3,7 +3,7 @@
 import { cache } from 'react'
 import { getSupabaseServer } from '@/shared/lib/supabase/server'
 import type { ShopCategory } from '@/domains/shop/types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, unstable_cache, revalidateTag } from 'next/cache'
 import { checkSuspensionGuard } from '@/shared/utils/suspension-guard'
 import { logUserAction } from '@/shared/actions/log-actions'
 
@@ -167,19 +167,24 @@ export async function getCategoryItemsPaginated(
 /**
  * 사용자 포인트 조회
  */
+const _getCachedUserPointsImpl = (userId: string) => unstable_cache(
+  async (): Promise<number> => {
+    const supabase = await getSupabaseServer()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('points')
+      .eq('id', userId)
+      .single()
+    if (error) return 0
+    return data?.points || 0
+  },
+  ['user-points', userId],
+  { revalidate: 180, tags: [`user-points-${userId}`] }
+)();
+
 export async function getUserPoints(userId: string | undefined): Promise<number> {
   if (!userId) return 0
-  
-  const supabase = await getSupabaseServer()
-  
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('points')
-    .eq('id', userId)
-    .single()
-  
-  if (error) return 0
-  return data?.points || 0
+  return _getCachedUserPointsImpl(userId)
 }
 
 /**
@@ -254,6 +259,7 @@ export async function purchaseItem(itemId: number): Promise<PurchaseItemResult> 
     
     // 캐시 갱신
     revalidatePath('/shop')
+    revalidateTag(`user-points-${user.id}`, 'default')
     
     // 아이템 구매 성공 로그 기록
     await logUserAction(

@@ -26,6 +26,7 @@ type HomePostRow = {
   is_event?: boolean | null;
   event_type?: 'global' | 'board' | null;
   event_boards?: string[] | null;
+  event_ends_at?: string | null;
   is_must_read?: boolean | null;
   notice_type?: 'global' | 'board' | null;
   show_in_widget?: boolean | null;
@@ -239,6 +240,7 @@ function mapHomePost(row: HomePostRow, enrichment: HomePostEnrichment = {}): Pos
     is_event: Boolean(row.is_event && (row.event_type || 'global') === 'global'),
     event_type: row.event_type || 'global',
     event_boards: row.event_boards || null,
+    event_ends_at: row.event_ends_at || null,
     notice_type: row.notice_type || null,
     is_must_read: row.is_must_read || false,
     is_hidden: row.is_hidden || false,
@@ -268,6 +270,7 @@ const getHomeLatestPosts = unstable_cache(
         is_event,
         event_type,
         event_boards,
+        event_ends_at,
         is_must_read,
         notice_type,
         is_hidden,
@@ -297,8 +300,13 @@ const getHomeLatestPosts = unstable_cache(
       return [];
     }
 
+    const now = new Date();
     const rows = (data as unknown as HomePostRow[])
-      .filter((row) => !HOTDEAL_SLUGS.has(row.boards?.slug || ''))
+      .filter((row) => {
+        if (HOTDEAL_SLUGS.has(row.boards?.slug || '')) return false;
+        if (row.is_event && row.event_ends_at && new Date(row.event_ends_at) < now) return false;
+        return true;
+      })
       .slice(0, 10);
     const enrichment = await getHomePostEnrichment(rows);
 
@@ -328,6 +336,7 @@ const getHomeWidgetNotices = unstable_cache(
         is_event,
         event_type,
         event_boards,
+        event_ends_at,
         is_must_read,
         notice_type,
         show_in_widget,
@@ -352,14 +361,20 @@ const getHomeWidgetNotices = unstable_cache(
       .eq('show_in_widget', true)
       .order('is_must_read', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(5));
+      .limit(20));
 
     if (error || !data) {
       console.error('[AllPostsWidget] notices query failed:', error);
       return [];
     }
 
-    const rows = data as unknown as HomePostRow[];
+    const now = new Date();
+    const rows = (data as unknown as HomePostRow[])
+      .filter((row) => {
+        if (row.is_event && row.event_ends_at && new Date(row.event_ends_at) < now) return false;
+        return true;
+      })
+      .slice(0, 5);
     const enrichment = await getHomePostEnrichment(rows);
 
     return rows.map((row) => mapHomePost(row, enrichment));

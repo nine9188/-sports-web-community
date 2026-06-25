@@ -31,6 +31,7 @@ export interface NoticeListPost {
   is_must_read?: boolean;
   is_notice?: boolean;
   is_event?: boolean;
+  event_ends_at?: string | null;
   team_id?: string | number | null;
   league_id?: string | number | null;
   comment_count?: number;
@@ -63,14 +64,26 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
     return notice.formattedDate || '-';
   }, [notice.formattedDate]);
 
+  const isEventEnded = useMemo(() => {
+    if (!notice.is_event || !notice.event_ends_at) return false;
+    return new Date(notice.event_ends_at) < new Date();
+  }, [notice.is_event, notice.event_ends_at]);
+
   // 배지 공통 렌더러
   const renderBadge = useMemo(() => {
     if (notice.is_must_read) {
       return <NoticeBadge type={notice.notice_type || 'global'} isMustRead={true} />;
     }
     if (notice.is_event) {
+      if (isEventEnded) {
+        return (
+          <span className="inline-flex items-center h-5 px-2 py-0 rounded text-[11px] font-semibold leading-none flex-shrink-0 whitespace-nowrap bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+            이벤트 마감
+          </span>
+        );
+      }
       return (
-        <span className="inline-flex items-center h-5 px-2 py-0 rounded text-xs font-semibold leading-none flex-shrink-0 whitespace-nowrap bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-200">
+        <span className="inline-flex items-center h-5 px-2 py-0 rounded text-[11px] font-semibold leading-none flex-shrink-0 whitespace-nowrap bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-200">
           이벤트
         </span>
       );
@@ -79,7 +92,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       return <NoticeBadge type={notice.notice_type} isMustRead={false} />;
     }
     return null;
-  }, [notice.is_must_read, notice.is_event, notice.notice_type]);
+  }, [notice.is_must_read, notice.is_event, notice.notice_type, isEventEnded]);
 
   // 게시판 로고 렌더링 함수 (PostList와 동일) - hooks는 항상 같은 순서로 호출되어야 함
   const renderBoardLogo = useMemo(() => {
@@ -147,7 +160,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                 {renderBadge}
               </div>
             )}
-            <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
+            <span className={`text-xs truncate text-gray-900 dark:text-[#F0F0F0] ${isEventEnded ? 'opacity-40 line-through' : ''}`}>
               {notice.title}
             </span>
             {(notice.comment_count || 0) > 0 && (
@@ -204,7 +217,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
       <td className="py-2 px-1 align-middle">
         <Link href={postUrl} className="block w-full" prefetch={false}>
           <div className="flex items-center gap-1 min-w-0">
-            <span className="text-xs truncate text-gray-900 dark:text-[#F0F0F0]">
+            <span className={`text-xs truncate text-gray-900 dark:text-[#F0F0F0] ${isEventEnded ? 'opacity-40 line-through' : ''}`}>
               {notice.title}
             </span>
             {(notice.comment_count || 0) > 0 && (

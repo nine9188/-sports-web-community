@@ -1,7 +1,8 @@
 import { cache } from 'react';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getPlayerLinkSlug } from '@/domains/livescore/utils/entityLinks';
-import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin, getSupabaseServer, getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getDefaultPlayerSeason, getPlayerSeasonCandidates } from './currentSeason';
 
 type PlayerShellRow = {
@@ -302,6 +303,9 @@ async function upsertPlayerShellFromApi(shell: PlayerShell, raw: ApiPlayerRespon
         last_api_sync: now,
         updated_at: now,
       }, { onConflict: 'player_id' });
+
+    // API 조회 후 새로 저장되었으므로, 해당 선수의 DB 쉘 캐시 무효화
+    revalidateTag('player-shell', 'default');
   } catch {
     // Shell writes are opportunistic and should never block rendering.
   }
@@ -343,6 +347,41 @@ async function fetchPlayerShellFromApi(playerId: number): Promise<PlayerShellRes
   return { status: 'missing' };
 }
 
+// DB 조회용 전용 함수 (unstable_cache 래핑)
+// cookies() 의존성이 없는 getSupabaseClientNoCookies를 사용하여 안전하게 캐싱합니다.
+const fetchPlayerShellFromDbCached = unstable_cache(
+  async (playerId: number): Promise<PlayerShell | null> => {
+    const supabase = getSupabaseClientNoCookies();
+    
+    // 1) 선수 정보 조회
+    const { data: playerRow, error: playerError } = await supabase
+      .from('football_players')
+      .select('player_id,name,korean_name,display_name,team_id,team_name,position,number,nationality,nationality_ko,age,height,weight,photo_url,photo_cached_url,slug,is_active,last_api_sync')
+      .eq('player_id', playerId)
+      .maybeSingle();
+
+    if (playerError || !playerRow || playerRow.is_active === false) {
+      return null;
+    }
+
+    // 2) 소속 팀 정보 조회
+    let teamRow: TeamShellRow | null = null;
+    if (playerRow.team_id) {
+      const { data: teamData } = await supabase
+        .from('football_teams')
+        .select('team_id,name,name_ko,slug,logo_url,logo_cached_url,league_id,league_name,league_name_ko,league_logo_url,country,current_season')
+        .eq('team_id', playerRow.team_id)
+        .maybeSingle();
+      
+      teamRow = (teamData as TeamShellRow | null) ?? null;
+    }
+
+    return buildShellFromRows(playerRow as PlayerShellRow, teamRow);
+  },
+  ['player-shell-db'],
+  { revalidate: 86400, tags: ['player-shell'] } // 24시간 캐싱
+);
+
 async function fetchPlayerShellInternal(playerId: string): Promise<PlayerShellResult> {
   const id = Number(playerId);
   if (!Number.isFinite(id) || id <= 0) {
@@ -350,10 +389,10 @@ async function fetchPlayerShellInternal(playerId: string): Promise<PlayerShellRe
   }
 
   try {
-    const row = await fetchPlayerRow(id);
-    if (row && row.is_active !== false) {
-      const team = await fetchTeamRow(row.team_id);
-      return { status: 'found', shell: buildShellFromRows(row, team), source: 'db' };
+    // 24시간 공유 캐시에서 먼저 조회 (DB 쿼리 99% 차단)
+    const cachedShell = await fetchPlayerShellFromDbCached(id);
+    if (cachedShell) {
+      return { status: 'found', shell: cachedShell, source: 'db' };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

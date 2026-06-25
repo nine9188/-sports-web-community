@@ -96,6 +96,7 @@ interface RawPostData {
   is_event?: boolean;
   event_type?: 'global' | 'board' | null;
   event_boards?: string[] | null;
+  event_ends_at?: string | null;
   profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null };
   thumbnail_url?: string | null;
   deal_info?: DealInfo | null;
@@ -138,6 +139,7 @@ export interface Post {
   is_event?: boolean;
   event_type?: 'global' | 'board' | null;
   event_boards?: string[] | null;
+  event_ends_at?: string | null;
   deal_info?: DealInfo | null;
 }
 
@@ -179,7 +181,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
 
     // 특수 게시판 확인 (공지, 분석)
     let isNoticeBoard = false;
-    let noticeBoardId: string | null = null;
+    let noticeBoardIds: string[] = [];
     let analysisRegion: 'foreign' | 'domestic' | 'all' | null = null;
     const checkBoardId = boardId || currentBoardId;
 
@@ -189,7 +191,9 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
 
       if (boardData?.slug === 'notice') {
         isNoticeBoard = true;
-        noticeBoardId = boardData.id;
+        const allBoards = await getCachedAllBoards();
+        const children = allBoards.filter(b => b.parent_id === boardData.id);
+        noticeBoardIds = [boardData.id, ...children.map(c => c.id)];
       } else if (boardData?.slug === 'data-analysis') {
         analysisRegion = 'all';
       } else if (boardData?.slug === 'foreign-analysis') {
@@ -237,7 +241,7 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .from('posts')
       .select(`
         id, title, created_at, updated_at, board_id, views, likes,
-        post_number, user_id, is_hidden, is_deleted, is_notice, is_event, event_type, event_boards,
+        post_number, user_id, is_hidden, is_deleted, is_notice, is_event, event_type, event_boards, event_ends_at,
         profiles (id, nickname, level, exp, icon_id, public_id),
         thumbnail_url, deal_info
       `)
@@ -246,18 +250,23 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .eq('is_hidden', false);
 
     // 필터 적용
-    if (isNoticeBoard && noticeBoardId) {
-      postsQuery = postsQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
-    } else if (analysisRegion === 'all') {
-      // 데이터분석 게시판: 해외+국내 전체 분석글 조회
-      postsQuery = applyAnalysisFilter(postsQuery, 'all', analysisBoardIds);
-    } else if (analysisRegion) {
-      // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 직접 조회
-      postsQuery = applyAnalysisFilter(postsQuery, analysisRegion, analysisBoardIds);
-    } else if (currentBoardFilter) {
-      postsQuery = postsQuery.eq('board_id', currentBoardFilter);
-    } else if (targetBoardsFilter?.length) {
-      postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+    if (isNoticeBoard && noticeBoardIds.length > 0) {
+      postsQuery = postsQuery.or(`board_id.in.(${noticeBoardIds.join(',')}),is_notice.eq.true,is_event.eq.true`);
+    } else {
+      const nowStr = new Date().toISOString();
+      const eventFilter = `is_event.neq.true,event_ends_at.is.null,event_ends_at.gt.${nowStr}`;
+      postsQuery = postsQuery.or(eventFilter);
+      if (analysisRegion === 'all') {
+        // 데이터분석 게시판: 해외+국내 전체 분석글 조회
+        postsQuery = applyAnalysisFilter(postsQuery, 'all', analysisBoardIds);
+      } else if (analysisRegion) {
+        // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 직접 조회
+        postsQuery = applyAnalysisFilter(postsQuery, analysisRegion, analysisBoardIds);
+      } else if (currentBoardFilter) {
+        postsQuery = postsQuery.eq('board_id', currentBoardFilter);
+      } else if (targetBoardsFilter?.length) {
+        postsQuery = postsQuery.in('board_id', targetBoardsFilter);
+      }
     }
 
     // 핫딜 게시판 제외 필터 적용
@@ -283,18 +292,23 @@ export async function fetchPosts(params: FetchPostsParams): Promise<PostsRespons
       .eq('is_deleted', false)
       .eq('is_hidden', false);
 
-    if (isNoticeBoard && noticeBoardId) {
-      countQuery = countQuery.or(`board_id.eq.${noticeBoardId},is_notice.eq.true`);
-    } else if (analysisRegion === 'all') {
-      // 데이터분석 게시판: 해외+국내 전체 분석글 카운트
-      countQuery = applyAnalysisFilter(countQuery, 'all', analysisBoardIds);
-    } else if (analysisRegion) {
-      // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 카운트
-      countQuery = applyAnalysisFilter(countQuery, analysisRegion, analysisBoardIds);
-    } else if (currentBoardFilter) {
-      countQuery = countQuery.eq('board_id', currentBoardFilter);
-    } else if (targetBoardsFilter?.length) {
-      countQuery = countQuery.in('board_id', targetBoardsFilter);
+    if (isNoticeBoard && noticeBoardIds.length > 0) {
+      countQuery = countQuery.or(`board_id.in.(${noticeBoardIds.join(',')}),is_notice.eq.true,is_event.eq.true`);
+    } else {
+      const nowStr = new Date().toISOString();
+      const eventFilter = `is_event.neq.true,event_ends_at.is.null,event_ends_at.gt.${nowStr}`;
+      countQuery = countQuery.or(eventFilter);
+      if (analysisRegion === 'all') {
+        // 데이터분석 게시판: 해외+국내 전체 분석글 카운트
+        countQuery = applyAnalysisFilter(countQuery, 'all', analysisBoardIds);
+      } else if (analysisRegion) {
+        // 해외/국내 분석 게시판: analysis_region 필터로 해외/국내 분석글 카운트
+        countQuery = applyAnalysisFilter(countQuery, analysisRegion, analysisBoardIds);
+      } else if (currentBoardFilter) {
+        countQuery = countQuery.eq('board_id', currentBoardFilter);
+      } else if (targetBoardsFilter?.length) {
+        countQuery = countQuery.in('board_id', targetBoardsFilter);
+      }
     }
 
     // 핫딜 게시판 제외 필터 적용 (카운트)

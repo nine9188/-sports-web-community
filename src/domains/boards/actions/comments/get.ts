@@ -15,7 +15,16 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
     const { data, error } = await supabase
       .from('comments')
       .select(`
-        *,
+        id,
+        user_id,
+        post_id,
+        content,
+        created_at,
+        updated_at,
+        parent_id,
+        comment_number,
+        likes,
+        dislikes,
         profiles(
           id,
           nickname,
@@ -49,10 +58,10 @@ export async function getComments(postId: string): Promise<CommentsListResponse>
         comment_number: comment.comment_number,
         likes: comment.likes || 0,
         dislikes: comment.dislikes || 0,
-        profiles: comment.profiles,
+        profiles: Array.isArray(comment.profiles) ? comment.profiles[0] : (comment.profiles || null),
         is_hidden: false,
         is_deleted: false
-      } as CommentType;
+      } as unknown as CommentType;
       
       // 댓글 상태 판단
       const status = determineCommentStatus(comment);

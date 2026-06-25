@@ -348,6 +348,7 @@ export async function savePostDraft(input: SavePostDraftInput): Promise<DraftAct
     deal_info: input.dealInfo ?? null,
     poll: input.poll ?? null,
     expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   const query = input.draftId

@@ -4,6 +4,44 @@ import { getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getLevelIconUrl } from '@/shared/utils/level-icons-server';
 import { formatDate } from '@/shared/utils/dateUtils';
 import type { EventType, Post, NoticeType } from '@/domains/boards/types/post';
+import { getCachedAllBoards } from '../getCachedBoards';
+
+async function checkIsNoticeOrSubBoard(boardId?: string): Promise<boolean> {
+  if (!boardId) return false;
+  try {
+    const allBoards = await getCachedAllBoards();
+    const board = allBoards.find(b => b.id === boardId);
+    let current = board;
+    while (current) {
+      if (current.slug === 'notice' || current.slug === 'notices') {
+        return true;
+      }
+      const parentId = current.parent_id;
+      current = parentId ? allBoards.find(b => b.id === parentId) : undefined;
+    }
+  } catch (error) {
+    console.error('checkIsNoticeOrSubBoard error:', error);
+  }
+  return false;
+}
+
+async function getNoticeBoardIdsForQuery(boardId?: string): Promise<string[]> {
+  if (!boardId) return [];
+  try {
+    const allBoards = await getCachedAllBoards();
+    const board = allBoards.find(b => b.id === boardId);
+    if (!board) return [boardId];
+
+    // 만약 이 게시판이 상위 공지사항 게시판(slug가 notice 또는 notices)이라면 하부 게시판 ID들도 포함
+    if (board.slug === 'notice' || board.slug === 'notices') {
+      const children = allBoards.filter(b => b.parent_id === board.id);
+      return [board.id, ...children.map(c => c.id)];
+    }
+  } catch (error) {
+    console.error('getNoticeBoardIdsForQuery error:', error);
+  }
+  return [boardId];
+}
 
 /**
  * 공지사항 조회 (전체 공지 + 게시판별 공지)
@@ -38,6 +76,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         is_event,
         event_type,
         event_boards,
+        event_ends_at,
         is_must_read,
         notice_type,
         notice_boards,
@@ -61,13 +100,28 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         ),
         comments!post_id(count)
       `)
-      .or('is_notice.eq.true,is_event.eq.true')
-      .eq('is_deleted', false)
-      .eq('is_hidden', false);
+    const isNoticeOrSub = await checkIsNoticeOrSubBoard(boardId);
+    const queryBoardIds = boardId ? await getNoticeBoardIdsForQuery(boardId) : [];
+
+    if (isNoticeOrSub && boardId) {
+      if (queryBoardIds.length > 1) {
+        query = query.or(`is_notice.eq.true,is_event.eq.true,board_id.in.(${queryBoardIds.join(',')})`);
+      } else {
+        query = query.or(`is_notice.eq.true,is_event.eq.true,board_id.eq.${boardId}`);
+      }
+    } else {
+      query = query.or('is_notice.eq.true,is_event.eq.true');
+    }
+
+    query = query.eq('is_deleted', false).eq('is_hidden', false);
 
     // 게시판 필터링 (공지 및 이벤트 대응)
     if (boardId) {
-      query = query.or(`notice_type.eq.global,and(notice_type.eq.board,notice_boards.cs.{${boardId}}),event_type.eq.global,and(event_type.eq.board,event_boards.cs.{${boardId}})`);
+      if (queryBoardIds.length > 1) {
+        query = query.or(`board_id.in.(${queryBoardIds.join(',')}),notice_type.eq.global,and(notice_type.eq.board,notice_boards.cs.{${boardId}}),event_type.eq.global,and(event_type.eq.board,event_boards.cs.{${boardId}})`);
+      } else {
+        query = query.or(`board_id.eq.${boardId},notice_type.eq.global,and(notice_type.eq.board,notice_boards.cs.{${boardId}}),event_type.eq.global,and(event_type.eq.board,event_boards.cs.{${boardId}})`);
+      }
     }
     // boardId가 없으면 모든 공지 조회 (공지 게시판용)
 
@@ -103,6 +157,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
       is_event?: boolean;
       event_type?: EventType | null;
       event_boards?: string[] | null;
+      event_ends_at?: string | null;
       is_must_read?: boolean;
       notice_type?: NoticeType;
       notice_boards?: string[] | null;
@@ -242,6 +297,7 @@ export async function getNotices(boardId?: string): Promise<Post[]> {
         is_event: notice.is_event || false,
         event_type: notice.event_type || 'global',
         event_boards: notice.event_boards || null,
+        event_ends_at: notice.event_ends_at || null,
         is_must_read: notice.is_must_read || false,
         notice_type: notice.notice_type || null,
         notice_boards: notice.notice_boards || null,
@@ -308,6 +364,10 @@ export async function getGlobalNotices(): Promise<Post[]> {
         likes,
         dislikes,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
+        event_ends_at,
         is_must_read,
         notice_type,
         notice_boards,
@@ -361,18 +421,15 @@ export async function getNoticesForBoard(boardData: { id: string; slug: string }
   headerNotices: Post[];
   boardNotices: Post[];
 }> {
-  const isNoticeBoard = boardData.slug === 'notice' || boardData.slug === 'notices';
+  const isNoticeBoard = boardData.slug === 'notice' || boardData.slug === 'notices' || await checkIsNoticeOrSubBoard(boardData.id);
 
   if (isNoticeBoard) {
-    // 공지사항 게시판: allNotices(모든 공지) + headerNotices(해당 게시판 공지)
-    const [allNotices, headerNotices] = await Promise.all([
-      getNotices(),                    // 모든 공지
-      getNotices(boardData.id)         // 전체 공지 + 공지사항 게시판 공지
-    ]);
+    // 공지사항 게시판: allNotices(모든 공지 + 이 게시판 글) + headerNotices(해당 게시판 공지)
+    const noticesList = await getNotices(boardData.id);
 
     return {
-      allNotices,
-      headerNotices,
+      allNotices: noticesList,
+      headerNotices: noticesList.filter(n => n.is_must_read),
       boardNotices: []
     };
   } else {
@@ -416,6 +473,10 @@ export async function getBoardNotices(boardId: string): Promise<Post[]> {
         likes,
         dislikes,
         is_notice,
+        is_event,
+        event_type,
+        event_boards,
+        event_ends_at,
         is_must_read,
         notice_type,
         notice_boards,

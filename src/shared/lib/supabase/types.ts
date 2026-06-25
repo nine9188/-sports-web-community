@@ -1552,6 +1552,7 @@ export type Database = {
           is_event: boolean | null
           event_boards: string[] | null
           event_created_at: string | null
+          event_ends_at: string | null
           event_type: string | null
           is_must_read: boolean | null
           is_notice: boolean | null
@@ -1588,6 +1589,7 @@ export type Database = {
           is_event?: boolean | null
           event_boards?: string[] | null
           event_created_at?: string | null
+          event_ends_at?: string | null
           event_type?: string | null
           is_must_read?: boolean | null
           is_notice?: boolean | null
@@ -1624,6 +1626,7 @@ export type Database = {
           is_event?: boolean | null
           event_boards?: string[] | null
           event_created_at?: string | null
+          event_ends_at?: string | null
           event_type?: string | null
           is_must_read?: boolean | null
           is_notice?: boolean | null

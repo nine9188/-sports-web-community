@@ -141,7 +141,7 @@ export async function createOrUpdatePrediction(
 
 export async function updatePredictionStatsManually(matchId: string) {
   try {
-    const supabase = await getSupabaseAction();
+    const supabase = getSupabaseAdmin();
 
     const { data: predictions, error: selectError } = await supabase
       .from('match_predictions')

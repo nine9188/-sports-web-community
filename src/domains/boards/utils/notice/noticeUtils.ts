@@ -128,10 +128,11 @@ export function processNoticesForLayout(
   } else {
     // 일반 게시판: 일반 게시글 표시
     const layoutPosts = convertApiPostsToLayoutPosts(postsData.data || []);
+    const isSubNotice = boardData.slug === 'notice-general' || boardData.slug === 'notice-event' || boardData.slug?.startsWith('notice-');
 
     return {
       posts: layoutPosts,
-      notices: noticesData.boardNotices,
+      notices: isSubNotice ? noticesData.headerNotices : noticesData.boardNotices,
       pagination: {
         totalItems: postsData.meta.totalItems,
         itemsPerPage: postsData.meta.itemsPerPage,

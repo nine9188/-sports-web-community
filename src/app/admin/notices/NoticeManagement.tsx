@@ -37,6 +37,7 @@ export default function NoticeManagement() {
   const [selectedEventPostNumber, setSelectedEventPostNumber] = useState<string>('');
   const [selectedEventType, setSelectedEventType] = useState<EventType>('global');
   const [selectedEventBoardIds, setSelectedEventBoardIds] = useState<string[]>([]);
+  const [selectedEventEndsAt, setSelectedEventEndsAt] = useState<string>('');
   const [selectedNoticeType, setSelectedNoticeType] = useState<NoticeType>('global');
   const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
   const [isMustRead, setIsMustRead] = useState<boolean>(false);
@@ -190,17 +191,20 @@ export default function NoticeManagement() {
     }
 
     try {
+      const endsAtIso = selectedEventEndsAt ? new Date(selectedEventEndsAt).toISOString() : null;
       const result = await setPostEventByNumberMutation.mutateAsync({
         postNumber: parseInt(selectedEventPostNumber, 10),
         isEvent: true,
         eventType: selectedEventType,
         boardIds: selectedEventType === 'board' ? selectedEventBoardIds : undefined,
+        eventEndsAt: endsAtIso,
       });
 
       if (result.success) {
         toast.success(result.message);
         setSelectedEventPostNumber('');
         setSelectedEventBoardIds([]);
+        setSelectedEventEndsAt('');
       } else {
         toast.error(result.message);
       }
@@ -241,7 +245,7 @@ export default function NoticeManagement() {
   };
 
   const handleChangeEventType = async (
-    post: { id: string; event_boards?: string[] | null },
+    post: { id: string; event_boards?: string[] | null; event_ends_at?: string | null },
     newType: EventType
   ) => {
     if (newType === 'board') {
@@ -255,6 +259,7 @@ export default function NoticeManagement() {
         postId: post.id,
         isEvent: true,
         eventType: newType,
+        eventEndsAt: post.event_ends_at,
       });
       if (result.success) {
         toast.success(result.message);
@@ -273,12 +278,15 @@ export default function NoticeManagement() {
       return;
     }
 
+    const post = eventPosts.find((p) => p.id === postId);
+
     try {
       const result = await togglePostEventMutation.mutateAsync({
         postId,
         isEvent: true,
         eventType: 'board',
         boardIds: eventBoardPickerBoardIds,
+        eventEndsAt: post?.event_ends_at,
       });
       if (result.success) {
         toast.success(result.message);
@@ -443,6 +451,21 @@ export default function NoticeManagement() {
               />
             </div>
           )}
+
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
+              이벤트 마감 시간
+            </label>
+            <input
+              type="datetime-local"
+              value={selectedEventEndsAt}
+              onChange={(e) => setSelectedEventEndsAt(e.target.value)}
+              className={cn('w-full px-4 py-2 rounded-lg', inputBaseStyles, focusStyles)}
+            />
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
+              마감 시간을 설정하지 않으면 무기한 유지됩니다.
+            </p>
+          </div>
 
           <button
             onClick={handleSetEventLabel}
@@ -733,6 +756,35 @@ export default function NoticeManagement() {
                       {post.event_type === 'board' ? `게시판 이벤트 (${post.event_boards?.length || 0}개)` : '전체 이벤트'}
                       {post.is_must_read ? ' | 필독 우선 표시' : post.is_notice ? ' | 공지 우선 표시' : ''}
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[13px] text-gray-500 dark:text-gray-400">마감:</span>
+                    <input
+                      type="datetime-local"
+                      value={post.event_ends_at ? new Date(new Date(post.event_ends_at).getTime() - new Date(post.event_ends_at).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                      onChange={async (e) => {
+                        const dateVal = e.target.value;
+                        const isoVal = dateVal ? new Date(dateVal).toISOString() : null;
+                        try {
+                          const result = await togglePostEventMutation.mutateAsync({
+                            postId: post.id,
+                            isEvent: true,
+                            eventType: post.event_type || 'global',
+                            boardIds: post.event_boards || undefined,
+                            eventEndsAt: isoVal
+                          });
+                          if (result.success) {
+                            toast.success('이벤트 마감 시간이 변경되었습니다.');
+                          } else {
+                            toast.error(result.message);
+                          }
+                        } catch (error) {
+                          toast.error('이벤트 마감 시간 변경 중 오류가 발생했습니다.');
+                        }
+                      }}
+                      className={cn('px-2 py-1 text-[13px] rounded bg-gray-200 dark:bg-[#262626] text-gray-700 dark:text-gray-300 border-none cursor-pointer', focusStyles)}
+                    />
                   </div>
 
                   <select

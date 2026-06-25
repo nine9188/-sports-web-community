@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseServer, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { calculateLevelFromExp } from '@/shared/utils/level-icons-server';
 import { createLevelUpNotification } from '@/domains/notifications/actions';
 import {
@@ -138,7 +138,8 @@ export async function rewardUserActivity(
     // 5-7. 트랜잭션으로 모든 작업을 한 번에 처리 (성능 향상)
     try {
       // 5. 보상 내역 기록 - 경험치 히스토리
-      const { error: expHistoryError } = await supabase
+      const adminSupabase = getSupabaseAdmin();
+      const { error: expHistoryError } = await adminSupabase
         .from('exp_history')
         .insert({
           user_id: userId,
@@ -152,7 +153,7 @@ export async function rewardUserActivity(
       }
       
       // 6. 보상 내역 기록 - 포인트 히스토리
-      const { error: pointHistoryError } = await supabase
+      const { error: pointHistoryError } = await adminSupabase
         .from('point_history')
         .insert({
           user_id: userId,
@@ -170,7 +171,7 @@ export async function rewardUserActivity(
       const newPoints = currentPoints + pointsReward;
       const newLevel = calculateLevelFromExp(newExp);
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await adminSupabase
         .from('profiles')
         .update({
           exp: newExp,
@@ -237,21 +238,22 @@ async function grantFirstActivityBonus(
     const reward = ACTIVITY_REWARDS[bonusType];
 
     // 경험치 히스토리 기록
-    await supabase.from('exp_history').insert({
+    const adminSupabase = getSupabaseAdmin();
+    await adminSupabase.from('exp_history').insert({
       user_id: userId,
       exp: reward.exp,
       reason: reward.reason,
     });
 
     // 포인트 히스토리 기록
-    await supabase.from('point_history').insert({
+    await adminSupabase.from('point_history').insert({
       user_id: userId,
       points: reward.points,
       reason: reward.reason,
     });
 
-    // 프로필 업데이트
-    const { data: profile } = await supabase
+    // 프로필 조회
+    const { data: profile } = await adminSupabase
       .from('profiles')
       .select('exp, points, level')
       .eq('id', userId)
@@ -262,7 +264,7 @@ async function grantFirstActivityBonus(
       const newPoints = (profile.points || 0) + reward.points;
       const newLevel = calculateLevelFromExp(newExp);
 
-      await supabase
+      await adminSupabase
         .from('profiles')
         .update({ exp: newExp, points: newPoints, level: newLevel })
         .eq('id', userId);

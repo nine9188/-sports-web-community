@@ -257,7 +257,7 @@ async function grantReferralReward(
   exp: number,
   reason: string
 ): Promise<void> {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   // 경험치 히스토리 기록
   await supabase.from('exp_history').insert({

@@ -13,10 +13,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = await getSupabaseServer();
 
   const [usersResult, postsResult, commentsResult, boardsResult] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
-    supabase.from('comments').select('*', { count: 'exact', head: true }),
-    supabase.from('boards').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }),
+    supabase.from('posts').select('id', { count: 'exact', head: true }),
+    supabase.from('comments').select('id', { count: 'exact', head: true }),
+    supabase.from('boards').select('id', { count: 'exact', head: true }),
   ]);
 
   return {

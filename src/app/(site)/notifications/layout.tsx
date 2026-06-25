@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/domains/auth/actions';
+import { getAuthenticatedUser } from '@/shared/actions/auth';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 
 export async function generateMetadata() {
@@ -19,8 +19,8 @@ export default async function NotificationsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 서버에서 인증 체크
-  const { user } = await getCurrentUser();
+  // 서버에서 인증 체크 (profiles DB 조회 생략)
+  const { data: { user } } = await getAuthenticatedUser();
 
   // 로그인하지 않은 사용자 처리
   if (!user) {

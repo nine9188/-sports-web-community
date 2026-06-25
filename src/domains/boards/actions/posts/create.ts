@@ -240,7 +240,7 @@ async function createPostInternal(params: {
       // 썸네일 Storage 캐싱 (외부 URL → CDN URL로 교체)
       cacheThumbnailToStorage(thumbnailUrl ?? '', postId),
       // 첫 게시글 마일스톤
-      supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', userId)
         .then(({ count }) => { if (count === 1) return checkReferralMilestone(userId, 'first_post'); }),
       ]).catch(err => console.error('게시글 후처리 실패 (무시됨):', err));
     });

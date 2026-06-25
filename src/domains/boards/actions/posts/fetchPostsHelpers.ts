@@ -235,6 +235,7 @@ export function formatPostData(
     is_event?: boolean;
     event_type?: 'global' | 'board' | null;
     event_boards?: string[] | null;
+    event_ends_at?: string | null;
     profiles?: { id?: string; nickname?: string; level?: number; exp?: number; icon_id?: number | null; public_id?: string | null } | null;
     content?: Json;
     thumbnail_url?: string | null;
@@ -336,6 +337,7 @@ export function formatPostData(
     is_event: isEventVisible,
     event_type: eventType,
     event_boards: eventBoards,
+    event_ends_at: post.event_ends_at || null,
     deal_info: post.deal_info || null
   };
 }

@@ -1,7 +1,8 @@
 import { cache } from 'react';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { fetchFromFootballApi } from '@/domains/livescore/actions/footballApi';
 import { getTeamLinkSlug } from '@/domains/livescore/utils/entityLinks';
-import { getSupabaseAdmin, getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseAdmin, getSupabaseServer, getSupabaseClientNoCookies } from '@/shared/lib/supabase/server';
 import { getCurrentSeasonForLeague } from '@/domains/livescore/actions/teamLeagueData';
 
 type TeamShellRow = {
@@ -303,6 +304,9 @@ async function upsertTeamShellFromApi(shell: TeamShell, raw: ApiTeamResponse): P
         last_api_sync: now,
         updated_at: now,
       }, { onConflict: 'team_id' });
+
+    // API 조회 후 새로 저장되었으므로, 해당 팀의 DB 쉘 캐시 무효화
+    revalidateTag('team-shell', 'default');
   } catch {
     // Shell writes are opportunistic and should never block rendering.
   }
@@ -330,6 +334,27 @@ async function fetchTeamShellFromApi(teamId: number): Promise<TeamShellResult> {
   }
 }
 
+// DB 조회용 전용 함수 (unstable_cache 래핑)
+// cookies() 의존성이 없는 getSupabaseClientNoCookies를 사용하여 안전하게 캐싱합니다.
+const fetchTeamShellFromDbCached = unstable_cache(
+  async (teamId: number): Promise<TeamShell | null> => {
+    const supabase = getSupabaseClientNoCookies();
+    const { data, error } = await supabase
+      .from('football_teams')
+      .select('team_id,name,name_ko,slug,logo_url,logo_cached_url,league_id,league_name,league_name_ko,league_logo_url,country,current_season,is_active')
+      .eq('team_id', teamId)
+      .maybeSingle();
+
+    if (error || !data || data.is_active === false) {
+      return null;
+    }
+
+    return buildShellFromRow(data as TeamShellRow);
+  },
+  ['team-shell-db'],
+  { revalidate: 86400, tags: ['team-shell'] } // 24시간 캐싱
+);
+
 async function fetchTeamShellInternal(teamId: string): Promise<TeamShellResult> {
   const id = Number(teamId);
   if (!Number.isFinite(id) || id <= 0) {
@@ -337,9 +362,10 @@ async function fetchTeamShellInternal(teamId: string): Promise<TeamShellResult> 
   }
 
   try {
-    const row = await fetchTeamRow(id);
-    if (row && row.is_active !== false) {
-      return { status: 'found', shell: buildShellFromRow(row), source: 'db' };
+    // 24시간 공유 캐시에서 먼저 조회 (DB 쿼리 99% 차단)
+    const cachedShell = await fetchTeamShellFromDbCached(id);
+    if (cachedShell) {
+      return { status: 'found', shell: cachedShell, source: 'db' };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

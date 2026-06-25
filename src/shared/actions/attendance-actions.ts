@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseServer } from '@/shared/lib/supabase/server';
+import { getSupabaseServer, getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { rewardUserActivity, getActivityTypeValues } from './activity-actions';
 import { checkReferralMilestone } from './referral-actions';
 import { getConsecutiveBonus, CONSECUTIVE_LOGIN_BONUSES } from '@/shared/constants/rewards';
@@ -187,7 +187,7 @@ async function grantConsecutiveBonus(
   points: number,
   reason: string
 ): Promise<void> {
-  const supabase = await getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   // 경험치 히스토리 기록
   await supabase.from('exp_history').insert({

@@ -47,6 +47,7 @@ export interface Post {
   is_event?: boolean;
   event_type?: 'global' | 'board' | null;
   event_boards?: string[] | null;
+  event_ends_at?: string | null;
   is_hidden?: boolean;
   is_deleted?: boolean;
   deal_info?: DealInfo | null;

@@ -34,6 +34,7 @@ export interface Post {
   event_type?: EventType | null;
   event_boards?: string[] | null; // 이벤트 라벨을 표시할 게시판 ID 배열 (다중 선택)
   event_created_at?: string | null;
+  event_ends_at?: string | null;
   notice_type?: NoticeType | null;
   notice_boards?: string[] | null; // 공지를 표시할 게시판 ID 배열 (다중 선택)
   notice_order?: number | null;
