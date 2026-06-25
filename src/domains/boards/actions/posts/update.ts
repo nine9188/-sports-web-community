@@ -216,7 +216,7 @@ export async function updatePost(
 
     // 메타데이터 캐시 무효화 (generateMetadata용 per-post 캐시)
     if (postData.board_id && postData.post_number) {
-      revalidateTag(`post-${postData.board_id}-${postData.post_number}`, 'default');
+      (revalidateTag as any)(`post-${postData.board_id}-${postData.post_number}`);
     }
     revalidatePostListCaches(boardSlug);
 

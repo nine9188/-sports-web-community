@@ -172,7 +172,7 @@ async function togglePostReaction(
 
     // 캐시 무효화
     if (currentPost.board_id && currentPost.post_number) {
-      revalidateTag(`post-${currentPost.board_id}-${currentPost.post_number}`, 'default');
+      (revalidateTag as any)(`post-${currentPost.board_id}-${currentPost.post_number}`);
       const boardSlug = oneOrNull(currentPost.board)?.slug;
       revalidatePostListCaches(boardSlug);
     }

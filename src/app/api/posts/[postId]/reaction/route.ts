@@ -89,7 +89,7 @@ export async function POST(
     .single();
 
   if (postInfo) {
-    revalidateTag(`post-${postInfo.board_id}-${postInfo.post_number}`, 'default');
+    (revalidateTag as any)(`post-${postInfo.board_id}-${postInfo.post_number}`);
     const boardSlug = oneOrNull(postInfo.board)?.slug;
     revalidatePostListCaches(boardSlug);
   }
