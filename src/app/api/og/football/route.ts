@@ -69,9 +69,7 @@ function renderOgSvg({
     </linearGradient>
   </defs>
 
-  <rect x="64" y="58" width="46" height="46" rx="12" fill="#FFFFFF"/>
-  <text x="87" y="89" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="900" fill="#101828">4590</text>
-  <text x="128" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
+  <text x="64" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
 
   ${renderImageSlot(leftImage, 80, 226)}
   <g transform="translate(${textX}, 0)">
