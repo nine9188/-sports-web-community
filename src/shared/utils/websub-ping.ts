@@ -12,6 +12,7 @@ export async function pingWebSubHub(): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `hub.mode=publish&hub.url=${encodeURIComponent(`${siteConfig.url}/rss.xml`)}`,
+      signal: AbortSignal.timeout(3000),
     });
   } catch (error) {
     // ping 실패해도 게시글 작성에 영향 없도록 무시

@@ -55,18 +55,79 @@ function withTimeout<T>(
   });
 }
 
-async function convertToWebP(file: File): Promise<File> {
-  logImageDebug('convert check', {
-    name: file.name,
-    type: file.type,
-    size: file.size,
+function convertWithWorker(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const workerCode = `
+      self.onmessage = async function(e) {
+        const { file, quality } = e.data;
+        try {
+          const bitmap = await createImageBitmap(file);
+          const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Canvas 2D context is null');
+          }
+          ctx.drawImage(bitmap, 0, 0);
+          bitmap.close();
+          const blob = await canvas.convertToBlob({
+            type: 'image/webp',
+            quality: quality
+          });
+          self.postMessage({ success: true, blob });
+        } catch (err) {
+          self.postMessage({ success: false, error: err.message || String(err) });
+        }
+      };
+    `;
+
+    let settled = false;
+    const blobUrl = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+    const worker = new Worker(blobUrl);
+
+    const done = (result: File) => {
+      if (settled) return;
+      settled = true;
+      worker.terminate();
+      URL.revokeObjectURL(blobUrl);
+      resolve(result);
+    };
+
+    const timer = window.setTimeout(() => {
+      logImageDebug('Worker convert timeout: using original file');
+      done(file);
+    }, CONVERT_TIMEOUT_MS);
+
+    worker.onmessage = (e) => {
+      window.clearTimeout(timer);
+      const { success, blob, error } = e.data;
+      if (success && blob) {
+        if (blob.size >= file.size) {
+          logImageDebug('Worker webp bigger than original: using original file', {
+            originalSize: file.size,
+            webpSize: blob.size,
+          });
+          done(file);
+        } else {
+          const baseName = file.name.replace(/\.[^.]+$/, '');
+          done(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+        }
+      } else {
+        logImageError('Worker conversion error, falling back', error);
+        reject(new Error(error || 'Worker compression failed'));
+      }
+    };
+
+    worker.onerror = (err) => {
+      window.clearTimeout(timer);
+      logImageError('Worker error, falling back', err);
+      reject(err);
+    };
+
+    worker.postMessage({ file, quality: WEBP_QUALITY });
   });
+}
 
-  if (file.type === 'image/webp' || file.type === 'image/gif') {
-    logImageDebug('convert skipped: already webp or gif');
-    return file;
-  }
-
+function convertWithMainThreadCanvas(file: File): Promise<File> {
   return new Promise((resolve) => {
     const objectUrl = URL.createObjectURL(file);
     let settled = false;
@@ -76,7 +137,7 @@ async function convertToWebP(file: File): Promise<File> {
       settled = true;
       URL.revokeObjectURL(objectUrl);
 
-      logImageDebug('convert result', {
+      logImageDebug('Main-thread convert result', {
         originalName: file.name,
         originalType: file.type,
         originalSize: file.size,
@@ -90,7 +151,7 @@ async function convertToWebP(file: File): Promise<File> {
     };
 
     const timer = window.setTimeout(() => {
-      logImageDebug('convert timeout: using original file');
+      logImageDebug('Main-thread convert timeout: using original file');
       done(file);
     }, CONVERT_TIMEOUT_MS);
 
@@ -102,7 +163,7 @@ async function convertToWebP(file: File): Promise<File> {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
 
-        logImageDebug('image loaded for convert', {
+        logImageDebug('Main-thread image loaded for convert', {
           width: img.naturalWidth,
           height: img.naturalHeight,
         });
@@ -111,7 +172,7 @@ async function convertToWebP(file: File): Promise<File> {
 
         if (!ctx) {
           window.clearTimeout(timer);
-          logImageDebug('canvas context missing: using original file');
+          logImageDebug('Main-thread canvas context missing: using original file');
           done(file);
           return;
         }
@@ -123,13 +184,13 @@ async function convertToWebP(file: File): Promise<File> {
             window.clearTimeout(timer);
 
             if (!blob) {
-              logImageDebug('toBlob failed: using original file');
+              logImageDebug('Main-thread toBlob failed: using original file');
               done(file);
               return;
             }
 
             if (blob.size >= file.size) {
-              logImageDebug('webp bigger than original: using original file', {
+              logImageDebug('Main-thread webp bigger than original: using original file', {
                 originalSize: file.size,
                 webpSize: blob.size,
               });
@@ -145,14 +206,14 @@ async function convertToWebP(file: File): Promise<File> {
         );
       } catch (error) {
         window.clearTimeout(timer);
-        logImageError('convert exception: using original file', error);
+        logImageError('Main-thread convert exception: using original file', error);
         done(file);
       }
     };
 
     img.onerror = () => {
       window.clearTimeout(timer);
-      logImageError('image load failed for convert: using original file', {
+      logImageError('Main-thread image load failed for convert: using original file', {
         name: file.name,
         type: file.type,
       });
@@ -161,6 +222,38 @@ async function convertToWebP(file: File): Promise<File> {
 
     img.src = objectUrl;
   });
+}
+
+async function convertToWebP(file: File): Promise<File> {
+  logImageDebug('convert check', {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  });
+
+  if (file.type === 'image/webp' || file.type === 'image/gif') {
+    logImageDebug('convert skipped: already webp or gif');
+    return file;
+  }
+
+  // 1. OffscreenCanvas + Web Worker (UI 비선점 백그라운드 처리)
+  if (
+    typeof window !== 'undefined' &&
+    'Worker' in window &&
+    'OffscreenCanvas' in window &&
+    'createImageBitmap' in window
+  ) {
+    try {
+      logImageDebug('Attempting conversion via Web Worker');
+      return await convertWithWorker(file);
+    } catch (workerErr) {
+      logImageError('Web Worker conversion failed, falling back to main thread', workerErr);
+    }
+  }
+
+  // 2. 메인 스레드 Canvas (구형 브라우저 등 지원 안 하는 환경에서의 Fallback)
+  logImageDebug('Using main-thread Canvas fallback');
+  return convertWithMainThreadCanvas(file);
 }
 
 type UploadPostImageFileOptions = {

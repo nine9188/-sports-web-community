@@ -60,6 +60,7 @@ async function submitIndexNowBatch(
         keyLocation: INDEXNOW_KEY_LOCATION,
         urlList: submitted,
       }),
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!response.ok && response.status !== 202) {
