@@ -64,6 +64,10 @@ export async function generateMetadata({
     });
   }
 
+
+
+
+
   const team = teamData.team;
   const mappedTeam = await getTeamById(Number(id));
   const resolvedLeagueId = mappedTeam?.league_id || team.league?.id || null;
@@ -82,7 +86,7 @@ export async function generateMetadata({
   const ogImage = buildFootballOgImageUrl({
     title: teamName,
     subtitle: [leagueName, countryName, team.founded ? `${team.founded}년 창단` : ''].filter(Boolean).join(' · '),
-    label: '팀 정보',
+    label: leagueName || '팀 정보',
     leftImage: teamLogoImage,
   });
 

@@ -136,7 +136,7 @@ export async function generateMetadata({
   const ogImage = buildFootballOgImageUrl({
     title: `${homeTeam} ${score} ${awayTeam}`,
     subtitle: [leagueName, roundText, dateStr].filter(Boolean).join(' · '),
-    label: '경기 정보',
+    label: leagueName || '경기 정보',
     leftImage: match.teams.home.logo,
     rightImage: match.teams.away.logo,
   });

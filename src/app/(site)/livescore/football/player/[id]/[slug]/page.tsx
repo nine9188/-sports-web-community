@@ -81,7 +81,7 @@ export async function generateMetadata({
   const ogImage = buildFootballOgImageUrl({
     title: playerName,
     subtitle: profileParts.slice(0, 4).join(' · '),
-    label: '선수 정보',
+    label: leagueName || '선수 정보',
     leftImage: playerImage,
   });
   const { shouldNoindex } = await resolveTeamIndexability({
