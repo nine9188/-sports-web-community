@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 
@@ -274,6 +275,13 @@ async function imageToDataUri(url: string | null): Promise<string | null> {
     if (!response.ok) return null;
 
     const input = Buffer.from(await response.arrayBuffer());
+    
+    // Check if the image is a generic placeholder shield logo from API-Sports
+    const hash = crypto.createHash('md5').update(input).digest('hex');
+    if (hash === '3617b8094f9ea8c81f6d0beff671978b') {
+      return null;
+    }
+
     const image = await sharp(input)
       .resize(124, 124, {
         fit: 'contain',
