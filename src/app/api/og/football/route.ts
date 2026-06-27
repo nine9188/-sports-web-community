@@ -5,6 +5,20 @@ import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 
+// Load local transparent brand logo at startup
+const brandLogoDataUri = (() => {
+  try {
+    const logoPath = path.join(process.cwd(), 'public/logo/192-14.png');
+    if (fs.existsSync(logoPath)) {
+      const buffer = fs.readFileSync(logoPath);
+      return `data:image/png;base64,${buffer.toString('base64')}`;
+    }
+  } catch (err) {
+    console.error('Failed to load local brand logo:', err);
+  }
+  return '';
+})();
+
 const SIZE = {
   width: 1200,
   height: 630,
@@ -19,7 +33,7 @@ export async function GET(request: Request) {
   const rightImage = getSafeImageUrl(searchParams.get('rightImage'));
   const logo = getSafeImageUrl(searchParams.get('logo'));
 
-  const [leftDataUri, rightDataUri, logoDataUri] = await Promise.all([
+  const [leftDataUri, rightDataUri, leagueLogoDataUri] = await Promise.all([
     imageToDataUri(leftImage),
     imageToDataUri(rightImage),
     imageToDataUri(logo),
@@ -31,7 +45,8 @@ export async function GET(request: Request) {
     label,
     leftImage: leftDataUri,
     rightImage: rightDataUri,
-    logoDataUri,
+    logoDataUri: leagueLogoDataUri || brandLogoDataUri || null,
+    isBrandLogo: !leagueLogoDataUri,
   });
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
 
@@ -50,6 +65,7 @@ function renderOgSvg({
   leftImage,
   rightImage,
   logoDataUri,
+  isBrandLogo,
 }: {
   title: string;
   subtitle: string;
@@ -57,6 +73,7 @@ function renderOgSvg({
   leftImage: string | null;
   rightImage: string | null;
   logoDataUri: string | null;
+  isBrandLogo: boolean;
 }) {
   // 1. MATCH MODE: Both logos exist
   if (leftImage && rightImage) {
@@ -95,10 +112,12 @@ function renderOgSvg({
     </linearGradient>
   </defs>
 
-  ${logoDataUri ? `
+  ${logoDataUri ? (isBrandLogo ? `
+  <image x="64" y="58" width="46" height="46" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : `
   <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
   <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
-  ` : ''}
+  `) : ''}
   <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
 
   ${renderImageSlot(leftImage, 80, 226)}
@@ -151,10 +170,12 @@ function renderOgSvg({
     </linearGradient>
   </defs>
 
-  ${logoDataUri ? `
+  ${logoDataUri ? (isBrandLogo ? `
+  <image x="64" y="58" width="46" height="46" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : `
   <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
   <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
-  ` : ''}
+  `) : ''}
   <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
 
   ${renderImageSlot(leftImage, 80, 226)}
@@ -204,10 +225,12 @@ function renderOgSvg({
     </linearGradient>
   </defs>
 
-  ${logoDataUri ? `
+  ${logoDataUri ? (isBrandLogo ? `
+  <image x="64" y="58" width="46" height="46" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : `
   <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
   <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
-  ` : ''}
+  `) : ''}
   <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
   
   <g transform="translate(80, 0)">

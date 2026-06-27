@@ -96,6 +96,12 @@ window.gtag('config', 'G-MESEGFZZPF');
 `,
           }}
         />
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-8892057636180546'}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </head>
 
       <body className="w-full h-full overflow-x-hidden">
