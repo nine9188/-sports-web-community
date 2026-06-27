@@ -106,6 +106,7 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
       ? `최근 이적 선수: ${playerNames.join(', ')}`
       : `${leagueName} · 팀별 이적 현황`,
     label: leagueName || '팀 이적시장',
+    logo: context.league?.logo || null,
   });
 
   const { shouldNoindex } = await resolveTeamIndexability({

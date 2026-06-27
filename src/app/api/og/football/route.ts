@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import sharp from 'sharp';
 
 export const runtime = 'nodejs';
@@ -14,10 +16,12 @@ export async function GET(request: Request) {
   const label = clamp(searchParams.get('label') || '4590 Football', 32);
   const leftImage = getSafeImageUrl(searchParams.get('leftImage'));
   const rightImage = getSafeImageUrl(searchParams.get('rightImage'));
+  const logo = getSafeImageUrl(searchParams.get('logo'));
 
-  const [leftDataUri, rightDataUri] = await Promise.all([
+  const [leftDataUri, rightDataUri, logoDataUri] = await Promise.all([
     imageToDataUri(leftImage),
     imageToDataUri(rightImage),
+    imageToDataUri(logo),
   ]);
 
   const svg = renderOgSvg({
@@ -26,6 +30,7 @@ export async function GET(request: Request) {
     label,
     leftImage: leftDataUri,
     rightImage: rightDataUri,
+    logoDataUri,
   });
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
 
@@ -43,20 +48,149 @@ function renderOgSvg({
   label,
   leftImage,
   rightImage,
+  logoDataUri,
 }: {
   title: string;
   subtitle: string;
   label: string;
   leftImage: string | null;
   rightImage: string | null;
+  logoDataUri: string | null;
 }) {
-  const titleLines = wrapText(title, 18, 2);
-  const subtitleLines = wrapText(subtitle, 34, 2);
-  const titleStartY = titleLines.length > 1 ? 270 : 310;
-  const imageSlotsWidth = (leftImage ? 216 : 0) + (rightImage ? 216 : 0);
-  const textX = leftImage ? 298 : 80;
-  const textWidth = 1040 - imageSlotsWidth;
+  // 1. MATCH MODE: Both logos exist
+  if (leftImage && rightImage) {
+    const titleLines = wrapText(title, 18, 2);
+    const longestLine = Math.max(...titleLines.map(l => l.length), 0);
+    
+    let titleFontSize = 66;
+    if (longestLine > 15) {
+      titleFontSize = 48;
+    } else if (longestLine > 12) {
+      titleFontSize = 56;
+    }
+    const titleLineHeight = titleFontSize + 12;
+    
+    // Wrap at 50 to keep info like round, group, date on one line
+    const subtitleLines = wrapText(subtitle, 50, 2);
+    const subtitleFontSize = 28;
+    const subtitleLineHeight = 38;
+    
+    let titleStartY = 315;
+    let subtitleStartY = 375;
+    if (titleLines.length > 1) {
+      titleStartY = 275;
+      subtitleStartY = 275 + (titleLines.length - 1) * titleLineHeight + 65;
+    }
+    
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${SIZE.width}" height="${SIZE.height}" viewBox="0 0 ${SIZE.width} ${SIZE.height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${SIZE.width}" height="${SIZE.height}" fill="#101828"/>
+  <rect x="0" y="0" width="${SIZE.width}" height="${SIZE.height}" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="${SIZE.width}" y2="${SIZE.height}" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="0.55" stop-color="#182230"/>
+      <stop offset="1" stop-color="#0B4A6F"/>
+    </linearGradient>
+  </defs>
 
+  ${logoDataUri ? `
+  <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
+  <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : ''}
+  <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
+
+  ${renderImageSlot(leftImage, 80, 226)}
+  
+  <g>
+    ${titleLines.map((line, index) => `<text x="600" y="${titleStartY + index * titleLineHeight}" text-anchor="middle" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${titleFontSize}" font-weight="900" fill="#FFFFFF">${escapeXml(line)}</text>`).join('')}
+    ${subtitleLines.map((line, index) => `<text x="600" y="${subtitleStartY + index * subtitleLineHeight}" text-anchor="middle" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${subtitleFontSize}" font-weight="500" fill="#D0D5DD">${escapeXml(line)}</text>`).join('')}
+  </g>
+  
+  ${renderImageSlot(rightImage, 952, 226)}
+
+  <text x="64" y="548" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="26" font-weight="500" fill="#D0D5DD">축구 라이브스코어 &amp; 커뮤니티</text>
+  <text x="1136" y="548" text-anchor="end" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF">4590fb.com</text>
+</svg>`;
+  }
+
+  // 2. SINGLE IMAGE MODE (Team, League, Player pages)
+  if (leftImage) {
+    const titleLines = wrapText(title, 20, 2);
+    const longestLine = Math.max(...titleLines.map(l => l.length), 0);
+    
+    let titleFontSize = 66;
+    if (longestLine > 18) {
+      titleFontSize = 48;
+    } else if (longestLine > 14) {
+      titleFontSize = 56;
+    }
+    const titleLineHeight = titleFontSize + 12;
+    
+    const subtitleLines = wrapText(subtitle, 50, 2);
+    const subtitleFontSize = 32;
+    const subtitleLineHeight = 42;
+    
+    let titleStartY = 315;
+    let subtitleStartY = 375;
+    if (titleLines.length > 1) {
+      titleStartY = 275;
+      subtitleStartY = 275 + (titleLines.length - 1) * titleLineHeight + 65;
+    }
+    
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${SIZE.width}" height="${SIZE.height}" viewBox="0 0 ${SIZE.width} ${SIZE.height}" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${SIZE.width}" height="${SIZE.height}" fill="#101828"/>
+  <rect x="0" y="0" width="${SIZE.width}" height="${SIZE.height}" fill="url(#g)"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="${SIZE.width}" y2="${SIZE.height}" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827"/>
+      <stop offset="0.55" stop-color="#182230"/>
+      <stop offset="1" stop-color="#0B4A6F"/>
+    </linearGradient>
+  </defs>
+
+  ${logoDataUri ? `
+  <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
+  <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : ''}
+  <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
+
+  ${renderImageSlot(leftImage, 80, 226)}
+  
+  <g transform="translate(298, 0)">
+    ${titleLines.map((line, index) => `<text x="0" y="${titleStartY + index * titleLineHeight}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${titleFontSize}" font-weight="900" fill="#FFFFFF">${escapeXml(line)}</text>`).join('')}
+    ${subtitleLines.map((line, index) => `<text x="0" y="${subtitleStartY + index * subtitleLineHeight}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${subtitleFontSize}" font-weight="500" fill="#D0D5DD">${escapeXml(line)}</text>`).join('')}
+  </g>
+
+  <text x="64" y="548" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="26" font-weight="500" fill="#D0D5DD">축구 라이브스코어 &amp; 커뮤니티</text>
+  <text x="1136" y="548" text-anchor="end" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF">4590fb.com</text>
+</svg>`;
+  }
+
+  // 3. TEXT-ONLY MODE
+  const titleLines = wrapText(title, 24, 2);
+  const longestLine = Math.max(...titleLines.map(l => l.length), 0);
+  
+  let titleFontSize = 66;
+  if (longestLine > 22) {
+    titleFontSize = 48;
+  } else if (longestLine > 18) {
+    titleFontSize = 56;
+  }
+  const titleLineHeight = titleFontSize + 12;
+  
+  const subtitleLines = wrapText(subtitle, 55, 2);
+  const subtitleFontSize = 32;
+  const subtitleLineHeight = 42;
+  
+  let titleStartY = 315;
+  let subtitleStartY = 375;
+  if (titleLines.length > 1) {
+    titleStartY = 275;
+    subtitleStartY = 275 + (titleLines.length - 1) * titleLineHeight + 65;
+  }
+  
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${SIZE.width}" height="${SIZE.height}" viewBox="0 0 ${SIZE.width} ${SIZE.height}" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="${SIZE.width}" height="${SIZE.height}" fill="#101828"/>
@@ -69,14 +203,16 @@ function renderOgSvg({
     </linearGradient>
   </defs>
 
-  <text x="64" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
-
-  ${renderImageSlot(leftImage, 80, 226)}
-  <g transform="translate(${textX}, 0)">
-    ${titleLines.map((line, index) => `<text x="0" y="${titleStartY + index * 76}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="66" font-weight="900" fill="#FFFFFF">${escapeXml(line)}</text>`).join('')}
-    ${subtitleLines.map((line, index) => `<text x="0" y="${titleStartY + titleLines.length * 76 + 20 + index * 42}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="32" font-weight="500" fill="#D0D5DD">${escapeXml(line)}</text>`).join('')}
+  ${logoDataUri ? `
+  <rect x="64" y="58" width="46" height="46" rx="10" fill="#FFFFFF"/>
+  <image x="69" y="63" width="36" height="36" preserveAspectRatio="xMidYMid meet" href="${logoDataUri}"/>
+  ` : ''}
+  <text x="${logoDataUri ? 128 : 64}" y="91" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="30" font-weight="800" fill="#FFFFFF">${escapeXml(label)}</text>
+  
+  <g transform="translate(80, 0)">
+    ${titleLines.map((line, index) => `<text x="0" y="${titleStartY + index * titleLineHeight}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${titleFontSize}" font-weight="900" fill="#FFFFFF">${escapeXml(line)}</text>`).join('')}
+    ${subtitleLines.map((line, index) => `<text x="0" y="${subtitleStartY + index * subtitleLineHeight}" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="${subtitleFontSize}" font-weight="500" fill="#D0D5DD">${escapeXml(line)}</text>`).join('')}
   </g>
-  ${renderImageSlot(rightImage, Math.min(952, textX + textWidth + 28), 226)}
 
   <text x="64" y="548" font-family="Arial, 'Noto Sans CJK KR', sans-serif" font-size="26" font-weight="500" fill="#D0D5DD">축구 라이브스코어 &amp; 커뮤니티</text>
   <text x="1136" y="548" text-anchor="end" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF">4590fb.com</text>

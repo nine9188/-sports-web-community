@@ -139,6 +139,7 @@ export async function generateMetadata({
     label: leagueName || '경기 정보',
     leftImage: match.teams.home.logo,
     rightImage: match.teams.away.logo,
+    logo: match.league.logo,
   });
 
   const canonicalSlug = await resolveCanonicalMatchSlug(id);

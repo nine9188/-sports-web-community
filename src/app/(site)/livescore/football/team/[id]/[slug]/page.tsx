@@ -71,7 +71,7 @@ export async function generateMetadata({
   const team = teamData.team;
   const mappedTeam = await getTeamById(Number(id));
   const resolvedLeagueId = mappedTeam?.league_id || team.league?.id || null;
-  const league = mappedTeam?.league_id ? await getLeagueById(mappedTeam.league_id) : null;
+  const league = resolvedLeagueId ? await getLeagueById(resolvedLeagueId) : null;
   const teamName = mappedTeam?.name_ko || team.name;
   const leagueName = league?.name_ko || league?.name || team.league?.name_ko || team.league?.name || '';
   const countryName = mappedTeam?.country_ko || mappedTeam?.country_en || team.country || '';
@@ -88,6 +88,7 @@ export async function generateMetadata({
     subtitle: [leagueName, countryName, team.founded ? `${team.founded}년 창단` : ''].filter(Boolean).join(' · '),
     label: leagueName || '팀 정보',
     leftImage: teamLogoImage,
+    logo: league?.logo,
   });
 
   const { shouldNoindex } = await resolveTeamIndexability({

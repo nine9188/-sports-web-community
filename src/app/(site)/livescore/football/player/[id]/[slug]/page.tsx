@@ -83,6 +83,7 @@ export async function generateMetadata({
     subtitle: profileParts.slice(0, 4).join(' · '),
     label: leagueName || '선수 정보',
     leftImage: playerImage,
+    logo: player.league?.logo || null,
   });
   const { shouldNoindex } = await resolveTeamIndexability({
     teamId: player.team?.id || null,
