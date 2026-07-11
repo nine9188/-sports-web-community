@@ -35,7 +35,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 echo ""
 echo "🚀 Pushing to GitHub (main branch)..."
-git push origin master:main
+git push origin main
+
 
 echo ""
 echo "✅ Push complete!"
