@@ -58,6 +58,12 @@ function renderParagraphContent(node: TipTapNode): string {
             text = `<strong>${text}</strong>`;
           } else if (mark.type === 'italic') {
             text = `<em>${text}</em>`;
+          } else if (mark.type === 'underline') {
+            text = `<u>${text}</u>`;
+          } else if (mark.type === 'strike') {
+            text = `<s>${text}</s>`;
+          } else if (mark.type === 'code') {
+            text = `<code>${text}</code>`;
           } else if (mark.type === 'link' && mark.attrs?.href) {
             const href = mark.attrs.href;
             const target = mark.attrs.target || '_blank';
@@ -68,6 +74,8 @@ function renderParagraphContent(node: TipTapNode): string {
       }
 
       paragraphContent += text;
+    } else if (textNode.type === 'hardBreak') {
+      paragraphContent += '<br />';
     }
   });
 
