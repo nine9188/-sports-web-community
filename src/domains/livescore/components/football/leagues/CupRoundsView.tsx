@@ -57,17 +57,16 @@ interface FixtureRowProps {
   fixture: CupFixture;
   isLast: boolean;
   isCurrent?: boolean;  // 현재 보고있는 매치 → 하이라이트
-  highlightPosition?: 'single' | 'start' | 'middle' | 'end'; // 월드컵 리그 페이지의 오늘/다음 예정 경기 묶음
+  isHighlighted?: boolean; // 월드컵 리그 페이지의 오늘/다음 예정 경기 묶음
 }
 
-function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: FixtureRowProps) {
+function FixtureRow({ fixture, isLast, isCurrent = false, isHighlighted = false }: FixtureRowProps) {
   const { home, away, status } = fixture;
   const isLive = LIVE_CODES.has(status.short);
   const isFinished = FINISHED_CODES.has(status.short);
   const showScore = isLive || isFinished;
   const statusLabel = getFixtureStatusLabel(status);
   const dateTime = formatDateTime(fixture.date);
-  const isHighlighted = Boolean(highlightPosition);
 
   const href = getMatchHrefByTeams(fixture.id, home, away);
 
@@ -77,7 +76,7 @@ function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: F
     : isCurrent
       ? 'border-b border-blue-100 dark:border-blue-900/50'
       : isHighlighted
-        ? 'border-b border-[#002FA7]/20 dark:border-blue-900/60'
+        ? 'border-b border-[#002FA7]/10 dark:border-blue-900/40'
       : 'border-b border-gray-100 dark:border-gray-800';
 
   // 현재 매치는 행 전체를 부드러운 그라디언트(파랑→빨강)로 단일 처리
@@ -87,18 +86,12 @@ function FixtureRow({ fixture, isLast, isCurrent = false, highlightPosition }: F
     : isHighlighted
       ? 'relative bg-blue-50/70 dark:bg-blue-950/30'
     : '';
-  const highlightFrameClass = {
-    single: 'border-2 border-[#002FA7] rounded-sm dark:border-blue-500',
-    start: 'border-x-2 border-t-2 border-[#002FA7] rounded-t-sm dark:border-blue-500',
-    middle: 'border-x-2 border-[#002FA7] dark:border-blue-500',
-    end: 'border-x-2 border-b-2 border-[#002FA7] rounded-b-sm dark:border-blue-500',
-  }[highlightPosition ?? 'middle'];
 
   return (
     <Link
       href={href}
       aria-current={isCurrent ? 'page' : undefined}
-      className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${rowBaseBg} ${rowHover} ${borderClass} ${isHighlighted ? highlightFrameClass : ''}`}
+      className={`flex items-center gap-2 px-3 py-2.5 transition-colors ${rowBaseBg} ${rowHover} ${borderClass}`}
     prefetch={false}
     >
       {/* 날짜 + 상태 */}
@@ -368,30 +361,58 @@ export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode 
               id={`round-${round.round}`}
               className={`border-t border-gray-100 dark:border-gray-800 ${isOpen ? '' : 'hidden'}`}
             >
-              {round.fixtures.map((fixture, idx) => {
-                const isHighlighted = highlightedFixtureIds.has(fixture.id);
-                const isPreviousHighlighted = idx > 0 && highlightedFixtureIds.has(round.fixtures[idx - 1].id);
-                const isNextHighlighted = idx < round.fixtures.length - 1 && highlightedFixtureIds.has(round.fixtures[idx + 1].id);
-                const highlightPosition = !isHighlighted
-                  ? undefined
-                  : !isPreviousHighlighted && !isNextHighlighted
-                    ? 'single'
-                    : !isPreviousHighlighted
-                      ? 'start'
-                      : !isNextHighlighted
-                        ? 'end'
-                        : 'middle';
+              {(() => {
+                const elements: React.ReactNode[] = [];
+                let currentGroup: { fixture: CupFixture; idx: number }[] = [];
 
-                return (
-                  <FixtureRow
-                    key={`fixture-${fixture.id}-${idx}`}
-                    fixture={fixture}
-                    isLast={idx === round.fixtures.length - 1}
-                    isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
-                    highlightPosition={highlightPosition}
-                  />
-                );
-              })}
+                const renderGroup = (group: { fixture: CupFixture; idx: number }[], keySuffix: string) => {
+                  if (group.length === 0) return null;
+                  return (
+                    <div 
+                      key={`highlight-group-${keySuffix}`} 
+                      className="border-2 border-[#002FA7] dark:border-blue-500 rounded-sm overflow-hidden m-0.5"
+                    >
+                      {group.map((item, groupIdx) => (
+                        <FixtureRow
+                          key={`fixture-${item.fixture.id}-${item.idx}`}
+                          fixture={item.fixture}
+                          isLast={groupIdx === group.length - 1}
+                          isCurrent={currentMatchId !== undefined && item.fixture.id === currentMatchId}
+                          isHighlighted={true}
+                        />
+                      ))}
+                    </div>
+                  );
+                };
+
+                round.fixtures.forEach((fixture, idx) => {
+                  const isHighlighted = highlightedFixtureIds.has(fixture.id);
+
+                  if (isHighlighted) {
+                    currentGroup.push({ fixture, idx });
+                  } else {
+                    if (currentGroup.length > 0) {
+                      elements.push(renderGroup(currentGroup, `${idx}`));
+                      currentGroup = [];
+                    }
+                    elements.push(
+                      <FixtureRow
+                        key={`fixture-${fixture.id}-${idx}`}
+                        fixture={fixture}
+                        isLast={idx === round.fixtures.length - 1}
+                        isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}
+                        isHighlighted={false}
+                      />
+                    );
+                  }
+                });
+
+                if (currentGroup.length > 0) {
+                  elements.push(renderGroup(currentGroup, 'last'));
+                }
+
+                return elements;
+              })()}
             </div>
           </Container>
         );

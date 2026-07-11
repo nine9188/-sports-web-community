@@ -138,7 +138,14 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
+    robots: {
+      index: !shouldNoindex,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    },
   });
 }
 
