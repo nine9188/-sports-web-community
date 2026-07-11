@@ -234,7 +234,7 @@ export default function PostActions({
           }`}
         >
           <Bookmark size={16} className={isScrapped ? 'fill-current text-white' : 'text-amber-600 dark:text-amber-400'} />
-          <span>{isScrapped ? '스크랩 완료' : '스크랩'}</span>
+          <span>스크랩</span>
         </Button>
 
         <Button
