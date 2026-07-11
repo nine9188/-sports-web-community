@@ -252,24 +252,25 @@ export default function PostActions({
         </Button>
       </div>
 
-      {/* 🔖 스크랩 안내 및 리스트 모달 (디시인사이드 스타일) */}
+      {/* 🔖 스크랩 안내 및 리스트 모달 (프로젝트 통합 디자인) */}
       <Dialog open={showScrapModal} onOpenChange={setShowScrapModal}>
         <DialogContent variant="default" className="sm:max-w-[420px] overflow-hidden">
           <DialogHeader className="justify-between bg-gray-50 dark:bg-[#262626] border-b border-black/5 dark:border-white/10 px-4 py-2.5">
-            <DialogTitle className="text-[13px] font-bold text-gray-800 dark:text-gray-200">스크랩</DialogTitle>
+            <DialogTitle className="text-[13px] font-bold text-gray-800 dark:text-gray-200">스크랩 완료</DialogTitle>
             <DialogCloseButton className="h-6 w-6" />
           </DialogHeader>
 
-          <DialogBody className="py-5 px-6 flex flex-col items-center">
+          <DialogBody className="py-5 px-5 flex flex-col items-center">
             {/* 완료 메시지 */}
-            <div className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 text-center mb-6">
-              📌 스크랩에 저장되었습니다.
+            <div className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 text-center mb-5 flex items-center gap-1.5">
+              <Bookmark className="h-4 w-4 text-yellow-500 fill-current" />
+              <span>게시글이 스크랩에 저장되었습니다.</span>
             </div>
 
             {/* 최근 스크랩 리스트 박스 */}
-            <div className="w-full bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-black/5 dark:border-white/5 rounded-lg p-3.5 mb-2">
+            <div className="w-full bg-gray-50 dark:bg-[#151515] border border-black/5 dark:border-white/10 rounded-lg p-3.5">
               <div className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2.5">
-                최근 스크랩 내역 (일부 확인)
+                최근 스크랩 내역
               </div>
 
               {isLoadingRecent ? (
@@ -284,14 +285,17 @@ export default function PostActions({
                 <ul className="space-y-2">
                   {recentScraps.map((item, idx) => (
                     <li key={item.id || idx} className="text-xs flex items-center justify-between gap-3 text-gray-700 dark:text-gray-300">
-                      <Link 
-                        href={`/boards/${item.board_slug}/${item.post_number}`} 
-                        className="truncate hover:underline hover:text-brand-primary dark:hover:text-brand-primary-dark font-medium flex-1 text-left"
-                        onClick={() => setShowScrapModal(false)}
-                      >
-                        {item.title}
-                      </Link>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <Bookmark className="h-3 w-3 text-yellow-500/80 shrink-0" />
+                        <Link 
+                          href={`/boards/${item.board_slug}/${item.post_number}`} 
+                          className="truncate hover:underline hover:text-brand-primary dark:hover:text-brand-primary-dark font-medium text-left"
+                          onClick={() => setShowScrapModal(false)}
+                        >
+                          {item.title}
+                        </Link>
+                      </div>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">
                         {item.board_name}
                       </span>
                     </li>
@@ -301,25 +305,28 @@ export default function PostActions({
             </div>
           </DialogBody>
 
-          {/* 모달 푸터 버튼 및 우측 하단 바로가기 링크 */}
-          <DialogFooter className="border-t border-black/5 dark:border-white/10 px-4 py-3 flex items-center justify-between">
-            <div className="w-20" /> {/* 빈 공간 확보 (좌측 균형용) */}
+          {/* 모달 푸터: 대칭적인 좌우 채우기 버튼 배치 */}
+          <DialogFooter className="border-t border-black/5 dark:border-white/10 px-4 py-3 flex gap-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setShowScrapModal(false)}
-              className="h-8 text-xs font-semibold px-4 border-black/10 dark:border-white/10"
+              className="flex-1 text-xs"
             >
               닫기
             </Button>
-            <Link
-              href="/settings/my-scraps"
-              onClick={() => setShowScrapModal(false)}
-              className="text-[11px] font-medium text-gray-500 hover:text-brand-primary dark:text-gray-400 dark:hover:text-brand-primary-dark flex items-center gap-0.5 hover:underline"
-              prefetch={false}
+            <Button
+              variant="ghost"
+              asChild
+              className="flex-1 text-xs bg-yellow-500 hover:bg-yellow-600 text-white dark:bg-yellow-600 dark:hover:bg-yellow-700 font-semibold"
             >
-              스크랩 보기 ▶
-            </Link>
+              <Link
+                href="/settings/my-scraps"
+                onClick={() => setShowScrapModal(false)}
+                prefetch={false}
+              >
+                스크랩 보관함 가기
+              </Link>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
