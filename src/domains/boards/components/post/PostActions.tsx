@@ -155,7 +155,17 @@ export default function PostActions({
       const res = await togglePostScrap(postId);
       if (res.success) {
         setIsScrapped(!!res.scrapped);
-        toast.success(res.scrapped ? '게시글을 스크랩했습니다.' : '스크랩을 취소했습니다.');
+        if (res.scrapped) {
+          toast.success('게시글을 스크랩했습니다.', {
+            action: {
+              label: '스크랩 보기',
+              onClick: () => window.location.href = '/settings/my-scraps',
+            },
+            duration: 4000,
+          });
+        } else {
+          toast.success('스크랩을 취소했습니다.');
+        }
       } else {
         toast.error(res.error || '스크랩 처리 중 오류가 발생했습니다.');
       }
@@ -167,50 +177,48 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex flex-col items-center gap-3 mt-6 mb-4">
-      <div className="flex justify-center items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={handleLike}
-          disabled={isLiking || isDisliking}
-          className={`rounded-md shadow-sm border ${
-            userAction === 'like'
-              ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700'
-              : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50'
-          }`}
-        >
-          <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : 'text-blue-500 dark:text-blue-400'} />
-          <span>{likes}</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          onClick={handleDislike}
-          disabled={isLiking || isDisliking}
-          className={`rounded-md shadow-sm border ${
-            userAction === 'dislike'
-              ? 'bg-red-500 dark:bg-red-600 text-white border-red-500 dark:border-red-600 hover:bg-red-600 dark:hover:bg-red-700'
-              : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
-          }`}
-        >
-          <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : 'text-red-500 dark:text-red-400'} />
-          <span>{dislikes}</span>
-        </Button>
-      </div>
+    <div className="flex justify-center items-center gap-3 mt-4 mb-2">
+      <Button
+        variant="ghost"
+        onClick={handleLike}
+        disabled={isLiking || isDisliking}
+        className={`rounded-md shadow-sm border ${
+          userAction === 'like'
+            ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700'
+            : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50'
+        }`}
+      >
+        <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : 'text-blue-500 dark:text-blue-400'} />
+        <span>{likes}</span>
+      </Button>
 
       <Button
         variant="ghost"
         onClick={handleScrapClick}
         disabled={isScraping}
-        className={`w-full max-w-[280px] rounded-md shadow-sm border text-[13px] gap-1.5 h-9 transition-colors ${
+        className={`rounded-md shadow-sm border transition-colors ${
           isScrapped
             ? 'bg-yellow-500 dark:bg-yellow-600 text-white border-yellow-500 dark:border-yellow-600 hover:bg-yellow-600 dark:hover:bg-yellow-700'
-            : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-amber-950/40'
+            : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-amber-950/50'
         }`}
       >
-        <Bookmark size={14} className={isScrapped ? 'fill-current text-white' : 'text-amber-600 dark:text-amber-400'} />
+        <Bookmark size={16} className={isScrapped ? 'fill-current text-white' : 'text-amber-600 dark:text-amber-400'} />
         <span>{isScrapped ? '스크랩 완료' : '스크랩'}</span>
+      </Button>
+
+      <Button
+        variant="ghost"
+        onClick={handleDislike}
+        disabled={isLiking || isDisliking}
+        className={`rounded-md shadow-sm border ${
+          userAction === 'dislike'
+            ? 'bg-red-500 dark:bg-red-600 text-white border-red-500 dark:border-red-600 hover:bg-red-600 dark:hover:bg-red-700'
+            : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
+        }`}
+      >
+        <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : 'text-red-500 dark:text-red-400'} />
+        <span>{dislikes}</span>
       </Button>
     </div>
   );
-} 
+}
