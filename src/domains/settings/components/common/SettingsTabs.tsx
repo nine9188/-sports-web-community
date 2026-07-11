@@ -12,6 +12,7 @@ const tabs: TabItem[] = [
   { id: '/settings/exp', label: '경험치 내역' },
   { id: '/settings/my-posts', label: '내가 쓴 글' },
   { id: '/settings/my-comments', label: '내가 쓴 댓글' },
+  { id: '/settings/my-scraps', label: '스크랩한 글' },
   { id: '/settings/password', label: '비밀번호 변경' },
   { id: '/settings/account-delete', label: '회원 탈퇴' },
 ];

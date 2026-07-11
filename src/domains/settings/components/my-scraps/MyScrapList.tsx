@@ -1,0 +1,98 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { formatDate } from '@/shared/utils/dateUtils';
+import { Container, ContainerHeader, ContainerTitle } from '@/shared/components/ui';
+
+interface ScrappedPostItem {
+  id: string;
+  title: string;
+  post_number: number;
+  views: number;
+  likes: number;
+  dislikes: number;
+  category: string;
+  created_at: string;
+  scrapped_at: string;
+  author_nickname: string;
+  board_name: string;
+  board_slug: string;
+}
+
+interface MyScrapListProps {
+  posts: ScrappedPostItem[];
+  totalCount: number;
+}
+
+export default function MyScrapList({
+  posts = [],
+  totalCount = 0
+}: MyScrapListProps) {
+  return (
+    <Container className="bg-white dark:bg-[#1D1D1D]">
+      <ContainerHeader className="h-auto py-3 justify-between">
+        <ContainerTitle>스크랩 목록</ContainerTitle>
+        <span className="text-[13px] text-gray-500 dark:text-gray-400">총 {totalCount}개</span>
+      </ContainerHeader>
+
+      {posts.length === 0 ? (
+        <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-[#F5F5F5] dark:bg-[#262626] bg-opacity-50">
+          <p>스크랩한 게시글이 없습니다.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-black/5 dark:divide-white/10 table-fixed">
+            <thead className="bg-[#F5F5F5] dark:bg-[#262626]">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-5/12">
+                  제목
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/12">
+                  작성자
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell w-2/12">
+                  게시판
+                </th>
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell w-1/12">
+                  조회
+                </th>
+                <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/12">
+                  스크랩일
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-[#1D1D1D] divide-y divide-black/5 dark:divide-white/10">
+              {posts.map((post) => (
+                <tr key={post.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
+                  <td className="px-4 py-4 text-[13px] overflow-hidden">
+                    <Link
+                      href={`/boards/${post.board_slug}/${post.post_number}`}
+                      prefetch={false}
+                      className="font-medium truncate block text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300"
+                      title={post.title}
+                    >
+                      {post.title}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-700 dark:text-gray-300">
+                    {post.author_nickname}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-left hidden md:table-cell">
+                    {post.board_name}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-center hidden sm:table-cell">
+                    {post.views.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-[13px] text-gray-500 dark:text-gray-400 text-center">
+                    {formatDate(post.scrapped_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Container>
+  );
+}

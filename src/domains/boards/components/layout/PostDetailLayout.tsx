@@ -10,6 +10,7 @@ import PostHeader from "../post/PostHeader";
 import PostContent from "../post/PostContent";
 import PostActions from "../post/PostActions";
 import PostFooter from "../post/PostFooter";
+import { checkIsScrapped } from "../../actions/posts/scrap";
 import { Container } from "@/shared/components/ui";
 import CommentSection from "../post/CommentSection";
 import { HotdealInfoBox } from "../hotdeal";
@@ -26,6 +27,7 @@ import { extractRelatedCtasFromContent } from "../../utils/post/extractRelatedCt
 import type { RelatedPostCta } from "../../utils/post/extractRelatedCtasFromContent";
 import { getRelatedEntityCardsFromContent } from "../../actions/getRelatedEntityCardsFromContent";
 import { PenLine } from "lucide-react";
+import BoardDescriptionHeader from "../board/BoardDescriptionHeader";
 
 interface PostAuthor {
   nickname: string | null;
@@ -74,6 +76,7 @@ interface PostDetailLayoutProps {
     id: string;
     name: string;
     slug: string;
+    description?: string | null;
   };
   breadcrumbs: Breadcrumb[];
   /** 서버에서 미리 처리된 HTML (깜빡임 방지) */
@@ -181,6 +184,7 @@ export default async function PostDetailLayout({
 }: PostDetailLayoutProps) {
   const relatedCtas = extractRelatedCtasFromContent(post.content);
   const relatedEntityCards = await getRelatedEntityCardsFromContent(post.content);
+  const isScrapped = await checkIsScrapped(post.id);
 
   // 게시글 상세 정보 구성
   const author: PostAuthor = {
@@ -319,10 +323,19 @@ export default async function PostDetailLayout({
   return (
     <div className="container mx-auto">
       <PostHashScroller />
-      {/* 1. 게시판 경로 - BoardBreadcrumbs 컴포넌트 사용 */}
-      <div className="overflow-x-auto">
-        <BoardBreadcrumbs breadcrumbs={breadcrumbs} />
-      </div>
+      {/* 1. 게시판 설명 헤더 및 경로 */}
+      <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
+        <BoardDescriptionHeader
+          boardId={board.id}
+          name={board.name}
+          slug={slug}
+          description={board.description || null}
+          canWritePost={isLoggedIn}
+          alwaysCollapsed={true}
+          breadcrumbs={breadcrumbs}
+          plain={true}
+        />
+      </Container>
 
       {/* 2. 게시글 본문 (상세 정보) */}
       <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
@@ -375,6 +388,7 @@ export default async function PostDetailLayout({
               initialLikes={post.likes || 0}
               initialDislikes={post.dislikes || 0}
               initialUserAction={postUserAction}
+              initialIsScrapped={isScrapped}
               isLoggedIn={isLoggedIn}
             />
           </div>

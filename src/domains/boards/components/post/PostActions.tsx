@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui';
 import { reactToPost } from '@/domains/boards/utils/post/postReactionClient';
+import { togglePostScrap } from '@/domains/boards/actions/posts/scrap';
 import {
   POST_REACTION_UPDATED_EVENT,
   dispatchPostReactionUpdated,
@@ -17,6 +18,7 @@ interface PostActionsProps {
   initialLikes: number;
   initialDislikes: number;
   initialUserAction: 'like' | 'dislike' | null;
+  initialIsScrapped?: boolean;
   isLoggedIn?: boolean;
 }
 
@@ -43,6 +45,7 @@ export default function PostActions({
   initialLikes = 0, 
   initialDislikes = 0,
   initialUserAction = null,
+  initialIsScrapped = false,
   isLoggedIn = false,
 }: PostActionsProps) {
   const [likes, setLikes] = useState(initialLikes);
@@ -50,12 +53,16 @@ export default function PostActions({
   const [isLiking, setIsLiking] = useState(false);
   const [isDisliking, setIsDisliking] = useState(false);
   const [userAction, setUserAction] = useState<'like' | 'dislike' | null>(initialUserAction);
+  const [isScrapped, setIsScrapped] = useState(initialIsScrapped);
+  const [isScraping, setIsScraping] = useState(false);
+
   // 서버 데이터가 변경되면(router.refresh 등) 로컬 상태 동기화
   useEffect(() => {
     setLikes(initialLikes);
     setDislikes(initialDislikes);
     setUserAction(initialUserAction);
-  }, [initialLikes, initialDislikes, initialUserAction]);
+    setIsScrapped(initialIsScrapped);
+  }, [initialLikes, initialDislikes, initialUserAction, initialIsScrapped]);
 
   useEffect(() => {
     const handleExternalReaction = (event: Event) => {
@@ -128,34 +135,81 @@ export default function PostActions({
   const handleLike = () => handleReaction('like');
   const handleDislike = () => handleReaction('dislike');
 
+  const handleScrapClick = async () => {
+    if (!isLoggedIn) {
+      toast.error('로그인이 필요한 서비스입니다.', {
+        description: '스크랩 기능은 회원만 이용할 수 있습니다. 로그인하시겠습니까?',
+        action: {
+          label: '로그인',
+          onClick: () => window.location.href = '/signin',
+        },
+        duration: 5000,
+      });
+      return;
+    }
+
+    if (isScraping) return;
+
+    try {
+      setIsScraping(true);
+      const res = await togglePostScrap(postId);
+      if (res.success) {
+        setIsScrapped(!!res.scrapped);
+        toast.success(res.scrapped ? '게시글을 스크랩했습니다.' : '스크랩을 취소했습니다.');
+      } else {
+        toast.error(res.error || '스크랩 처리 중 오류가 발생했습니다.');
+      }
+    } catch {
+      toast.error('스크랩 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
   return (
-    <div className="flex justify-center items-center gap-4 mt-4">
-      <Button
-        variant="ghost"
-        onClick={handleLike}
-        disabled={isLiking || isDisliking}
-        className={`rounded-md shadow-sm border ${
-          userAction === 'like'
-            ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700'
-            : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50'
-        }`}
-      >
-        <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : 'text-blue-500 dark:text-blue-400'} />
-        <span>{likes}</span>
-      </Button>
+    <div className="flex flex-col items-center gap-3 mt-6 mb-4">
+      <div className="flex justify-center items-center gap-4">
+        <Button
+          variant="ghost"
+          onClick={handleLike}
+          disabled={isLiking || isDisliking}
+          className={`rounded-md shadow-sm border ${
+            userAction === 'like'
+              ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-500 dark:border-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700'
+              : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/50'
+          }`}
+        >
+          <ThumbsUp size={16} className={userAction === 'like' ? 'text-white' : 'text-blue-500 dark:text-blue-400'} />
+          <span>{likes}</span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={handleDislike}
+          disabled={isLiking || isDisliking}
+          className={`rounded-md shadow-sm border ${
+            userAction === 'dislike'
+              ? 'bg-red-500 dark:bg-red-600 text-white border-red-500 dark:border-red-600 hover:bg-red-600 dark:hover:bg-red-700'
+              : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
+          }`}
+        >
+          <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : 'text-red-500 dark:text-red-400'} />
+          <span>{dislikes}</span>
+        </Button>
+      </div>
 
       <Button
         variant="ghost"
-        onClick={handleDislike}
-        disabled={isLiking || isDisliking}
-        className={`rounded-md shadow-sm border ${
-          userAction === 'dislike'
-            ? 'bg-red-500 dark:bg-red-600 text-white border-red-500 dark:border-red-600 hover:bg-red-600 dark:hover:bg-red-700'
-            : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50'
+        onClick={handleScrapClick}
+        disabled={isScraping}
+        className={`w-full max-w-[280px] rounded-md shadow-sm border text-[13px] gap-1.5 h-9 transition-colors ${
+          isScrapped
+            ? 'bg-yellow-500 dark:bg-yellow-600 text-white border-yellow-500 dark:border-yellow-600 hover:bg-yellow-600 dark:hover:bg-yellow-700'
+            : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-amber-950/40'
         }`}
       >
-        <ThumbsDown size={16} className={userAction === 'dislike' ? 'text-white' : 'text-red-500 dark:text-red-400'} />
-        <span>{dislikes}</span>
+        <Bookmark size={14} className={isScrapped ? 'fill-current text-white' : 'text-amber-600 dark:text-amber-400'} />
+        <span>{isScrapped ? '스크랩 완료' : '이 게시글 스크랩'}</span>
       </Button>
     </div>
   );

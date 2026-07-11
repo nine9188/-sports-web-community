@@ -19,6 +19,7 @@ interface BoardDescriptionHeaderProps {
   description: string | null;
   canWritePost: boolean;
   defaultCollapsed?: boolean;
+  alwaysCollapsed?: boolean;
   breadcrumbs?: Breadcrumb[];
   plain?: boolean;
 }
@@ -30,11 +31,12 @@ export default function BoardDescriptionHeader({
   description,
   canWritePost,
   defaultCollapsed = false,
+  alwaysCollapsed = false,
   breadcrumbs,
   plain = false
 }: BoardDescriptionHeaderProps) {
   const [isMobile, setIsMobile] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  const [isCollapsed, setIsCollapsed] = useState(alwaysCollapsed || defaultCollapsed);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function BoardDescriptionHeader({
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    if (window.innerWidth >= 768) {
+    if (window.innerWidth >= 768 && !alwaysCollapsed) {
       const saved = localStorage.getItem(`4590_board_desc_collapsed_${boardId}`);
       if (saved !== null) {
         setIsCollapsed(saved === 'true');
@@ -54,12 +56,14 @@ export default function BoardDescriptionHeader({
     }
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, [boardId]);
+  }, [boardId, alwaysCollapsed]);
 
   const handleToggle = () => {
     const nextState = !isCollapsed;
     setIsCollapsed(nextState);
-    localStorage.setItem(`4590_board_desc_collapsed_${boardId}`, String(nextState));
+    if (!alwaysCollapsed) {
+      localStorage.setItem(`4590_board_desc_collapsed_${boardId}`, String(nextState));
+    }
   };
 
   const content = (
