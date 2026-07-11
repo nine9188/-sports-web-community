@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { fetchCachedMatchFullData } from '@/domains/livescore/actions/match/matchData';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildMatchSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import MatchPageClient, { MatchTabType } from '@/domains/livescore/components/football/match/MatchPageClient';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
@@ -130,9 +132,28 @@ export async function generateMetadata({
   const statusText = match.status.name || '';
   const matchContext = [dateStr, leagueName, roundText].filter(Boolean).join(' ');
   const locationText = venueText ? ` 경기 장소: ${venueText}.` : '';
-  const description = isNotStarted || !hasScore
-    ? `${matchContext} ${homeTeam} vs ${awayTeam} 경기 일정입니다.${locationText} 상대 전적, 예상 라인업, 순위와 경기 정보를 4590 Football에서 확인하세요.`
-    : `${matchContext} ${homeTeam} ${score} ${awayTeam} 경기 ${statusText ? `${statusText} ` : ''}정보입니다.${locationText} 득점, 라인업, 통계, 하이라이트를 4590 Football에서 확인하세요.`;
+  const description = buildMatchSeoSummary({
+    status: {
+      code: match.status.code,
+      name: match.status.name || '',
+    },
+    time: {
+      date: match.time?.date || '',
+    },
+    league: {
+      name: leagueName,
+      round: match.league.round || undefined,
+    },
+    teams: {
+      home: { name: homeTeam },
+      away: { name: awayTeam },
+    },
+    goals: match.goals,
+    venue: {
+      name: match.venue?.name || null,
+      city: match.venue?.city || null,
+    },
+  });
   const ogImage = buildFootballOgImageUrl({
     title: `${homeTeam} ${score} ${awayTeam}`,
     subtitle: [leagueName, roundText, dateStr].filter(Boolean).join(' · '),
@@ -148,6 +169,8 @@ export async function generateMetadata({
     leagueId: match.league.id,
     hasQueryState: hasTabState,
     matchStatusCode: match.status.code,
+    homeTeamName: match.teams.home.name,
+    awayTeamName: match.teams.away.name,
   });
 
   return buildMetadata({
@@ -191,7 +214,14 @@ export async function generateMetadata({
     ],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
+    robots: {
+      index: !shouldNoindex,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    },
   });
 }
 
@@ -221,7 +251,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
     const match = matchData.match;
     const rawData = matchData.matchData as Record<string, unknown> | undefined;
     const rawFixture = rawData?.fixture as { venue?: { name?: string; city?: string } } | undefined;
-    const rawLeague = rawData?.league as { season?: number } | undefined;
+    const rawLeague = rawData?.league as { season?: number; round?: string } | undefined;
     const venueName = rawFixture?.venue?.name;
     const venueCity = rawFixture?.venue?.city;
     const statusCode = match?.status?.code ?? '';
@@ -426,6 +456,23 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       if (event.assist?.id) statsPlayerIds.add(event.assist.id);
     });
     lineupPlayerIds.forEach((playerId) => statsPlayerIds.add(playerId));
+
+    // 전체 이벤트 데이터에서 선수 및 어시스트 ID 추가 수집
+    if (Array.isArray(matchData.events)) {
+      matchData.events.forEach((event: any) => {
+        if (event.player?.id) statsPlayerIds.add(Number(event.player.id));
+        if (event.assist?.id) statsPlayerIds.add(Number(event.assist.id));
+      });
+    }
+
+    // 라인업 데이터에서 선수 ID 추가 수집
+    if (matchData.lineups?.response) {
+      const { home, away } = matchData.lineups.response;
+      home?.startXI?.forEach((item: any) => item.player?.id && statsPlayerIds.add(Number(item.player.id)));
+      home?.substitutes?.forEach((item: any) => item.player?.id && statsPlayerIds.add(Number(item.player.id)));
+      away?.startXI?.forEach((item: any) => item.player?.id && statsPlayerIds.add(Number(item.player.id)));
+      away?.substitutes?.forEach((item: any) => item.player?.id && statsPlayerIds.add(Number(item.player.id)));
+    }
     const playerKoreanNames = statsPlayerIds.size > 0
       ? await getPlayersKoreanNames(Array.from(statsPlayerIds)).catch((error) => {
           console.error('[match-page] stats Korean names preload failed:', error);
@@ -448,6 +495,29 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
       venueName || venueCity ? `경기장 ${[venueName, venueCity].filter(Boolean).join(', ')}` : '',
       '라인업, 전력 비교, 이벤트, 통계, 순위 정보를 확인하세요.',
     ].filter(Boolean).join('. ');
+
+    const matchSeoSummary = match ? buildMatchSeoSummary({
+      status: {
+        code: match.status.code,
+        name: match.status.name,
+      },
+      time: {
+        date: match.time.date,
+      },
+      league: {
+        name: leagueName,
+        round: rawLeague?.round || undefined,
+      },
+      teams: {
+        home: { name: homeTeamName },
+        away: { name: awayTeamName },
+      },
+      goals: match.goals,
+      venue: {
+        name: venueName || null,
+        city: venueCity || null,
+      },
+    }) : '';
 
     return (
       <>
@@ -484,6 +554,7 @@ async function MatchPageContent({ matchId, slug, tab }: { matchId: string; slug:
           cupRoundsData={cupRoundsData}
           initialSidebarData={initialSidebarData}
           highlight={highlight}
+          seoSummary={matchSeoSummary}
         />
       </>
     );

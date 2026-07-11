@@ -41,13 +41,13 @@ export interface MatchCardLinkElement extends HTMLAnchorElement {
   _hoverLeave?: () => void;
 }
 
-// 배당률 관련 타입
-export interface BettingOddsItem {
+// 승률 관련 타입
+export interface MatchWinRateItem {
   value: 'Home' | 'Draw' | 'Away';
   odd: number;
 }
 
-export interface BettingOddsObject {
+export interface MatchWinRateObject {
   home: number;
   draw: number;
   away: number;

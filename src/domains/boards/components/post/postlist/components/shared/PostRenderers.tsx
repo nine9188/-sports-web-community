@@ -155,7 +155,7 @@ export function renderAuthor(
     <AuthorLink
       nickname={post.author_nickname || '익명'}
       publicId={post.author_public_id}
-      oddsUserId={post.author_id}
+      authorId={post.author_id}
       iconUrl={post.author_icon_url}
       level={post.author_level || 1}
       exp={post.author_exp}

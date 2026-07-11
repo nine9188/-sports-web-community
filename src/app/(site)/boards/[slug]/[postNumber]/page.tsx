@@ -238,16 +238,23 @@ export async function generateMetadata({
 
   const isRssBoard = ['foreign-news', 'domestic-news', 'news'].includes(slug);
   const robots = isRssBoard
-    ? { index: false, follow: true }
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: false,
+          follow: true,
+        },
+      }
     : (hasListState ? { index: false, follow: true } : undefined);
 
   return buildMetadata({
     title: displayTitle,
-    titleOnly: true,
+    titleOnly: false,
     description,
     path: `/boards/${slug}/${postNumber}`,
     type: 'article',
-    image: post.thumbnail_url ?? undefined,
+    image: post.thumbnail_url ?? (post as { first_image_url?: string | null }).first_image_url ?? undefined,
     publishedTime: post.created_at ?? undefined,
     modifiedTime: post.updated_at ?? undefined,
     keywords,

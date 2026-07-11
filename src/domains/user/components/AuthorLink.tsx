@@ -30,7 +30,7 @@ const REPORT_REASON_OPTIONS = Object.entries(REPORT_REASONS).map(([, value]) => 
 
 interface AuthorLinkProps {
   nickname: string;
-  oddsUserId?: string;
+  authorId?: string;
   publicId?: string | null;
   iconUrl?: string | null;
   level?: number;
@@ -52,7 +52,7 @@ interface AuthorLinkProps {
  */
 export default function AuthorLink({
   nickname,
-  oddsUserId,
+  authorId,
   publicId,
   iconUrl,
   level = 1,
@@ -140,7 +140,7 @@ export default function AuthorLink({
     try {
       const result = await createReport({
         targetType: 'user',
-        targetId: oddsUserId ?? '',
+        targetId: authorId ?? '',
         reason: reason as ReportReason,
         description: description.trim() || undefined
       });
@@ -215,7 +215,7 @@ export default function AuthorLink({
               <User className="w-4 h-4" />
               프로필 보기
             </Link>
-            {oddsUserId && (
+            {authorId && (
               <Button
                 type="button"
                 variant="ghost"
@@ -231,7 +231,7 @@ export default function AuthorLink({
         )}
 
         {/* 신고 모달 */}
-        {oddsUserId && (
+        {authorId && (
         <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>

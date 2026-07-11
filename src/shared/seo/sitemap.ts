@@ -254,10 +254,25 @@ function canonicalPlayerSlugFromRow(player: PlayerRow): string | null {
 }
 
 export async function getBoardSitemap(): Promise<MetadataRoute.Sitemap> {
-  const boards = (await getCachedAllBoards()) as BoardRow[];
+  const supabase = getSupabaseAdmin();
+  const [boards, { data: posts, error }] = await Promise.all([
+    getCachedAllBoards() as Promise<BoardRow[]>,
+    runSitemapQuery('active board ids query', () => supabase
+      .from('posts')
+      .select('board_id')
+      .eq('is_deleted', false)
+      .eq('is_hidden', false)
+    )
+  ]);
+
+  if (error) {
+    console.error('[sitemap] active board ids query failed:', error);
+  }
+
+  const activeBoardIds = new Set((posts || []).map((p: any) => p.board_id).filter(Boolean));
 
   return boards
-    .filter((board) => Boolean(board.slug))
+    .filter((board) => Boolean(board.slug) && activeBoardIds.has(board.id))
     .map((board): SitemapEntry => ({
       url: siteUrl(`/boards/${board.slug}`),
       changeFrequency: board.parent_id ? 'daily' : 'weekly',
@@ -310,7 +325,6 @@ export async function getPostSitemap(id: string | number): Promise<MetadataRoute
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
-    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")')
     .order('created_at', { ascending: false })
     .range(from, to));
 
@@ -341,7 +355,6 @@ export async function getRecentPostSitemap(): Promise<MetadataRoute.Sitemap> {
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
-    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")')
     .order('created_at', { ascending: false })
     .limit(1000));
 

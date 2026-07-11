@@ -44,12 +44,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico?v=20260613', type: 'image/x-icon', sizes: '48x48' },
-      { url: '/favicon.svg?v=20260613', type: 'image/svg+xml' },
+      { url: `${siteConfig.url}/favicon.ico`, type: 'image/x-icon', sizes: '48x48' },
+      { url: `${siteConfig.url}/favicon.svg`, type: 'image/svg+xml' },
     ],
-    shortcut: ['/favicon.ico?v=20260613'],
+    shortcut: [`${siteConfig.url}/favicon.ico`],
     apple: [
-      { url: '/apple-icon.png?v=20260613', sizes: '180x180', type: 'image/png' },
+      { url: `${siteConfig.url}/apple-icon.png`, sizes: '180x180', type: 'image/png' },
     ],
   },
   manifest: '/site.webmanifest',

@@ -130,7 +130,7 @@ export default function HighlightBanner({ highlight, mode = 'modal' }: Highlight
       {/* 모달 - 데스크탑 전용 */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70"
           onClick={() => setIsModalOpen(false)}
         >
           <div

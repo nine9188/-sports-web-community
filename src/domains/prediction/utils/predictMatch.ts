@@ -323,10 +323,10 @@ function generateChartData(
   awayForm: any,
   homeInjuries: any,
   awayInjuries: any,
-  odds?: any
+  marketRates?: any
 ) {
-  // 배당률 데이터 변환
-  const bettingOdds = odds?.response?.[0]?.bookmakers?.[0]?.bets
+  // 해외 예측 데이터 변환
+  const marketRatesData = marketRates?.response?.[0]?.bookmakers?.[0]?.bets
     ?.find((b: any) => b.name === 'Match Winner')?.values
     ?.map((v: any) => ({
       name: v.value,
@@ -391,7 +391,7 @@ function generateChartData(
         injuries: awayInjuries?.length || 0
       }
     },
-    bettingOdds
+    marketRatesData
   }
 }
 
@@ -445,7 +445,7 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
     let leagueName = ''
     let leagueNameKo = ''
     let homeStats: any, awayStats: any, homeForm: any, awayForm: any
-    let homeInjuries: any, awayInjuries: any, h2h: any, odds: any
+    let homeInjuries: any, awayInjuries: any, h2h: any, marketRates: any
     let prompt: string
     let matchForCache: any = null
 
@@ -537,9 +537,9 @@ export async function predictMatch(fixtureId: number, forceRefresh: boolean = fa
 - ${home.name} 기준 전적: ${h2hHomeWins}승 ${h2hDraws}무 ${h2hAwayWins}패
 ${h2hList}
 `
-      // predictionApiData 사용 시 h2h, odds 변수 설정
+      // predictionApiData 사용 시 h2h, marketRates 변수 설정
       h2h = { response: pd.h2h }
-      odds = null
+      marketRates = null
       homeForm = []
       awayForm = []
 
@@ -575,7 +575,7 @@ ${h2hList}
       homeInjuries = results[4]
       awayInjuries = results[5]
       h2h = results[6]
-      odds = results[7]
+      marketRates = results[7]
 
       const homeFormStr = homeForm?.slice(0, 5).map((fixture: any) => {
         const hg = fixture.goals?.home ?? 0
@@ -640,8 +640,8 @@ ${h2h?.response?.slice(0, 5)?.map((h: any) => `${h.teams.home.name} ${h.goals.ho
 ${summarizeInjuries(homeInjuries, home.name)}
 ${summarizeInjuries(awayInjuries, away.name)}
 
-[배당률]
-${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values?.map((v: any) => `${v.value}: ${v.odd}`).join(' / ') || '배당률 정보 없음'}
+[해외 예측 평가]
+${marketRates?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values?.map((v: any) => `${v.value}: ${v.odd}`).join(' / ') || '평가지표 정보 없음'}
 `
     }
 
@@ -683,22 +683,22 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
 
     const aiAnalysis = completion.choices[0].message.content || '분석 결과를 가져올 수 없습니다.'
 
-    // 확률 계산: predictionApiData가 있으면 그 데이터 사용, 없으면 배당률 역산
+    // 확률 계산: predictionApiData가 있으면 그 데이터 사용, 없으면 시장 데이터 역산
     let homeWinPct = 40, drawPct = 30, awayWinPct = 30
     if (predictionApiData?.predictions?.percent) {
       homeWinPct = parseInt(predictionApiData.predictions.percent.home) || 40
       drawPct = parseInt(predictionApiData.predictions.percent.draw) || 30
       awayWinPct = parseInt(predictionApiData.predictions.percent.away) || 30
-    } else if (odds) {
-      const oddsValues = odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values
-      if (oddsValues) {
-        const homeOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Home')?.odd || '0')
-        const drawOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Draw')?.odd || '0')
-        const awayOdd = parseFloat(oddsValues.find((v: any) => v.value === 'Away')?.odd || '0')
-        if (homeOdd > 0 && drawOdd > 0 && awayOdd > 0) {
-          const totalProb = (1/homeOdd) + (1/drawOdd) + (1/awayOdd)
-          homeWinPct = Math.round((1/homeOdd) / totalProb * 100)
-          drawPct = Math.round((1/drawOdd) / totalProb * 100)
+    } else if (marketRates) {
+      const rateValues = marketRates?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values
+      if (rateValues) {
+        const homeRate = parseFloat(rateValues.find((v: any) => v.value === 'Home')?.odd || '0')
+        const drawRate = parseFloat(rateValues.find((v: any) => v.value === 'Draw')?.odd || '0')
+        const awayRate = parseFloat(rateValues.find((v: any) => v.value === 'Away')?.odd || '0')
+        if (homeRate > 0 && drawRate > 0 && awayRate > 0) {
+          const totalProb = (1/homeRate) + (1/drawRate) + (1/awayRate)
+          homeWinPct = Math.round((1/homeRate) / totalProb * 100)
+          drawPct = Math.round((1/drawRate) / totalProb * 100)
           awayWinPct = 100 - homeWinPct - drawPct
         }
       }
@@ -720,7 +720,7 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
       form_analysis: predictionApiData
         ? `홈팀 폼: ${predictionApiData.teams.home.last_5?.form || 'N/A'}%, 어웨이팀 폼: ${predictionApiData.teams.away.last_5?.form || 'N/A'}%`
         : `홈팀 최근 폼: ${homeForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}, 어웨이팀: ${awayForm?.slice(0, 5).map(() => 'W/L/D').join('') || 'N/A'}`,
-      betting_odds: odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values || null
+      market_index: marketRates?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match Winner')?.values || null
     }
 
     const dataSources: DataSources = {
@@ -769,7 +769,7 @@ ${odds?.response?.[0]?.bookmakers?.[0]?.bets?.find((b: any) => b.name === 'Match
       awayForm,
       homeInjuries,
       awayInjuries,
-      odds
+      marketRates
     )
 
     return {

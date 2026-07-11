@@ -231,6 +231,12 @@ export default function Formation({
   const processedHomeTeam = useMemo(() => processTeamData(homeTeamData), [processTeamData, homeTeamData]);
   const processedAwayTeam = useMemo(() => processTeamData(awayTeamData), [processTeamData, awayTeamData]);
 
+  const isFallback = useMemo(() => {
+    const homeGridNull = processedHomeTeam.startXI.length > 0 && processedHomeTeam.startXI.every(p => !p.grid);
+    const awayGridNull = processedAwayTeam.startXI.length > 0 && processedAwayTeam.startXI.every(p => !p.grid);
+    return homeGridNull || awayGridNull;
+  }, [processedHomeTeam, processedAwayTeam]);
+
   const homeName = homeTeamDisplayName || processedHomeTeam.team.name;
   const awayName = awayTeamDisplayName || processedAwayTeam.team.name;
   const captureMessage = captureStage ? CAPTURE_STAGE_MESSAGE[captureStage] : null;
@@ -616,6 +622,11 @@ export default function Formation({
       {captureMessage && (
         <div className="border-b border-black/5 bg-amber-50/80 px-3 py-2 text-center text-[12px] font-medium text-amber-800 dark:border-white/10 dark:bg-amber-500/10 dark:text-amber-200">
           {captureMessage}
+        </div>
+      )}
+      {isFallback && !isLoading && hasFormationPlayers && (
+        <div className="border-b border-black/5 bg-gray-50 dark:bg-zinc-900/50 px-4 py-2.5 text-center text-[12px] text-gray-500 dark:text-gray-400">
+          ⚠️ 데이터 제공사 사정으로 상세 포메이션 좌표가 제공되지 않아 포지션 기준 기본 배치로 노출 중입니다.
         </div>
       )}
 

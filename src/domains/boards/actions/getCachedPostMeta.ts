@@ -5,6 +5,29 @@ import { getSupabaseAdmin } from '@/shared/lib/supabase/server';
 import { extractSummary } from '@/domains/boards/utils/post/extractSummary';
 import { extractPostSeoEntities } from '@/domains/boards/utils/post/extractPostSeoEntities';
 
+function extractFirstImage(content: unknown): string | null {
+  if (!content || typeof content !== 'object') return null;
+  const doc = content as { content?: unknown[] };
+  if (!doc.content || !Array.isArray(doc.content)) return null;
+
+  function traverse(nodes: unknown[]): string | null {
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      const n = node as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+      if (n.type === 'image' && n.attrs?.src) {
+        return String(n.attrs.src);
+      }
+      if (n.content && Array.isArray(n.content)) {
+        const found = traverse(n.content);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  return traverse(doc.content);
+}
+
 /**
  * 게시글 메타데이터 fetch (캐시 미스 시 실행)
  * content 대신 summary 컬럼 사용 (description용, egress 절감)
@@ -28,11 +51,13 @@ async function fetchPostMeta(boardId: string, postNumber: number) {
 
   const contentSummary = extractSummary(contentRow?.content, 200) || contentRow?.content_text || '';
   const seoEntities = extractPostSeoEntities(contentRow?.content);
+  const firstImageUrl = extractFirstImage(contentRow?.content);
 
   return {
     ...data,
     content_summary: contentSummary,
     seo_entities: seoEntities,
+    first_image_url: firstImageUrl,
   };
 }
 

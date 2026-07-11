@@ -11,7 +11,7 @@ import { localExternalImageProxyUrl } from '@/shared/images/urls';
 type ThumbnailSizeId = 'vertical' | 'square' | 'smallSquare';
 type ThumbnailTemplate =
   | 'versus'
-  | 'powerOdds'
+  | 'powerCompare'
   | 'powerRadar'
   | 'comparison'
   | 'condition'
@@ -50,7 +50,7 @@ const THUMBNAIL_SIZES: ThumbnailSize[] = [
 
 const EXPORT_TEMPLATES: Array<{ id: ThumbnailTemplate; label: string }> = [
   { id: 'versus', label: 'VS 포스터형' },
-  { id: 'powerOdds', label: '전력비교 1' },
+  { id: 'powerCompare', label: '전력비교 1' },
   { id: 'powerRadar', label: '전력비교 2' },
   { id: 'comparison', label: '상대 비교지표' },
   { id: 'condition', label: '팀 컨디션' },
@@ -1099,7 +1099,7 @@ function DataBottomBrand({ tone, scale = 1 }: { tone: ThumbnailTone; scale?: num
   );
 }
 
-function PowerOddsHeader({ data, tone, scale = 1 }: { data: PredictionChartData; tone: ThumbnailTone; scale?: number }) {
+function PowerCompareHeader({ data, tone, scale = 1 }: { data: PredictionChartData; tone: ThumbnailTone; scale?: number }) {
   const colors = TONES[tone];
   const logoSize = Math.round(72 * scale);
   const teamSize = Math.round(34 * scale);
@@ -1535,7 +1535,7 @@ function PredictionThumbnail({
     );
   }
 
-  if (template === 'powerOdds') {
+  if (template === 'powerCompare') {
     const squareScale = contentScale;
     const radarChartSize = isSquare ? Math.round(650 * squareScale) : 760;
 
@@ -1543,7 +1543,7 @@ function PredictionThumbnail({
       <div style={frameStyle}>
         {dataTopBrand}
         {dataBottomBrand}
-        <PowerOddsHeader data={chartData} tone={tone} scale={squareScale} />
+        <PowerCompareHeader data={chartData} tone={tone} scale={squareScale} />
         <div style={{ marginTop: sectionTitleTop }}>
           <div style={{ color: colors.accent, fontSize: sectionTitleSize, fontWeight: sectionTitleWeight }}>전력비교 레이더</div>
         </div>
@@ -1984,7 +1984,7 @@ export default function PredictionThumbnailMaker() {
             <div className="grid gap-2">
               {[
                 ['versus', 'VS 포스터형'],
-                ['powerOdds', '전력비교 1'],
+                ['powerCompare', '전력비교 1'],
                 ['powerRadar', '전력비교 2'],
                 ['comparison', '상대 비교지표'],
                 ['condition', '팀 컨디션'],

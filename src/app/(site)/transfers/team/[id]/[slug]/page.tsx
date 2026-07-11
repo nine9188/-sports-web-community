@@ -18,6 +18,7 @@ import { normalizeRouteSlug } from '@/shared/utils/nextNavigationErrors';
 import { buildFootballOgImageUrl } from '@/shared/utils/footballOgImage';
 import { siteConfig } from '@/shared/config';
 import { resolveTeamIndexability } from '@/domains/livescore/actions/seoIndexability';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
 
 interface TeamTransfersPageProps {
   params: Promise<{ id: string; slug: string }>;
@@ -125,7 +126,14 @@ export async function generateMetadata({ params, searchParams }: TeamTransfersPa
     keywords: [`${teamName} 이적`, `${teamName} 영입`, `${teamName} 방출`, `${teamName} 이적시장`, `${leagueName} 이적`, ...playerNames, '축구 이적시장', '4590', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
-    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
+    robots: {
+      index: !shouldNoindex,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    },
   });
 }
 
@@ -228,10 +236,10 @@ export default async function TeamTransfersPage({ params, searchParams }: TeamTr
             <h1 className="daum-wm-title text-[13px] font-bold text-gray-900 dark:text-[#F0F0F0]">{teamName} 이적시장</h1>
           </div>
         </ContainerHeader>
-        <div className="px-4 py-3 bg-white dark:bg-[#1D1D1D]">
-          <p className="daum-wm-content text-[13px] text-gray-700 dark:text-gray-300">
-            {description}
-          </p>
+        <div className="px-4 pb-4 bg-white dark:bg-[#1D1D1D]">
+          <div className="mt-4">
+            <SeoSummaryCallout summary={description} plain />
+          </div>
         </div>
       </Container>
 

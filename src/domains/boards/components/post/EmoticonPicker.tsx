@@ -211,7 +211,7 @@ export default function EmoticonPicker({ onSelect, onClose }: EmoticonPickerProp
   // 모바일
   if (!isDesktop) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col justify-end"
+      <div className="fixed inset-0 z-[9999] flex flex-col justify-end"
         onTouchMove={(e) => {
           const target = e.target as HTMLElement;
           if (!target.closest('[data-emoticon-scroll]')) e.preventDefault();

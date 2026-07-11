@@ -40,14 +40,14 @@ export default function PostHeader({
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/7 dark:border-white/10 px-4 py-3">
       {/* 제목 (핫딜의 경우 자동 생성된 제목 표시) */}
-      <h1 className={`daum-wm-title text-lg font-medium mb-2 ${titleClassName}`}>{displayTitle}</h1>
+      <h1 className={`daum-wm-title text-base md:text-lg font-semibold mb-2 ${titleClassName}`}>{displayTitle}</h1>
 
       {/* PC */}
       <div className="hidden md:flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <AuthorLink
           nickname={author.nickname || '알 수 없음'}
           publicId={author.public_id}
-          oddsUserId={author.id}
+          authorId={author.id}
           iconUrl={author.icon_url}
           level={author.level}
           exp={author.exp}
@@ -71,7 +71,7 @@ export default function PostHeader({
           <AuthorLink
             nickname={author.nickname || '알 수 없음'}
             publicId={author.public_id}
-            oddsUserId={author.id}
+            authorId={author.id}
             iconUrl={author.icon_url}
             level={author.level}
             exp={author.exp}

@@ -6,6 +6,8 @@ import { transformMatches } from '@/domains/livescore/utils/transformMatch';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { siteConfig } from '@/shared/config';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildLiveScoreMainSeoSummary } from '@/domains/livescore/utils/seoSummary';
 
 export async function generateMetadata({
   searchParams: searchParamsPromise
@@ -54,7 +56,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     title: `${dateLabel} 축구 일정·라이브스코어·경기 결과`,
-    description: `${dateLabel} 축구 일정, 라이브스코어와 경기 결과를 4590 Football에서 확인하세요. 어제 축구 스코어, 오늘 축구 경기 결과, 내일 경기 일정. EPL, 라리가, 세리에A, 분데스리가, 챔피언스리그, K리그 라이브스코어.`,
+    description: buildLiveScoreMainSeoSummary(dateLabel, 0, 0),
     path: dateParam ? `/livescore/football?date=${dateParam}` : '/livescore/football',
     keywords: [
       '라이브스코어', '축구 라이브스코어', '실시간 스코어', '축구 스코어',
@@ -90,6 +92,27 @@ export default async function FootballLiveScorePage({
   const initialMatches = await transformMatches(rawMatches);
   const liveMatchCount = countLiveMatches(initialMatches);
 
+  // KST 기준 오늘 날짜
+  const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const todayStr = nowKst.toISOString().split('T')[0];
+
+  // 날짜 레이블 결정 (오늘/어제/내일/날짜)
+  let dateLabel = '오늘';
+  if (dateParam && dateParam !== todayStr) {
+    const selected = new Date(dateParam + 'T00:00:00Z');
+    const today = new Date(todayStr + 'T00:00:00Z');
+    const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === -1) dateLabel = '어제';
+    else if (diffDays === 1) dateLabel = '내일';
+    else {
+      const m = selected.getUTCMonth() + 1;
+      const d = selected.getUTCDate();
+      dateLabel = `${m}월 ${d}일`;
+    }
+  }
+
+  const seoSummary = buildLiveScoreMainSeoSummary(dateLabel, initialMatches.length, liveMatchCount);
   const pageUrl = `${siteConfig.url}/livescore/football`;
 
   return (
@@ -121,6 +144,11 @@ export default async function FootballLiveScorePage({
           initialMatches={initialMatches}
           initialLiveMatchCount={liveMatchCount}
         />
+      {seoSummary && (
+        <div className="mt-4">
+          <SeoSummaryCallout summary={seoSummary} />
+        </div>
+      )}
     </>
   );
 }

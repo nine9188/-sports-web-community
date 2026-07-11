@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 import {
   getBoardSitemap,
   getCoreLeagueSitemap,
-  getCoreMatchSitemap,
-  getCorePlayerSitemap,
-  getCoreTeamSitemap,
+  getMatchSitemap,
+  getPlayerSitemap,
+  getTeamSitemap,
   getRecentPostSitemap,
   getStaticSitemap,
   getTransferTeamSitemap,
@@ -79,9 +79,9 @@ export async function getSitemapSectionEntries(section: string): Promise<Metadat
   if (section === 'recent-posts') return getRecentPostSitemap();
   if (section === 'transfers') return getTransferTeamSitemap();
   if (section === 'livescore-leagues') return getCoreLeagueSitemap();
-  if (section === 'livescore-teams') return getCoreTeamSitemap();
-  if (section === 'livescore-players') return getCorePlayerSitemap();
-  if (section === 'livescore-matches') return getCoreMatchSitemap();
+  if (section === 'livescore-teams') return getTeamSitemap(0);
+  if (section === 'livescore-players') return getPlayerSitemap(0);
+  if (section === 'livescore-matches') return getMatchSitemap(0);
 
   return null;
 }

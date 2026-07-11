@@ -85,7 +85,7 @@ export async function generateMetadata({
   // 게시판 정보 조회
   const { data: board } = await supabase
     .from('boards')
-    .select('name, description, parent_id')
+    .select('id, name, description, parent_id')
     .eq('slug', slug)
     .single();
 
@@ -97,6 +97,16 @@ export async function generateMetadata({
       noindex: true,
     });
   }
+
+  // 게시글 개수 조회 (글이 하나도 없는 빈 게시판은 noindex)
+  const { count: postCount } = await supabase
+    .from('posts')
+    .select('id', { count: 'exact', head: true })
+    .eq('board_id', board.id)
+    .eq('is_deleted', false)
+    .eq('is_hidden', false)
+    .limit(1);
+  const isEmptyBoard = (postCount ?? 0) === 0;
 
   let parentBoardName: string | null = null;
   if (board.parent_id) {
@@ -110,9 +120,20 @@ export async function generateMetadata({
 
   const seo = getBoardSeoData(slug, board.name, parentBoardName);
   const isRssBoard = ['foreign-news', 'domestic-news', 'news'].includes(slug);
-  const robots = isRssBoard
-    ? { index: false, follow: true }
-    : metadataState.robots;
+  
+  let robots = metadataState.robots;
+  if (isEmptyBoard) {
+    robots = { index: false, follow: true };
+  } else if (isRssBoard) {
+    robots = {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    };
+  }
 
   return buildMetadata({
     title: seo.title,

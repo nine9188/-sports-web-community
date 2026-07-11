@@ -19,7 +19,7 @@ export interface MatchContext {
   h2h_summary: string
   injury_impact: string
   form_analysis: string
-  betting_odds: unknown
+  market_index: unknown
 }
 
 export interface DataSources {

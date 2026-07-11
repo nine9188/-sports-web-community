@@ -208,6 +208,41 @@ function formatKstDate(iso: string | undefined) {
   }).format(date);
 }
 
+function getMatchStatusText(fixture: CupFixture) {
+  if (fixture.home.score !== null && fixture.away.score !== null) {
+    return `${fixture.home.score} - ${fixture.away.score}`;
+  }
+
+  const kickoffDate = new Date(fixture.date);
+  const now = new Date();
+
+  const toKstDateString = (d: Date) => {
+    return new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    }).format(d);
+  };
+
+  const kickoffStr = toKstDateString(kickoffDate);
+  const todayStr = toKstDateString(now);
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = toKstDateString(tomorrow);
+
+  if (kickoffStr === todayStr) {
+    return '오늘';
+  } else if (kickoffStr === tomorrowStr) {
+    return '내일';
+  } else {
+    const month = kickoffDate.getMonth() + 1;
+    const day = kickoffDate.getDate();
+    return `${month}월 ${day}일`;
+  }
+}
+
 function fixtureToBracketCard(fixture: CupFixture): BracketCardData {
   return {
     id: String(fixture.id),
@@ -286,19 +321,24 @@ function MatchCard({ item, isFinal = false }: { item?: BracketCardData; isFinal?
           </div>
         </div>
       ) : (
-        <div className="grid min-w-0 grid-cols-[max-content_4px_max-content] items-start justify-center gap-0">
-          <div className="flex min-w-[19px] flex-col items-center gap-0.5">
-            <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
-            <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
-              {getTeamCode(fixture.home)}
-            </span>
+        <div className="flex flex-col items-center">
+          <div className="grid min-w-0 grid-cols-[max-content_4px_max-content] items-start justify-center gap-0">
+            <div className="flex min-w-[19px] flex-col items-center gap-0.5">
+              <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
+              <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
+                {getTeamCode(fixture.home)}
+              </span>
+            </div>
+            <span aria-hidden />
+            <div className="flex min-w-[19px] flex-col items-center gap-0.5">
+              <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
+              <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
+                {getTeamCode(fixture.away)}
+              </span>
+            </div>
           </div>
-          <span aria-hidden />
-          <div className="flex min-w-[19px] flex-col items-center gap-0.5">
-            <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
-            <span className="whitespace-nowrap text-center text-[7.5px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[8.5px]">
-              {getTeamCode(fixture.away)}
-            </span>
+          <div className="mt-1 text-center text-[7.5px] font-bold text-gray-500 dark:text-gray-400 leading-none lg:text-[8.5px]">
+            {getMatchStatusText(fixture)}
           </div>
         </div>
       )}
@@ -352,19 +392,24 @@ function MobileBracketCard({ item, isFinal = false }: { item?: BracketCardData; 
           </div>
         </div>
       ) : (
-        <div className="grid min-w-0 grid-cols-[max-content_5px_max-content] items-start justify-center gap-0">
-          <div className="flex min-w-[18px] flex-col items-center gap-0.5">
-            <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
-            <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
-              {getTeamCode(fixture.home)}
-            </span>
+        <div className="flex flex-col items-center">
+          <div className="grid min-w-0 grid-cols-[max-content_5px_max-content] items-start justify-center gap-0">
+            <div className="flex min-w-[18px] flex-col items-center gap-0.5">
+              <TeamLogoMark logo={fixture.home.logo} name={fixture.home.name} />
+              <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
+                {getTeamCode(fixture.home)}
+              </span>
+            </div>
+            <span aria-hidden />
+            <div className="flex min-w-[18px] flex-col items-center gap-0.5">
+              <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
+              <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
+                {getTeamCode(fixture.away)}
+              </span>
+            </div>
           </div>
-          <span aria-hidden />
-          <div className="flex min-w-[18px] flex-col items-center gap-0.5">
-            <TeamLogoMark logo={fixture.away.logo} name={fixture.away.name} />
-            <span className="whitespace-nowrap text-center text-[8px] font-semibold leading-none text-gray-900 dark:text-[#F0F0F0]">
-              {getTeamCode(fixture.away)}
-            </span>
+          <div className="mt-1 text-center text-[8px] font-bold text-gray-500 dark:text-gray-400 leading-none">
+            {getMatchStatusText(fixture)}
           </div>
         </div>
       )}
@@ -387,8 +432,8 @@ const MOBILE_X = {
   left8: 30,
   left4: 50,
   center: 50,
-  third: 27,
-  champion: 73,
+  third: 14,
+  champion: 86,
   right4: 50,
   right8: 70,
   right16: 83,
@@ -396,17 +441,17 @@ const MOBILE_X = {
 
 const MOBILE_Y = {
   top32: 58,
-  top32Second: 126,
-  top16: 218,
-  top8: 304,
-  top4: 390,
-  final: 474,
-  third: 474,
-  bottom4: 576,
-  bottom8: 662,
-  bottom16: 748,
-  bottom32: 840,
-  bottom32Second: 908,
+  top32Second: 138,
+  top16: 230,
+  top8: 316,
+  top4: 402,
+  final: 486,
+  third: 486,
+  bottom4: 588,
+  bottom8: 674,
+  bottom16: 760,
+  bottom32: 852,
+  bottom32Second: 932,
 };
 
 const MOBILE_EDGES: DesktopEdge[] = [
@@ -440,6 +485,7 @@ function MobileVerticalBracket({
   semiFinals,
   finalItem,
   thirdPlaceItems,
+  isSidebar = false,
 }: {
   roundOf32: BracketSplit;
   roundOf16: BracketSplit;
@@ -447,31 +493,55 @@ function MobileVerticalBracket({
   semiFinals: BracketSplit;
   finalItem: BracketCardData;
   thirdPlaceItems: BracketCardData[];
+  isSidebar?: boolean;
 }) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [paths, setPaths] = useState<DesktopPath[]>([]);
+  const [labelCoords, setLabelCoords] = useState<Record<string, number>>({});
   const thirdPlaceItem = thirdPlaceItems[0];
+  const limitTo16 = true;
+
+  const yMap = limitTo16 ? {
+    top16: 70,
+    top8: 155,
+    top4: 240,
+    final: 325,
+    third: 325,
+    bottom4: 410,
+    bottom8: 495,
+    bottom16: 580,
+  } : {
+    top16: MOBILE_Y.top16,
+    top8: MOBILE_Y.top8,
+    top4: MOBILE_Y.top4,
+    final: MOBILE_Y.final,
+    third: MOBILE_Y.third,
+    bottom4: MOBILE_Y.bottom4,
+    bottom8: MOBILE_Y.bottom8,
+    bottom16: MOBILE_Y.bottom16,
+  };
+
   const nodes: DesktopNode[] = [
-    ...MOBILE_32_LAYOUT.map((itemIndex, layoutIndex) => ({
+    ...(!limitTo16 ? MOBILE_32_LAYOUT.map((itemIndex, layoutIndex) => ({
       id: `mt32-${itemIndex}`,
       item: roundOf32.left[itemIndex],
       x: 14 + (layoutIndex % 4) * 24,
       y: layoutIndex < 4 ? MOBILE_Y.top32 : MOBILE_Y.top32Second,
-    })),
-    ...roundOf16.left.map((item, index) => ({ id: `mt16-${index}`, item, x: 14 + index * 24, y: MOBILE_Y.top16 })),
-    ...quarterFinals.left.map((item, index) => ({ id: `mt8-${index}`, item, x: index === 0 ? MOBILE_X.left8 : MOBILE_X.right8, y: MOBILE_Y.top8 })),
-    ...semiFinals.left.map((item, index) => ({ id: `mt4-${index}`, item, x: MOBILE_X.left4, y: MOBILE_Y.top4 })),
-    { id: 'mfinal', item: finalItem, x: MOBILE_X.center, y: MOBILE_Y.final, isFinal: true },
-    ...(thirdPlaceItem ? [{ id: 'mthird', item: thirdPlaceItem, x: MOBILE_X.third, y: MOBILE_Y.third, label: '3/4위전' }] : []),
-    ...semiFinals.right.map((item, index) => ({ id: `mb4-${index}`, item, x: MOBILE_X.right4, y: MOBILE_Y.bottom4 })),
-    ...quarterFinals.right.map((item, index) => ({ id: `mb8-${index}`, item, x: index === 0 ? MOBILE_X.left8 : MOBILE_X.right8, y: MOBILE_Y.bottom8 })),
-    ...roundOf16.right.map((item, index) => ({ id: `mb16-${index}`, item, x: 14 + index * 24, y: MOBILE_Y.bottom16 })),
-    ...MOBILE_32_LAYOUT.map((itemIndex, layoutIndex) => ({
+    })) : []),
+    ...roundOf16.left.map((item, index) => ({ id: `mt16-${index}`, item, x: 14 + index * 24, y: yMap.top16 })),
+    ...quarterFinals.left.map((item, index) => ({ id: `mt8-${index}`, item, x: index === 0 ? MOBILE_X.left8 : MOBILE_X.right8, y: yMap.top8 })),
+    ...semiFinals.left.map((item, index) => ({ id: `mt4-${index}`, item, x: MOBILE_X.left4, y: yMap.top4 })),
+    { id: 'mfinal', item: finalItem, x: MOBILE_X.center, y: yMap.final, isFinal: true },
+    ...(thirdPlaceItem ? [{ id: 'mthird', item: thirdPlaceItem, x: MOBILE_X.third, y: yMap.third }] : []),
+    ...semiFinals.right.map((item, index) => ({ id: `mb4-${index}`, item, x: MOBILE_X.right4, y: yMap.bottom4 })),
+    ...quarterFinals.right.map((item, index) => ({ id: `mb8-${index}`, item, x: index === 0 ? MOBILE_X.left8 : MOBILE_X.right8, y: yMap.bottom8 })),
+    ...roundOf16.right.map((item, index) => ({ id: `mb16-${index}`, item, x: 14 + index * 24, y: yMap.bottom16 })),
+    ...(!limitTo16 ? MOBILE_32_LAYOUT.map((itemIndex, layoutIndex) => ({
       id: `mb32-${itemIndex}`,
       item: roundOf32.right[itemIndex],
       x: 14 + (layoutIndex % 4) * 24,
       y: layoutIndex < 4 ? MOBILE_Y.bottom32 : MOBILE_Y.bottom32Second,
-    })),
+    })) : []),
   ];
 
   const updatePaths = useCallback(() => {
@@ -509,7 +579,7 @@ function MobileVerticalBracket({
         }];
       });
 
-    const pairPaths = MOBILE_PAIR_EDGES.flatMap((edge, index) => {
+    const pairPaths = limitTo16 ? [] : MOBILE_PAIR_EDGES.flatMap((edge, index) => {
       const sources = edge.sources.map((sourceId) => boundsById.get(sourceId));
       const target = boundsById.get(edge.target);
       if (!target || sources.some((source) => !source)) return [];
@@ -520,43 +590,89 @@ function MobileVerticalBracket({
       }];
     });
 
+    const coords: Record<string, number> = {};
+    const getMidpointY = (sourceId: string, targetId: string) => {
+      const source = boundsById.get(sourceId);
+      const target = boundsById.get(targetId);
+      if (!source || !target) return null;
+      const isDownward = source.centerY < target.centerY;
+      const sourceY = isDownward ? source.bottom : source.top;
+      const targetY = isDownward ? target.top : target.bottom;
+      return sourceY + (targetY - sourceY) / 2;
+    };
+
+    const top8Val = getMidpointY('mt16-0', 'mt8-0');
+    if (top8Val !== null) coords['top-8'] = top8Val;
+
+    const top4Val = getMidpointY('mt8-0', 'mt4-0');
+    if (top4Val !== null) coords['top-4'] = top4Val;
+
+    const finalVal = getMidpointY('mt4-0', 'mfinal');
+    if (finalVal !== null) {
+      coords['final'] = finalVal;
+      coords['third-label'] = finalVal;
+    }
+
+    const bottom4Val = getMidpointY('mfinal', 'mb4-0');
+    if (bottom4Val !== null) coords['bottom-final'] = bottom4Val;
+
+    const bottom8Val = getMidpointY('mb4-0', 'mb8-0');
+    if (bottom8Val !== null) coords['bottom-4'] = bottom8Val;
+
+    const bottom16Val = getMidpointY('mb8-0', 'mb16-0');
+    if (bottom16Val !== null) coords['bottom-8'] = bottom16Val;
+
+    setLabelCoords(coords);
     setPaths([...roundPaths, ...pairPaths]);
-  }, []);
+  }, [roundOf32, roundOf16, quarterFinals, semiFinals, finalItem, thirdPlaceItems, limitTo16]);
 
   useLayoutEffect(() => {
     updatePaths();
 
+    const timer = setTimeout(updatePaths, 150);
+
     const board = boardRef.current;
-    if (!board) return;
+    if (!board) return () => clearTimeout(timer);
 
     const resizeObserver = new ResizeObserver(updatePaths);
     resizeObserver.observe(board);
     window.addEventListener('resize', updatePaths);
 
     return () => {
+      clearTimeout(timer);
       resizeObserver.disconnect();
       window.removeEventListener('resize', updatePaths);
     };
   }, [updatePaths]);
 
-  const labels = [
-    { id: 'top-32', x: 50, y: 14, text: '32강' },
-    { id: 'top-16', x: 50, y: MOBILE_Y.top16 - 42, text: '16강' },
-    { id: 'top-8', x: 50, y: MOBILE_Y.top8 - 42, text: '8강' },
-    { id: 'top-4', x: 50, y: MOBILE_Y.top4 - 62, text: '4강' },
-    { id: 'final', x: 55, y: MOBILE_Y.final - 44, text: '결승' },
-    { id: 'bottom-4', x: 55, y: MOBILE_Y.bottom4 - 46, text: '4강' },
-    { id: 'bottom-8', x: 50, y: MOBILE_Y.bottom8 - 42, text: '8강' },
-    { id: 'bottom-16', x: 50, y: MOBILE_Y.bottom16 - 42, text: '16강' },
-    { id: 'bottom-32', x: 50, y: MOBILE_Y.bottom32Second + 32, text: '32강' },
+  const labels = limitTo16 ? [
+    { id: 'top-16', x: 50, y: labelCoords['top-16'] ?? 20, text: '16강' },
+    { id: 'top-8', x: 50, y: yMap.top8, text: '8강' },
+    { id: 'top-4', x: 50, y: yMap.top4, text: '4강', isSide: true },
+    { id: 'final', x: 50, y: yMap.final, text: '결승', isSide: true },
+    { id: 'third-label', x: MOBILE_X.third, y: labelCoords['third-label'] ?? 282, text: '3/4위전' },
+    { id: 'bottom-4', x: 50, y: yMap.bottom4, text: '4강', isSide: true },
+    { id: 'bottom-8', x: 50, y: yMap.bottom8, text: '8강' },
+    { id: 'bottom-16', x: 50, y: 638, text: '16강' },
+  ] : [
+    { id: 'top-32', x: 50, y: 16, text: '32강' },
+    { id: 'top-16', x: 50, y: 184, text: '16강' },
+    { id: 'top-8', x: 50, y: yMap.top8, text: '8강' },
+    { id: 'top-4', x: 50, y: yMap.top4, text: '4강', isSide: true },
+    { id: 'final', x: 50, y: yMap.final, text: '결승', isSide: true },
+    { id: 'third-label', x: MOBILE_X.third, y: 444, text: '3/4위전' },
+    { id: 'bottom-4', x: 50, y: yMap.bottom4, text: '4강', isSide: true },
+    { id: 'bottom-8', x: 50, y: yMap.bottom8, text: '8강' },
+    { id: 'bottom-16', x: 50, y: 806, text: '16강' },
+    { id: 'bottom-32', x: 50, y: 990, text: '32강' },
   ];
 
   return (
-    <div className="p-2 md:hidden">
-      <div ref={boardRef} className="relative h-[980px] rounded-md border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-[#1D1D1D]">
+    <div className={isSidebar ? "p-1 w-full" : "p-1 lg:hidden pb-8"}>
+      <div ref={boardRef} className={`relative ${limitTo16 ? 'h-[655px]' : 'h-[1005px]'} p-1`}>
         <svg
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible text-gray-400 dark:text-gray-600"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible text-gray-400 dark:text-gray-600"
         >
           {paths.map((path) => (
             <path
@@ -569,22 +685,43 @@ function MobileVerticalBracket({
             />
           ))}
         </svg>
-        {labels.map((label) => (
-          <div
-            key={label.id}
-            className="absolute z-20 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-gray-600 dark:text-gray-300"
-            style={{ left: `${label.x}%`, top: label.y }}
-          >
-            {label.text}
-          </div>
-        ))}
+        {labels.map((label) => {
+          const isSide = 'isSide' in label && label.isSide;
+          const leftValue = isSide
+            ? (label.id === 'final' ? 'calc(50% + 42px)' : 'calc(50% + 38px)')
+            : `${label.x}%`;
+          const topValue = isSide ? `${label.y}px` : `${label.y - 9}px`;
+          const transformValue = isSide ? 'translateY(-50%)' : 'translateX(-50%)';
+
+          const isFinal = label.text === '결승';
+          const badgeClass = isFinal
+            ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-400"
+            : "border-gray-200 bg-white text-gray-600 dark:border-gray-800 dark:bg-[#1D1D1D] dark:text-gray-300";
+
+          return (
+            <div
+              key={label.id}
+              className={`absolute z-20 flex items-center justify-center h-[18px] px-2 whitespace-nowrap rounded-full border text-[9.5px] font-bold leading-none shadow-sm ${badgeClass}`}
+              style={{
+                left: leftValue,
+                top: topValue,
+                transform: transformValue,
+                WebkitTransform: transformValue,
+              }}
+            >
+              {label.text}
+            </div>
+          );
+        })}
         <div
-          className="absolute z-20 w-[72px] -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${MOBILE_X.champion}%`, top: MOBILE_Y.final + 3 }}
+          className="absolute z-20 w-[72px]"
+          style={{
+            left: `${MOBILE_X.champion}%`,
+            top: limitTo16 ? `${yMap.final}px` : `${MOBILE_Y.final}px`,
+            transform: 'translate(-50%, -50%)',
+            WebkitTransform: 'translate(-50%, -50%)',
+          }}
         >
-          <div className="mb-1 text-center text-[10px] font-semibold leading-none text-transparent" aria-hidden>
-            챔피언
-          </div>
           <div className="px-1.5 py-1.5 text-center">
             <Trophy className="mx-auto h-7 w-7 text-gray-300 dark:text-gray-700" aria-hidden />
             <span className="mt-1 block text-[11px] font-semibold leading-none text-gray-500 dark:text-gray-400">챔피언</span>
@@ -594,8 +731,13 @@ function MobileVerticalBracket({
           <div
             key={node.id}
             data-bracket-node={node.id}
-            className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 ${node.id === 'mfinal' || node.id === 'mthird' ? 'w-[72px]' : 'w-[64px]'}`}
-            style={{ left: `${node.x}%`, top: `${node.y}px` }}
+            className={`absolute z-20 ${node.id === 'mfinal' || node.id === 'mthird' ? 'w-[72px]' : 'w-[64px]'}`}
+            style={{
+              left: `${node.x}%`,
+              top: `${node.y}px`,
+              transform: 'translate(-50%, -50%)',
+              WebkitTransform: 'translate(-50%, -50%)',
+            }}
           >
             {node.label && (
               <div
@@ -623,6 +765,7 @@ function MobileVerticalBracket({
 interface WorldCupBracketViewProps {
   rounds: CupRound[];
   standings?: any;
+  forceVertical?: boolean;
 }
 
 function splitBracketSide(items: BracketCardData[]) {
@@ -655,12 +798,12 @@ const DESKTOP_X = {
 };
 
 const DESKTOP_Y = {
-  r32: [64, 132, 200, 268, 336, 404, 472, 540],
-  r16: [98, 234, 370, 506],
-  qf: [166, 438],
-  sf: [302],
-  final: 205,
-  third: 410,
+  r32: [64, 144, 224, 304, 384, 464, 544, 624],
+  r16: [104, 264, 424, 584],
+  qf: [184, 504],
+  sf: [344],
+  final: 234,
+  third: 454,
 };
 
 const DESKTOP_EDGES: DesktopEdge[] = [
@@ -751,7 +894,7 @@ function verticalPairPathFromMeasuredCards(sources: CardBounds[], target: CardBo
   const topY = top.centerY;
   const bottomY = bottom.centerY;
   const middleY = topY + (bottomY - topY) / 2;
-  const isTopHalf = bottomY < MOBILE_Y.final;
+  const isTopHalf = target.centerY > middleY;
   const tailY = isTopHalf ? bottom.bottom + 12 : top.top - 12;
   const targetY = isTopHalf ? target.top : target.bottom;
   const tailX = x + 8;
@@ -872,19 +1015,22 @@ function DesktopBracketBoard({
         }];
       })
     );
-  }, []);
+  }, [roundOf32, roundOf16, quarterFinals, semiFinals, finalItem, thirdPlaceItems]);
 
   useLayoutEffect(() => {
     updatePaths();
 
+    const timer = setTimeout(updatePaths, 150);
+
     const board = boardRef.current;
-    if (!board) return;
+    if (!board) return () => clearTimeout(timer);
 
     const resizeObserver = new ResizeObserver(updatePaths);
     resizeObserver.observe(board);
     window.addEventListener('resize', updatePaths);
 
     return () => {
+      clearTimeout(timer);
       resizeObserver.disconnect();
       window.removeEventListener('resize', updatePaths);
     };
@@ -902,8 +1048,8 @@ function DesktopBracketBoard({
   ];
 
   return (
-    <div className="relative hidden h-[595px] overflow-hidden px-2 py-3 md:block lg:px-4 lg:py-4">
-      <div ref={boardRef} className="absolute inset-x-2 top-3 h-[565px] lg:inset-x-4 lg:top-4">
+    <div className="relative hidden h-[680px] overflow-hidden px-2 py-3 lg:block lg:px-4 lg:py-4">
+      <div ref={boardRef} className="absolute inset-x-2 top-3 h-[650px] lg:inset-x-4 lg:top-4">
         <svg
           aria-hidden
           className="pointer-events-none absolute inset-0 h-full w-full overflow-visible text-gray-200 dark:text-gray-800"
@@ -930,7 +1076,7 @@ function DesktopBracketBoard({
         ))}
         <div
           className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 text-center"
-          style={{ left: `${DESKTOP_X.center / 10}%`, top: '88px' }}
+          style={{ left: `${DESKTOP_X.center / 10}%`, top: '117px' }}
         >
           <Trophy className="h-10 w-10 text-gray-300 dark:text-gray-700 lg:h-12 lg:w-12" aria-hidden />
           <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 lg:text-[12px]">챔피언</span>
@@ -955,7 +1101,7 @@ function DesktopBracketBoard({
   );
 }
 
-export default function WorldCupBracketView({ rounds, standings }: WorldCupBracketViewProps) {
+export default function WorldCupBracketView({ rounds, standings, forceVertical = false }: WorldCupBracketViewProps) {
   const columns = KNOCKOUT_ROUNDS.map((round) => {
     const actualItems = (rounds.find((item) => item.round === round.key)?.fixtures ?? []).map(fixtureToBracketCard);
     const mergedItems = getMergedRoundItems(round.key, actualItems, standings);
@@ -971,6 +1117,22 @@ export default function WorldCupBracketView({ rounds, standings }: WorldCupBrack
   const quarterFinals = splitBracketSide(columns.find((round) => round.key === 'Quarter-finals')?.items ?? []);
   const semiFinals = splitBracketSide(columns.find((round) => round.key === 'Semi-finals')?.items ?? []);
   const finalItem = columns.find((round) => round.key === 'Final')?.items[0] ?? FALLBACK_BRACKET.Final[0];
+
+  if (forceVertical) {
+    return (
+      <div className="w-full select-none overflow-x-auto overflow-y-hidden" style={{ contentVisibility: 'auto' }}>
+        <MobileVerticalBracket
+          roundOf32={roundOf32}
+          roundOf16={roundOf16}
+          quarterFinals={quarterFinals}
+          semiFinals={semiFinals}
+          finalItem={finalItem}
+          thirdPlaceItems={thirdPlaceItems}
+          isSidebar={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <Container className="overflow-hidden bg-white dark:bg-[#1D1D1D]">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -9,6 +9,38 @@ import { Match } from '@/domains/livescore/types/match';
 import MatchCard from '../MatchCard';
 
 const LEAGUE_PLACEHOLDER = '/images/placeholder-league.svg';
+
+const PRIORITY_LEAGUE_ORDER = [
+  // 1. 주요 컵 대회 및 친선 경기 (사용자 지정 순서)
+  1,   // FIFA World Cup
+  2,   // UEFA Champions League
+  3,   // UEFA Europa League
+  848, // UEFA Conference League
+  17,  // AFC Champions League
+  45,  // FA Cup
+  48,  // EFL Cup
+  667, // Club Friendlies
+
+  // 2. 주요 정규 리그 (EPL, 라리가 등 지정 순서)
+  39,  // 프리미어 리그
+  140, // 라리가
+  78,  // 분데스리가
+  61,  // 리그앙
+  135, // 세리에 A
+  40,  // 챔피언십
+  179, // 스코틀랜드 프리미어십
+  88,  // 에레디비지에
+  94,  // 프리메이라 리가
+  292, // K리그1
+  293, // K리그2
+  98,  // J1 리그
+  169, // 중국 슈퍼리그
+  307, // 사우디 프로리그
+  253, // MLS
+  71,  // 브라질레이로
+  262, // 리가 MX
+  119, // 덴마크 수페르리가
+];
 
 interface LeagueMatchListProps {
   matches: Match[];
@@ -47,7 +79,21 @@ export default function LeagueMatchList({
       });
     });
 
-    return groups;
+    // 지정된 우선순위에 따라 리그 정렬 (Stable Sort 보장)
+    const groupsWithIndex = groups.map((group, idx) => ({ group, idx }));
+    groupsWithIndex.sort((a, b) => {
+      const indexA = PRIORITY_LEAGUE_ORDER.indexOf(a.group.leagueId);
+      const indexB = PRIORITY_LEAGUE_ORDER.indexOf(b.group.leagueId);
+
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.idx - b.idx;
+    });
+
+    return groupsWithIndex.map(item => item.group);
   }, [matches]);
 
   const [expandedLeagues, setExpandedLeagues] = useState<Set<number>>(() => (

@@ -194,7 +194,7 @@ function FormBadge({ result }: { result: string }) {
   };
 
   return (
-    <span className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-medium ${getStyle()}`}>
+    <span className={`w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded text-[10px] md:text-[11px] font-medium ${getStyle()}`}>
       {result.toUpperCase()}
     </span>
   );
@@ -205,8 +205,8 @@ function FormDisplay({ form }: { form: string }) {
   if (!form) return null;
   const recentResults = form.split('').reverse();
   return (
-    <div className="grid w-[154px] max-w-full grid-cols-[repeat(6,24px)] gap-0.5 md:w-[258px] md:grid-cols-[repeat(10,24px)]">
-      <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F5F5F5] text-[11px] font-semibold text-gray-400 dark:bg-[#333333] dark:text-gray-500">
+    <div className="grid w-fit max-w-full grid-cols-[repeat(6,20px)] gap-0.5 md:grid-cols-[repeat(10,24px)] md:gap-0.5">
+      <span className="flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded bg-[#F5F5F5] text-[10px] md:text-[11px] font-semibold text-gray-400 dark:bg-[#333333] dark:text-gray-500">
         &gt;
       </span>
       {recentResults.map((char, idx) => (
@@ -286,14 +286,14 @@ function underOverLine(team: TeamData, line: string) {
   return (
     <div className="inline-block space-y-0.5 text-left leading-5">
       <div>
-        득점Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
+        득점 오버 <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-        득점Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
+        언더 <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
       </div>
       <div>
-        실점Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
+        실점 오버 <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
         <span className="mx-0.5 text-gray-300 dark:text-gray-600 sm:mx-1">/</span>
-        실점Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
+        언더 <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
       </div>
     </div>
   );
@@ -304,16 +304,14 @@ function mobileUnderOverLine(team: TeamData, line: string) {
   const againstLine = team.league?.goals?.against?.under_over?.[line];
 
   return (
-    <div className="inline-block space-y-0.5 text-left leading-4">
-      <div>
-        득점Over <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong>
-        <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
-        득점Under <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong>
+    <div className="space-y-1 leading-5">
+      <div className="grid grid-cols-2 gap-x-2">
+        <span>득 오버 <strong className="text-green-600 dark:text-green-400">{forLine?.over ?? '-'}</strong></span>
+        <span>언더 <strong className="text-red-600 dark:text-red-400">{forLine?.under ?? '-'}</strong></span>
       </div>
-      <div>
-        실점Over <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong>
-        <span className="mx-0.5 text-gray-300 dark:text-gray-600">/</span>
-        실점Under <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong>
+      <div className="grid grid-cols-2 gap-x-2">
+        <span>실 오버 <strong className="text-green-600 dark:text-green-400">{againstLine?.over ?? '-'}</strong></span>
+        <span>언더 <strong className="text-red-600 dark:text-red-400">{againstLine?.under ?? '-'}</strong></span>
       </div>
     </div>
   );
@@ -324,6 +322,21 @@ function formatLineups(team: TeamData, limit: number) {
     .slice(0, limit)
     .map((lineup) => `${lineup.formation} (${lineup.played})`)
     .join(' · ') || '-';
+}
+
+function formatLineupsMobile(team: TeamData, limit: number, align: 'left' | 'right') {
+  const lineups = team.league?.lineups || [];
+  if (lineups.length === 0) return '-';
+  return (
+    <div className={`space-y-0.5 text-[10px] ${align === 'right' ? 'text-right' : 'text-left'}`}>
+      {lineups.slice(0, limit).map((lineup, idx) => (
+        <div key={idx} className="truncate">
+          <span className="font-semibold text-gray-900 dark:text-[#F0F0F0]">{lineup.formation}</span>
+          <span className="text-gray-400 dark:text-gray-500 ml-1">({lineup.played}경기)</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function CompareSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -616,8 +629,8 @@ function PredictionTeamComparison({
               label="주요"
               home={formatLineups(home, 4)}
               away={formatLineups(away, 4)}
-              mobileHome={formatLineups(home, 4)}
-              mobileAway={formatLineups(away, 4)}
+              mobileHome={formatLineupsMobile(home, 2, 'right')}
+              mobileAway={formatLineupsMobile(away, 2, 'left')}
               mobileLayout="center-label"
             />
           </CompareSection>
@@ -714,7 +727,7 @@ export default function PredictionChart({
           )}
           <div className="flex items-center justify-center gap-4 md:gap-8 mb-3">
             {/* 홈팀 */}
-            <div className="flex items-center gap-1.5 md:gap-3">
+            <div className="flex items-center gap-3 md:gap-4.5">
               {teams.home.logo && (
                 <a href={homeHref} className="w-9 h-9 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center" aria-label={`${homeNameKo} 팀 페이지`}>
                   <Image src={teams.home.logo} alt={homeNameKo} width={48} height={48} unoptimized className="w-full h-full object-contain" />
@@ -733,7 +746,7 @@ export default function PredictionChart({
               <div className="text-xs text-gray-500 dark:text-gray-400">무승부</div>
             </div>
             {/* 원정팀 */}
-            <div className="flex items-center gap-1.5 md:gap-3">
+            <div className="flex items-center gap-3 md:gap-4.5">
               <div className="text-center">
                 <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{predictions.percent.away}</div>
                 <a href={awayHref} className="block max-w-[90px] truncate text-[13px] text-gray-600 no-underline hover:text-brand-primary hover:no-underline dark:text-gray-400 dark:hover:text-brand-primary-dark">
@@ -872,15 +885,15 @@ export default function PredictionChart({
                 <a
                   key={idx}
                   href={matchHref}
-                  className="grid grid-cols-[64px_minmax(0,1fr)_52px_minmax(0,1fr)_64px] items-center gap-2 px-3 py-2 text-xs no-underline transition-colors hover:bg-[#F5F5F5] hover:no-underline dark:hover:bg-[#262626]"
+                  className="grid grid-cols-[48px_minmax(0,1fr)_42px_minmax(0,1fr)_48px] md:grid-cols-[64px_minmax(0,1fr)_52px_minmax(0,1fr)_64px] items-center gap-1.5 md:gap-2 px-3 py-2 text-xs no-underline transition-colors hover:bg-[#F5F5F5] hover:no-underline dark:hover:bg-[#262626]"
                 >
-                  <span className="text-gray-400">
+                  <span className="text-gray-400 truncate text-[10px] md:text-xs">
                     {new Date(match.fixture.date).toLocaleDateString('ko-KR', { year: '2-digit', month: 'numeric', day: 'numeric' })}
                   </span>
                   <span className={`min-w-0 truncate text-right ${match.teams.home.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.home.winner === false ? 'text-red-500' : ''}`}>
                     {matchHomeNameKo}
                   </span>
-                  <span className="rounded bg-[#F5F5F5] px-2 py-0.5 text-center font-bold text-gray-900 dark:bg-[#262626] dark:text-[#F0F0F0]">
+                  <span className="rounded bg-[#F5F5F5] px-1.5 py-0.5 text-center font-bold text-gray-900 dark:bg-[#262626] dark:text-[#F0F0F0] text-[11px] md:text-xs">
                     {match.goals.home}-{match.goals.away}
                   </span>
                   <span className={`min-w-0 truncate text-left ${match.teams.away.winner ? 'font-bold text-green-600 dark:text-green-400' : match.teams.away.winner === false ? 'text-red-500' : ''}`}>

@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildTeamSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import TeamPageClient, { TeamTabType } from '@/domains/livescore/components/football/team/TeamPageClient';
 import {
   fetchTeamFullData,
@@ -79,10 +81,13 @@ export async function generateMetadata({
   const teamSlug = canonicalSlug || (isUsableTeamSlug(id, slug) ? slug : '') || slugify(teamName);
   const teamLogoUrl = team.logo || await getTeamLogoUrl(Number(id), 'md');
   const teamLogoImage = teamLogoUrl.includes('placeholder') ? undefined : teamLogoUrl;
-  const contextParts = [leagueName, countryName, team.founded ? `${team.founded}년 창단` : '']
-    .filter(Boolean)
-    .join(', ');
-  const description = `${teamName}${contextParts ? ` (${contextParts})` : ''} 팀 페이지입니다. 현재 순위, 선수단, 최근 경기 결과, 다음 경기 일정과 시즌 통계를 4590 Football에서 확인하세요.`;
+  const description = buildTeamSeoSummary({
+    name: teamName,
+    country: countryName || null,
+    founded: team.founded || null,
+    venue: team.venue ? { name: team.venue.name || null, city: team.venue.city || null } : null,
+    leagueName: leagueName || null,
+  });
   const ogImage = buildFootballOgImageUrl({
     title: teamName,
     subtitle: [leagueName, countryName, team.founded ? `${team.founded}년 창단` : ''].filter(Boolean).join(' · '),
@@ -411,6 +416,14 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
       ],
     });
 
+    const teamSeoSummary = team ? buildTeamSeoSummary({
+      name: teamDisplayName,
+      country: teamMapping?.country_ko || teamMapping?.country_en || team.country || null,
+      founded: team.founded || null,
+      venue: venue ? { name: venue.name || null, city: venue.city || null } : null,
+      leagueName: leagueDisplayName || null,
+    }) : '';
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
@@ -434,6 +447,7 @@ async function TeamPageContent({ id, slug, tab }: { id: string; slug: string; ta
           initialData={initialData}
           playerKoreanNames={playerKoreanNames}
           dailyBriefing={dailyBriefing}
+          seoSummary={teamSeoSummary}
         />
       </>
     );

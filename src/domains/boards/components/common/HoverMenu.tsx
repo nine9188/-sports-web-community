@@ -10,7 +10,8 @@ export default function HoverMenu({
   topBoards,
   childBoardsMap,
   rootBoardId,
-  rootBoardSlug
+  rootBoardSlug,
+  plain = false
 }: HoverMenuProps) {
   const [hoveredBoard, setHoveredBoard] = useState<string | null>(null);
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
@@ -319,114 +320,122 @@ export default function HoverMenu({
     </div>
   ), [isMobile, handleMenuEnter, handleMenuClose, handleMobileSubmenuClick, childBoardsMap, currentBoardId, hoveredBoard]);
 
+  const content = (
+    <div className={`${plain ? 'px-0' : 'px-4 py-2.5'} relative overflow-visible`} ref={containerRef}>
+      {/* 네비게이션 바 */}
+      <nav className="flex items-center justify-between gap-2" ref={navRef}>
+        {/* 전체 버튼 */}
+        <Link
+          href={`/boards/${rootBoardSlug || rootBoardId}`}
+          prefetch={false}
+          data-board="all"
+          className={`px-2 py-1 text-xs sm:text-[13px] whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
+            currentBoardId === rootBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
+          }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 sm:h-4 sm:w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            />
+          </svg>
+          전체
+        </Link>
+
+        {/* 게시판 탭들 */}
+        <div className="flex items-center justify-between gap-1 flex-1">
+          <div className="flex items-center gap-1 flex-1 flex-wrap">
+            {visibleBoards.map(renderTabItem)}
+          </div>
+
+          {/* 더보기 버튼 (모바일) */}
+          {hiddenBoards.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMobileDropdown}
+              data-dropdown-toggle
+              className="h-auto w-auto px-2 py-1 text-gray-700 dark:text-gray-300 flex-shrink-0"
+              aria-label={mobileDropdownOpen ? '하위 게시판 접기' : '하위 게시판 펼치기'}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-4 w-4 transition-transform ${
+                  mobileDropdownOpen ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </Button>
+          )}
+        </div>
+      </nav>
+
+      {/* 숨겨진 게시판 드롭다운 (모바일) */}
+      {mobileDropdownOpen && hiddenBoards.length > 0 && (
+        <div className="mt-2">
+          <div className="flex flex-wrap gap-1">
+            {hiddenBoards.map(renderTabItem)}
+          </div>
+        </div>
+      )}
+
+      {/* 하위 메뉴 */}
+      {hoveredBoard && getChildBoards(hoveredBoard).length > 0 && (
+        <>
+          {isMobile ? (
+            <MobileBottomSheet
+              hoveredBoard={hoveredBoard}
+              boardName={sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
+              boardSlug={sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}
+              childBoards={getChildBoards(hoveredBoard)}
+              currentBoardId={currentBoardId}
+              onClose={() => setHoveredBoard(null)}
+            />
+          ) : (
+            /* 데스크톱 2열 리스트 드롭다운 */
+            <div
+              ref={menuRef}
+              onMouseEnter={handleDropdownEnter}
+              onMouseLeave={handleMenuClose}
+              className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-gray-200 dark:border-[#444444] z-[100] rounded-lg w-[280px] animate-in fade-in slide-in-from-top-1 duration-150"
+              style={{
+                left: `${menuPosition.left}px`,
+                top: `${menuPosition.top + 2}px`,
+              }}
+            >
+              {createListLayout(getChildBoards(hoveredBoard))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  if (plain) {
+    return content;
+  }
+
   return (
     <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
-      <div className="px-4 py-2.5 relative overflow-visible" ref={containerRef}>
-        {/* 네비게이션 바 */}
-        <nav className="flex items-center justify-between gap-2" ref={navRef}>
-          {/* 전체 버튼 */}
-          <Link
-            href={`/boards/${rootBoardSlug || rootBoardId}`}
-            prefetch={false}
-            data-board="all"
-            className={`px-2 py-1 text-xs sm:text-[13px] whitespace-nowrap hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded-md flex items-center gap-1 transition-colors text-gray-700 dark:text-gray-300 flex-shrink-0 ${
-              currentBoardId === rootBoardId ? 'bg-[#EAEAEA] dark:bg-[#333333]' : ''
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-3 w-3 sm:h-4 sm:w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            전체
-          </Link>
-
-          {/* 게시판 탭들 */}
-          <div className="flex items-center justify-between gap-1 flex-1">
-            <div className="flex items-center gap-1 flex-1 flex-wrap">
-              {visibleBoards.map(renderTabItem)}
-            </div>
-
-            {/* 더보기 버튼 (모바일) */}
-            {hiddenBoards.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleMobileDropdown}
-                data-dropdown-toggle
-                className="h-auto w-auto px-2 py-1 text-gray-700 dark:text-gray-300 flex-shrink-0"
-                aria-label={mobileDropdownOpen ? '하위 게시판 접기' : '하위 게시판 펼치기'}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 transition-transform ${
-                    mobileDropdownOpen ? 'rotate-180' : ''
-                  }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </Button>
-            )}
-          </div>
-        </nav>
-
-        {/* 숨겨진 게시판 드롭다운 (모바일) */}
-        {mobileDropdownOpen && hiddenBoards.length > 0 && (
-          <div className="mt-2">
-            <div className="flex flex-wrap gap-1">
-              {hiddenBoards.map(renderTabItem)}
-            </div>
-          </div>
-        )}
-
-        {/* 하위 메뉴 */}
-        {hoveredBoard && getChildBoards(hoveredBoard).length > 0 && (
-          <>
-            {isMobile ? (
-              <MobileBottomSheet
-                hoveredBoard={hoveredBoard}
-                boardName={sortedTopBoards.find(board => board.id === hoveredBoard)?.name || '게시판 이동'}
-                boardSlug={sortedTopBoards.find(board => board.id === hoveredBoard)?.slug || hoveredBoard}
-                childBoards={getChildBoards(hoveredBoard)}
-                currentBoardId={currentBoardId}
-                onClose={() => setHoveredBoard(null)}
-              />
-            ) : (
-              /* 데스크톱 2열 리스트 드롭다운 */
-              <div
-                ref={menuRef}
-                onMouseEnter={handleDropdownEnter}
-                onMouseLeave={handleMenuClose}
-                className="absolute bg-white dark:bg-[#1D1D1D] shadow-lg border border-gray-200 dark:border-[#444444] z-[100] rounded-lg w-[280px] animate-in fade-in slide-in-from-top-1 duration-150"
-                style={{
-                  left: `${menuPosition.left}px`,
-                  top: `${menuPosition.top + 2}px`,
-                }}
-              >
-                {createListLayout(getChildBoards(hoveredBoard))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {content}
     </Container>
   );
 }

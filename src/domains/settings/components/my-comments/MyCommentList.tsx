@@ -50,20 +50,20 @@ export default function MyCommentList({
                 <tr key={comment.id} className="hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors">
                   <td className="px-4 py-4 text-[13px] max-w-0">
                     <Link
-                      href={`/boards/${comment.board_id}/posts/${comment.post_id}#comment-${comment.id}`}
+                      href={`/boards/${comment.board_slug || comment.board_id}/${comment.post_number || comment.post_id}#comment-${comment.id}`}
                       className="text-gray-900 dark:text-[#F0F0F0] hover:text-gray-700 dark:hover:text-gray-300 transition-colors block truncate"
                       title={comment.content}
-                    prefetch={false}
+                      prefetch={false}
                     >
                       {comment.content}
                     </Link>
                   </td>
                   <td className="px-4 py-4 text-[13px] text-gray-500 dark:text-gray-400 text-left hidden md:table-cell max-w-0">
                     <Link
-                      href={`/boards/${comment.board_id}/posts/${comment.post_id}`}
+                      href={`/boards/${comment.board_slug || comment.board_id}/${comment.post_number || comment.post_id}`}
                       className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] transition-colors block truncate"
                       title={comment.post_title || '(제목 없음)'}
-                    prefetch={false}
+                      prefetch={false}
                     >
                       {comment.post_title || '(제목 없음)'}
                     </Link>

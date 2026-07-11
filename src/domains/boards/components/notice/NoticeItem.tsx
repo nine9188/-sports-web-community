@@ -180,7 +180,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
                 <AuthorLink
                   nickname={notice.author_nickname || '익명'}
                   publicId={notice.author_public_id || notice.profiles?.public_id}
-                  oddsUserId={notice.author_id || notice.profiles?.id}
+                  authorId={notice.author_id || notice.profiles?.id}
                   iconUrl={notice.author_icon_url}
                   level={notice.author_level || 1}
                   exp={notice.author_exp}
@@ -237,7 +237,7 @@ export function NoticeItem({ notice, showBoardName = false, isLast = false, isMo
         <AuthorLink
           nickname={notice.author_nickname || notice.profiles?.nickname || '익명'}
           publicId={notice.author_public_id || notice.profiles?.public_id}
-          oddsUserId={notice.author_id || notice.profiles?.id}
+          authorId={notice.author_id || notice.profiles?.id}
           iconUrl={notice.author_icon_url}
           level={notice.author_level || 1}
           exp={notice.author_exp}

@@ -10,7 +10,7 @@ const items = [
   { href: '/livescore/football/leagues/1/world-cup', icon: Trophy, label: '월드컵' },
   { href: '/', icon: House, label: '홈', center: true },
   { href: '/boards/all', icon: ClipboardList, label: '게시판' },
-  { href: '/boards/all/create', icon: SquarePen, label: '글쓰기' },
+  { href: '/boards/soccer/create', icon: SquarePen, label: '글쓰기' },
 ];
 
 export default function MobileFloatingTabBar() {

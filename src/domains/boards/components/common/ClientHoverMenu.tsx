@@ -13,6 +13,9 @@ interface ClientHoverMenuProps {
   prefetchedData?: PrefetchedData;
   // 서버 컴포넌트에서 전달받은 초기 게시판 데이터
   initialBoardsData?: BoardsResponse;
+  canWritePost?: boolean;
+  writeUrl?: string;
+  plain?: boolean;
 }
 
 export default function ClientHoverMenu({
@@ -20,7 +23,10 @@ export default function ClientHoverMenu({
   rootBoardId,
   rootBoardSlug,
   prefetchedData,
-  initialBoardsData
+  initialBoardsData,
+  canWritePost = false,
+  writeUrl,
+  plain = false
 }: ClientHoverMenuProps) {
   // 서버에서 데이터를 미리 가져왔다면 그것을 사용하고, 아니면 useBoards 훅 사용
   const { data, isLoading, error } = useBoards(
@@ -36,6 +42,9 @@ export default function ClientHoverMenu({
         childBoardsMap={prefetchedData.childBoardsMap}
         rootBoardId={rootBoardId || ''}
         rootBoardSlug={rootBoardSlug}
+        canWritePost={canWritePost}
+        writeUrl={writeUrl}
+        plain={plain}
       />
     );
   }
@@ -94,6 +103,9 @@ export default function ClientHoverMenu({
       childBoardsMap={childBoardsMap}
       rootBoardId={rootBoardId || ''}
       rootBoardSlug={rootBoardSlug}
+      canWritePost={canWritePost}
+      writeUrl={writeUrl}
+      plain={plain}
     />
   );
-} 
+}

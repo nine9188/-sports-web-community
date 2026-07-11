@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildPlayerSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import PlayerPageClient from '@/domains/livescore/components/football/player/PlayerPageClient';
 import { fetchPlayerFullData } from '@/domains/livescore/actions/player/data';
 import { isUsablePlayerSlug, resolvePlayerCanonicalSlug } from '@/domains/livescore/actions/player/slug';
@@ -77,7 +79,14 @@ export async function generateMetadata({
     player.age ? `${player.age}세` : '',
     player.number ? `등번호 ${player.number}` : '',
   ].filter(Boolean);
-  const description = `${playerName}${profileParts.length ? ` (${profileParts.join(', ')})` : ''} 선수 프로필입니다. 시즌 출전 기록, 득점, 도움, 평점, 순위, 부상, 트로피, 경기 일정과 이적 정보를 4590 Football에서 확인하세요.`;
+  const description = buildPlayerSeoSummary({
+    name: playerName,
+    teamName: currentTeam || null,
+    nationality: player.nationality || null,
+    age: player.age || null,
+    position: position || null,
+    number: player.number || null,
+  });
   const ogImage = buildFootballOgImageUrl({
     title: playerName,
     subtitle: profileParts.slice(0, 4).join(' · '),
@@ -385,6 +394,15 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
       ],
     });
 
+    const playerSeoSummary = playerInfo ? buildPlayerSeoSummary({
+      name: playerDisplayName,
+      teamName: teamDisplayName || null,
+      nationality: playerInfo.nationality || null,
+      age: playerInfo.age || null,
+      position: getKoreanPosition(currentPosition) || null,
+      number: playerStats?.[0]?.games?.number || null,
+    }) : '';
+
     // 클라이언트 컴포넌트에 데이터 전달
     return (
       <>
@@ -410,6 +428,7 @@ async function PlayerPageContent({ playerId, slug, tab, page }: { playerId: stri
           rankingsKoreanNames={rankingsKoreanNames}
           initialPage={fixturePage}
           relatedPosts={relatedPosts}
+          seoSummary={playerSeoSummary}
         />
       </>
     );

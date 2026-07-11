@@ -108,6 +108,10 @@ export function convertSupabaseToCdnUrl(url: string | null | undefined): string 
       const publicPrefix = '/storage/v1/object/public/';
       
       if (pathname.startsWith(publicPrefix)) {
+        // post-videos 버킷은 CDN 치환에서 제외
+        if (pathname.startsWith(`${publicPrefix}post-videos/`)) {
+          return trimmedUrl;
+        }
         const relativePath = pathname.substring(publicPrefix.length);
         return `${STORAGE_CDN_BASE_URL}/${relativePath}`;
       }

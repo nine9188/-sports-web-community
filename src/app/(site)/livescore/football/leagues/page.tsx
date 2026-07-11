@@ -7,12 +7,14 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildLeaguesMainSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
 
 export async function generateMetadata() {
   return buildMetadata({
     title: '축구 리그·팀 순위표 - EPL·라리가·K리그 팀 정보',
-    description: '프리미어리그, 라리가, 세리에A, 분데스리가, 리그앙, K리그 등 주요 축구 리그의 팀 순위표, 팀 정보, 선수단과 기록을 4590 Football에서 확인하세요.',
+    description: buildLeaguesMainSeoSummary(),
     path: '/livescore/football/leagues',
     keywords: [
       '축구 리그',
@@ -44,7 +46,7 @@ const LEAGUE_CATEGORIES: Record<string, number[]> = {
   '아시아': [292, 293, 98, 169, 17, 307],
   '아메리카': [253, 71, 262],
   '국내 컵 대회': [45, 48, 143, 137, 66, 81],
-  '국제 대회': [1, 32, 30, 10, 5, 9, 13, 15, 531],
+  '국제 대회': [1, 7, 32, 30, 10, 5, 9, 13, 15, 531],
   '친선 경기': [667],
 };
 
@@ -71,9 +73,7 @@ export default async function LeaguesPage() {
             <ContainerTitle>리그·팀</ContainerTitle>
           </ContainerHeader>
           <ContainerContent>
-            <p className="text-sm text-gray-900 dark:text-gray-100">
-              리그를 선택하면 각 리그의 순위와 팀 정보를 확인할 수 있습니다.
-            </p>
+            <SeoSummaryCallout summary={buildLeaguesMainSeoSummary()} plain />
           </ContainerContent>
         </Container>
 

@@ -25,6 +25,7 @@ import type { PostPoll } from "../../types/poll";
 import { extractRelatedCtasFromContent } from "../../utils/post/extractRelatedCtasFromContent";
 import type { RelatedPostCta } from "../../utils/post/extractRelatedCtasFromContent";
 import { getRelatedEntityCardsFromContent } from "../../actions/getRelatedEntityCardsFromContent";
+import { PenLine } from "lucide-react";
 
 interface PostAuthor {
   nickname: string | null;
@@ -422,7 +423,7 @@ export default async function PostDetailLayout({
         )}
       </Container>
 
-      {/* 4. 게시글 하단 버튼 영역 */}
+      {/* 4. 게시글 중간 버튼 영역 */}
         <PostFooter
           boardSlug={slug}
           postNumber={postNumber}
@@ -432,6 +433,7 @@ export default async function PostDetailLayout({
           userId={post.user_id}
           returnHref={returnHref}
           withMargin={true}
+          variant="middle"
         />
 
       {/* 5. 포스트 네비게이션 */}
@@ -492,7 +494,7 @@ export default async function PostDetailLayout({
         postNumber={postNumber}
       />
 
-      {/* 9. 게시글 푸터 (중복) */}
+      {/* 9. 게시글 하단 버튼 영역 */}
         <PostFooter
           boardSlug={slug}
           postNumber={postNumber}
@@ -502,6 +504,7 @@ export default async function PostDetailLayout({
           userId={post.user_id}
           returnHref={returnHref}
           withMargin={totalPages > 1}
+          variant="bottom"
         />
 
       {/* 10. 검색바 + 글쓰기 */}
@@ -512,10 +515,11 @@ export default async function PostDetailLayout({
         {isLoggedIn && (
           <Link
             href={`/boards/${slug}/create`}
-            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
-          prefetch={false}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 rounded text-[13px] font-medium transition-colors whitespace-nowrap min-h-[36px] shadow-sm"
+            prefetch={false}
           >
-            <span>글쓰기</span>
+            <PenLine className="h-3.5 w-3.5 text-white" />
+            <span className="inline">글쓰기</span>
           </Link>
         )}
       </div>

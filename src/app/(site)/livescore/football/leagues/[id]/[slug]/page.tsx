@@ -1,4 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
+import { buildLeagueSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import { getLeagueSlug } from '@/domains/livescore/utils/slugs';
 import { fetchLeagueDetails } from '@/domains/livescore/actions/footballApi';
 import { getLeagueById } from '@/domains/livescore/actions/teamLeagueData';
@@ -61,9 +63,10 @@ export async function generateMetadata({ params }: LeaguePageProps) {
   const title = isCup
     ? `${displayName} 대진표·경기 일정·경기 결과`
     : `${displayName} 순위·일정·득점 순위`;
-  const description = isCup
-    ? `${displayName}${league.country ? ` (${league.country})` : ''} 대진표, 라운드별 경기 일정과 경기 결과를 4590 Football에서 확인하세요.`
-    : `${displayName}${league.country ? ` (${league.country})` : ''} 순위, 경기 일정, 결과, 득점 순위와 팀 정보를 4590 Football에서 확인하세요.`;
+  const description = buildLeagueSeoSummary({
+    name: displayName,
+    season: league.season || null,
+  });
   const keywords = isCup
     ? [
       `${displayName} 대진표`,
@@ -117,7 +120,14 @@ export async function generateMetadata({ params }: LeaguePageProps) {
     description,
     path: `/livescore/football/leagues/${id}/${getLeagueSlug(parseInt(id, 10), league.name)}`,
     keywords,
-    ...(shouldNoindex ? { robots: { index: false, follow: true } } : {}),
+    robots: {
+      index: !shouldNoindex,
+      follow: true,
+      googleBot: {
+        index: false,
+        follow: true,
+      },
+    },
   });
 }
 async function LeaguePageContent({ id }: { id: string }) {
@@ -180,6 +190,11 @@ async function LeaguePageContent({ id }: { id: string }) {
     LeagueRankingsSectionBlock({ leagueId }),
   ]);
 
+  const leagueSeoSummary = league ? buildLeagueSeoSummary({
+    name: displayName,
+    season: seasonLabel || league.season || null,
+  }) : '';
+
   return (
     <div className="min-h-screen">
       <DaumWebmasterHints
@@ -203,6 +218,12 @@ async function LeaguePageContent({ id }: { id: string }) {
           boardSlug={boardSlug}
         />
       </div>
+
+      {leagueSeoSummary && (
+        <div className="mt-4">
+          <SeoSummaryCallout summary={leagueSeoSummary} />
+        </div>
+      )}
 
       <div className="mt-4">
         <AdBanner />

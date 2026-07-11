@@ -65,6 +65,8 @@ export interface MyCommentItem {
   post_title: string;
   board_name: string;
   created_at: string;
+  post_number?: number;
+  board_slug?: string;
 }
 
 /**

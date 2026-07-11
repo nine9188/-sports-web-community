@@ -22,6 +22,9 @@ export interface HoverMenuProps {
   childBoardsMap: Record<string, ChildBoard[]>;
   rootBoardId: string;
   rootBoardSlug?: string;
+  canWritePost?: boolean;
+  writeUrl?: string;
+  plain?: boolean;
 }
 
 export interface PrefetchedData {

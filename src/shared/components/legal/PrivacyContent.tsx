@@ -92,6 +92,16 @@ export default function PrivacyContent() {
         <p className="ml-3">• 서비스 이용 분석</p>
         <p className="font-medium mt-2">3. 쿠키 거부 방법</p>
         <p className="ml-3">브라우저 설정에서 쿠키 저장을 거부할 수 있습니다. 다만, 쿠키를 거부할 경우 로그인 등 일부 서비스 이용에 제한이 있을 수 있습니다.</p>
+        <p className="font-medium mt-2">4. 제3자 광고 서비스(구글 애드센스 등)의 쿠키 사용</p>
+        <p className="ml-3">
+          서비스는 맞춤형 광고 제공을 위해 Google AdSense를 이용할 수 있으며, Google을 포함한 제3자 제공업체는 이용자의 이전 방문 기록을 바탕으로 광고를 제공하기 위해 쿠키를 사용합니다.
+        </p>
+        <p className="ml-3 mt-1">
+          Google의 광고 쿠키 사용으로 인해 Google 및 파트너사는 이용자의 본 웹사이트 방문 및 인터넷상의 다른 웹사이트 방문 정보를 토대로 맞춤형 광고를 게재할 수 있습니다.
+        </p>
+        <p className="ml-3 mt-1">
+          이용자는 Google 광고 설정(https://www.google.com/settings/ads) 페이지를 방문하여 맞춤형 광고 게재를 거부할 수 있으며, 또는 www.aboutads.info 페이지를 방문하여 제3자 제공업체의 맞춤형 광고를 위한 쿠키 사용을 차단할 수 있습니다.
+        </p>
       </div>
       {/* 제10조 */}
       <div>

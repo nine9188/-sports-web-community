@@ -384,7 +384,7 @@ export default function CupRoundsView({ rounds, currentMatchId, defaultOpenMode 
 
                 return (
                   <FixtureRow
-                    key={fixture.id}
+                    key={`fixture-${fixture.id}-${idx}`}
                     fixture={fixture}
                     isLast={idx === round.fixtures.length - 1}
                     isCurrent={currentMatchId !== undefined && fixture.id === currentMatchId}

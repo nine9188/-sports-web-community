@@ -73,78 +73,44 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
 
   // 이벤트 텍스트 내 선수 이름에 링크를 적용하는 헬퍼 함수
   const renderEventTextWithPlayerLinks = (event: MatchEvent) => {
-    const originalText = mapEventToKoreanText(event); // "Lionel Messi 골 (Sergio Busquets 어시스트)"와 같은 형식
+    // 처음부터 한글 이름으로 문장 생성
+    const text = mapEventToKoreanText(event, playerKoreanNames);
 
-    let currentElements: (string | JSX.Element)[] = [originalText];
+    // player 링크만 감싸기 (정규식 없이 간단하게)
+    const playerName = (event.player?.id && playerKoreanNames[event.player.id]) || event.player?.name || '';
+    const assistName = (event.assist?.id && playerKoreanNames[event.assist?.id]) || event.assist?.name || '';
 
-    // 선수 (player) 이름에 링크 적용
-    if (event.player?.id && event.player.name) {
-      const koreanPlayerName = playerKoreanNames[event.player.id] || event.player.name;
-      const englishPlayerName = event.player.name;
-      
-      const newElements: (string | JSX.Element)[] = [];
-      currentElements.forEach((element, i) => {
-        if (typeof element === 'string') {
-          // 문자열인 경우에만 분리 및 링크 적용
-          // 정규 표현식으로 영어 선수 이름을 찾고, 괄호로 감싸서 구분자도 결과 배열에 포함
-          const parts = element.split(new RegExp(`(\\b${englishPlayerName}\\b)`, 'g'));
-          parts.forEach((part, idx) => {
-            if (part === englishPlayerName) {
-              newElements.push(
-                <Link
-                  key={`player-link-${event.player.id}-${i}-${idx}`} // 고유한 key 추가
-                  href={getPlayerHref(event.player)}
-                  className="hover:underline transition-all"
-                prefetch={false}
-                >
-                  {koreanPlayerName}
-                </Link>
-              );
-            } else {
-              newElements.push(part);
-            }
-          });
-        } else {
-          newElements.push(element); // 이미 JSX 엘리먼트인 경우 그대로 유지
-        }
-      });
-      currentElements = newElements;
-    }
+    if (!playerName) return text;
 
-    // 어시스트 (assist) 이름에 링크 적용
-    if (event.assist?.id && event.assist.name) {
-      const assistId = event.assist.id;
-      const koreanAssistName = playerKoreanNames[assistId] || event.assist.name;
-      const englishAssistName = event.assist.name;
+    const parts = text.split(playerName);
+    const elements: React.ReactNode[] = [];
 
-      const newElements: (string | JSX.Element)[] = [];
-      currentElements.forEach((element, i) => {
-        if (typeof element === 'string') {
-          const parts = element.split(new RegExp(`(\\b${englishAssistName}\\b)`, 'g'));
-          parts.forEach((part, idx) => {
-            if (part === englishAssistName) {
-              newElements.push(
-                <Link
-                  key={`assist-link-${assistId}-${i}-${idx}`}
-                  href={getPlayerHref({ id: assistId, name: englishAssistName })}
-                  className="hover:underline transition-all"
-                prefetch={false}
-                >
-                  {koreanAssistName}
-                </Link>
-              );
-            } else {
-              newElements.push(part);
-            }
-          });
-        } else {
-          newElements.push(element); // 이미 JSX 엘리먼트인 경우 그대로 유지
-        }
-      });
-      currentElements = newElements;
-    }
+    parts.forEach((part, i) => {
+      if (i > 0) {
+        elements.push(
+          <Link key={`player-${i}`} href={getPlayerHref(event.player)} className="hover:underline transition-all" prefetch={false}>
+            {playerName}
+          </Link>
+        );
+      }
+      if (!assistName || !part.includes(assistName)) {
+        elements.push(part);
+      } else {
+        const assistParts = part.split(assistName);
+        assistParts.forEach((ap, j) => {
+          if (j > 0) {
+            elements.push(
+              <Link key={`assist-${i}-${j}`} href={getPlayerHref({ id: event.assist!.id!, name: event.assist!.name! })} className="hover:underline transition-all" prefetch={false}>
+                {assistName}
+              </Link>
+            );
+          }
+          elements.push(ap);
+        });
+      }
+    });
 
-    return currentElements;
+    return elements;
   };
 
   // matchData prop이 변경될 때 이벤트 데이터 업데이트
@@ -234,13 +200,8 @@ function Events({ matchId, events: propsEvents, playerKoreanNames = {}, teamLogo
       <ContainerContent>
         <div className="space-y-2">
           {sortedEvents.map((event, index) => {
-            // 이벤트를 한국어 문장으로 변환 (renderEventTextWithPlayerLinks 함수 내에서 다시 사용됨)
-            const koreanText = mapEventToKoreanText(event);
-
-            // 기존 선수 이름 교체 로직은 더 이상 필요 없음
-            // let eventText = koreanText.split(' ').slice(1).join(' ');
-            // if (event.player?.id) { ... }
-            // if (event.assist?.id) { ... }
+            // 한글 이름 포함한 이벤트 문장 생성
+            const koreanText = mapEventToKoreanText(event, playerKoreanNames);
 
             return (
               <div

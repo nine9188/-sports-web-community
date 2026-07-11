@@ -92,7 +92,7 @@ function CommentItem({ comment }: { comment: SupportComment }) {
         <AuthorLink
           nickname={comment.user_profile?.nickname || '익명'}
           publicId={comment.user_profile?.public_id}
-          oddsUserId={comment.user_id}
+          authorId={comment.user_id}
           showIcon={false}
         />
         <span className="text-xs text-gray-500 dark:text-gray-400">

@@ -4,6 +4,7 @@ import { PenLine } from "lucide-react";
 import BoardBreadcrumbs from "../common/BoardBreadcrumbs";
 import BoardTeamInfo from "../board/BoardTeamInfo";
 import LeagueInfo from "../board/LeagueInfo";
+import BoardDescriptionHeader from "../board/BoardDescriptionHeader";
 import BoardPopularPosts from "../board/BoardPopularPosts";
 import ClientHoverMenu from "../common/ClientHoverMenu";
 import PostList from "../post/PostList";
@@ -164,27 +165,14 @@ export default function BoardDetailLayout({
         slug={boardData.slug || boardData.id}
         name={boardData.name}
       />
-      <div>
-        <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} />
-      </div>
-
-      {/* 일반 게시판: 브레드크럼 아래 광고 */}
-      {hasBreadcrumbs && kakaoAdBanner}
-
-      {/* 커스텀 필터 컴포넌트 (예: 인기글 기간 필터) */}
-      {filterComponent && <div className="mb-4">{filterComponent}</div>}
-
-      {/* 인기 게시글 위젯 - 헤더 공지보다 먼저 표시 (항상 4칸 표시) */}
-      {popularPosts && (
-        <MemoizedBoardPopularPosts
-          weekPosts={popularPosts.weekPosts}
-          monthPosts={popularPosts.monthPosts}
-          className="mb-4"
-        />
-      )}
-
+      {/* 1. 정보 헤더 통합 카드 (최상단 배치) */}
       {teamData && (
-        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
+          {hasBreadcrumbs && (
+            <div className="h-6 px-4 flex items-center border-b border-black/5 dark:border-white/10 bg-[#F5F5F5]/30 dark:bg-[#262626]/30">
+              <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} plain small />
+            </div>
+          )}
           <BoardTeamInfo
             teamData={teamData}
             boardId={boardData.id}
@@ -192,16 +180,18 @@ export default function BoardDetailLayout({
             isLoggedIn={canWritePost}
             className=""
             teamLogoUrl={teamLogoUrl}
+            description={boardData.description}
           />
-          {/* 공지사항 - TeamInfo 바로 아래 붙임 */}
-          {notices && notices.length > 0 && (
-            <MemoizedNoticeList notices={notices} standalone={false} />
-          )}
         </Container>
       )}
 
       {leagueData && (
-        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
+          {hasBreadcrumbs && (
+            <div className="h-6 px-4 flex items-center border-b border-black/5 dark:border-white/10 bg-[#F5F5F5]/30 dark:bg-[#262626]/30">
+              <MemoizedBoardBreadcrumbs breadcrumbs={breadcrumbs} plain small />
+            </div>
+          )}
           <LeagueInfo
             leagueData={leagueData}
             boardId={boardData.id}
@@ -210,46 +200,47 @@ export default function BoardDetailLayout({
             className=""
             leagueLogoUrl={leagueLogoUrl}
             leagueLogoUrlDark={leagueLogoUrlDark}
+            description={boardData.description}
           />
-          {/* 공지사항 - LeagueInfo 바로 아래 붙임 */}
-          {notices && notices.length > 0 && (
-            <MemoizedNoticeList notices={notices} standalone={false} />
-          )}
         </Container>
       )}
 
-      {/* 팀/리그 정보가 없는 게시판: 게시판 이름 + 공지사항 통합 */}
       {!teamData && !leagueData && (
-        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
-          {/* 게시판 헤더 */}
-          <div className="h-12 px-4 flex items-center justify-between bg-[#F5F5F5] dark:bg-[#262626] border-b border-black/5 dark:border-white/10">
-            <h1 className="text-[13px] font-semibold truncate text-gray-900 dark:text-[#F0F0F0]">
-              {boardData.name}
-            </h1>
-            {canWritePost && (
-              <Link
-                href={`/boards/${slug}/create`}
-                aria-label="글쓰기"
-                title="글쓰기"
-                className="p-2 rounded-md hover:bg-[#EAEAEA] dark:hover:bg-[#333333] transition-colors flex-shrink-0"
-              prefetch={false}
-              >
-                <PenLine className="h-4 w-4 text-gray-900 dark:text-[#F0F0F0]" />
-              </Link>
-            )}
-          </div>
-
-          {/* 공지사항 - 헤더 바로 아래 붙임 */}
-          {notices && notices.length > 0 && (
-            <MemoizedNoticeList notices={notices} standalone={false} />
-          )}
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4 overflow-visible">
+          <BoardDescriptionHeader
+            boardId={boardData.id}
+            name={boardData.name}
+            slug={slug}
+            description={boardData.description}
+            canWritePost={canWritePost}
+            defaultCollapsed={false}
+            breadcrumbs={breadcrumbs}
+            plain={true}
+          />
         </Container>
       )}
 
-      {/* 인기글/전체글: 헤더 아래 광고 */}
-      {!hasBreadcrumbs && kakaoAdBanner}
+      {/* 2. 광고 배너 */}
+      {hasBreadcrumbs && kakaoAdBanner}
 
-      {/* 호버 메뉴 - 클라이언트 컴포넌트로 전환 */}
+      {/* 3. 커스텀 필터 컴포넌트 & 베스트 인기글 위젯 */}
+      {filterComponent && <div className="mb-4">{filterComponent}</div>}
+      {popularPosts && (
+        <MemoizedBoardPopularPosts
+          weekPosts={popularPosts.weekPosts}
+          monthPosts={popularPosts.monthPosts}
+          className="mb-4"
+        />
+      )}
+
+      {/* 4. 공지사항 (독립된 카드 형태로 헤더/광고/베스트 뒤에 렌더링) */}
+      {notices && notices.length > 0 && (
+        <Container className="bg-white dark:bg-[#1D1D1D] mb-4">
+          <MemoizedNoticeList notices={notices} standalone={false} />
+        </Container>
+      )}
+
+      {/* 5. 호버 메뉴 - 클라이언트 컴포넌트로 전환 (독립된 카드) */}
       {topBoards && hoverChildBoardsMap && (
         <MemoizedClientHoverMenu
           currentBoardId={boardData.id}
@@ -300,11 +291,11 @@ export default function BoardDetailLayout({
         {canWritePost && (
           <Link
             href={`/boards/${slug}/create`}
-            className="flex items-center justify-center gap-1 px-3 py-2 border border-black/7 dark:border-0 bg-[#F5F5F5] dark:bg-[#262626] text-gray-900 dark:text-[#F0F0F0] hover:bg-[#EAEAEA] dark:hover:bg-[#333333] rounded text-[13px] transition-colors whitespace-nowrap min-h-[36px]"
-          prefetch={false}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 rounded text-[13px] font-medium transition-colors whitespace-nowrap min-h-[36px] shadow-sm"
+            prefetch={false}
           >
-            <PenLine className="h-4 w-4" />
-            <span className="hidden sm:inline">글쓰기</span>
+            <PenLine className="h-3.5 w-3.5 text-white" />
+            <span className="inline">글쓰기</span>
           </Link>
         )}
       </div>

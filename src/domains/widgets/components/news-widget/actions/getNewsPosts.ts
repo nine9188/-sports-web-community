@@ -87,7 +87,7 @@ export async function getNewsPosts(boardSlug: string): Promise<NewsItem[]> {
   return unstable_cache(
     () => _fetchNewsPostsImpl(boardSlug),
     ['news-posts', boardSlug],
-    { revalidate: 600, tags: ['news-posts', `news-posts-${boardSlug}`] }
+    { revalidate: 60, tags: ['news-posts', `news-posts-${boardSlug}`] }
   )();
 }
 

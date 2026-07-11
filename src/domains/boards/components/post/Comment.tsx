@@ -208,7 +208,7 @@ export default function Comment({
               <div className="flex items-center space-x-2 min-w-0">
                 <AuthorLink
                   nickname={comment.profiles?.nickname || '알 수 없음'}
-                  oddsUserId={comment.user_id ?? undefined}
+                  authorId={comment.user_id ?? undefined}
                   publicId={comment.profiles?.public_id ?? undefined}
                   iconUrl={comment.profiles?.icon_url || undefined}
                   level={comment.profiles?.level || 1}
@@ -302,7 +302,7 @@ export default function Comment({
                   </button>
                 )}
                 {!isCommentOwner && currentUserId && (
-                  <ReportButton targetType="comment" targetId={comment.id} variant="ghost" size="sm" showText={false} className="text-xs p-1" />
+                  <ReportButton targetType="comment" targetId={comment.id} variant="ghost" size="sm" showText={false} className="text-xs p-1 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20" />
                 )}
                 {isCommentOwner && !isEditing && (
                   <>

@@ -9,6 +9,8 @@ import { useTeamLeague } from '@/shared/context/TeamLeagueContext';
 import { getTeamHref as buildTeamHref } from '@/domains/livescore/utils/entityLinks';
 import { SPORTS_PLACEHOLDERS } from '@/shared/images/urls';
 import { motion } from 'framer-motion';
+import WorldCupBracketView from '@/domains/livescore/components/football/leagues/WorldCupBracketView';
+import type { CupRound } from '@/domains/livescore/actions/match/cupFixtures';
 
 const LEAGUE_PLACEHOLDER = SPORTS_PLACEHOLDERS.leagues;
 const TEAM_PLACEHOLDER = SPORTS_PLACEHOLDERS.teams;
@@ -42,6 +44,7 @@ interface LeagueStandingsProps {
   leagueLogoUrls?: Record<number, string>;
   leagueLogoUrlsDark?: Record<number, string>;
   teamLogoUrls?: Record<number, string>;
+  worldCupRounds?: CupRound[];
 }
 
 export default function LeagueStandings({
@@ -50,6 +53,7 @@ export default function LeagueStandings({
   leagueLogoUrls = {},
   leagueLogoUrlsDark = {},
   teamLogoUrls = {},
+  worldCupRounds = [],
 }: LeagueStandingsProps) {
   const getKoreanTeamName = useKoreanTeamName();
   const [activeLeagueId, setActiveLeagueId] = useState(initialLeague);
@@ -58,6 +62,7 @@ export default function LeagueStandings({
   });
   const [loadingLeagueId, setLoadingLeagueId] = useState<string | null>(null);
   const isWorldCupActive = activeLeagueId === WORLD_CUP_LEAGUE.id;
+  const [worldCupMode, setWorldCupMode] = useState<'standings' | 'bracket'>('bracket');
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({
     0: true, // Group A (index 0) is open by default
   });
@@ -222,10 +227,47 @@ export default function LeagueStandings({
         </span>
       </div>
 
+      {isWorldCupActive && (
+        <div className="flex border-b border-black/5 dark:border-white/10 bg-white dark:bg-[#1D1D1D]">
+          <button
+            type="button"
+            onClick={() => setWorldCupMode('bracket')}
+            className={`flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors ${
+              worldCupMode === 'bracket'
+                ? 'border-gray-900 text-gray-900 dark:border-[#F0F0F0] dark:text-[#F0F0F0]'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900'
+            }`}
+          >
+            토너먼트 대진표
+          </button>
+          <button
+            type="button"
+            onClick={() => setWorldCupMode('standings')}
+            className={`flex-1 py-2 text-xs font-bold text-center border-b-2 transition-colors ${
+              worldCupMode === 'standings'
+                ? 'border-gray-900 text-gray-900 dark:border-[#F0F0F0] dark:text-[#F0F0F0]'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900'
+            }`}
+          >
+            조별 순위
+          </button>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-[#1D1D1D]">
-        {isCurrentLeagueLoading && !currentStandings ? (
+        {isCurrentLeagueLoading && !currentStandings && worldCupMode !== 'bracket' ? (
           <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
             불러오는 중...
+          </div>
+        ) : isWorldCupActive && worldCupMode === 'bracket' ? (
+          <div className="p-1">
+            {worldCupRounds && worldCupRounds.length > 0 ? (
+              <WorldCupBracketView rounds={worldCupRounds} standings={currentStandings} forceVertical={true} />
+            ) : (
+              <div className="p-3 text-center text-gray-500 dark:text-gray-400 text-xs">
+                대진표 데이터를 불러올 수 없습니다.
+              </div>
+            )}
           </div>
         ) : currentStandings?.standings?.some(group => group.length) ? (
           isWorldCupActive ? (

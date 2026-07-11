@@ -216,7 +216,7 @@ const LeagueStandingsTable = memo(({ standings, leagueId, teamLogoUrls = {}, sho
 
                     return (
                       <tr
-                        key={standing.team?.id || standing.rank}
+                        key={`standing-${standing.team?.id || standing.rank}-${index}`}
                         className={`transition-colors hover:bg-[#EAEAEA] dark:hover:bg-[#333333] ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}
                       >
                         {/* 모바일용 순위 */}

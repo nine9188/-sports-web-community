@@ -16,10 +16,14 @@ export async function resolveFootballIndexability({
   leagueId,
   hasQueryState = false,
   matchStatusCode,
+  homeTeamName,
+  awayTeamName,
 }: {
   leagueId?: number | string | null;
   hasQueryState?: boolean;
   matchStatusCode?: string | null;
+  homeTeamName?: string | null;
+  awayTeamName?: string | null;
 }): Promise<{ shouldNoindex: boolean; reason: FootballNoindexReason }> {
   if (hasQueryState) {
     return { shouldNoindex: true, reason: 'query-state' };
@@ -32,6 +36,18 @@ export async function resolveFootballIndexability({
   const numericLeagueId = typeof leagueId === 'string' ? Number(leagueId) : leagueId;
   if (!numericLeagueId || !Number.isFinite(numericLeagueId)) {
     return { shouldNoindex: true, reason: 'unknown-league' };
+  }
+
+  // 1. 만약 국가대표 친선경기(ID: 10)인 경우 청소년/여자 등의 마이너 경기는 제외 (올림픽/아시안게임은 허용)
+  if (numericLeagueId === 10) {
+    const isYouthOrMinor = (name?: string | null) => {
+      if (!name) return false;
+      return /\b(?:U\d{2}|U-\d{2}|Under \d{2}|Women|W-Team|여자|U23|U21|U20|U19|U18|U17)\b/i.test(name) ||
+        name.includes(' U2') || name.includes(' U1') || name.includes(' 여자');
+    };
+    if (isYouthOrMinor(homeTeamName) || isYouthOrMinor(awayTeamName)) {
+      return { shouldNoindex: true, reason: 'non-indexable-league' };
+    }
   }
 
   const indexableLeagueIds = await getIndexableLeagueIds();

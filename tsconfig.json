@@ -45,7 +45,8 @@
     "node_modules",
     "backup",
     "scripts",
-    "workers"
+    "workers",
+    "supabase"
   ],
   "ts-node": {
     "compilerOptions": {

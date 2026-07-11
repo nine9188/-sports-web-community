@@ -193,6 +193,12 @@ export function processContentToHtml(content: ContentInput): string {
   const supabasePrefix = `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public`;
   if (rawHtml.includes(supabasePrefix)) {
     rawHtml = rawHtml.replaceAll(supabasePrefix, STORAGE_CDN_BASE_URL);
+    
+    // CDN에서 지원하지 않는 post-videos 버킷 URL은 원래 Supabase URL로 복원
+    const cdnPrefixForVideos = `${STORAGE_CDN_BASE_URL.replace(/\/+$/, '')}/post-videos`;
+    if (rawHtml.includes(cdnPrefixForVideos)) {
+      rawHtml = rawHtml.replaceAll(cdnPrefixForVideos, `${supabasePrefix}/post-videos`);
+    }
   }
 
   // sanitize-html로 정화 (XSS 방지)

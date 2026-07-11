@@ -4,6 +4,7 @@ import TabContent from './TabContent';
 import { TeamFullDataResponse } from '@/domains/livescore/actions/teams/team';
 import type { TeamDailyBriefingData } from '@/domains/livescore/actions/teams/dailyBriefing';
 import AdBanner from '@/shared/components/AdBanner';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
 
 export type TeamTabType = 'overview' | 'fixtures' | 'standings' | 'squad' | 'transfers' | 'stats';
 
@@ -15,6 +16,7 @@ interface TeamPageClientProps {
   initialData: TeamFullDataResponse;
   playerKoreanNames?: PlayerKoreanNames;
   dailyBriefing?: TeamDailyBriefingData | null;
+  seoSummary?: string;
 }
 
 export default function TeamPageClient({
@@ -23,6 +25,7 @@ export default function TeamPageClient({
   initialData,
   playerKoreanNames = {},
   dailyBriefing = null,
+  seoSummary,
 }: TeamPageClientProps) {
   const currentTab = initialTab;
 
@@ -34,7 +37,13 @@ export default function TeamPageClient({
         venueImageUrl={initialData.venueImageUrl}
       />
 
-      <div className="mb-4">
+      {seoSummary && (
+        <div className="mt-4">
+          <SeoSummaryCallout summary={seoSummary} />
+        </div>
+      )}
+
+      <div className="mb-4 mt-4">
         <AdBanner />
       </div>
 

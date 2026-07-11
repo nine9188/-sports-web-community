@@ -11,6 +11,7 @@ import MatchSidebar from './sidebar/MatchSidebar';
 import TabContent from './TabContent';
 import TabNavigation from './TabNavigation';
 import MatchViewTracker from '@/shared/components/analytics/MatchViewTracker';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
 
 export type MatchTabType = 'power' | 'events' | 'lineups' | 'stats' | 'standings' | 'support';
 
@@ -32,6 +33,7 @@ interface MatchPageClientProps {
   homeBoardSlug?: string | null;
   awayBoardSlug?: string | null;
   highlight?: MatchHighlight | null;
+  seoSummary?: string;
 }
 
 export default function MatchPageClient({
@@ -50,6 +52,7 @@ export default function MatchPageClient({
   homeBoardSlug,
   awayBoardSlug,
   highlight,
+  seoSummary,
 }: MatchPageClientProps) {
   const currentTab = initialTab;
   const sidebarData = initialSidebarData ?? null;
@@ -85,7 +88,13 @@ export default function MatchPageClient({
             leagueLogoDarkUrl={initialData.leagueLogoDarkUrl}
           />
 
-          <div className="mb-4">
+          {seoSummary && (
+            <div className="mt-4">
+              <SeoSummaryCallout summary={seoSummary} />
+            </div>
+          )}
+
+          <div className="mb-4 mt-4">
             <AdBanner />
           </div>
 

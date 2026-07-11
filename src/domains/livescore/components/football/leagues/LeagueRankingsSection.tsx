@@ -132,7 +132,7 @@ const RankingTable = memo(({
             <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
               {rankings.map((ranking, index) => (
                 <PlayerRow
-                  key={ranking.player.id}
+                  key={`ranking-${ranking.player.id}-${index}`}
                   ranking={ranking}
                   index={index}
                   type={type}

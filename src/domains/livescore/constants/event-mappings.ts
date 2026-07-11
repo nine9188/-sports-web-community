@@ -266,12 +266,15 @@ export default EVENT_INFO_MAP;
 /**
  * 이벤트를 한국어 문장으로 매핑하는 함수
  */
-export function mapEventToKoreanText(event: MatchEvent): string {
+export function mapEventToKoreanText(
+  event: MatchEvent,
+  playerKoreanNames: Record<number, string | null> = {}
+): string {
   const { type, detail, player, assist } = event;
-  
-  // 선수 이름
-  const playerName = player?.name || '알 수 없는 선수';
-  const assistName = assist?.name || '';
+
+  // 한글 이름 우선 사용
+  const playerName = (player?.id && playerKoreanNames[player.id]) || player?.name || '알 수 없는 선수';
+  const assistName = (assist?.id && playerKoreanNames[assist.id]) || assist?.name || '';
   
   // 문장 생성
   let sentenceText = '';

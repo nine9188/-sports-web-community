@@ -12,10 +12,12 @@ interface CommentResponseItem extends Record<string, unknown> {
   posts?: {
     id?: unknown;
     title?: unknown;
+    post_number?: unknown;
     board_id?: unknown;
     boards?: {
       id?: unknown;
       name?: unknown;
+      slug?: unknown;
     };
   };
 }
@@ -53,10 +55,12 @@ export async function getMyComments(
         posts!inner(
           id, 
           title,
+          post_number,
           board_id,
           boards!inner(
             id,
-            name
+            name,
+            slug
           )
         )
       `, { count: 'exact' })
@@ -113,7 +117,9 @@ export async function getMyComments(
             post_id: String(rawComment.post_id),
             board_id: String(rawComment.posts.board_id),
             post_title: String(rawComment.posts.title),
-            board_name: String(rawComment.posts.boards.name)
+            board_name: String(rawComment.posts.boards.name),
+            post_number: rawComment.posts.post_number ? Number(rawComment.posts.post_number) : undefined,
+            board_slug: rawComment.posts.boards.slug ? String(rawComment.posts.boards.slug) : undefined
           });
         }
       } catch (err) {

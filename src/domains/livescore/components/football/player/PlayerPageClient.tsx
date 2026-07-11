@@ -5,6 +5,7 @@ import { PlayerFullDataResponse } from '@/domains/livescore/actions/player/data'
 import AdBanner from '@/shared/components/AdBanner';
 import type { PlayerTabType } from '@/domains/livescore/hooks';
 import type { RelatedPost } from '@/domains/livescore/actions/match/relatedPosts';
+import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
 
 interface PlayerPageClientProps {
   playerId: string;
@@ -14,6 +15,7 @@ interface PlayerPageClientProps {
   rankingsKoreanNames?: Record<number, string | null>;
   initialPage?: number;
   relatedPosts?: RelatedPost[];
+  seoSummary?: string;
 }
 
 export default function PlayerPageClient({
@@ -24,6 +26,7 @@ export default function PlayerPageClient({
   rankingsKoreanNames = {},
   initialPage = 1,
   relatedPosts = [],
+  seoSummary,
 }: PlayerPageClientProps) {
   const currentTab = initialTab;
 
@@ -39,8 +42,14 @@ export default function PlayerPageClient({
         currentTeamLeague={initialData.currentTeamLeague}
       />
 
+      {seoSummary && (
+        <div className="mt-4">
+          <SeoSummaryCallout summary={seoSummary} />
+        </div>
+      )}
+
       {/* 배너 광고 */}
-      <div className="mb-4">
+      <div className="mb-4 mt-4">
         <AdBanner />
       </div>
 

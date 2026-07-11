@@ -191,9 +191,32 @@ const Player = memo(function Player({
     }
   };
 
+  // pos 기반 폴백: grid/formation이 null일 때 pos 그룹으로 라인 배치
+  // posOrder: 팀 전체 startXI 중 같은 pos인 선수들의 인덱스 (0-based), posTotal: 같은 pos 선수 수
+  const getPositionFromPos = (
+    pos: string,
+    isHome: boolean,
+    posIndex: number,   // 같은 pos 내 순서 (0-based)
+    posTotal: number,   // 같은 pos 선수 총 수
+  ): { x: number; y: number; totalInLine: number } => {
+    // pos → 라인 번호 매핑 (G=1, D=2, M=3, F=4)
+    const posLineMap: Record<string, number> = { G: 1, D: 2, M: 3, F: 4 };
+    const lineNum = posLineMap[pos] ?? 3;
+    const totalLines = 4; // G, D, M, F 4줄 고정
+    const anchors = computeLineAnchors(isMobile, isHome, totalLines);
+    const primary = anchors[Math.min(lineNum - 1, anchors.length - 1)] ?? (isMobile ? 50 : 50);
+    const offset = calculateOffset(posIndex + 1, posTotal);
+    const centerX = 28;
+    const centerY = isMobile ? 28 : 33.5;
+    if (isMobile) {
+      return { x: centerX + offset, y: primary, totalInLine: posTotal };
+    }
+    return { x: primary, y: centerY + offset, totalInLine: posTotal };
+  };
+
   // 포지션 계산 함수
   const getPositionFromGrid = (grid: string | null, isHome: boolean, formation: string): { x: number; y: number; totalInLine: number } => {
-    // 기본 폴백 위치(센터 근처)
+    // grid가 없으면 pos 폴백 처리 (renderTeam에서 별도 호출)
     if (!grid) return isMobile ? { x: 28, y: 50, totalInLine: 1 } : { x: 50, y: 28, totalInLine: 1 };
 
     // grid 파싱과 안전장치
@@ -262,8 +285,34 @@ const Player = memo(function Player({
 
 
   const renderTeam = (team: TeamData, isHome: boolean) => {
+    // grid/formation 모두 null인 경우 pos 기반 폴백 준비
+    const allGridNull = team.startXI.every(p => !p.grid);
+    // pos별 선수 그룹핑 (순서 유지)
+    const posCounts: Record<string, number> = {};
+    const posIndexMap: number[] = [];
+    if (allGridNull) {
+      team.startXI.forEach(p => {
+        const pos = p.pos || 'M';
+        posIndexMap.push(posCounts[pos] ?? 0);
+        posCounts[pos] = (posCounts[pos] ?? 0) + 1;
+      });
+    }
+
     return team.startXI.map((player, index) => {
-      const { totalInLine, ...position } = getPositionFromGrid(player.grid, isHome, team.formation);
+      let position: { x: number; y: number };
+      let totalInLine: number;
+      if (allGridNull) {
+        // pos 폴백 사용
+        const pos = player.pos || 'M';
+        const posIndex = posIndexMap[index];
+        const posTotal = posCounts[pos] || 1;
+        const result = getPositionFromPos(pos, isHome, posIndex, posTotal);
+        position = { x: result.x, y: result.y };
+        totalInLine = result.totalInLine;
+      } else {
+        const result = getPositionFromGrid(player.grid, isHome, team.formation);
+        ({ totalInLine, ...position } = result);
+      }
 
       const numberFontSize = isMobile ? 1.25 : 1.4;
       const nameFontSize = isMobile ? 1.5 : 1.8;

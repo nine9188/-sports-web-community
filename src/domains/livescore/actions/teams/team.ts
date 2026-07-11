@@ -128,6 +128,10 @@ export interface TeamSeoDataResponse {
       name?: string | null;
       name_ko?: string | null;
     } | null;
+    venue?: {
+      name?: string | null;
+      city?: string | null;
+    } | null;
   };
 }
 
@@ -477,6 +481,10 @@ export const fetchTeamSeoData = cache(
             name: team.league.name,
             name_ko: team.league.name_ko,
           } : null,
+          venue: team.venue ? {
+            name: team.venue.name || null,
+            city: team.venue.city || null,
+          } : null,
         },
       };
     }
@@ -484,6 +492,7 @@ export const fetchTeamSeoData = cache(
     try {
       const teamData = await fetchFromFootballApi('teams', { id: teamId });
       const team = teamData?.response?.[0]?.team;
+      const venue = teamData?.response?.[0]?.venue;
 
       if (!team) {
         return {
@@ -501,6 +510,10 @@ export const fetchTeamSeoData = cache(
           country: team.country,
           founded: team.founded,
           logo: team.logo,
+          venue: venue ? {
+            name: venue.name || null,
+            city: venue.city || null,
+          } : null,
         },
       };
     } catch (error) {

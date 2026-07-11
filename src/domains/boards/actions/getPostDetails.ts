@@ -270,7 +270,8 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       postUserActionResult,
       teamsResult,
       leaguesResult,
-      iconResult
+      iconResult,
+      liveStatsResult
     ] = await (async () => {
       const result = await Promise.all([
       // 게시글 목록 — 모든 view_type에서 thumbnail_url + summary 사용
@@ -311,7 +312,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
       getCachedLeaguesByIds(leagueIds).then(data => ({ data })),
 
       // 작성자 아이콘 (캐시 7일)
-      getCachedShopItemIconUrl(iconId).then(url => ({ data: url ? { image_url: url } : null }))
+      getCachedShopItemIconUrl(iconId).then(url => ({ data: url ? { image_url: url } : null })),
+
+      // 실시간 조회수, 추천수 조회 (무거운 본문 정보 캐싱 보장 및 조회수/추천수 정합성을 위한 분리 조회)
+      supabase
+        .from('posts')
+        .select('views, likes, dislikes')
+        .eq('id', post.id)
+        .maybeSingle()
       ]);
       return result;
     })();
@@ -319,6 +327,14 @@ export async function getPostPageData(slug: string, postNumber: string, fromBoar
     const { data: postsData, count } = postsResult;
     const filesData = filesResult.data;
     const postUserActionData = postUserActionResult.data;
+
+    // 실시간 조회수, 추천수 정보 동기화
+    const liveStats = liveStatsResult?.data;
+    if (liveStats) {
+      post.views = liveStats.views;
+      post.likes = liveStats.likes;
+      post.dislikes = liveStats.dislikes;
+    }
 
     // 4590 표준: Storage URL로 팀/리그 로고 조회 (다크모드 포함)
     const [teamLogoUrlMap, leagueLogoUrlMap, leagueLogoDarkUrlMap] = await Promise.all([

@@ -38,5 +38,5 @@ echo "🚀 Pushing to GitHub (main branch)..."
 git push origin master:main
 
 echo ""
-echo "✅ Deploy complete!"
-echo "🔗 Check Vercel dashboard for deployment status"
+echo "✅ Push complete!"
+echo "🔗 Code has been successfully pushed to GitHub"
