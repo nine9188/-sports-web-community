@@ -209,7 +209,7 @@ export default function PostActions({
         }`}
       >
         <Bookmark size={14} className={isScrapped ? 'fill-current text-white' : 'text-amber-600 dark:text-amber-400'} />
-        <span>{isScrapped ? '스크랩 완료' : '이 게시글 스크랩'}</span>
+        <span>{isScrapped ? '스크랩 완료' : '스크랩'}</span>
       </Button>
     </div>
   );
