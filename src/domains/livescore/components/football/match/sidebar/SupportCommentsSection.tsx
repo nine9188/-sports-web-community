@@ -11,6 +11,7 @@ import {
 import { getSupabaseBrowser } from '@/shared/lib/supabase';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { AuthorLink } from '@/domains/user/components';
+import { useAuth } from '@/shared/context/AuthContext';
 
 interface MatchDataType {
   teams?: {
@@ -122,13 +123,14 @@ export default function SupportCommentsSection({
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
 
   const [newComment, setNewComment] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<TeamType>('neutral');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<TeamType | 'all'>('all');
   const [visibleCount, setVisibleCount] = useState(10);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [allComments, setAllComments] = useState<SupportComment[]>(initialComments ?? []);
 
   const homeTeam = matchData.teams?.home;
@@ -137,35 +139,6 @@ export default function SupportCommentsSection({
   useEffect(() => {
     setAllComments(initialComments ?? []);
   }, [initialComments]);
-
-  useEffect(() => {
-    const supabase = getSupabaseBrowser();
-
-    const checkAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setIsLoggedIn(!!user);
-      } catch {
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      if (!session) {
-        setIsLoggedIn(false);
-        return;
-      }
-
-      const { data: { user }, error } = await supabase.auth.getUser();
-      setIsLoggedIn(!error && !!user);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const filteredComments = allComments.filter((comment) => {
     if (activeTab === 'all') return true;
