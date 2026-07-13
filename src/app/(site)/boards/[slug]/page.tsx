@@ -82,14 +82,10 @@ export async function generateMetadata({
   const supabase = await getSupabaseServer();
   const metadataState = getBoardListMetadataState(`/boards/${slug}`, resolvedSearchParams);
 
-  // 게시판 정보 조회
-  const { data: board } = await supabase
-    .from('boards')
-    .select('id, name, description, parent_id')
-    .eq('slug', slug)
-    .single();
+  const { getBoardPageData } = await import('@/domains/boards/actions/getBoards');
+  const boardResult = await getBoardPageData(slug, 1);
 
-  if (!board) {
+  if (!boardResult.success || !boardResult.boardData) {
     return buildMetadata({
       title: '게시판을 찾을 수 없습니다',
       description: '요청하신 게시판이 존재하지 않습니다.',
@@ -98,11 +94,15 @@ export async function generateMetadata({
     });
   }
 
+  const board = boardResult.boardData;
+  const filteredBoardIds = boardResult.filteredBoardIds || [board.id];
+
   // 게시글 개수 조회 (글이 하나도 없는 빈 게시판은 noindex)
+  // 부모 게시판의 경우 하위 게시판 글 개수까지 포함하여 계산
   const { count: postCount } = await supabase
     .from('posts')
     .select('id', { count: 'exact', head: true })
-    .eq('board_id', board.id)
+    .in('board_id', filteredBoardIds)
     .eq('is_deleted', false)
     .eq('is_hidden', false)
     .limit(1);
