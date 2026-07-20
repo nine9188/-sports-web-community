@@ -8,8 +8,10 @@ import { GUIDE_DEMO_IMAGES } from './demoAssets';
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     title: '이용 가이드',
-    description: '축구 커뮤니티 4590 Football 이용 가이드. 라이브스코어, 리그·팀 탐색, 선수 정보, 게시글 작성, 승부예측 등 사용법을 안내합니다.',
+    ogTitle: '4590 이용 가이드',
+    description: '4590 커뮤니티 이용 규칙, 가이드 및 주요 기능 사용법 안내 페이지입니다.',
     path: '/guide',
+    keywords: ['4590', '4590 이용가이드', '축구 커뮤니티', '4590football'],
   });
 }
 

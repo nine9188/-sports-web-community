@@ -136,10 +136,11 @@ export async function generateMetadata({
   }
 
   return buildMetadata({
-    title: seo.title,
-    description: board.description ? `${board.description} 축구 커뮤니티 4590 Football.` : seo.desc,
+    title: `${board.name} 게시판`,
+    ogTitle: `${board.name} - 4590 축구 커뮤니티`,
+    description: board.description || `${board.name} 소식, 이슈 및 이야기를 4590 축구 커뮤니티 팬들과 함께 나누세요.`,
     path: metadataState.path,
-    keywords: seo.keywords,
+    keywords: ['4590', board.name, '축구 게시판', '축구 커뮤니티', '4590football'],
     ...(robots && { robots }),
   });
 }

@@ -27,6 +27,7 @@ export const MAIN_SITEMAP_SECTIONS = [
     key: 'recent-posts',
     path: '/sitemaps/recent-posts.xml',
   },
+  /* 구글 서치콘솔 오류 방지 및 애드센스 심사 통과를 위해 Disallow 대상 sitemap 제외
   {
     key: 'livescore-teams',
     path: '/sitemaps/livescore-teams.xml',
@@ -43,6 +44,7 @@ export const MAIN_SITEMAP_SECTIONS = [
     key: 'transfers',
     path: '/sitemaps/transfers.xml',
   },
+  */
 ] as const;
 
 export type MainSitemapSection = typeof MAIN_SITEMAP_SECTIONS[number]['key'];

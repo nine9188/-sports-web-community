@@ -35,6 +35,8 @@ type MetadataImage = {
 export interface BuildMetadataParams {
   /** 페이지 제목 (필수) */
   title: string;
+  /** OpenGraph 전용 제목 (선택) - 없으면 title 사용 */
+  ogTitle?: string;
   /** URL 경로 (필수) - 예: '/boards/free' */
   path: string;
   /** 페이지 설명 (선택) - 없으면 전역 설명 사용 */
@@ -184,12 +186,14 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     ...(params.includeSiteKeywords === false ? [] : config.siteKeywords),
   ]));
 
+  const ogTitle = params.ogTitle || fullTitle;
+
   const metadata: Metadata = {
     title: titleMeta,
     description,
     keywords,
     openGraph: {
-      title: fullTitle,
+      title: ogTitle,
       description,
       url: canonicalUrl,
       siteName: config.siteName,
@@ -201,7 +205,7 @@ export async function buildMetadata(params: BuildMetadataParams): Promise<Metada
     },
     twitter: {
       card: 'summary_large_image',
-      title: fullTitle,
+      title: ogTitle,
       description,
       images: [primaryOgImage],
       creator: config.twitterHandle,

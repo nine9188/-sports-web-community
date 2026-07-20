@@ -8,9 +8,11 @@ const CONTACT_EMAIL = 'support@4590fb.com';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: '제휴/광고 문의',
-    description: '축구 커뮤니티 4590 Football 제휴, 광고, 스폰서십 문의 안내 페이지입니다.',
+    title: '문의하기',
+    ogTitle: '4590 문의하기',
+    description: '4590 Football 서비스 이용 제안, 제휴 및 광고 문의 안내 페이지입니다.',
     path: '/contact',
+    keywords: ['4590', '4590 문의', '제휴 문의', '4590football'],
   });
 }
 

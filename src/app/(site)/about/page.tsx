@@ -9,10 +9,11 @@ import '@/styles/post-content.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
-    title: '소개',
-    description: '축구 커뮤니티 4590 Football. 라이브스코어, 경기 분석, 축구 승부예측, 해외축구·국내축구 게시판을 제공하는 축구 커뮤니티입니다.',
+    title: '사이트 소개',
+    ogTitle: '4590 축구 커뮤니티 소개',
+    description: '4590 Football 플랫폼 소개, 서비스 안내 및 자주 묻는 질문(FAQ)을 확인하세요.',
     path: '/about',
-    keywords: ['축구 커뮤니티', '4590', '4590football', '4590 Football', '라이브스코어', '축구 분석', '축구 승부예측'],
+    keywords: ['4590', '4590 소개', '축구 커뮤니티', '4590football'],
   });
 }
 

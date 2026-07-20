@@ -107,10 +107,11 @@ export async function generateMetadata({ searchParams }: Props) {
   );
 
   return buildMetadata({
-    title: "상점 - 포인트 아이템",
-    description: "축구 커뮤니티 4590 Football 포인트 상점. 출석체크, 활동으로 모은 포인트로 프로필 아이콘, 닉네임 변경권 등 아이템을 구매하세요.",
+    title: "포인트 상점",
+    ogTitle: "4590 포인트 상점",
+    description: "4590 커뮤니티 활동 및 출석체크로 모은 포인트로 아이콘 및 혜택 상품을 교환하세요.",
     path: "/shop",
-    keywords: ["포인트 상점", "포인트 교환", "출석체크 이벤트", "축구 커뮤니티", "4590", "4590football"],
+    keywords: ["4590", "포인트 상점", "출석체크", "4590포인트", "4590football"],
     ...(hasStateQuery ? { robots: { index: false, follow: true } } : {}),
   });
 }

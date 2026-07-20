@@ -16,8 +16,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`,
+    default: '4590 - 축구 커뮤니티 | 4590football',
+    template: `%s | 4590`,
   },
   description: siteConfig.description,
   keywords: [...siteConfig.keywords],
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   other: {
     'msapplication-TileColor': brandColors.primary,
-    'application-name': '4590 Football',
+    'application-name': '4590',
   },
   robots: {
     index: true,

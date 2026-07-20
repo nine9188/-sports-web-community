@@ -22,14 +22,11 @@ export async function generateMetadata({
   // LIVE 필터
   if (filterParam === 'live') {
     return buildMetadata({
-      title: '실시간 축구 경기·라이브스코어·경기 결과',
-      description: '지금 진행 중인 축구 경기와 라이브스코어, 실시간 경기 결과를 4590 Football에서 확인하세요. EPL, 라리가, 세리에A, 분데스리가, 챔피언스리그, K리그 실시간 스코어.',
+      title: '진행 중인 축구 경기 라이브스코어',
+      ogTitle: '실시간 축구 경기 스코어 - 4590',
+      description: '지금 진행 중인 축구 경기와 라이브스코어, 실시간 경기 결과를 4590에서 확인하세요.',
       path: '/livescore/football',
-      keywords: [
-        '실시간 축구', '실시간 경기', '라이브 축구', '축구 라이브',
-        '실시간 스코어', '라이브스코어', '진행중 축구 경기',
-        'EPL 실시간', '챔피언스리그 실시간', 'K리그 실시간',
-      ],
+      keywords: ['4590', '실시간 축구', '라이브스코어', '축구 경기결과', '4590football'],
       robots: { index: false, follow: true },
     });
   }
@@ -55,19 +52,11 @@ export async function generateMetadata({
   }
 
   return buildMetadata({
-    title: `${dateLabel} 축구 일정·라이브스코어·경기 결과`,
-    description: buildLiveScoreMainSeoSummary(dateLabel, 0, 0),
+    title: hasQueryState ? `${dateLabel} 축구 일정·라이브스코어` : '실시간 축구 라이브스코어',
+    ogTitle: '4590 라이브스코어',
+    description: '전 세계 축구 경기의 실시간 스코어, 오늘 경기 일정 및 대진표를 4590에서 확인하세요.',
     path: dateParam ? `/livescore/football?date=${dateParam}` : '/livescore/football',
-    keywords: [
-      '라이브스코어', '축구 라이브스코어', '실시간 스코어', '축구 스코어',
-      '오늘 축구 일정', '오늘 축구 경기', '오늘 축구 경기 결과', '오늘 축구 경기결과', '오늘 축구 스코어',
-      '내일 축구 일정', '축구 일정',
-      '어제 축구 경기결과', '어제 축구 스코어', '어제 해외축구',
-      '축구 경기결과', '해외축구 결과', '축구 점수',
-      'EPL 경기결과', '프리미어리그 결과', '라리가 경기결과',
-      '챔피언스리그 결과', 'K리그 경기결과', '분데스리가 결과',
-      '축구 경기 일정', '오늘 프리미어리그', '실시간 축구 결과',
-    ],
+    keywords: ['4590', '축구 라이브스코어', '실시간 스코어', '오늘 축구 경기', '4590football'],
     ...(hasQueryState ? { robots: { index: false, follow: true } } : {}),
   });
 }

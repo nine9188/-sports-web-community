@@ -41,13 +41,14 @@ export async function generateMetadata({ searchParams }: TransfersPageProps): Pr
   });
 
   return buildMetadata({
-    title: '이적시장 - 해외/국내 이적 정보',
-    description,
+    title: '축구 이적시장 & 소식',
+    ogTitle: '실시간 축구 이적 현황 - 4590',
+    description: 'EPL, 라리가, K리그 등 주요 리그 및 구단별 선수 이적 현황, 영입, 임대 소식을 확인하세요.',
     path: '/transfers',
     image: ogImage,
     imageWidth: 1200,
     imageHeight: 630,
-    keywords: ['이적시장', '이적 정보', '선수 이적', '해외 이적', 'K리그 이적', ...leagueNames, '4590', '4590football'],
+    keywords: ['4590', '축구 이적시장', '이적 루머', '선수 이적', '4590football'],
     includeSiteKeywords: false,
     includeDefaultOgFallbacks: false,
     robots: {

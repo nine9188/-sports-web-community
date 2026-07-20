@@ -355,6 +355,7 @@ export async function getRecentPostSitemap(): Promise<MetadataRoute.Sitemap> {
     .select('post_number, updated_at, created_at, boards!inner(slug)')
     .eq('is_deleted', false)
     .eq('is_hidden', false)
+    .not('boards.slug', 'in', '("foreign-news","domestic-news","news")')
     .order('created_at', { ascending: false })
     .limit(1000));
 

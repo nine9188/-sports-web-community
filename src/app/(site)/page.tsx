@@ -18,24 +18,26 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
   return buildMetadata({
-    title: '4590 Football - 축구 커뮤니티 | 라이브스코어, 해외축구, 국내축구 게시판',
+    title: '4590 - 축구 커뮤니티 | 4590football',
+    ogTitle: '4590 - 축구 커뮤니티',
     description:
-      '축구 커뮤니티 4590 Football. 해외축구, 국내축구 라이브스코어와 경기 일정, EPL·라리가·세리에A·K리그 팀·선수 정보를 확인하고 축구 커뮤니티에서 자유롭게 소통하세요.',
+      '해외축구·국내축구 커뮤니티 4590(4590football). 실시간 라이브스코어, 경기 일정, 이적 소식을 축구 팬들과 함께 나누세요.',
     path: '/',
     titleOnly: true,
     keywords: [
-      '축구 커뮤니티',
       '4590',
       '4590football',
-      '4590 Football',
+      '축구 커뮤니티',
+      '해외축구 커뮤니티',
+      '라이브스코어',
       '해외축구',
       '국내축구',
-      '라이브스코어',
-      '경기 일정',
-      '축구 뉴스',
       'EPL',
-      '챔피언스리그',
       'K리그',
+      '라리가',
+      '분데스리가',
+      '세리에A',
+      '리그앙',
     ],
   });
 }
