@@ -19,6 +19,16 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
   const discountRate = getDiscountRate(dealInfo.price, dealInfo.original_price);
   const isEnded = dealInfo.is_ended;
 
+  const rawDealInfo = dealInfo as Record<string, any>;
+  const purchaseUrl =
+    dealInfo?.deal_url ||
+    rawDealInfo?.purchase_url ||
+    rawDealInfo?.url ||
+    rawDealInfo?.link ||
+    rawDealInfo?.buy_url ||
+    rawDealInfo?.product_url ||
+    rawDealInfo?.source_url;
+
   return (
     <div className="rounded-lg border border-black/7 dark:border-white/10 bg-white dark:bg-[#1D1D1D] overflow-hidden">
       {/* 종료 상태 또는 종료 버튼 */}
@@ -56,15 +66,19 @@ export function HotdealInfoBox({ dealInfo, postId, isAuthor }: HotdealInfoBoxPro
             링크
           </div>
           <div className="flex-1 px-4 py-3">
-            <Link
-              href={dealInfo.deal_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline break-all text-[13px] transition-colors"
-            prefetch={false}
-            >
-              {dealInfo.deal_url}
-            </Link>
+            {purchaseUrl ? (
+              <Link
+                href={purchaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-[#F0F0F0] hover:underline break-all text-[13px] transition-colors"
+                prefetch={false}
+              >
+                {purchaseUrl}
+              </Link>
+            ) : (
+              <span className="text-gray-400 dark:text-gray-500 text-[13px]">-</span>
+            )}
           </div>
         </div>
 

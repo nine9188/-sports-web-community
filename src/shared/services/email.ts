@@ -1,15 +1,16 @@
 import nodemailer from 'nodemailer';
 
-// Brevo SMTP 설정
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false, // TLS 사용
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function getTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false, // TLS 사용
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
 interface EmailTemplate {
   to: string;
@@ -70,12 +71,12 @@ function emailLayout(content: string): string {
 /**
  * 이메일 발송 기본 함수 (Brevo SMTP 사용)
  */
-async function sendEmail({ to, subject, html }: EmailTemplate) {
+export async function sendEmail({ to, subject, html }: EmailTemplate) {
   try {
     const senderEmail = process.env.SMTP_SENDER_EMAIL || 'noreply@example.com';
     const senderName = process.env.SMTP_SENDER_NAME || '4590 football';
 
-    const info = await transporter.sendMail({
+    const info = await getTransporter().sendMail({
       from: `${senderName} <${senderEmail}>`,
       to: to,
       subject: subject,

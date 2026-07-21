@@ -7,6 +7,7 @@ import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/
 import TrackPageVisit from '@/domains/layout/components/TrackPageVisit';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
+import AdBanner from '@/shared/components/AdBanner';
 import SeoSummaryCallout from '@/shared/components/SeoSummaryCallout';
 import { buildLeaguesMainSeoSummary } from '@/domains/livescore/utils/seoSummary';
 import { getLeagueLogoUrls } from '@/domains/livescore/actions/images';
@@ -76,6 +77,11 @@ export default async function LeaguesPage() {
             <SeoSummaryCallout summary={buildLeaguesMainSeoSummary()} plain />
           </ContainerContent>
         </Container>
+
+        {/* 리그/팀 메인 상단 가로형 스마트 무작위 광고 배너 */}
+        <div className="my-3">
+          <AdBanner />
+        </div>
 
         <div className="space-y-4 mt-4">
           {Object.entries(LEAGUE_CATEGORIES).map(([category, leagueIds]) => (

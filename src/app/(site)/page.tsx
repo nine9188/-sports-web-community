@@ -1,10 +1,11 @@
 import React from 'react';
 import { AllPostsWidget, BoardCollectionWidget, HomeActionWidget, HomeLinkWidget, NewsWidget } from '@/domains/widgets/components';
 import AdBanner from '@/shared/components/AdBanner';
+import SmartAdRelay from '@/shared/components/SmartAdRelay';
 import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
 import { KAKAO } from '@/shared/constants/ad-constants';
 import { LiveScoreWidgetV2, transformToWidgetLeagues } from '@/domains/widgets/components/live-score-widget';
-import { fetchTodayMatches, fetchWorldCupSidebarMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
+import { fetchTodayMatches, fetchWorldCupWidgetMatches } from '@/domains/livescore/actions/footballApi';
 import { getAuthenticatedUser } from '@/shared/actions/auth';
 import { buildMetadata } from '@/shared/utils/metadataNew';
 import { siteConfig } from '@/shared/config';
@@ -12,7 +13,6 @@ import DaumWebmasterHints from '@/shared/components/DaumWebmasterHints';
 import { fetchAllPostsWidgetData } from '@/domains/widgets/components/AllPostsWidget';
 import { fetchNewsData } from '@/domains/widgets/components/news-widget';
 import { fetchBoardCollectionData } from '@/domains/widgets/components/board-collection-widget/BoardCollectionWidget';
-import WorldCupSidebarCard from '@/domains/sidebar/components/WorldCupSidebarCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,12 +61,11 @@ const HOME_SECONDARY_LINKS = [
 ];
 
 export default async function HomePage() {
-  const [liveScoreData, worldCupSidebarMatches, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
+  const [liveScoreData, boardCollectionData, latestPosts, news, currentUser] = await Promise.all([
     Promise.all([
       fetchTodayMatches(),
       fetchWorldCupWidgetMatches(),
     ]).then(([todayMatches, worldCupMatches]) => transformToWidgetLeagues(todayMatches, worldCupMatches)),
-    fetchWorldCupSidebarMatches(),
     fetchBoardCollectionData(),
     fetchAllPostsWidgetData(),
     fetchNewsData(),
@@ -84,24 +83,17 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
       <main className="flex flex-col gap-4 bg-transparent overflow-visible">
-        <div className="hidden md:block">
-          <HomeActionWidget isLoggedIn={Boolean(currentUser.data?.user)} />
-        </div>
-        <div className="flex flex-col gap-4 md:hidden">
-          <HomeActionWidget isLoggedIn={Boolean(currentUser.data?.user)} />
-          <WorldCupSidebarCard matches={worldCupSidebarMatches} />
-        </div>
+        <HomeActionWidget isLoggedIn={Boolean(currentUser.data?.user)} />
+
         <h1 className="sr-only">4590 Football - 실시간 축구 스코어 커뮤니티</h1>
         <AdBanner />
         <LiveScoreWidgetV2 leagues={liveScoreData} />
         <HomeLinkWidget items={HOME_SECONDARY_LINKS} ariaLabel="홈 보조 이동" />
         <BoardCollectionWidget data={boardCollectionData} />
         <AllPostsWidget posts={latestPosts} />
-        <div className="hidden md:flex justify-center">
-          <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
-        </div>
-        <div className="md:hidden flex justify-center">
-          <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
+        {/* 메인페이지 2번째 광고 배너 - 쿠팡 파트너스 가로형 다이내믹 배너 1순위 적용 */}
+        <div className="flex justify-center my-2">
+          <SmartAdRelay slotType="content" kakaoAdUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} />
         </div>
         <NewsWidget news={news} />
       </main>

@@ -19,6 +19,8 @@ import HoverMenu from "../common/HoverMenu";
 import BoardSearchBar from "../board/BoardSearchBar";
 import PostDetailRelatedList from "./PostDetailRelatedList";
 import ResponsiveKakaoAd from "@/shared/components/ResponsiveKakaoAd";
+import SmartAdRelay from "@/shared/components/SmartAdRelay";
+import AdBanner from "@/shared/components/AdBanner";
 import { KAKAO } from "@/shared/constants/ad-constants";
 import PostHashScroller from "./PostHashScroller";
 import PostPollCard from "../post/PostPollCard";
@@ -395,9 +397,22 @@ export default async function PostDetailLayout({
         </div>
 
         {/* adsense-placeholder: former PC post-detail in-feed slot, keep this location for future AdSense restore. */}
-        {/* PC 전용 카카오 본문 하단 광고 */}
-        <div className="hidden md:flex justify-center py-4 border-t border-black/5 dark:border-white/10">
-          <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
+        {/* 본문 중단 쿠팡 파트너스 가로형 728x90 핫딜 배너 (답답함 100% 해소) */}
+        <div className="hidden md:flex justify-center my-6 py-4 border-y border-black/5 dark:border-white/10">
+          <SmartAdRelay
+            slotType="content"
+            kakaoAdUnit={KAKAO.POST_PC_BANNER}
+            adWidth={728}
+            adHeight={90}
+          />
+        </div>
+        <div className="md:hidden flex justify-center my-4 py-3 border-y border-black/5 dark:border-white/10">
+          <SmartAdRelay
+            slotType="content"
+            kakaoAdUnit={KAKAO.MOBILE_BANNER}
+            adWidth={320}
+            adHeight={100}
+          />
         </div>
 
         {/* 첨부파일 섹션 (있는 경우) */}
@@ -461,16 +476,9 @@ export default async function PostDetailLayout({
         />
       </div>
 
-      {/* adsense-placeholder: former mobile post-detail bottom banner slot, 320x100. */}
-      {/* 모바일 전용 카카오 배너 광고 */}
-      <div className="mb-4 md:hidden flex justify-center">
-        <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
-      </div>
-
-      {/* adsense-placeholder: former PC post-detail bottom banner slot, 728x90. */}
-      {/* PC 전용 카카오 배너 광고 */}
-      <div className="hidden md:flex justify-center mb-4">
-        <ResponsiveKakaoAd adUnit={KAKAO.BOTTOM_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
+      {/* 댓글 상단 가로형 스마트 광고 배너 (PC 728x90 / 모바일 320x100 클릭몬 & 쿠팡 가로형) */}
+      <div className="mb-4 flex justify-center">
+        <AdBanner />
       </div>
 
       {/* 6. 댓글 섹션 - 서버 데이터로 즉시 렌더링 */}

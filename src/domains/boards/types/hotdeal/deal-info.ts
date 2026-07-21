@@ -18,7 +18,7 @@ export interface DealInfo {
   shipping: string;
 
   /** 구매 링크 */
-  deal_url: string;
+  deal_url?: string;
 
   /** 종료 여부 */
   is_ended: boolean;

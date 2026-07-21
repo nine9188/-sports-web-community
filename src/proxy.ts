@@ -22,7 +22,7 @@ const SITE_LAYOUT_SKIP_PATHS = new Set([
 
 // 검색엔진 등 허용된 크롤러 (AI 데이터 수집 봇 제외)
 const PUBLIC_CRAWLER_USER_AGENT_PATTERN =
-  /(googlebot|google-inspectiontool|googleother|storebot-google|adsbot-google|mediapartners-google|bingbot|yeti|daum|daumoa|kakaotalk|duckduckbot|baiduspider|facebookbot|meta-externalagent)/i
+  /(googlebot|google-inspectiontool|googleother|storebot-google|adsbot-google|mediapartners-google|google-publisher-plugin|google-pagespeed|lighthouse|chrome-lighthouse|adsense|bingbot|yeti|daum|daumoa|kakaotalk|duckduckbot|baiduspider|facebookbot|meta-externalagent|appengine-google)/i
 
 function isPublicCrawlerUserAgent(userAgent: string | null) {
   return Boolean(userAgent && PUBLIC_CRAWLER_USER_AGENT_PATTERN.test(userAgent))
@@ -47,17 +47,16 @@ function isLikelyBrowserImpersonator(request: NextRequest) {
 
   const secFetchMode = request.headers.get('sec-fetch-mode')
   const secFetchDest = request.headers.get('sec-fetch-dest')
-  const secFetchUser = request.headers.get('sec-fetch-user')
-  const secChUa = request.headers.get('sec-ch-ua')
+  const accept = request.headers.get('accept')
   const acceptLanguage = request.headers.get('accept-language')
-  const hasBrowserNavigationHeaders =
-    secFetchMode?.toLowerCase() === 'navigate' &&
-    secFetchDest?.toLowerCase() === 'document' &&
-    secFetchUser === '?1' &&
-    Boolean(secChUa) &&
+
+  const isDocumentRequest =
+    secFetchDest?.toLowerCase() === 'document' ||
+    secFetchMode?.toLowerCase() === 'navigate' ||
+    Boolean(accept && accept.includes('text/html')) ||
     Boolean(acceptLanguage)
 
-  return !hasBrowserNavigationHeaders
+  return !isDocumentRequest
 }
 
 function shouldDenyExpensiveBotRequest(request: NextRequest) {

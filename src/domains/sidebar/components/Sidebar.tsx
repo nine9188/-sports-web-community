@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Container, ContainerHeader, ContainerTitle, ContainerContent } from '@/shared/components/ui';
 import { SidebarProps } from '../types';
 import ResponsiveKakaoAd from '@/shared/components/ResponsiveKakaoAd';
+import SmartAdRelay from '@/shared/components/SmartAdRelay';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
 export default function Sidebar({
@@ -65,9 +66,9 @@ export default function Sidebar({
             </svg>
           </Link>
 
-          {/* 사이드바 광고 - 카카오 */}
+          {/* 좌측 사이드바 무작위 로테이션 스마트 멀티 광고 (300x250) */}
           <div className="mb-4">
-            <ResponsiveKakaoAd adUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} minWidth={1024} />
+            <SmartAdRelay slotType="sidebar" kakaoAdUnit={KAKAO.LEFT_SIDEBAR} adWidth={300} adHeight={250} />
           </div>
 
           {/* 게시판 이동 섹션 */}

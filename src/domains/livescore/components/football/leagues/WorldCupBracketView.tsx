@@ -208,6 +208,23 @@ function formatKstDate(iso: string | undefined) {
   }).format(date);
 }
 
+function getChampionTeam(finalItem: BracketCardData | undefined) {
+  const fixture = finalItem?.fixture;
+  if (!fixture) return null;
+
+  if (fixture.home.winner === true) return fixture.home;
+  if (fixture.away.winner === true) return fixture.away;
+
+  const finishedStatuses = ['FT', 'AET', 'PEN', 'POST', 'WO'];
+  const isFinished = finishedStatuses.includes(fixture.status?.short);
+  if (isFinished && fixture.home.score !== null && fixture.away.score !== null) {
+    if (fixture.home.score > fixture.away.score) return fixture.home;
+    if (fixture.away.score > fixture.home.score) return fixture.away;
+  }
+
+  return null;
+}
+
 function getMatchStatusText(fixture: CupFixture) {
   if (fixture.home.score !== null && fixture.away.score !== null) {
     return `${fixture.home.score} - ${fixture.away.score}`;
@@ -500,6 +517,7 @@ function MobileVerticalBracket({
   const [labelCoords, setLabelCoords] = useState<Record<string, number>>({});
   const thirdPlaceItem = thirdPlaceItems[0];
   const limitTo16 = true;
+  const championTeam = getChampionTeam(finalItem);
 
   const yMap = limitTo16 ? {
     top16: 70,
@@ -722,9 +740,25 @@ function MobileVerticalBracket({
             WebkitTransform: 'translate(-50%, -50%)',
           }}
         >
-          <div className="px-1.5 py-1.5 text-center">
-            <Trophy className="mx-auto h-7 w-7 text-gray-300 dark:text-gray-700" aria-hidden />
-            <span className="mt-1 block text-[11px] font-semibold leading-none text-gray-500 dark:text-gray-400">챔피언</span>
+          <div className="flex flex-col items-center px-1.5 py-1 text-center">
+            <Trophy
+              className={`mx-auto h-6 w-6 ${
+                championTeam ? 'text-amber-400 dark:text-amber-300 drop-shadow-sm' : 'text-gray-300 dark:text-gray-700'
+              }`}
+              aria-hidden
+            />
+            {championTeam ? (
+              <div className="mt-0.5 flex flex-col items-center gap-0.5">
+                <TeamLogoMark logo={championTeam.logo} name={championTeam.name} />
+                <span className="whitespace-nowrap text-center text-[9px] font-bold leading-none text-gray-900 dark:text-[#F0F0F0]">
+                  {teamDisplayName(championTeam)}
+                </span>
+              </div>
+            ) : (
+              <span className="mt-1 block text-[11px] font-semibold leading-none text-gray-500 dark:text-gray-400">
+                챔피언
+              </span>
+            )}
           </div>
         </div>
         {nodes.map((node) => (
@@ -964,6 +998,8 @@ function DesktopBracketBoard({
   finalItem: BracketCardData;
   thirdPlaceItems: BracketCardData[];
 }) {
+  const championTeam = getChampionTeam(finalItem);
+
   const boardRef = useRef<HTMLDivElement>(null);
   const [paths, setPaths] = useState<DesktopPath[]>([]);
   const nodes: DesktopNode[] = [
@@ -1075,11 +1111,27 @@ function DesktopBracketBoard({
           </div>
         ))}
         <div
-          className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 text-center"
+          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 text-center"
           style={{ left: `${DESKTOP_X.center / 10}%`, top: '117px' }}
         >
-          <Trophy className="h-10 w-10 text-gray-300 dark:text-gray-700 lg:h-12 lg:w-12" aria-hidden />
-          <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 lg:text-[12px]">챔피언</span>
+          <Trophy
+            className={`h-9 w-9 lg:h-11 lg:w-11 ${
+              championTeam ? 'text-amber-400 dark:text-amber-300 drop-shadow-sm' : 'text-gray-300 dark:text-gray-700'
+            }`}
+            aria-hidden
+          />
+          {championTeam ? (
+            <div className="flex flex-col items-center gap-0.5">
+              <TeamLogoMark logo={championTeam.logo} name={championTeam.name} />
+              <span className="whitespace-nowrap text-center text-[9.5px] font-bold leading-none text-gray-900 dark:text-[#F0F0F0] lg:text-[11.5px]">
+                {teamDisplayName(championTeam)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 lg:text-[12px]">
+              챔피언
+            </span>
+          )}
         </div>
         {nodes.map((node) => (
           <div
@@ -1103,7 +1155,17 @@ function DesktopBracketBoard({
 
 export default function WorldCupBracketView({ rounds, standings, forceVertical = false }: WorldCupBracketViewProps) {
   const columns = KNOCKOUT_ROUNDS.map((round) => {
-    const actualItems = (rounds.find((item) => item.round === round.key)?.fixtures ?? []).map(fixtureToBracketCard);
+    const actualItems = (
+      rounds.find(
+        (item) =>
+          item.round === round.key ||
+          (round.key === 'Final' &&
+            item.round.toLowerCase().includes('final') &&
+            !item.round.includes('Quarter') &&
+            !item.round.includes('Semi') &&
+            !item.round.includes('3rd'))
+      )?.fixtures ?? []
+    ).map(fixtureToBracketCard);
     const mergedItems = getMergedRoundItems(round.key, actualItems, standings);
     return {
       ...round,

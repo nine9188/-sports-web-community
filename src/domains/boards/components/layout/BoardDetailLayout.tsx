@@ -16,7 +16,7 @@ import BoardSearchBar from "../board/BoardSearchBar";
 import { isHotdealBoard } from "../../utils/hotdeal";
 import { Breadcrumb } from "../../types/board/data";
 import { Board } from "../../types/board";
-import ResponsiveKakaoAd from "@/shared/components/ResponsiveKakaoAd";
+import AdBanner from "@/shared/components/AdBanner";
 import { KAKAO } from "@/shared/constants/ad-constants";
 import type { LayoutPost, PopularPost } from "@/domains/boards/types/post";
 import RecentlyVisitedBoardEffect from "./RecentlyVisitedBoardEffect";
@@ -148,14 +148,9 @@ export default function BoardDetailLayout({
   const hasBreadcrumbs = breadcrumbs.length > 0;
 
   const kakaoAdBanner = (
-    <>
-      <div className="hidden md:flex justify-center mb-4">
-        <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />
-      </div>
-      <div className="md:hidden flex justify-center mb-4">
-        <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />
-      </div>
-    </>
+    <div className="mb-4">
+      <AdBanner />
+    </div>
   );
 
   return (
@@ -221,7 +216,7 @@ export default function BoardDetailLayout({
       )}
 
       {/* 2. 광고 배너 */}
-      {hasBreadcrumbs && kakaoAdBanner}
+      {kakaoAdBanner}
 
       {/* 3. 커스텀 필터 컴포넌트 & 베스트 인기글 위젯 */}
       {filterComponent && <div className="mb-4">{filterComponent}</div>}

@@ -1,26 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ResponsiveKakaoAd from './ResponsiveKakaoAd';
+import SmartAdRelay from './SmartAdRelay';
 import { KAKAO } from '@/shared/constants/ad-constants';
 
 /**
- * 페이지 배너 광고
+ * 페이지 통합 스마트 멀티 광고 배너
  *
- * LCP 최적화:
- * - 초기: 고정 높이 placeholder만 렌더 (CLS 방지)
- * - LCP 이후: requestIdleCallback으로 실제 광고 마운트
- * → 광고가 LCP 후보에서 제외됨
- *
- * matchMedia로 PC/모바일 중 실제 화면에 맞는 광고만 mount:
- * - PC (md 이상): 728x90
- * - 모바일 (md 미만): 320x100
+ * - PC (md 이상): 728x90 (1순위 클릭몬/카카오 ➔ 미송출 시 노란색 4590 카드)
+ * - 모바일 (md 미만): 320x100 (1순위 클릭몬/카카오 ➔ 미송출 시 노란색 4590 카드)
  */
 export default function AdBanner() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // 짧은 지연 후 광고 로드 (LCP는 인라인 SVG로 해결됨)
     if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(() => setReady(true), { timeout: 500 });
       return () => cancelIdleCallback(id);
@@ -31,18 +24,31 @@ export default function AdBanner() {
 
   return (
     <>
-      {/* adsense-placeholder: former shared PC page banner slot, 728x90. */}
       {/* PC 배너 - 728x90 */}
-      <div className="hidden md:flex justify-center">
-        <div style={{ width: 728, height: 90 }}>
-          {ready && <ResponsiveKakaoAd adUnit={KAKAO.POST_PC_BANNER} adWidth={728} adHeight={90} minWidth={768} />}
+      <div className="hidden md:flex justify-center my-3">
+        <div style={{ width: 728, height: 90, maxWidth: '100%' }}>
+          {ready && (
+            <SmartAdRelay
+              slotType="header"
+              kakaoAdUnit={KAKAO.POST_PC_BANNER}
+              adWidth={728}
+              adHeight={90}
+            />
+          )}
         </div>
       </div>
-      {/* adsense-placeholder: former shared mobile page banner slot, 320x100. */}
+
       {/* 모바일 배너 - 320x100 */}
-      <div className="md:hidden flex justify-center">
+      <div className="md:hidden flex justify-center my-2">
         <div style={{ width: 320, height: 100, maxWidth: '100%' }}>
-          {ready && <ResponsiveKakaoAd adUnit={KAKAO.MOBILE_BANNER} adWidth={320} adHeight={100} maxWidth={767} />}
+          {ready && (
+            <SmartAdRelay
+              slotType="header"
+              kakaoAdUnit={KAKAO.MOBILE_BANNER}
+              adWidth={320}
+              adHeight={100}
+            />
+          )}
         </div>
       </div>
     </>
