@@ -22,6 +22,7 @@ import { scrollToTop } from '@/shared/utils/scroll';
 import Footer from '@/shared/components/Footer';
 const SuspensionPopup = lazy(() => import('@/shared/components/SuspensionPopup'));
 const AttendanceChecker = lazy(() => import('@/shared/components/AttendanceChecker'));
+const FloatingBottomAd = lazy(() => import('@/shared/components/FloatingBottomAd'));
 
 interface SiteLayoutClientProps {
   children?: React.ReactNode;
@@ -156,6 +157,7 @@ export default function SiteLayoutClient({
       <Suspense fallback={null}>
         <SuspensionPopup />
         <AttendanceChecker />
+        <FloatingBottomAd />
       </Suspense>
     </IconProvider>
   );
